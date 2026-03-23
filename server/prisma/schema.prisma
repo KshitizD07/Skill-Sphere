@@ -379,3 +379,29 @@ model SystemConfig {
   updatedAt             DateTime @updatedAt
   updatedBy             String?
 }
+
+// ─────────────────────────────────────────────────────────────────────────────
+// EMAIL WHITELIST
+// ─────────────────────────────────────────────────────────────────────────────
+
+model AllowedEmail {
+  id        String   @id @default(uuid())
+  email     String   @unique
+  addedBy   String?  // who approved this email
+  note      String?  // optional reason / name
+  usedAt    DateTime? // set when account is created
+  createdAt DateTime @default(now())
+
+  @@index([email])
+}
+
+model OtpVerification {
+  id        String   @id @default(uuid())
+  email     String
+  otp       String
+  expiresAt DateTime
+  used      Boolean  @default(false)
+  createdAt DateTime @default(now())
+
+  @@index([email])
+}

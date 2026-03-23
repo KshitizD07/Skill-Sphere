@@ -1,3 +1,4 @@
+require('dotenv').config();
 const express = require('express');
 const bcrypt  = require('bcryptjs');
 const jwt     = require('jsonwebtoken');
@@ -6,16 +7,22 @@ const { PrismaClient } = require('@prisma/client');
 
 const { asyncHandler, ApiError } = require('../utils/errorHandler');
 const { authenticateToken } = require('../middleware/auth');
+const { sendOtp, verifyOtp } = require('../services/emailService');
 
 const router = express.Router();
 const prisma = new PrismaClient();
 
+const PASSWORD_REGEX = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]).{8,}$/;
+
 const registerSchema = z.object({
-  email:    z.string().email(),
-  password: z.string().min(6, 'Password must be at least 6 characters'),
-  name:     z.string().min(2, 'Name must be at least 2 characters'),
-  role:     z.enum(['STUDENT', 'ALUMNI']),
+  email:    z.string().email('Invalid email format').toLowerCase(),
+  password: z.string()
+    .min(8, 'Password must be at least 8 characters')
+    .regex(PASSWORD_REGEX, 'Password must contain uppercase, lowercase, number and special character'),
+  name:     z.string().min(2, 'Name must be at least 2 characters').max(60),
+  role:     z.enum(['STUDENT', 'ALUMNI'], { errorMap: () => ({ message: 'Role must be STUDENT or ALUMNI' }) }),
   college:  z.string().min(1).optional(),
+  otp:      z.string().length(6, 'OTP must be 6 digits'),
 });
 
 const loginSchema = z.object({
@@ -31,13 +38,54 @@ function signToken(user) {
   );
 }
 
-// POST /api/auth/register
+// ── POST /api/auth/send-otp ───────────────────────────────────────────────────
+// Step 1 of registration: validate email is whitelisted, send OTP
+router.post('/send-otp', asyncHandler(async (req, res) => {
+  const { email } = req.body;
+  if (!email) throw ApiError.badRequest('Email is required');
+
+  const normalised = email.toLowerCase().trim();
+
+  // Whitelist check
+  const allowed = await prisma.allowedEmail.findUnique({ where: { email: normalised } });
+  if (!allowed) {
+    throw new ApiError(403, 'EMAIL_NOT_WHITELISTED',
+      'This email is not on the invite list. Contact the SkillSphere team to get access.'
+    );
+  }
+
+  // Already registered
+  if (allowed.usedAt) throw ApiError.conflict('An account with this email already exists');
+
+  const exists = await prisma.user.findUnique({ where: { email: normalised } });
+  if (exists) throw ApiError.conflict('Email already registered');
+
+  await sendOtp(normalised);
+
+  res.json({ success: true, message: 'Verification code sent to your email' });
+}));
+
+// ── POST /api/auth/register ───────────────────────────────────────────────────
+// Step 2: verify OTP + create account
 router.post('/register', asyncHandler(async (req, res) => {
   const data = registerSchema.parse(req.body);
+
+  // Whitelist check
+  const allowed = await prisma.allowedEmail.findUnique({ where: { email: data.email } });
+  if (!allowed) {
+    throw new ApiError(403, 'EMAIL_NOT_WHITELISTED',
+      'This email is not on the invite list.'
+    );
+  }
+  if (allowed.usedAt) throw ApiError.conflict('Account already exists for this email');
 
   const exists = await prisma.user.findUnique({ where: { email: data.email } });
   if (exists) throw ApiError.conflict('Email already registered');
 
+  // Verify OTP
+  await verifyOtp(data.email, data.otp);
+
+  // Create user
   const hashed = await bcrypt.hash(data.password, 12);
   const user   = await prisma.user.create({
     data: {
@@ -47,6 +95,12 @@ router.post('/register', asyncHandler(async (req, res) => {
       role:     data.role,
       college:  data.college || null,
     },
+  });
+
+  // Mark whitelist entry as used
+  await prisma.allowedEmail.update({
+    where: { email: data.email },
+    data:  { usedAt: new Date() },
   });
 
   await prisma.activityLog.create({
@@ -59,7 +113,7 @@ router.post('/register', asyncHandler(async (req, res) => {
   });
 }));
 
-// POST /api/auth/login
+// ── POST /api/auth/login ──────────────────────────────────────────────────────
 router.post('/login', asyncHandler(async (req, res) => {
   const data = loginSchema.parse(req.body);
 
@@ -74,13 +128,13 @@ router.post('/login', asyncHandler(async (req, res) => {
 
   await prisma.activityLog.create({
     data: { userId: user.id, action: 'USER_LOGIN', details: 'Logged in' },
-  });
+  }).catch(() => {});
 
   const { password: _, ...safeUser } = user;
   res.json({ token: signToken(user), user: safeUser });
 }));
 
-// GET /api/auth/verify
+// ── GET /api/auth/verify ──────────────────────────────────────────────────────
 router.get('/verify', authenticateToken, asyncHandler(async (req, res) => {
   const user = await prisma.user.findUnique({
     where:  { id: req.user.userId },
@@ -90,13 +144,13 @@ router.get('/verify', authenticateToken, asyncHandler(async (req, res) => {
   res.json({ valid: true, user });
 }));
 
-// POST /api/auth/logout
+// ── POST /api/auth/logout ─────────────────────────────────────────────────────
 router.post('/logout', asyncHandler(async (req, res) => {
   const { userId } = req.body;
   if (userId) {
     await prisma.activityLog.create({
       data: { userId, action: 'USER_LOGOUT', details: 'Logged out' },
-    }).catch(() => {}); // non-critical
+    }).catch(() => {});
   }
   res.json({ success: true });
 }));
