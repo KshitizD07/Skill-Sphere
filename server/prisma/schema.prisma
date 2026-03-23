@@ -1,0 +1,381 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// CORE IDENTITY
+// ─────────────────────────────────────────────────────────────────────────────
+
+model User {
+  id        String   @id @default(uuid())
+  email     String   @unique
+  password  String
+  name      String
+  role      UserRole @default(STUDENT)
+  college   String?
+
+  headline  String?
+  bio       String?
+  avatar    String?
+  github    String?
+  linkedin  String?
+
+  createdAt DateTime @default(now())
+
+  // Relations
+  skills           Skill[]
+  posts            Post[]
+  likes            Like[]
+  comments         Comment[]
+  activityLogs     ActivityLog[]
+  ledSquads        Squad[]          @relation("SquadLeader")
+  applications     SquadApplication[]
+  matchDecisions   MatchDecision[]
+
+  @@index([college])
+  @@index([role])
+  @@index([createdAt(sort: Desc)])
+}
+
+enum UserRole {
+  STUDENT
+  ALUMNI
+  ADMIN
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// SKILLS
+// ─────────────────────────────────────────────────────────────────────────────
+
+model Skill {
+  id              String    @id @default(uuid())
+  userId          String
+  user            User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  name            String
+  level           String    @default("Beginner")
+  isVerified      Boolean   @default(false)
+  verificationUrl String?
+  verifiedAt      DateTime?
+  calculatedScore Int?
+  showLevel       Boolean   @default(true)
+
+  createdAt       DateTime  @default(now())
+
+  @@unique([userId, name])
+  @@index([userId])
+  @@index([name])
+  @@index([isVerified])
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// JOB ROLES (for skill gap analysis)
+// ─────────────────────────────────────────────────────────────────────────────
+
+model JobRole {
+  id          String         @id @default(uuid())
+  title       String         @unique
+  description String?
+  skills      JobRoleSkill[]
+}
+
+model JobRoleSkill {
+  id        String  @id @default(uuid())
+  jobRoleId String
+  jobRole   JobRole @relation(fields: [jobRoleId], references: [id], onDelete: Cascade)
+  skillName String
+  importance String @default("Required")
+
+  @@index([jobRoleId])
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// SOCIAL FEED
+// ─────────────────────────────────────────────────────────────────────────────
+
+model Post {
+  id       String    @id @default(uuid())
+  userId   String
+  user     User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  content  String
+  imageUrl String?
+  createdAt DateTime @default(now())
+  likes    Like[]
+  comments Comment[]
+
+  @@index([userId])
+  @@index([createdAt(sort: Desc)])
+}
+
+model Like {
+  id        String   @id @default(uuid())
+  postId    String
+  post      Post     @relation(fields: [postId], references: [id], onDelete: Cascade)
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+
+  @@unique([postId, userId])
+  @@index([postId])
+}
+
+model Comment {
+  id        String   @id @default(uuid())
+  postId    String
+  post      Post     @relation(fields: [postId], references: [id], onDelete: Cascade)
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  content   String
+  createdAt DateTime @default(now())
+
+  @@index([postId])
+}
+
+model ActivityLog {
+  id        String   @id @default(uuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  action    String
+  details   String?
+  createdAt DateTime @default(now())
+
+  @@index([userId])
+  @@index([createdAt(sort: Desc)])
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// N.E.X.U.S. — SQUAD SYSTEM
+// ─────────────────────────────────────────────────────────────────────────────
+
+model Squad {
+  id             String      @id @default(uuid())
+  title          String      @db.VarChar(120)
+  description    String      @db.Text
+  event          String?     @db.VarChar(100)
+  visibility     Visibility  @default(PUBLIC)
+  maxMembers     Int         @default(4)
+  currentMembers Int         @default(1)
+  status         SquadStatus @default(OPEN)
+  leaderId       String
+  leader         User        @relation("SquadLeader", fields: [leaderId], references: [id], onDelete: Cascade)
+  createdAt      DateTime    @default(now())
+  updatedAt      DateTime    @updatedAt
+  expiresAt      DateTime?
+
+  slots          SquadSlot[]
+  applications   SquadApplication[]
+  decisions      MatchDecision[]
+
+  @@index([status, createdAt(sort: Desc)])
+  @@index([leaderId])
+  @@index([event])
+}
+
+enum Visibility {
+  PUBLIC
+  CAMPUS_ONLY
+  STEALTH
+}
+
+enum SquadStatus {
+  OPEN
+  FULL
+  CLOSED
+  ARCHIVED
+}
+
+model SquadSlot {
+  id              String     @id @default(uuid())
+  squadId         String
+  squad           Squad      @relation(fields: [squadId], references: [id], onDelete: Cascade)
+  roleTitle       String     @db.VarChar(80)
+  requiredSkill   String?    @db.VarChar(60)
+  minScore        Int        @default(0)
+  requireVerified Boolean    @default(false)
+  status          SlotStatus @default(OPEN)
+  filledBy        String?
+  position        Int        @default(0)
+  createdAt       DateTime   @default(now())
+
+  @@index([squadId, status])
+  @@index([requiredSkill])
+}
+
+enum SlotStatus {
+  OPEN
+  FILLED
+}
+
+model SquadApplication {
+  id         String            @id @default(uuid())
+  squadId    String
+  squad      Squad             @relation(fields: [squadId], references: [id], onDelete: Cascade)
+  userId     String
+  user       User              @relation(fields: [userId], references: [id], onDelete: Cascade)
+  message    String?           @db.VarChar(200)
+  status     ApplicationStatus @default(PENDING)
+  matchScore Int?
+  appliedAt  DateTime          @default(now())
+  decidedAt  DateTime?
+
+  @@unique([squadId, userId])
+  @@index([userId, status])
+  @@index([squadId, status])
+}
+
+enum ApplicationStatus {
+  PENDING
+  ACCEPTED
+  REJECTED
+  WITHDRAWN
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// ANTIFRAGILE N.E.X.U.S. — EVOLUTIONARY MATCHING SYSTEM
+// ─────────────────────────────────────────────────────────────────────────────
+
+// Multiple matching strategies compete — poor ones get demoted, good ones promoted
+model MatchStrategy {
+  id             String         @id @default(uuid())
+  name           String         @unique  // e.g. "verified_skills_v1"
+  displayName    String
+  description    String
+  version        String
+  state          StrategyState  @default(SHADOW)
+  influenceLevel InfluenceLevel @default(MEDIUM)
+
+  totalDecisions Int @default(0)
+  consensusWins  Int @default(0)
+  soloWins       Int @default(0)
+
+  config         Json?          // strategy-specific params
+  createdAt      DateTime       @default(now())
+  activatedAt    DateTime?
+  lastPromotedAt DateTime?
+  lastDemotedAt  DateTime?
+  deprecatedAt   DateTime?
+
+  decisions    MatchDecision[]   @relation("StrategyDecisions")
+  performance  StrategyPerformance[]
+  promotions   StrategyPromotion[]
+
+  @@index([state])
+}
+
+enum StrategyState {
+  ACTIVE
+  SHADOW
+  DEPRECATED
+}
+
+enum InfluenceLevel {
+  LOW
+  MEDIUM
+  HIGH
+}
+
+// Every matching decision is logged — full audit trail + explainability
+model MatchDecision {
+  id              String   @id @default(uuid())
+  squadId         String
+  squad           Squad    @relation(fields: [squadId], references: [id])
+  slotId          String?
+  timestamp       DateTime @default(now())
+
+  selectedUserId  String
+  selectedUser    User     @relation(fields: [selectedUserId], references: [id])
+  alternativesShown String[]
+
+  wasConsensus    Boolean  @default(false)
+  wasRandom       Boolean  @default(false)
+  consensusCount  Int      @default(0)
+  strategyVotes   Json     // { strategyId: { candidateId, score } }
+  activeStrategies Json
+
+  outcome         MatchOutcome?
+  strategies      MatchStrategy[] @relation("StrategyDecisions")
+
+  @@index([squadId])
+  @@index([selectedUserId])
+  @@index([timestamp])
+}
+
+// What actually happened — the only source of truth for strategy evaluation
+model MatchOutcome {
+  id            String        @id @default(uuid())
+  decisionId    String        @unique
+  decision      MatchDecision @relation(fields: [decisionId], references: [id])
+
+  accepted      Boolean
+  acceptedAt    DateTime?
+  rejectedAt    DateTime?
+  timeToDecision Int?         // minutes
+
+  memberJoinedAt DateTime?
+  memberLeftAt   DateTime?
+  retention30d   Boolean?
+  retention60d   Boolean?
+  squadCompleted Boolean?
+
+  leaderRating  Int?
+  recordedAt    DateTime @default(now())
+  lastUpdatedAt DateTime @updatedAt
+
+  @@index([accepted])
+}
+
+// Weekly performance snapshots per strategy
+model StrategyPerformance {
+  id            String         @id @default(uuid())
+  strategyId    String
+  strategy      MatchStrategy  @relation(fields: [strategyId], references: [id])
+  windowStart   DateTime
+  windowEnd     DateTime
+  totalVotes    Int            @default(0)
+  acceptedCount Int            @default(0)
+  rejectedCount Int            @default(0)
+  acceptanceRate Float?
+  retention30dRate Float?
+  rankInWindow  Int?
+  calculatedAt  DateTime       @default(now())
+
+  @@index([strategyId, windowStart])
+}
+
+// Audit log of every strategy state change
+model StrategyPromotion {
+  id           String         @id @default(uuid())
+  strategyId   String
+  strategy     MatchStrategy  @relation(fields: [strategyId], references: [id])
+  fromState    StrategyState
+  toState      StrategyState
+  fromInfluence InfluenceLevel?
+  toInfluence  InfluenceLevel?
+  reason       String
+  metrics      Json?
+  triggeredBy  String?        // "SYSTEM" or userId
+  triggeredAt  DateTime       @default(now())
+
+  @@index([strategyId])
+}
+
+// Global system config for antifragile parameters
+model SystemConfig {
+  id                    String   @id @default(uuid())
+  maxActiveStrategies   Int      @default(5)
+  maxShadowStrategies   Int      @default(3)
+  minRandomnessRate     Float    @default(0.10)
+  maxRandomnessRate     Float    @default(0.30)
+  minConsensusStrategies Int     @default(2)
+  influenceDecayDays    Int      @default(30)
+  performanceWindowDays Int      @default(7)
+  promotionWindowCount  Int      @default(3)
+  demotionWindowCount   Int      @default(3)
+  updatedAt             DateTime @updatedAt
+  updatedBy             String?
+}
