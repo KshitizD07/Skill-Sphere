@@ -1,0 +1,28 @@
+@import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Rajdhani:wght@400;500;600;700&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ── Scrollbar ── */
+.custom-scrollbar::-webkit-scrollbar { width: 4px; }
+.custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
+.custom-scrollbar::-webkit-scrollbar-thumb { background: rgba(34, 211, 238, 0.3); border-radius: 2px; }
+.custom-scrollbar::-webkit-scrollbar-thumb:hover { background: rgba(34, 211, 238, 0.6); }
+
+/* Global slim scrollbar */
+* { scrollbar-width: thin; scrollbar-color: rgba(34, 211, 238, 0.3) transparent; }
+
+/* ── Animations ── */
+@keyframes fade-in {
+  from { opacity: 0; transform: translateY(8px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+.animate-fade-in { animation: fade-in 0.3s ease forwards; }
+
+/* ── Prose override for roadmap markdown ── */
+.prose h1, .prose h2, .prose h3 { color: inherit; }
+.prose ul > li::marker { color: rgba(34, 211, 238, 0.5); }
+.prose a { color: #22d3ee; }
+.prose strong { color: white; }
+.prose code { color: #22d3ee; background: rgba(0,0,0,0.5); }
