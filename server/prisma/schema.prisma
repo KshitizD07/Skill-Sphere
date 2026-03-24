@@ -12,30 +12,31 @@ datasource db {
 // ─────────────────────────────────────────────────────────────────────────────
 
 model User {
-  id        String   @id @default(uuid())
-  email     String   @unique
-  password  String
-  name      String
-  role      UserRole @default(STUDENT)
-  college   String?
+  id       String   @id @default(uuid())
+  email    String   @unique
+  password String
+  name     String
+  role     UserRole @default(STUDENT)
+  college  String?
 
-  headline  String?
-  bio       String?
-  avatar    String?
-  github    String?
-  linkedin  String?
+  headline String?
+  bio      String?
+  avatar   String?
+  github   String?
+  linkedin String?
 
   createdAt DateTime @default(now())
 
   // Relations
-  skills           Skill[]
-  posts            Post[]
-  likes            Like[]
-  comments         Comment[]
-  activityLogs     ActivityLog[]
-  ledSquads        Squad[]          @relation("SquadLeader")
-  applications     SquadApplication[]
-  matchDecisions   MatchDecision[]
+  skills         Skill[]
+  posts          Post[]
+  likes          Like[]
+  comments       Comment[]
+  activityLogs   ActivityLog[]
+  ledSquads      Squad[]            @relation("SquadLeader")
+  applications   SquadApplication[]
+  matchDecisions MatchDecision[]
+  commentLikes   CommentLike[]
 
   @@index([college])
   @@index([role])
@@ -53,9 +54,9 @@ enum UserRole {
 // ─────────────────────────────────────────────────────────────────────────────
 
 model Skill {
-  id              String    @id @default(uuid())
-  userId          String
-  user            User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  id     String @id @default(uuid())
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   name            String
   level           String    @default("Beginner")
@@ -65,7 +66,7 @@ model Skill {
   calculatedScore Int?
   showLevel       Boolean   @default(true)
 
-  createdAt       DateTime  @default(now())
+  createdAt DateTime @default(now())
 
   @@unique([userId, name])
   @@index([userId])
@@ -85,11 +86,11 @@ model JobRole {
 }
 
 model JobRoleSkill {
-  id        String  @id @default(uuid())
-  jobRoleId String
-  jobRole   JobRole @relation(fields: [jobRoleId], references: [id], onDelete: Cascade)
-  skillName String
-  importance String @default("Required")
+  id         String  @id @default(uuid())
+  jobRoleId  String
+  jobRole    JobRole @relation(fields: [jobRoleId], references: [id], onDelete: Cascade)
+  skillName  String
+  importance String  @default("Required")
 
   @@index([jobRoleId])
 }
@@ -99,14 +100,14 @@ model JobRoleSkill {
 // ─────────────────────────────────────────────────────────────────────────────
 
 model Post {
-  id       String    @id @default(uuid())
-  userId   String
-  user     User      @relation(fields: [userId], references: [id], onDelete: Cascade)
-  content  String
-  imageUrl String?
-  createdAt DateTime @default(now())
-  likes    Like[]
-  comments Comment[]
+  id        String    @id @default(uuid())
+  userId    String
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  content   String
+  imageUrl  String?
+  createdAt DateTime  @default(now())
+  likes     Like[]
+  comments  Comment[]
 
   @@index([userId])
   @@index([createdAt(sort: Desc)])
@@ -125,15 +126,32 @@ model Like {
 }
 
 model Comment {
-  id        String   @id @default(uuid())
-  postId    String
-  post      Post     @relation(fields: [postId], references: [id], onDelete: Cascade)
-  userId    String
-  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  content   String
-  createdAt DateTime @default(now())
+  id           String        @id @default(uuid())
+  postId       String
+  post         Post          @relation(fields: [postId], references: [id], onDelete: Cascade)
+  userId       String
+  user         User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  content      String
+  parentId     String?
+  parent       Comment?      @relation("CommentReplies", fields: [parentId], references: [id], onDelete: Cascade)
+  replies      Comment[]     @relation("CommentReplies")
+  commentLikes CommentLike[]
+  createdAt    DateTime      @default(now())
 
   @@index([postId])
+  @@index([parentId])
+}
+
+model CommentLike {
+  id        String   @id @default(uuid())
+  commentId String
+  comment   Comment  @relation(fields: [commentId], references: [id], onDelete: Cascade)
+  userId    String
+  createdAt DateTime @default(now())
+  User      User     @relation(fields: [userId], references: [id])
+
+  @@unique([commentId, userId])
+  @@index([commentId])
 }
 
 model ActivityLog {
@@ -167,9 +185,9 @@ model Squad {
   updatedAt      DateTime    @updatedAt
   expiresAt      DateTime?
 
-  slots          SquadSlot[]
-  applications   SquadApplication[]
-  decisions      MatchDecision[]
+  slots        SquadSlot[]
+  applications SquadApplication[]
+  decisions    MatchDecision[]
 
   @@index([status, createdAt(sort: Desc)])
   @@index([leaderId])
@@ -242,7 +260,7 @@ enum ApplicationStatus {
 // Multiple matching strategies compete — poor ones get demoted, good ones promoted
 model MatchStrategy {
   id             String         @id @default(uuid())
-  name           String         @unique  // e.g. "verified_skills_v1"
+  name           String         @unique // e.g. "verified_skills_v1"
   displayName    String
   description    String
   version        String
@@ -253,16 +271,16 @@ model MatchStrategy {
   consensusWins  Int @default(0)
   soloWins       Int @default(0)
 
-  config         Json?          // strategy-specific params
-  createdAt      DateTime       @default(now())
+  config         Json? // strategy-specific params
+  createdAt      DateTime  @default(now())
   activatedAt    DateTime?
   lastPromotedAt DateTime?
   lastDemotedAt  DateTime?
   deprecatedAt   DateTime?
 
-  decisions    MatchDecision[]   @relation("StrategyDecisions")
-  performance  StrategyPerformance[]
-  promotions   StrategyPromotion[]
+  decisions   MatchDecision[]       @relation("StrategyDecisions")
+  performance StrategyPerformance[]
+  promotions  StrategyPromotion[]
 
   @@index([state])
 }
@@ -281,24 +299,24 @@ enum InfluenceLevel {
 
 // Every matching decision is logged — full audit trail + explainability
 model MatchDecision {
-  id              String   @id @default(uuid())
-  squadId         String
-  squad           Squad    @relation(fields: [squadId], references: [id])
-  slotId          String?
-  timestamp       DateTime @default(now())
+  id        String   @id @default(uuid())
+  squadId   String
+  squad     Squad    @relation(fields: [squadId], references: [id])
+  slotId    String?
+  timestamp DateTime @default(now())
 
-  selectedUserId  String
-  selectedUser    User     @relation(fields: [selectedUserId], references: [id])
+  selectedUserId    String
+  selectedUser      User     @relation(fields: [selectedUserId], references: [id])
   alternativesShown String[]
 
-  wasConsensus    Boolean  @default(false)
-  wasRandom       Boolean  @default(false)
-  consensusCount  Int      @default(0)
-  strategyVotes   Json     // { strategyId: { candidateId, score } }
+  wasConsensus     Boolean @default(false)
+  wasRandom        Boolean @default(false)
+  consensusCount   Int     @default(0)
+  strategyVotes    Json // { strategyId: { candidateId, score } }
   activeStrategies Json
 
-  outcome         MatchOutcome?
-  strategies      MatchStrategy[] @relation("StrategyDecisions")
+  outcome    MatchOutcome?
+  strategies MatchStrategy[] @relation("StrategyDecisions")
 
   @@index([squadId])
   @@index([selectedUserId])
@@ -307,14 +325,14 @@ model MatchDecision {
 
 // What actually happened — the only source of truth for strategy evaluation
 model MatchOutcome {
-  id            String        @id @default(uuid())
-  decisionId    String        @unique
-  decision      MatchDecision @relation(fields: [decisionId], references: [id])
+  id         String        @id @default(uuid())
+  decisionId String        @unique
+  decision   MatchDecision @relation(fields: [decisionId], references: [id])
 
-  accepted      Boolean
-  acceptedAt    DateTime?
-  rejectedAt    DateTime?
-  timeToDecision Int?         // minutes
+  accepted       Boolean
+  acceptedAt     DateTime?
+  rejectedAt     DateTime?
+  timeToDecision Int? // minutes
 
   memberJoinedAt DateTime?
   memberLeftAt   DateTime?
@@ -331,53 +349,53 @@ model MatchOutcome {
 
 // Weekly performance snapshots per strategy
 model StrategyPerformance {
-  id            String         @id @default(uuid())
-  strategyId    String
-  strategy      MatchStrategy  @relation(fields: [strategyId], references: [id])
-  windowStart   DateTime
-  windowEnd     DateTime
-  totalVotes    Int            @default(0)
-  acceptedCount Int            @default(0)
-  rejectedCount Int            @default(0)
-  acceptanceRate Float?
+  id               String        @id @default(uuid())
+  strategyId       String
+  strategy         MatchStrategy @relation(fields: [strategyId], references: [id])
+  windowStart      DateTime
+  windowEnd        DateTime
+  totalVotes       Int           @default(0)
+  acceptedCount    Int           @default(0)
+  rejectedCount    Int           @default(0)
+  acceptanceRate   Float?
   retention30dRate Float?
-  rankInWindow  Int?
-  calculatedAt  DateTime       @default(now())
+  rankInWindow     Int?
+  calculatedAt     DateTime      @default(now())
 
   @@index([strategyId, windowStart])
 }
 
 // Audit log of every strategy state change
 model StrategyPromotion {
-  id           String         @id @default(uuid())
-  strategyId   String
-  strategy     MatchStrategy  @relation(fields: [strategyId], references: [id])
-  fromState    StrategyState
-  toState      StrategyState
+  id            String          @id @default(uuid())
+  strategyId    String
+  strategy      MatchStrategy   @relation(fields: [strategyId], references: [id])
+  fromState     StrategyState
+  toState       StrategyState
   fromInfluence InfluenceLevel?
-  toInfluence  InfluenceLevel?
-  reason       String
-  metrics      Json?
-  triggeredBy  String?        // "SYSTEM" or userId
-  triggeredAt  DateTime       @default(now())
+  toInfluence   InfluenceLevel?
+  reason        String
+  metrics       Json?
+  triggeredBy   String? // "SYSTEM" or userId
+  triggeredAt   DateTime        @default(now())
 
   @@index([strategyId])
 }
 
 // Global system config for antifragile parameters
 model SystemConfig {
-  id                    String   @id @default(uuid())
-  maxActiveStrategies   Int      @default(5)
-  maxShadowStrategies   Int      @default(3)
-  minRandomnessRate     Float    @default(0.10)
-  maxRandomnessRate     Float    @default(0.30)
-  minConsensusStrategies Int     @default(2)
-  influenceDecayDays    Int      @default(30)
-  performanceWindowDays Int      @default(7)
-  promotionWindowCount  Int      @default(3)
-  demotionWindowCount   Int      @default(3)
-  updatedAt             DateTime @updatedAt
-  updatedBy             String?
+  id                     String   @id @default(uuid())
+  maxActiveStrategies    Int      @default(5)
+  maxShadowStrategies    Int      @default(3)
+  minRandomnessRate      Float    @default(0.10)
+  maxRandomnessRate      Float    @default(0.30)
+  minConsensusStrategies Int      @default(2)
+  influenceDecayDays     Int      @default(30)
+  performanceWindowDays  Int      @default(7)
+  promotionWindowCount   Int      @default(3)
+  demotionWindowCount    Int      @default(3)
+  updatedAt              DateTime @updatedAt
+  updatedBy              String?
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -385,12 +403,12 @@ model SystemConfig {
 // ─────────────────────────────────────────────────────────────────────────────
 
 model AllowedEmail {
-  id        String   @id @default(uuid())
-  email     String   @unique
-  addedBy   String?  // who approved this email
-  note      String?  // optional reason / name
+  id        String    @id @default(uuid())
+  email     String    @unique
+  addedBy   String? // who approved this email
+  note      String? // optional reason / name
   usedAt    DateTime? // set when account is created
-  createdAt DateTime @default(now())
+  createdAt DateTime  @default(now())
 
   @@index([email])
 }
