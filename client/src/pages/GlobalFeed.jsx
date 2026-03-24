@@ -1,14 +1,20 @@
 // pages/GlobalFeed.jsx
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import API from '../api';
-import { Search, ArrowLeft, MessageSquare, Heart, User, Building2, Users, Zap } from 'lucide-react';
+import { Search, ArrowLeft, MessageSquare, Heart, User, Building2, Users, Zap, Image as ImageIcon, X } from 'lucide-react';
 
 export default function GlobalFeed() {
   const navigate = useNavigate();
   const [posts, setPosts] = useState([]);
   const [searchQuery, setSearchQuery] = useState('');
   const [searchResults, setSearchResults] = useState([]);
+
+  // ── Task 3: post composer state ──
+  const [newPostContent, setNewPostContent] = useState('');
+  const [newPostImage, setNewPostImage] = useState('');
+  const postImageInputRef = useRef(null);
+
   const currentUser = JSON.parse(localStorage.getItem('user_data') || '{}');
 
   useEffect(() => { loadFeed(); }, []);
@@ -34,6 +40,33 @@ export default function GlobalFeed() {
   const handleLike = async (postId) => {
     try {
       await API.post(`/posts/${postId}/like`, { userId: currentUser.id });
+      loadFeed();
+    } catch (e) { console.error(e); }
+  };
+
+  // ── Task 3: convert selected image to base64 ──
+  const handlePostImageChange = (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      setNewPostImage(reader.result);
+    };
+    reader.readAsDataURL(file);
+  };
+
+  // ── Task 3: submit new post ──
+  const handleCreatePost = async () => {
+    if (!newPostContent.trim()) return;
+    try {
+      await API.post('/posts', {
+        userId: currentUser.id,
+        content: newPostContent,
+        imageUrl: newPostImage || null,
+      });
+      setNewPostContent('');
+      setNewPostImage('');
+      if (postImageInputRef.current) postImageInputRef.current.value = '';
       loadFeed();
     } catch (e) { console.error(e); }
   };
@@ -88,6 +121,56 @@ export default function GlobalFeed() {
             </div>
           )}
         </div>
+
+        {/* ── Task 3: Post composer ── */}
+        {currentUser.id && (
+          <div className="bg-gray-900/50 border border-gray-700 p-4 mb-8">
+            <textarea
+              value={newPostContent}
+              onChange={e => setNewPostContent(e.target.value)}
+              placeholder="Broadcast to the grid..."
+              className="w-full bg-black border border-gray-800 text-white p-3 focus:border-cyan-500 outline-none resize-none h-24 font-mono text-sm"
+            />
+
+            {newPostImage && (
+              <div className="relative mt-2 mb-2 inline-block">
+                <img src={newPostImage} alt="Preview" className="max-h-40 rounded border border-gray-700 object-cover" />
+                <button
+                  onClick={() => {
+                    setNewPostImage('');
+                    if (postImageInputRef.current) postImageInputRef.current.value = '';
+                  }}
+                  className="absolute -top-2 -right-2 p-1 bg-red-600 hover:bg-red-500 text-white rounded-full transition"
+                >
+                  <X size={12} />
+                </button>
+              </div>
+            )}
+
+            <div className="flex gap-2 mt-2">
+              <input
+                ref={postImageInputRef}
+                type="file"
+                accept="image/*"
+                onChange={handlePostImageChange}
+                className="hidden"
+              />
+              <button
+                onClick={() => postImageInputRef.current.click()}
+                className="flex items-center gap-2 px-3 py-2 bg-black border border-gray-700 hover:border-cyan-500 text-gray-500 hover:text-cyan-400 transition text-xs font-mono"
+              >
+                <ImageIcon size={14} /> ATTACH_IMAGE
+              </button>
+              <div className="flex-1" />
+              <button
+                onClick={handleCreatePost}
+                className="bg-cyan-600 hover:bg-cyan-500 text-black font-bold px-6 py-2 font-['Orbitron'] text-sm"
+              >
+                POST
+              </button>
+            </div>
+          </div>
+        )}
 
         <div className="space-y-6">
           {posts.map(post => (

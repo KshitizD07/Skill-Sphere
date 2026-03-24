@@ -1,11 +1,11 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import API from '../../api';
 import {
   User, ArrowLeft, Github, Linkedin, Cpu, MessageSquare,
   Shield, Edit3, Building2, Heart, MessageCircle, Send,
   Image as ImageIcon, Briefcase, Eye, EyeOff, CheckCircle,
-  Clock, ExternalLink
+  Clock, ExternalLink, X
 } from 'lucide-react';
 
 // ─── Recruiter View ────────────────────────────────────────────────────────────
@@ -13,7 +13,6 @@ function RecruiterView({ user }) {
   const verifiedSkills = user.skills?.filter(s => s.isVerified) || [];
   const allSkills = user.skills || [];
 
-  // Determine recency — check if any activity in last 30 days
   const recentActivity = user.activities?.some(a => {
     const diff = Date.now() - new Date(a.createdAt).getTime();
     return diff < 30 * 24 * 60 * 60 * 1000;
@@ -21,7 +20,6 @@ function RecruiterView({ user }) {
 
   return (
     <div className="bg-gray-900/80 border border-yellow-500/50 p-8 relative overflow-hidden">
-      {/* Corner badge */}
       <div className="absolute top-0 right-0 bg-yellow-400 text-black px-3 py-1 text-xs font-bold font-['Orbitron']">
         RECRUITER_VIEW
       </div>
@@ -47,7 +45,6 @@ function RecruiterView({ user }) {
         </div>
       </div>
 
-      {/* Top verified skills */}
       <div className="mb-6">
         <h3 className="text-yellow-400 font-bold font-['Orbitron'] text-sm mb-3 flex items-center gap-2">
           <CheckCircle size={14} /> TOP_VERIFIED_SKILLS
@@ -69,7 +66,6 @@ function RecruiterView({ user }) {
         )}
       </div>
 
-      {/* All skills (unverified) */}
       {allSkills.length > verifiedSkills.length && (
         <div className="mb-6">
           <h3 className="text-gray-500 font-bold font-['Orbitron'] text-xs mb-2">DECLARED_SKILLS</h3>
@@ -83,7 +79,6 @@ function RecruiterView({ user }) {
         </div>
       )}
 
-      {/* Recency signal */}
       <div className="mb-6 p-3 bg-black border border-gray-800 flex items-center gap-3">
         <Clock size={14} className={recentActivity ? 'text-green-400' : 'text-gray-600'} />
         <span className={`text-xs font-mono font-bold ${recentActivity ? 'text-green-400' : 'text-gray-600'}`}>
@@ -91,7 +86,6 @@ function RecruiterView({ user }) {
         </span>
       </div>
 
-      {/* Evidence links */}
       <div>
         <h3 className="text-gray-500 font-bold font-['Orbitron'] text-xs mb-3">EVIDENCE_LINKS</h3>
         <div className="flex flex-wrap gap-3">
@@ -132,8 +126,11 @@ export default function UserProfile() {
 
   const [posts, setPosts] = useState([]);
   const [newPostContent, setNewPostContent] = useState('');
-  const [newPostImage, setNewPostImage] = useState('');
+  const [newPostImage, setNewPostImage] = useState('');   // will hold base64 string
   const [commentInputs, setCommentInputs] = useState({});
+
+  // ── Task 3: ref for hidden file input in post composer ──
+  const postImageInputRef = useRef(null);
 
   const currentUser = JSON.parse(localStorage.getItem('user_data') || '{}');
   const isOwner = currentUser.id === id;
@@ -149,16 +146,29 @@ export default function UserProfile() {
     API.get(`/posts/user/${id}`).then(res => setPosts(res.data || []));
   };
 
+  // ── Task 3: convert selected image file to base64 ──
+  const handlePostImageChange = (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      setNewPostImage(reader.result);
+    };
+    reader.readAsDataURL(file);
+  };
+
   const handleCreatePost = async () => {
     if (!newPostContent.trim()) return;
     try {
       await API.post('/posts', {
         userId: currentUser.id,
         content: newPostContent,
-        imageUrl: newPostImage,
+        imageUrl: newPostImage || null,
       });
       setNewPostContent('');
       setNewPostImage('');
+      // reset file input so same file can be re-selected if needed
+      if (postImageInputRef.current) postImageInputRef.current.value = '';
       fetchPosts();
     } catch { alert('POST_FAILED'); }
   };
@@ -204,7 +214,6 @@ export default function UserProfile() {
           </button>
 
           <div className="flex items-center gap-3">
-            {/* Recruiter View Toggle */}
             <button
               onClick={() => setRecruiterMode(!recruiterMode)}
               className={`flex items-center gap-2 px-4 py-2 border font-bold font-['Orbitron'] text-xs transition ${
@@ -228,7 +237,6 @@ export default function UserProfile() {
           </div>
         </div>
 
-        {/* Recruiter View — full-width, replaces normal layout */}
         {recruiterMode ? (
           <RecruiterView user={user} />
         ) : (
@@ -332,16 +340,39 @@ export default function UserProfile() {
                       placeholder="Update status log..."
                       className="w-full bg-black border border-gray-800 text-white p-3 focus:border-cyan-500 outline-none resize-none h-24 font-mono text-sm"
                     />
-                    <div className="flex gap-2 mt-2">
-                      <div className="flex-1 relative">
-                        <ImageIcon size={14} className="absolute left-3 top-3 text-gray-500" />
-                        <input
-                          value={newPostImage}
-                          onChange={e => setNewPostImage(e.target.value)}
-                          placeholder="Image URL (Optional)"
-                          className="w-full bg-black border border-gray-800 text-cyan-400 pl-8 p-2 text-xs focus:border-cyan-500 outline-none"
-                        />
+
+                    {/* ── Task 3: image preview + remove ── */}
+                    {newPostImage && (
+                      <div className="relative mt-2 mb-2 inline-block">
+                        <img src={newPostImage} alt="Preview" className="max-h-40 rounded border border-gray-700 object-cover" />
+                        <button
+                          onClick={() => {
+                            setNewPostImage('');
+                            if (postImageInputRef.current) postImageInputRef.current.value = '';
+                          }}
+                          className="absolute -top-2 -right-2 p-1 bg-red-600 hover:bg-red-500 text-white rounded-full transition"
+                        >
+                          <X size={12} />
+                        </button>
                       </div>
+                    )}
+
+                    <div className="flex gap-2 mt-2">
+                      {/* ── Task 3: hidden file input + upload button ── */}
+                      <input
+                        ref={postImageInputRef}
+                        type="file"
+                        accept="image/*"
+                        onChange={handlePostImageChange}
+                        className="hidden"
+                      />
+                      <button
+                        onClick={() => postImageInputRef.current.click()}
+                        className="flex items-center gap-2 px-3 py-2 bg-black border border-gray-700 hover:border-cyan-500 text-gray-500 hover:text-cyan-400 transition text-xs font-mono"
+                      >
+                        <ImageIcon size={14} /> ATTACH_IMAGE
+                      </button>
+                      <div className="flex-1" />
                       <button onClick={handleCreatePost} className="bg-cyan-600 hover:bg-cyan-500 text-black font-bold px-6 py-2 font-['Orbitron'] text-sm">
                         POST
                       </button>

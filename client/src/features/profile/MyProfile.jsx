@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
   ArrowLeft, Camera, User, Cpu, Plus, CheckCircle,
@@ -19,6 +19,7 @@ export default function MyProfile() {
   const [showSkillSelector, setShowSkillSelector] = useState(false);
   const [showVerifier, setShowVerifier] = useState(false);
   const [selectedSkillToVerify, setSelectedSkillToVerify] = useState(null);
+  const avatarInputRef = useRef(null);
 
   useEffect(() => { if (storedUser.id) { loadUserData(); loadAllSkills(); } }, []);
 
@@ -35,6 +36,17 @@ export default function MyProfile() {
   const loadAllSkills = async () => {
     const skills = await ProfileAPI.getAllSkills();
     if (Array.isArray(skills)) setAllSkills(skills.filter(s => s && s.name?.trim()));
+  };
+
+  // ── Task 1: Convert selected image file to base64 ──
+  const handleAvatarFileChange = (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      setFormData(prev => ({ ...prev, avatar: reader.result }));
+    };
+    reader.readAsDataURL(file);
   };
 
   const handleSave = async () => {
@@ -65,7 +77,8 @@ export default function MyProfile() {
       <div className="absolute inset-0 bg-[linear-gradient(rgba(0,240,255,0.03)_1px,transparent_1px),linear-gradient(90deg,rgba(0,240,255,0.03)_1px,transparent_1px)] bg-[size:40px_40px] pointer-events-none" />
       <div className="max-w-4xl mx-auto relative z-10">
         <div className="flex items-center gap-4 mb-8">
-          <button onClick={() => navigate('/dashboard')} className="p-2 border border-gray-700 hover:border-cyan-500 text-gray-500 hover:text-cyan-400 transition"><ArrowLeft size={20} /></button>
+          {/* ── Task 2: navigate(-1) goes back to previous page instead of hardcoded /dashboard ── */}
+          <button onClick={() => navigate(-1)} className="p-2 border border-gray-700 hover:border-cyan-500 text-gray-500 hover:text-cyan-400 transition"><ArrowLeft size={20} /></button>
           <h1 className="text-3xl font-black text-white font-['Orbitron'] tracking-widest">EDIT_DOSSIER</h1>
         </div>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
@@ -74,11 +87,30 @@ export default function MyProfile() {
               <div className="w-32 h-32 rounded-full border-2 border-cyan-500/50 overflow-hidden mb-4 bg-black flex items-center justify-center shadow-[0_0_20px_rgba(34,211,238,0.2)]">
                 {formData.avatar ? <img src={formData.avatar} alt="Avatar" className="w-full h-full object-cover" /> : <User size={48} className="text-gray-600" />}
               </div>
-              <p className="text-xs text-cyan-500 font-mono mb-2">IMAGE_SOURCE_URL</p>
-              <div className="relative w-full">
-                <Camera size={14} className="absolute left-3 top-3 text-gray-500" />
-                <input value={formData.avatar} onChange={e => setFormData({...formData,avatar:e.target.value})} placeholder="https://..." className="w-full bg-black border border-gray-700 text-cyan-400 pl-8 p-2 text-xs focus:border-cyan-400 outline-none font-mono" />
-              </div>
+
+              {/* ── Task 1: File upload button replaces URL input ── */}
+              <p className="text-xs text-cyan-500 font-mono mb-2">UPLOAD_AVATAR</p>
+              <input
+                ref={avatarInputRef}
+                type="file"
+                accept="image/*"
+                onChange={handleAvatarFileChange}
+                className="hidden"
+              />
+              <button
+                onClick={() => avatarInputRef.current.click()}
+                className="w-full flex items-center justify-center gap-2 bg-black border border-gray-700 hover:border-cyan-400 text-cyan-400 hover:text-cyan-300 p-2 text-xs font-mono transition"
+              >
+                <Camera size={14} /> CHOOSE_FILE
+              </button>
+              {formData.avatar && (
+                <button
+                  onClick={() => setFormData(prev => ({ ...prev, avatar: '' }))}
+                  className="mt-2 text-xs text-gray-600 hover:text-red-500 font-mono transition"
+                >
+                  REMOVE_IMAGE
+                </button>
+              )}
             </div>
 
             <div className="bg-gray-900/50 border border-gray-800 p-4 relative">
