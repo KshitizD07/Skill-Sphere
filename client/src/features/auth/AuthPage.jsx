@@ -179,7 +179,7 @@ export default function AuthPage({ onLogin }) {
           </div>
         )}
 
-        <form onSubmit={handleOtpSubmit} className="space-y-6">
+        <form onSubmit={handleOtpSubmit} className="space-y-6" autoComplete="off">
           {/* 6-digit OTP boxes */}
           <div className="flex gap-3 justify-center" onPaste={handleOtpPaste}>
             {otp.map((digit, i) => (
@@ -192,6 +192,7 @@ export default function AuthPage({ onLogin }) {
                 value={digit}
                 onChange={e => handleOtpChange(i, e.target.value)}
                 onKeyDown={e => handleOtpKeyDown(i, e)}
+                autoComplete="off"
                 className="w-12 h-14 text-center text-2xl font-black text-cyan-400 bg-black border-2 border-gray-700 focus:border-cyan-400 outline-none font-['Orbitron'] transition-colors"
               />
             ))}
@@ -244,7 +245,7 @@ export default function AuthPage({ onLogin }) {
           </div>
         )}
 
-        <form onSubmit={handleFormSubmit} className="space-y-5 relative z-10">
+        <form onSubmit={handleFormSubmit} className="space-y-5 relative z-10" autoComplete="off">
 
           {!isLogin && (
             <>
@@ -266,14 +267,26 @@ export default function AuthPage({ onLogin }) {
 
               <div className="relative group">
                 <User className="absolute left-3 top-3.5 text-gray-500 group-focus-within:text-cyan-400 transition-colors" size={18} />
-                <input type="text" placeholder="OPERATOR_NAME" required
+                <input 
+                  type="text" 
+                  placeholder="OPERATOR_NAME" 
+                  required
+                  value={formData.name}
+                  autoComplete="off"
+                  name="name"
                   className="w-full bg-black border border-gray-700 text-cyan-400 pl-10 p-3 focus:border-cyan-400 outline-none font-mono"
-                  onChange={e => setFormData({...formData, name: e.target.value})} />
+                  onChange={e => setFormData({...formData, name: e.target.value})} 
+                />
               </div>
 
               <div className="relative group">
                 <Building2 className="absolute left-3 top-3.5 text-gray-500 group-focus-within:text-cyan-400 transition-colors" size={18} />
-                <select required value={formData.college} onChange={e => setFormData({...formData, college: e.target.value})}
+                <select 
+                  required 
+                  value={formData.college} 
+                  autoComplete="off"
+                  name="college"
+                  onChange={e => setFormData({...formData, college: e.target.value})}
                   className="w-full bg-black border border-gray-700 text-cyan-400 pl-10 p-3 focus:border-cyan-500 outline-none font-mono text-sm appearance-none cursor-pointer">
                   <option value="">[ SELECT_INSTITUTION ]</option>
                   {COLLEGES && COLLEGES.map((c,i) => <option key={i} value={c}>{c}</option>)}
@@ -284,16 +297,30 @@ export default function AuthPage({ onLogin }) {
 
           <div className="relative group">
             <Mail className="absolute left-3 top-3.5 text-gray-500 group-focus-within:text-cyan-400 transition-colors" size={18} />
-            <input type="email" placeholder="EMAIL_ADDRESS" required
+            <input 
+              type="email" 
+              placeholder="EMAIL_ADDRESS" 
+              required
+              value={formData.email}
+              autoComplete="off"
+              name="email"
               className="w-full bg-black border border-gray-700 text-cyan-400 pl-10 p-3 focus:border-cyan-400 outline-none font-mono"
-              onChange={e => setFormData({...formData, email: e.target.value})} />
+              onChange={e => setFormData({...formData, email: e.target.value})} 
+            />
           </div>
 
           <div className="relative group">
             <Lock className="absolute left-3 top-3.5 text-gray-500 group-focus-within:text-cyan-400 transition-colors" size={18} />
-            <input type="password" placeholder="ACCESS_CODE" required
+            <input 
+              type="password" 
+              placeholder="ACCESS_CODE" 
+              required
+              value={formData.password}
+              autoComplete="new-password"
+              name="password"
               className="w-full bg-black border border-gray-700 text-cyan-400 pl-10 p-3 focus:border-cyan-400 outline-none font-mono"
-              onChange={e => setFormData({...formData, password: e.target.value})} />
+              onChange={e => setFormData({...formData, password: e.target.value})} 
+            />
           </div>
 
           {!isLogin && formData.password && (
