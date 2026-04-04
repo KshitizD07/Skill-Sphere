@@ -15,10 +15,31 @@ function timeAgo(date) {
   return `${Math.floor(s/86400)}d ago`;
 }
 
+// Fixed Avatar with explicit sizes
 function Avatar({ src, size = 10 }) {
+  const sizeMap = {
+    6: 'w-6 h-6',
+    7: 'w-7 h-7',
+    8: 'w-8 h-8',
+    10: 'w-10 h-10',
+    12: 'w-12 h-12',
+  };
+  
+  const iconSizeMap = {
+    6: 12,
+    7: 14,
+    8: 16,
+    10: 20,
+    12: 24,
+  };
+
   return (
-    <div className={`w-${size} h-${size} rounded-full overflow-hidden border border-gray-700 bg-gray-900 shrink-0`}>
-      {src ? <img src={src} className="w-full h-full object-cover" alt="" /> : <User size={16} className="text-gray-600 w-full h-full p-1" />}
+    <div className={`${sizeMap[size] || 'w-10 h-10'} rounded-full overflow-hidden border border-gray-700 bg-gray-900 shrink-0 flex items-center justify-center`}>
+      {src ? (
+        <img src={src} className="w-full h-full object-cover" alt="" />
+      ) : (
+        <User size={iconSizeMap[size] || 20} className="text-gray-600" />
+      )}
     </div>
   );
 }
@@ -37,7 +58,7 @@ function CommentItem({ comment, postId, postOwnerId, currentUser, onDelete, onLi
   };
 
   return (
-    <div className="space-y-1.5">
+    <div className="space-y-1.5 relative z-20">
       <div className="flex gap-2 group">
         <Avatar src={comment.author?.avatar} size={7} />
         <div className="flex-1 min-w-0">
@@ -123,7 +144,7 @@ function PostCard({ post, currentUser, onDelete, onEdit, onLike, onComment, onLi
   };
 
   return (
-    <div className="bg-black border border-gray-800 hover:border-gray-700 transition group">
+    <div className="bg-black border border-gray-800 hover:border-gray-700 transition group relative z-10">
       <div className="flex items-center justify-between p-4 pb-2">
         <div className="flex items-center gap-3 cursor-pointer" onClick={() => navigate(`/profile/${post.author?.id}`)}>
           <Avatar src={post.author?.avatar} size={10} />
@@ -179,7 +200,7 @@ function PostCard({ post, currentUser, onDelete, onEdit, onLike, onComment, onLi
       </div>
 
       {showComments && (
-        <div className="px-4 pb-4 pt-3 border-t border-gray-900 space-y-3">
+        <div className="px-4 pb-4 pt-3 border-t border-gray-900 space-y-3 relative z-20 bg-black">
           {post.comments?.length === 0 && (
             <p className="text-gray-600 text-xs font-mono italic text-center py-1">No comments yet.</p>
           )}
@@ -320,9 +341,7 @@ export default function GlobalFeed() {
               {searchResults.map(u => (
                 <div key={u.id} onClick={() => { navigate(`/profile/${u.id}`); setSearchResults([]); setSearchQuery(''); }}
                   className="p-3 border-b border-gray-800 hover:bg-cyan-900/20 cursor-pointer flex items-center gap-3 transition">
-                  <div className="w-8 h-8 rounded-full bg-gray-800 overflow-hidden border border-gray-700">
-                    {u.avatar ? <img src={u.avatar} className="w-full h-full object-cover" alt="" /> : <User className="p-1 w-full h-full" />}
-                  </div>
+                  <Avatar src={u.avatar} size={8} />
                   <div>
                     <div className="text-white font-bold text-sm">{u.name}</div>
                     {u.college && <div className="text-[10px] text-purple-400 font-mono flex items-center gap-1"><Building2 size={10} /> {u.college}</div>}
