@@ -77,7 +77,6 @@ export default function MyProfile() {
       <div className="absolute inset-0 bg-[linear-gradient(rgba(0,240,255,0.03)_1px,transparent_1px),linear-gradient(90deg,rgba(0,240,255,0.03)_1px,transparent_1px)] bg-[size:40px_40px] pointer-events-none" />
       <div className="max-w-4xl mx-auto relative z-10">
         <div className="flex items-center gap-4 mb-8">
-          {/* ── Task 2: navigate(-1) goes back to previous page instead of hardcoded /dashboard ── */}
           <button onClick={() => navigate(-1)} className="p-2 border border-gray-700 hover:border-cyan-500 text-gray-500 hover:text-cyan-400 transition"><ArrowLeft size={20} /></button>
           <h1 className="text-3xl font-black text-white font-['Orbitron'] tracking-widest">EDIT_DOSSIER</h1>
         </div>

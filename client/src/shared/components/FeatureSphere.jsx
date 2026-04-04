@@ -1,5 +1,4 @@
 import { useRef, useState, useEffect } from 'react';
-import { motion } from 'framer-motion';
 
 const features = [
   { id: 'analysis', label: 'AI_SCAN',  color: 'border-cyan-400',   glow: 'shadow-[0_0_15px_rgba(34,211,238,0.5)]',  icon: '🧠' },
@@ -11,32 +10,87 @@ const features = [
 
 export default function FeatureSphere({ scrollToSection }) {
   const containerRef = useRef(null);
-  const [rotation, setRotation] = useState({ x: 0, y: 0 });
+  const rotationRef = useRef({ x: 0, y: 0 });
   const [isHovering, setIsHovering] = useState(false);
+  const mouseRafRef = useRef(null);
 
-  // Auto-rotate when not hovering
+  // Animation loop (NO React re-renders)
   useEffect(() => {
-    let raf;
+    let animationFrameId;
+
     const animate = () => {
-      if (!isHovering) {
-        setRotation(prev => ({
-          x: prev.x + 0.005,
-          y: prev.y + 0.008,
-        }));
+      if (containerRef.current) {
+        if (!isHovering) {
+          rotationRef.current.x += 0.003;
+          rotationRef.current.y += 0.005;
+        }
+
+        const nodes = containerRef.current.querySelectorAll('.feature-node');
+
+        nodes.forEach((node, i) => {
+          const baseAngle = (i / features.length) * 2 * Math.PI;
+          const radius = 180;
+
+          const effectiveX = rotationRef.current.y + baseAngle;
+          const effectiveY = rotationRef.current.x;
+
+          const x =
+            radius * Math.cos(effectiveX) -
+            radius * Math.sin(effectiveY) * Math.sin(effectiveX);
+
+          const y =
+            radius * Math.sin(effectiveX) * Math.cos(effectiveY);
+
+          const depth =
+            Math.sin(effectiveX) * Math.cos(effectiveY);
+
+          const scale = 0.75 + 0.35 * ((depth + 1) / 2);
+          const opacity = 0.5 + 0.5 * ((depth + 1) / 2);
+
+          node.style.transform = `translate3d(${x}px, ${y}px, 0) scale(${scale})`;
+          node.style.opacity = opacity;
+        });
       }
-      raf = requestAnimationFrame(animate);
+
+      animationFrameId = requestAnimationFrame(animate);
     };
+
     animate();
-    return () => cancelAnimationFrame(raf);
+
+    return () => cancelAnimationFrame(animationFrameId);
   }, [isHovering]);
 
+  // Throttled mouse movement (NO re-render)
   const handleMouseMove = (e) => {
-    if (!containerRef.current) return;
-    const { width, height, left, top } = containerRef.current.getBoundingClientRect();
-    const x = (e.clientX - left - width / 2);
-    const y = (e.clientY - top - height / 2);
-    setRotation({ x: y * 0.02, y: x * 0.02 });
+    if (!containerRef.current || mouseRafRef.current) return;
+
+    mouseRafRef.current = requestAnimationFrame(() => {
+      if (!containerRef.current) {
+        mouseRafRef.current = null;
+        return;
+      }
+
+      const { width, height, left, top } =
+        containerRef.current.getBoundingClientRect();
+
+      const x = e.clientX - left - width / 2;
+      const y = e.clientY - top - height / 2;
+
+      rotationRef.current = {
+        x: y * 0.005,
+        y: x * 0.005,
+      };
+
+      mouseRafRef.current = null;
+    });
   };
+
+  // Cleanup
+  useEffect(() => {
+    return () => {
+      if (mouseRafRef.current) cancelAnimationFrame(mouseRafRef.current);
+    };
+  }, []);
 
   return (
     <div
@@ -61,34 +115,24 @@ export default function FeatureSphere({ scrollToSection }) {
       </div>
 
       {/* Orbiting feature nodes */}
-      {features.map((feature, i) => {
-        const baseAngle = (i / features.length) * 2 * Math.PI;
-        const radius = 180;
-        const effectiveX = rotation.y + baseAngle;
-        const effectiveY = rotation.x;
-
-        // Simplified 3D projection
-        const x = radius * Math.cos(effectiveX) - radius * Math.sin(effectiveY) * Math.sin(effectiveX);
-        const y = radius * Math.sin(effectiveX) * Math.cos(effectiveY);
-
-        // Depth cue — nodes "behind" the centre are slightly dimmer and smaller
-        const depth = Math.sin(effectiveX) * Math.cos(effectiveY);
-        const scale = 0.75 + 0.35 * ((depth + 1) / 2);
-        const opacity = 0.5 + 0.5 * ((depth + 1) / 2);
-
+      {features.map((feature) => {
         return (
-          <motion.button
+          <button
             key={feature.id}
             onClick={() => scrollToSection(feature.id)}
-            animate={{ x, y, scale, opacity }}
-            transition={{ type: 'spring', stiffness: 80, damping: 18 }}
-            className={`absolute flex flex-col items-center justify-center w-20 h-20 bg-black/80 backdrop-blur-sm border-2 ${feature.color} ${feature.glow} rounded-lg cursor-pointer hover:bg-white/10 transition-colors z-10`}
+            className={`feature-node absolute flex flex-col items-center justify-center w-20 h-20 bg-black/80 backdrop-blur-sm border-2 ${feature.color} ${feature.glow} rounded-lg cursor-pointer hover:bg-white/10 transition-colors z-10`}
+            style={{
+              willChange: 'transform, opacity',
+              transform: 'translateZ(0)',
+            }}
           >
-            <span className="text-2xl mb-1 leading-none">{feature.icon}</span>
+            <span className="text-2xl mb-1 leading-none">
+              {feature.icon}
+            </span>
             <span className="text-[9px] font-bold text-gray-200 tracking-widest font-mono uppercase">
               {feature.label}
             </span>
-          </motion.button>
+          </button>
         );
       })}
     </div>
