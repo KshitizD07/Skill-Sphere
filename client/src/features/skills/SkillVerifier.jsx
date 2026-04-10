@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Shield, Github, Check, X, Lock, Eye } from 'lucide-react';
+import { Shield, Github, Check, X, Eye, Lock } from 'lucide-react';
 import SkillAPI from './skillAPI';
 
 export default function SkillVerifier({ userId, skillName, onVerifyComplete }) {
@@ -17,40 +17,38 @@ export default function SkillVerifier({ userId, skillName, onVerifyComplete }) {
     setStatus('scanning');
     setErrorMsg('');
 
-    // Use central SkillAPI instead of hardcoded fetch URL
     const data = await SkillAPI.verifySkill(userId, skillName, repoUrl, !isStealth);
 
     if (data.error) {
       setStatus('error');
-      setErrorMsg(data.message || 'Verification Failed');
+      setErrorMsg(data.message || 'Verification failed.');
     } else if (data.success) {
       setStatus('success');
       setScore(data.score);
       onVerifyComplete?.(data);
     } else {
       setStatus('error');
-      setErrorMsg('Verification Failed');
+      setErrorMsg('Verification failed.');
     }
 
     setLoading(false);
   };
 
   return (
-    <div className="p-6 bg-gray-900 border border-gray-700 rounded-xl max-w-md w-full shadow-2xl relative overflow-hidden">
-
+    <div className="p-6 bg-[#171f33] border border-[#434655]/30 rounded-md max-w-md w-full shadow-2xl relative overflow-hidden font-['Manrope']">
       {/* Top accent bar */}
-      <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500" />
+      <div className="absolute top-0 left-0 w-full h-0.5 bg-gradient-to-r from-[#0f69dc] via-[#adc6ff] to-[#29a195]" />
 
       {/* Header */}
       <div className="flex items-center gap-3 mb-6">
-        <div className="p-3 bg-gray-800 rounded-lg border border-gray-600">
-          <Shield className="w-6 h-6 text-cyan-400" />
+        <div className="p-2.5 bg-[#adc6ff]/8 rounded-xs border border-[#adc6ff]/15">
+          <Shield className="w-5 h-5 text-[#adc6ff]" />
         </div>
         <div>
-          <h3 className="text-xl font-bold text-white tracking-wide font-['Orbitron']">
-            VERIFY: <span className="text-cyan-400">{skillName}</span>
+          <h3 className="text-base font-extrabold text-[#dae2fd] tracking-tight">
+            Verify: <span className="text-[#adc6ff]">{skillName}</span>
           </h3>
-          <p className="text-xs text-gray-400 font-mono">GITHUB NEURAL LINK</p>
+          <p className="font-['Space_Grotesk'] text-[9px] font-bold tracking-[0.12em] uppercase text-[#8d90a0]">GitHub Repository Verification</p>
         </div>
       </div>
 
@@ -58,15 +56,15 @@ export default function SkillVerifier({ userId, skillName, onVerifyComplete }) {
       {status !== 'success' && (
         <div className="space-y-4">
           <div>
-            <label className="block text-xs font-mono text-gray-500 mb-1">REPOSITORY URL</label>
-            <div className="flex items-center bg-gray-800 rounded-md border border-gray-700 focus-within:border-cyan-500 transition-colors">
-              <Github className="w-5 h-5 text-gray-400 ml-3 shrink-0" />
+            <label className="block font-['Space_Grotesk'] text-[10px] font-bold tracking-[0.12em] uppercase text-[#8d90a0] mb-1.5">Repository URL</label>
+            <div className="flex items-center bg-[#131b2e] rounded-xs border border-[#434655]/40 focus-within:border-[#adc6ff]/50 transition-colors">
+              <Github className="w-4 h-4 text-[#656d84] ml-3 shrink-0" />
               <input
                 type="text"
                 value={repoUrl}
                 onChange={e => setRepoUrl(e.target.value)}
                 placeholder="https://github.com/username/project"
-                className="w-full bg-transparent p-3 text-sm text-white outline-none placeholder-gray-600 font-mono"
+                className="w-full bg-transparent p-3 text-sm text-[#dae2fd] outline-none placeholder-[#434655] font-['Manrope']"
               />
             </div>
           </div>
@@ -74,45 +72,45 @@ export default function SkillVerifier({ userId, skillName, onVerifyComplete }) {
           {/* Stealth toggle */}
           <div
             onClick={() => setIsStealth(!isStealth)}
-            className="flex items-center justify-between p-3 bg-gray-800/50 rounded-lg cursor-pointer hover:bg-gray-800 border border-transparent hover:border-gray-600 transition-all"
+            className="flex items-center justify-between p-3 bg-[#131b2e]/60 rounded-xs cursor-pointer hover:bg-[#222a3d] border border-[#434655]/20 hover:border-[#434655]/40 transition-all"
           >
             <div className="flex items-center gap-2">
               {isStealth
-                ? <Lock className="w-4 h-4 text-amber-400" />
-                : <Eye className="w-4 h-4 text-emerald-400" />}
-              <span className="text-sm font-medium text-gray-300">
-                {isStealth ? 'Stealth Mode — Score Hidden' : 'Public — Score Visible'}
+                ? <Lock className="w-4 h-4 text-[#bec6e0]" />
+                : <Eye className="w-4 h-4 text-[#89f5e7]" />}
+              <span className="text-sm font-medium text-[#c3c6d7]">
+                {isStealth ? 'Private — Score hidden' : 'Public — Score visible'}
               </span>
             </div>
-            <div className={`w-10 h-5 rounded-full relative transition-colors ${isStealth ? 'bg-amber-500/30' : 'bg-emerald-500/30'}`}>
-              <div className={`absolute top-1 w-3 h-3 rounded-full transition-all ${isStealth ? 'left-6 bg-amber-400' : 'left-1 bg-emerald-400'}`} />
+            <div className={`w-9 h-5 rounded-full relative transition-colors ${isStealth ? 'bg-[#656d84]/30' : 'bg-[#29a195]/30'}`}>
+              <div className={`absolute top-1 w-3 h-3 rounded-full transition-all ${isStealth ? 'left-5 bg-[#bec6e0]' : 'left-1 bg-[#89f5e7]'}`} />
             </div>
           </div>
 
           <button
             onClick={handleVerify}
             disabled={loading || !repoUrl}
-            className="w-full py-3 rounded-lg font-bold tracking-wider flex items-center justify-center gap-2 transition-all font-['Orbitron'] disabled:opacity-50 disabled:cursor-not-allowed bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-500 hover:to-blue-500 text-white"
+            className="w-full py-3 rounded-xs font-['Space_Grotesk'] font-bold text-xs tracking-[0.1em] uppercase flex items-center justify-center gap-2 transition-all active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed bg-gradient-to-r from-[#adc6ff] to-[#0f69dc] text-[#002e6a] hover:opacity-90 shadow-lg shadow-[#0f69dc]/20"
           >
-            {loading ? 'SCANNING_CODEBASE...' : 'INITIATE_VERIFICATION'}
+            {loading ? 'Scanning...' : 'Verify Skill'}
           </button>
         </div>
       )}
 
       {/* Success state */}
       {status === 'success' && (
-        <div className="text-center py-6">
-          <div className="w-16 h-16 bg-emerald-500/10 rounded-full flex items-center justify-center mx-auto mb-4 border border-emerald-500/50">
-            <Check className="w-8 h-8 text-emerald-400" />
+        <div className="text-center py-5">
+          <div className="w-14 h-14 bg-[#89f5e7]/8 rounded-full flex items-center justify-center mx-auto mb-4 border border-[#89f5e7]/25">
+            <Check className="w-7 h-7 text-[#89f5e7]" />
           </div>
-          <h4 className="text-lg font-bold text-white mb-2 font-['Orbitron']">VERIFIED</h4>
-          <p className="text-sm text-gray-400 mb-4">
-            Badge awarded for <span className="text-white font-bold">{skillName}</span>
+          <h4 className="text-base font-extrabold text-[#dae2fd] mb-1 tracking-tight">Verified</h4>
+          <p className="text-sm text-[#8d90a0] mb-5">
+            Verification badge awarded for <span className="text-[#dae2fd] font-semibold">{skillName}</span>
           </p>
-          <div className="bg-gray-800 p-4 rounded-lg inline-block border border-gray-700">
-            <p className="text-xs text-gray-500 uppercase font-mono mb-1">System Score</p>
-            <p className="text-3xl font-black text-white font-['Orbitron']">
-              {isStealth ? 'HIDDEN' : <>{score}<span className="text-sm text-gray-500">/10</span></>}
+          <div className="bg-[#131b2e] p-4 rounded-xs inline-block border border-[#434655]/30">
+            <p className="font-['Space_Grotesk'] text-[9px] font-bold tracking-[0.12em] uppercase text-[#8d90a0] mb-1">Verification Score</p>
+            <p className="text-3xl font-extrabold text-[#dae2fd] tracking-tight">
+              {isStealth ? <span className="text-[#656d84] text-xl">Private</span> : <>{score}<span className="text-base text-[#656d84]">/10</span></>}
             </p>
           </div>
         </div>
@@ -120,9 +118,9 @@ export default function SkillVerifier({ userId, skillName, onVerifyComplete }) {
 
       {/* Error state */}
       {status === 'error' && (
-        <div className="mt-4 p-3 bg-red-500/10 border border-red-500/50 rounded-lg flex items-center gap-3">
-          <X className="w-5 h-5 text-red-400 shrink-0" />
-          <p className="text-sm text-red-300 font-mono">{errorMsg}</p>
+        <div className="mt-4 p-3 bg-[#93000a]/10 border border-[#93000a]/30 rounded-xs flex items-center gap-3">
+          <X className="w-4 h-4 text-[#ffb4ab] shrink-0" />
+          <p className="text-sm text-[#ffb4ab]">{errorMsg}</p>
         </div>
       )}
     </div>

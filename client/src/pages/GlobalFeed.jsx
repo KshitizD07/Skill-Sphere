@@ -3,8 +3,8 @@ import { useNavigate } from 'react-router-dom';
 import API from '../api';
 import {
   Search, ArrowLeft, Heart, User, Building2,
-  Users, Zap, Image as ImageIcon, X, MessageCircle,
-  Send, CornerDownRight, Trash2, Pencil
+  Users, Image as ImageIcon, X, MessageCircle,
+  Send, CornerDownRight, Trash2, Pencil, Layers
 } from 'lucide-react';
 
 function timeAgo(date) {
@@ -15,31 +15,12 @@ function timeAgo(date) {
   return `${Math.floor(s/86400)}d ago`;
 }
 
-// Fixed Avatar with explicit sizes
 function Avatar({ src, size = 10 }) {
-  const sizeMap = {
-    6: 'w-6 h-6',
-    7: 'w-7 h-7',
-    8: 'w-8 h-8',
-    10: 'w-10 h-10',
-    12: 'w-12 h-12',
-  };
-  
-  const iconSizeMap = {
-    6: 12,
-    7: 14,
-    8: 16,
-    10: 20,
-    12: 24,
-  };
-
+  const sizeMap = { 6:'w-6 h-6', 7:'w-7 h-7', 8:'w-8 h-8', 10:'w-10 h-10', 12:'w-12 h-12' };
+  const iconSizeMap = { 6:12, 7:14, 8:16, 10:20, 12:24 };
   return (
-    <div className={`${sizeMap[size] || 'w-10 h-10'} rounded-full overflow-hidden border border-gray-700 bg-gray-900 shrink-0 flex items-center justify-center`}>
-      {src ? (
-        <img src={src} className="w-full h-full object-cover" alt="" />
-      ) : (
-        <User size={iconSizeMap[size] || 20} className="text-gray-600" />
-      )}
+    <div className={`${sizeMap[size]||'w-10 h-10'} rounded-full overflow-hidden border border-[#434655]/40 bg-[#222a3d] shrink-0 flex items-center justify-center`}>
+      {src ? <img src={src} className="w-full h-full object-cover" alt="" /> : <User size={iconSizeMap[size]||20} className="text-[#656d84]" />}
     </div>
   );
 }
@@ -62,24 +43,24 @@ function CommentItem({ comment, postId, postOwnerId, currentUser, onDelete, onLi
       <div className="flex gap-2 group">
         <Avatar src={comment.author?.avatar} size={7} />
         <div className="flex-1 min-w-0">
-          <div className="bg-gray-900/60 rounded px-3 py-2">
-            <span className="text-cyan-400 font-bold text-xs mr-2">{comment.author?.name}</span>
-            <span className="text-gray-300 text-xs">{comment.content}</span>
+          <div className="bg-[#222a3d] rounded-xs px-3 py-2">
+            <span className="text-[#adc6ff] font-semibold text-xs mr-2">{comment.author?.name}</span>
+            <span className="text-[#c3c6d7] text-xs">{comment.content}</span>
           </div>
           <div className="flex items-center gap-3 mt-1 px-1">
-            <span className="text-gray-600 text-[10px] font-mono">{timeAgo(comment.createdAt)}</span>
+            <span className="text-[#8d90a0] text-[10px] font-['Space_Grotesk']">{timeAgo(comment.createdAt)}</span>
             <button onClick={() => onLike(postId, comment.id)}
-              className={`flex items-center gap-1 text-[10px] font-mono transition ${liked ? 'text-red-400' : 'text-gray-600 hover:text-red-400'}`}>
+              className={`flex items-center gap-1 text-[10px] transition ${liked ? 'text-[#ffb4ab]' : 'text-[#8d90a0] hover:text-[#ffb4ab]'}`}>
               <Heart size={10} fill={liked ? 'currentColor' : 'none'} />
               {comment.likes?.length > 0 && comment.likes.length}
             </button>
             <button onClick={() => setShowReply(!showReply)}
-              className="text-[10px] font-mono text-gray-600 hover:text-cyan-400 transition flex items-center gap-1">
+              className="text-[10px] text-[#8d90a0] hover:text-[#6bd8cb] transition flex items-center gap-1 font-['Space_Grotesk']">
               <CornerDownRight size={10} /> Reply
             </button>
             {(isAuthor || isPostOwner) && (
               <button onClick={() => onDelete(postId, comment.id)}
-                className="text-[10px] font-mono text-gray-700 hover:text-red-400 transition opacity-0 group-hover:opacity-100">
+                className="text-[10px] text-[#434655] hover:text-[#ffb4ab] transition opacity-0 group-hover:opacity-100">
                 <Trash2 size={10} />
               </button>
             )}
@@ -89,33 +70,33 @@ function CommentItem({ comment, postId, postOwnerId, currentUser, onDelete, onLi
               <input value={replyText} onChange={e => setReplyText(e.target.value)}
                 onKeyDown={e => e.key === 'Enter' && submitReply()}
                 placeholder={`Reply to ${comment.author?.name}...`}
-                className="flex-1 bg-black border border-gray-800 text-gray-300 px-3 py-1.5 text-xs focus:border-cyan-500 outline-none" />
-              <button onClick={submitReply} className="text-cyan-500 hover:text-white px-2"><Send size={14} /></button>
-              <button onClick={() => setShowReply(false)} className="text-gray-600 hover:text-white px-1"><X size={14} /></button>
+                className="flex-1 bg-[#131b2e] border border-[#434655]/40 text-[#c3c6d7] px-3 py-1.5 text-xs focus:border-[#adc6ff]/50 outline-none rounded-xs" />
+              <button onClick={submitReply} className="text-[#adc6ff] hover:text-[#89f5e7] px-2 transition-colors"><Send size={14} /></button>
+              <button onClick={() => setShowReply(false)} className="text-[#8d90a0] hover:text-[#dae2fd] px-1 transition-colors"><X size={14} /></button>
             </div>
           )}
         </div>
       </div>
       {comment.replies?.length > 0 && (
-        <div className="ml-9 space-y-1.5 border-l border-gray-800 pl-3">
+        <div className="ml-9 space-y-1.5 border-l border-[#434655]/30 pl-3">
           {comment.replies.map(reply => (
             <div key={reply.id} className="flex gap-2 group">
               <Avatar src={reply.author?.avatar} size={6} />
               <div className="flex-1 min-w-0">
-                <div className="bg-gray-900/40 rounded px-3 py-1.5">
-                  <span className="text-cyan-400 font-bold text-xs mr-2">{reply.author?.name}</span>
-                  <span className="text-gray-400 text-xs">{reply.content}</span>
+                <div className="bg-[#1a2236] rounded-xs px-3 py-1.5">
+                  <span className="text-[#adc6ff] font-semibold text-xs mr-2">{reply.author?.name}</span>
+                  <span className="text-[#c3c6d7] text-xs">{reply.content}</span>
                 </div>
                 <div className="flex items-center gap-3 mt-0.5 px-1">
-                  <span className="text-gray-600 text-[10px] font-mono">{timeAgo(reply.createdAt)}</span>
+                  <span className="text-[#8d90a0] text-[10px] font-['Space_Grotesk']">{timeAgo(reply.createdAt)}</span>
                   <button onClick={() => onLike(postId, reply.id)}
-                    className={`flex items-center gap-1 text-[10px] transition ${reply.likes?.some(l => l.userId === currentUser.id) ? 'text-red-400' : 'text-gray-600 hover:text-red-400'}`}>
+                    className={`flex items-center gap-1 text-[10px] transition ${reply.likes?.some(l => l.userId === currentUser.id) ? 'text-[#ffb4ab]' : 'text-[#8d90a0] hover:text-[#ffb4ab]'}`}>
                     <Heart size={10} fill={reply.likes?.some(l => l.userId === currentUser.id) ? 'currentColor' : 'none'} />
                     {reply.likes?.length > 0 && reply.likes.length}
                   </button>
                   {(reply.author?.id === currentUser.id || isPostOwner) && (
                     <button onClick={() => onDelete(postId, reply.id)}
-                      className="text-[10px] text-gray-700 hover:text-red-400 opacity-0 group-hover:opacity-100 transition">
+                      className="text-[10px] text-[#434655] hover:text-[#ffb4ab] opacity-0 group-hover:opacity-100 transition">
                       <Trash2 size={10} />
                     </button>
                   )}
@@ -144,24 +125,24 @@ function PostCard({ post, currentUser, onDelete, onEdit, onLike, onComment, onLi
   };
 
   return (
-    <div className="bg-black border border-gray-800 hover:border-gray-700 transition group relative z-10">
-      <div className="flex items-center justify-between p-4 pb-2">
+    <div className="bg-[#171f33] border border-[#434655]/20 rounded-md hover:border-[#6bd8cb]/15 transition-colors group relative">
+      <div className="flex items-center justify-between p-4 pb-3">
         <div className="flex items-center gap-3 cursor-pointer" onClick={() => navigate(`/profile/${post.author?.id}`)}>
           <Avatar src={post.author?.avatar} size={10} />
           <div>
-            <div className="text-white font-bold hover:text-cyan-400 transition text-sm">{post.author?.name}</div>
-            <div className="flex items-center gap-2 text-[10px] font-mono text-gray-500">
+            <div className="text-[#dae2fd] font-semibold hover:text-[#adc6ff] transition-colors text-sm">{post.author?.name}</div>
+            <div className="flex items-center gap-2 text-[10px] font-['Space_Grotesk'] text-[#8d90a0]">
               {post.author?.college && <span>{post.author.college}</span>}
               <span>{timeAgo(post.createdAt)}</span>
             </div>
           </div>
         </div>
         {isOwner && (
-          <div className="flex gap-2 opacity-0 group-hover:opacity-100 transition">
+          <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
             <button onClick={() => { setEditing(!editing); setEditContent(post.content); }}
-              className="p-1.5 text-gray-600 hover:text-cyan-400 transition"><Pencil size={14} /></button>
+              className="p-1.5 text-[#8d90a0] hover:text-[#adc6ff] transition-colors rounded-xs"><Pencil size={14} /></button>
             <button onClick={() => onDelete(post.id)}
-              className="p-1.5 text-gray-600 hover:text-red-400 transition"><Trash2 size={14} /></button>
+              className="p-1.5 text-[#8d90a0] hover:text-[#ffb4ab] transition-colors rounded-xs"><Trash2 size={14} /></button>
           </div>
         )}
       </div>
@@ -170,46 +151,43 @@ function PostCard({ post, currentUser, onDelete, onEdit, onLike, onComment, onLi
         {editing ? (
           <div className="space-y-2">
             <textarea value={editContent} onChange={e => setEditContent(e.target.value)}
-              className="w-full bg-gray-900 border border-gray-700 text-white p-3 text-sm font-mono resize-none focus:border-cyan-500 outline-none"
+              className="w-full bg-[#131b2e] border border-[#434655]/40 text-[#dae2fd] p-3 text-sm font-['Manrope'] resize-none focus:border-[#adc6ff]/50 outline-none rounded-xs"
               rows={3} maxLength={500} />
             <div className="flex gap-2 justify-end">
-              <button onClick={() => setEditing(false)} className="px-3 py-1 text-xs font-mono text-gray-500 hover:text-white">Cancel</button>
+              <button onClick={() => setEditing(false)} className="px-3 py-1 text-xs text-[#8d90a0] hover:text-[#dae2fd] transition-colors">Cancel</button>
               <button onClick={() => { onEdit(post.id, editContent); setEditing(false); }}
-                className="px-3 py-1 text-xs font-mono bg-cyan-600 text-black hover:bg-cyan-400">Save</button>
+                className="px-3 py-1 text-xs bg-[#0f69dc] text-[#dae2fd] hover:bg-[#adc6ff] hover:text-[#002e6a] rounded-xs transition-all font-['Space_Grotesk'] font-bold uppercase tracking-wide">Save</button>
             </div>
           </div>
         ) : (
-          <p className="text-gray-300 text-sm leading-relaxed whitespace-pre-wrap">{post.content}</p>
+          <p className="text-[#c3c6d7] text-sm leading-relaxed whitespace-pre-wrap">{post.content}</p>
         )}
         {post.imageUrl && !editing && (
-          <img src={post.imageUrl} alt="" className="w-full rounded border border-gray-800 mt-3 max-h-96 object-cover" />
+          <img src={post.imageUrl} alt="" className="w-full rounded-xs border border-[#434655]/20 mt-3 max-h-96 object-cover" />
         )}
       </div>
 
-      <div className="flex items-center gap-4 px-4 py-2 border-t border-gray-900">
+      <div className="flex items-center gap-4 px-4 py-2.5 border-t border-[#434655]/15">
         <button onClick={() => onLike(post.id)}
-          className={`flex items-center gap-1.5 text-sm transition ${liked ? 'text-red-400' : 'text-gray-500 hover:text-red-400'}`}>
-          <Heart size={16} fill={liked ? 'currentColor' : 'none'} />
-          <span className="font-mono text-xs">{post.likes?.length || 0}</span>
+          className={`flex items-center gap-1.5 text-sm transition-colors ${liked ? 'text-[#ffb4ab]' : 'text-[#8d90a0] hover:text-[#ffb4ab]'}`}>
+          <Heart size={15} fill={liked ? 'currentColor' : 'none'} />
+          <span className="font-['Space_Grotesk'] text-[10px]">{post.likes?.length || 0}</span>
         </button>
         <button onClick={() => setShowComments(!showComments)}
-          className="flex items-center gap-1.5 text-sm text-gray-500 hover:text-cyan-400 transition">
-          <MessageCircle size={16} />
-          <span className="font-mono text-xs">{post.comments?.length || 0}</span>
+          className="flex items-center gap-1.5 text-sm text-[#8d90a0] hover:text-[#adc6ff] transition-colors">
+          <MessageCircle size={15} />
+          <span className="font-['Space_Grotesk'] text-[10px]">{post.comments?.length || 0}</span>
         </button>
       </div>
 
       {showComments && (
-        <div className="px-4 pb-4 pt-3 border-t border-gray-900 space-y-3 relative z-20 bg-black">
+        <div className="px-4 pb-4 pt-3 border-t border-[#434655]/15 space-y-3">
           {post.comments?.length === 0 && (
-            <p className="text-gray-600 text-xs font-mono italic text-center py-1">No comments yet.</p>
+            <p className="text-[#8d90a0] text-xs italic text-center py-1">No comments yet.</p>
           )}
           {post.comments?.map(c => (
-            <CommentItem key={c.id}
-              comment={c} postId={post.id} postOwnerId={post.author?.id}
-              currentUser={currentUser}
-              onDelete={onDeleteComment} onLike={onLikeComment} onReply={onReply}
-            />
+            <CommentItem key={c.id} comment={c} postId={post.id} postOwnerId={post.author?.id}
+              currentUser={currentUser} onDelete={onDeleteComment} onLike={onLikeComment} onReply={onReply} />
           ))}
           <div className="flex gap-2 pt-1">
             <Avatar src={currentUser.avatar} size={7} />
@@ -217,8 +195,8 @@ function PostCard({ post, currentUser, onDelete, onEdit, onLike, onComment, onLi
               <input value={commentText} onChange={e => setCommentText(e.target.value)}
                 onKeyDown={e => e.key === 'Enter' && !e.shiftKey && submitComment()}
                 placeholder="Write a comment..."
-                className="flex-1 bg-black border border-gray-800 text-gray-300 px-3 py-2 text-xs focus:border-cyan-500 outline-none" />
-              <button onClick={submitComment} className="text-cyan-500 hover:text-white px-2"><Send size={16} /></button>
+                className="flex-1 bg-[#131b2e] border border-[#434655]/40 text-[#c3c6d7] px-3 py-2 text-xs focus:border-[#adc6ff]/50 outline-none rounded-xs placeholder-[#434655]" />
+              <button onClick={submitComment} className="text-[#adc6ff] hover:text-[#89f5e7] px-2 transition-colors"><Send size={15} /></button>
             </div>
           </div>
         </div>
@@ -270,7 +248,6 @@ export default function GlobalFeed() {
     reader.readAsDataURL(file);
   };
 
-  // Optimistic like
   const handleLike = async (postId) => {
     const uid = currentUser.id;
     setPosts(prev => prev.map(p => {
@@ -308,22 +285,22 @@ export default function GlobalFeed() {
   };
 
   return (
-    <div className="min-h-screen bg-[#050505] text-gray-300 font-['Rajdhani'] p-4 md:p-8 relative selection:bg-cyan-500 selection:text-black">
-      <div className="absolute inset-0 bg-[linear-gradient(rgba(0,240,255,0.02)_1px,transparent_1px),linear-gradient(90deg,rgba(0,240,255,0.02)_1px,transparent_1px)] bg-[size:40px_40px] pointer-events-none" />
-
-      <div className="max-w-3xl mx-auto relative z-10">
+    <div className="min-h-screen bg-[#0b1326] text-[#dae2fd] font-['Manrope'] p-4 md:p-8">
+      <div className="max-w-3xl mx-auto">
         {/* Navbar */}
-        <div className="flex items-center justify-between mb-8 sticky top-0 bg-[#050505]/90 backdrop-blur-md p-4 border-b border-gray-800 z-50">
-          <div className="flex items-center gap-4">
-            <button onClick={() => navigate('/dashboard')} className="p-2 hover:text-cyan-400 transition"><ArrowLeft /></button>
-            <h1 className="text-2xl font-black text-white font-['Orbitron'] tracking-widest">THE_GRID</h1>
-          </div>
+        <div className="flex items-center justify-between mb-8 sticky top-0 bg-[#0b1326]/95 backdrop-blur-md p-4 border-b border-[#434655]/25 z-50 -mx-4 px-4">
           <div className="flex items-center gap-3">
-            <button onClick={() => navigate('/nexus')} className="flex items-center gap-2 px-3 py-1 bg-yellow-900/20 border border-yellow-500/50 text-yellow-400 hover:bg-yellow-500 hover:text-black transition font-mono text-xs font-bold">
-              <Zap size={14} /> NEXUS
+            <button onClick={() => navigate('/dashboard')} className="p-2 hover:text-[#adc6ff] transition-colors text-[#8d90a0]"><ArrowLeft size={18} /></button>
+            <h1 className="text-xl font-bold text-[#dae2fd] tracking-tight">Community Feed</h1>
+          </div>
+          <div className="flex items-center gap-2">
+            <button onClick={() => navigate('/nexus')}
+              className="flex items-center gap-1.5 px-3 py-1.5 bg-[#adc6ff]/8 border border-[#adc6ff]/20 text-[#adc6ff] hover:bg-[#adc6ff] hover:text-[#002e6a] transition-all rounded-xs font-['Space_Grotesk'] text-[10px] font-bold uppercase tracking-[0.1em]">
+              <Layers size={12} /> Teams
             </button>
-            <button onClick={() => navigate('/network')} className="flex items-center gap-2 px-3 py-1 bg-purple-900/20 border border-purple-500/50 text-purple-400 hover:bg-purple-500 hover:text-white transition font-mono text-xs font-bold">
-              <Users size={14} /> UPLINK
+            <button onClick={() => navigate('/network')}
+              className="flex items-center gap-1.5 px-3 py-1.5 bg-[#6bd8cb]/8 border border-[#6bd8cb]/20 text-[#6bd8cb] hover:bg-[#29a195] hover:text-[#003732] transition-all rounded-xs font-['Space_Grotesk'] text-[10px] font-bold uppercase tracking-[0.1em]">
+              <Users size={12} /> Network
             </button>
           </div>
         </div>
@@ -331,20 +308,20 @@ export default function GlobalFeed() {
         {/* Search */}
         <div className="mb-6 relative">
           <div className="relative group">
-            <Search className="absolute left-4 top-4 text-gray-500 group-focus-within:text-cyan-400" />
+            <Search className="absolute left-4 top-3.5 text-[#656d84] group-focus-within:text-[#adc6ff] transition-colors" size={16} />
             <input value={searchQuery} onChange={handleSearch}
-              placeholder="SEARCH_NETRUNNERS_OR_COLLEGES..."
-              className="w-full bg-gray-900/50 border border-gray-700 p-4 pl-12 text-white outline-none focus:border-cyan-500 font-mono transition-all" />
+              placeholder="Search members or institutions..."
+              className="w-full bg-[#171f33] border border-[#434655]/30 rounded-xs p-3 pl-11 text-[#dae2fd] outline-none focus:border-[#adc6ff]/50 font-['Manrope'] text-sm transition-colors placeholder-[#434655]" />
           </div>
           {searchResults.length > 0 && (
-            <div className="absolute top-full left-0 w-full bg-black border border-cyan-500 z-50 mt-2 shadow-2xl">
+            <div className="absolute top-full left-0 w-full bg-[#171f33] border border-[#434655]/40 rounded-xs z-50 mt-1 shadow-2xl">
               {searchResults.map(u => (
                 <div key={u.id} onClick={() => { navigate(`/profile/${u.id}`); setSearchResults([]); setSearchQuery(''); }}
-                  className="p-3 border-b border-gray-800 hover:bg-cyan-900/20 cursor-pointer flex items-center gap-3 transition">
+                  className="p-3 border-b border-[#434655]/20 hover:bg-[#222a3d] cursor-pointer flex items-center gap-3 transition-colors">
                   <Avatar src={u.avatar} size={8} />
                   <div>
-                    <div className="text-white font-bold text-sm">{u.name}</div>
-                    {u.college && <div className="text-[10px] text-purple-400 font-mono flex items-center gap-1"><Building2 size={10} /> {u.college}</div>}
+                    <div className="text-[#dae2fd] font-semibold text-sm">{u.name}</div>
+                    {u.college && <div className="text-[10px] text-[#6bd8cb] font-['Space_Grotesk'] flex items-center gap-1"><Building2 size={10} /> {u.college}</div>}
                   </div>
                 </div>
               ))}
@@ -354,32 +331,32 @@ export default function GlobalFeed() {
 
         {/* Composer */}
         {currentUser.id && (
-          <div className="bg-gray-900/50 border border-gray-700 p-4 mb-6">
+          <div className="bg-[#171f33] border border-[#434655]/20 rounded-md p-4 mb-6">
             <textarea value={newPostContent}
               onChange={e => { setNewPostContent(e.target.value); setCharCount(e.target.value.length); }}
-              placeholder="Broadcast to the grid..."
+              placeholder="Share an update..."
               maxLength={500}
-              className="w-full bg-black border border-gray-800 text-white p-3 focus:border-cyan-500 outline-none resize-none h-24 font-mono text-sm" />
-            <div className="flex items-center justify-between mt-1 mb-2">
-              <span className={`text-[10px] font-mono ${charCount > 450 ? 'text-yellow-400' : 'text-gray-600'}`}>{charCount}/500</span>
+              className="w-full bg-[#131b2e] border border-[#434655]/30 text-[#dae2fd] p-3 focus:border-[#adc6ff]/50 outline-none resize-none h-24 font-['Manrope'] text-sm rounded-xs placeholder-[#434655] transition-colors" />
+            <div className="flex items-center justify-between mt-2 mb-2.5">
+              <span className={`font-['Space_Grotesk'] text-[10px] ${charCount > 450 ? 'text-[#ffb4ab]' : 'text-[#434655]'}`}>{charCount}/500</span>
             </div>
             {newPostImage && (
               <div className="relative mb-3 inline-block">
-                <img src={newPostImage} alt="" className="max-h-40 rounded border border-gray-700 object-cover" />
+                <img src={newPostImage} alt="" className="max-h-40 rounded-xs border border-[#434655]/30 object-cover" />
                 <button onClick={() => { setNewPostImage(''); if (postImageRef.current) postImageRef.current.value = ''; }}
-                  className="absolute -top-2 -right-2 p-1 bg-red-600 hover:bg-red-500 text-white rounded-full"><X size={12} /></button>
+                  className="absolute -top-2 -right-2 p-1 bg-[#93000a] hover:bg-[#ffb4ab] text-white hover:text-[#002e6a] rounded-full transition-colors"><X size={12} /></button>
               </div>
             )}
             <div className="flex gap-2">
               <input ref={postImageRef} type="file" accept="image/*" onChange={handleImageChange} className="hidden" />
               <button onClick={() => postImageRef.current.click()}
-                className="flex items-center gap-2 px-3 py-2 bg-black border border-gray-700 hover:border-cyan-500 text-gray-500 hover:text-cyan-400 transition text-xs font-mono">
-                <ImageIcon size={14} /> ATTACH_IMAGE
+                className="flex items-center gap-2 px-3 py-2 bg-[#131b2e] border border-[#434655]/30 hover:border-[#adc6ff]/40 text-[#8d90a0] hover:text-[#adc6ff] transition-all text-xs font-['Space_Grotesk'] font-medium rounded-xs uppercase tracking-wide">
+                <ImageIcon size={13} /> Attach Image
               </button>
               <div className="flex-1" />
               <button onClick={handleCreatePost} disabled={!newPostContent.trim()}
-                className="bg-cyan-600 hover:bg-cyan-500 text-black font-bold px-6 py-2 font-['Orbitron'] text-sm disabled:opacity-40">
-                POST
+                className="bg-[#0f69dc] hover:bg-[#adc6ff] hover:text-[#002e6a] text-[#dae2fd] font-['Space_Grotesk'] font-bold px-6 py-2 rounded-xs text-xs uppercase tracking-[0.1em] disabled:opacity-40 transition-all">
+                Post
               </button>
             </div>
           </div>
@@ -388,12 +365,11 @@ export default function GlobalFeed() {
         {/* Feed */}
         <div className="space-y-4">
           {posts.length === 0 ? (
-            <div className="text-center py-20 border border-dashed border-gray-800">
-              <p className="text-gray-600 font-mono text-sm">NO_POSTS_YET — BE_FIRST</p>
+            <div className="text-center py-20 border border-dashed border-[#434655]/30 rounded-md">
+              <p className="text-[#8d90a0] font-['Space_Grotesk'] text-[10px] uppercase tracking-[0.12em]">No posts yet. Be the first to share.</p>
             </div>
           ) : posts.map(post => (
-            <PostCard key={post.id}
-              post={post} currentUser={currentUser} navigate={navigate}
+            <PostCard key={post.id} post={post} currentUser={currentUser} navigate={navigate}
               onDelete={handleDeletePost} onEdit={handleEditPost}
               onLike={handleLike} onComment={handleComment}
               onLikeComment={handleLikeComment} onDeleteComment={handleDeleteComment}

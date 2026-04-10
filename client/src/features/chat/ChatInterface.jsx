@@ -1,7 +1,7 @@
 import { useEffect, useState, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import API from '../../api';
-import { Send, ArrowLeft, Terminal } from 'lucide-react';
+import { Send, ArrowLeft, MessageSquare, User } from 'lucide-react';
 
 export default function ChatInterface() {
   const { id } = useParams();
@@ -11,8 +11,8 @@ export default function ChatInterface() {
   const [mentor, setMentor] = useState(null);
   const [msg, setMsg] = useState('');
   const [history, setHistory] = useState([
-    { sender: 'system', text: 'ENCRYPTED_CHANNEL_ESTABLISHED...' },
-    { sender: 'system', text: 'WAITING_FOR_PEER...' },
+    { sender: 'system', text: 'Session started.' },
+    { sender: 'system', text: 'Waiting for response...' },
   ]);
   const bottomRef = useRef(null);
 
@@ -22,7 +22,7 @@ export default function ChatInterface() {
       setTimeout(() => {
         setHistory(h => [...h, {
           sender: 'them',
-          text: `[${res.data.name}] has joined the session.`
+          text: `${res.data.name} has joined the session.`
         }]);
       }, 1000);
     });
@@ -46,39 +46,46 @@ export default function ChatInterface() {
     }, 2000);
   };
 
-  if (!mentor) return <div className="bg-black min-h-screen" />;
+  if (!mentor) return <div className="bg-[#0b1326] min-h-screen" />;
 
   return (
-    <div className="h-screen bg-black flex flex-col font-mono text-sm relative">
+    <div className="h-screen bg-[#0b1326] flex flex-col font-['Manrope'] text-sm">
 
       {/* Header */}
-      <div className="bg-gray-900 border-b border-green-500/30 p-4 flex items-center gap-4 shrink-0">
-        <button onClick={() => navigate(-1)} className="text-green-500 hover:text-white transition">
-          <ArrowLeft />
+      <div className="bg-[#131b2e] border-b border-[#434655]/30 p-4 flex items-center gap-4 shrink-0">
+        <button onClick={() => navigate(-1)} className="text-[#8d90a0] hover:text-[#adc6ff] transition-colors p-1">
+          <ArrowLeft size={18} />
         </button>
+        <div className="w-9 h-9 rounded-full border border-[#434655]/40 overflow-hidden bg-[#222a3d] flex items-center justify-center">
+          {mentor.avatar
+            ? <img src={mentor.avatar} className="w-full h-full object-cover" alt="" />
+            : <User size={16} className="text-[#656d84]" />}
+        </div>
         <div>
-          <div className="text-green-500 font-bold flex items-center gap-2">
-            <Terminal size={16} /> UPLINK: {mentor.name.toUpperCase()}
+          <div className="text-[#dae2fd] font-semibold flex items-center gap-2">
+            <MessageSquare size={14} className="text-[#adc6ff]" />
+            {mentor.name}
           </div>
-          <div className="text-xs text-green-500/50">
-            ID: {mentor.id.split('-')[0]} /// SECURE
+          <div className="flex items-center gap-1.5 mt-0.5">
+            <span className="w-1.5 h-1.5 rounded-full bg-[#89f5e7] animate-pulse" />
+            <span className="font-['Space_Grotesk'] text-[9px] font-bold tracking-[0.1em] uppercase text-[#8d90a0]">Active session</span>
           </div>
         </div>
-        <div className="ml-auto text-xs text-green-500/40 font-mono">
-          PEER: {currentUser.name?.toUpperCase()}
+        <div className="ml-auto">
+          <span className="font-['Space_Grotesk'] text-[10px] text-[#656d84] uppercase tracking-wide">{currentUser.name}</span>
         </div>
       </div>
 
       {/* Chat area */}
-      <div className="flex-1 overflow-y-auto p-4 space-y-4 bg-[#0a0a0a]">
+      <div className="flex-1 overflow-y-auto p-6 space-y-4 bg-[#0f1829]">
         {history.map((h, i) => (
           <div key={i} className={`flex ${h.sender === 'me' ? 'justify-end' : 'justify-start'}`}>
-            <div className={`max-w-[80%] p-3 border text-sm ${
+            <div className={`max-w-[75%] px-4 py-2.5 rounded-sm text-sm leading-relaxed ${
               h.sender === 'system'
-                ? 'w-full text-center border-transparent text-gray-600 italic text-xs'
+                ? 'w-full text-center text-[#434655] text-xs italic py-1 px-0'
                 : h.sender === 'me'
-                  ? 'bg-green-900/20 border-green-500/50 text-green-100'
-                  : 'bg-gray-900 border-gray-700 text-gray-300'
+                  ? 'bg-[#0f69dc]/20 border border-[#adc6ff]/20 text-[#dae2fd]'
+                  : 'bg-[#171f33] border border-[#434655]/25 text-[#c3c6d7]'
             }`}>
               {h.text}
             </div>
@@ -88,19 +95,19 @@ export default function ChatInterface() {
       </div>
 
       {/* Input */}
-      <form onSubmit={send} className="p-4 bg-gray-900 border-t border-green-500/30 flex gap-2 shrink-0">
+      <form onSubmit={send} className="p-4 bg-[#131b2e] border-t border-[#434655]/30 flex gap-3 shrink-0">
         <input
           value={msg}
           onChange={e => setMsg(e.target.value)}
-          className="flex-1 bg-black border border-gray-700 text-green-400 p-3 focus:outline-none focus:border-green-500 font-mono"
-          placeholder="ENTER_MESSAGE_SEQUENCE..."
+          className="flex-1 bg-[#0b1326] border border-[#434655]/40 text-[#dae2fd] p-3 rounded-xs focus:outline-none focus:border-[#adc6ff]/60 font-['Manrope'] text-sm placeholder-[#434655] transition-colors"
+          placeholder="Type a message..."
           autoFocus
         />
         <button
           type="submit"
-          className="bg-green-600 text-black px-6 hover:bg-green-500 font-bold transition"
+          className="bg-[#0f69dc] hover:bg-[#adc6ff] hover:text-[#002e6a] text-[#dae2fd] px-5 rounded-xs transition-all flex items-center gap-2 font-['Space_Grotesk'] font-bold text-[10px] uppercase tracking-wide active:scale-95"
         >
-          <Send size={20} />
+          <Send size={15} />
         </button>
       </form>
     </div>

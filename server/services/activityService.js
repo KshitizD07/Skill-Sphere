@@ -11,7 +11,8 @@ async function getUserActivity(userId, limit = 20) {
 
 async function logActivity(userId, action, details) {
   return prisma.activityLog.create({
-    data: { userId, action, details },
+    data: { userId, action, 
+      details:details ? JSON.stringify(details) : null, },
   });
 }
 

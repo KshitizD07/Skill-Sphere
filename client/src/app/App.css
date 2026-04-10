@@ -1,28 +1,92 @@
-@import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Rajdhani:wght@400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Manrope:wght@400;600;700;800&family=Space+Grotesk:wght@300;500;700&display=swap');
 
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
-/* ── Scrollbar ── */
-.custom-scrollbar::-webkit-scrollbar { width: 4px; }
-.custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
-.custom-scrollbar::-webkit-scrollbar-thumb { background: rgba(34, 211, 238, 0.3); border-radius: 2px; }
-.custom-scrollbar::-webkit-scrollbar-thumb:hover { background: rgba(34, 211, 238, 0.6); }
+/* ── Base ── */
+*, *::before, *::after { box-sizing: border-box; }
 
-/* Global slim scrollbar */
-* { scrollbar-width: thin; scrollbar-color: rgba(34, 211, 238, 0.3) transparent; }
+html, body {
+  background-color: #0b1326;
+  color: #dae2fd;
+  font-family: 'Manrope', sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+::selection { background-color: rgba(173, 198, 255, 0.25); color: #dae2fd; }
+
+/* ── Global slim scrollbar ── */
+* { scrollbar-width: thin; scrollbar-color: rgba(173, 198, 255, 0.2) transparent; }
+*::-webkit-scrollbar { width: 4px; height: 4px; }
+*::-webkit-scrollbar-track { background: transparent; }
+*::-webkit-scrollbar-thumb { background: rgba(173, 198, 255, 0.2); border-radius: 2px; }
+*::-webkit-scrollbar-thumb:hover { background: rgba(173, 198, 255, 0.4); }
+
+/* ── UI Label utility ── */
+.label-ui {
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  color: #8d90a0;
+}
 
 /* ── Animations ── */
 @keyframes fade-in {
-  from { opacity: 0; transform: translateY(8px); }
+  from { opacity: 0; transform: translateY(6px); }
   to   { opacity: 1; transform: translateY(0); }
 }
-.animate-fade-in { animation: fade-in 0.3s ease forwards; }
+.animate-fade-in { animation: fade-in 0.25s ease forwards; }
+
+@keyframes shimmer {
+  0%   { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+.animate-shimmer {
+  background: linear-gradient(90deg, #171f33 25%, #222a3d 50%, #171f33 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.5s infinite;
+}
+
+/* ── Glass panel ── */
+.glass {
+  background: rgba(45, 52, 73, 0.6);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+}
+
+/* ── Progress bar ── */
+.progress-track { background: #2d3449; border-radius: 9999px; height: 4px; }
+.progress-fill  { background: #adc6ff; border-radius: 9999px; height: 4px; transition: width 0.4s ease; }
 
 /* ── Prose override for roadmap markdown ── */
-.prose h1, .prose h2, .prose h3 { color: inherit; }
-.prose ul > li::marker { color: rgba(34, 211, 238, 0.5); }
-.prose a { color: #22d3ee; }
-.prose strong { color: white; }
-.prose code { color: #22d3ee; background: rgba(0,0,0,0.5); }
+.prose h1 { color: #adc6ff; font-family: 'Manrope', sans-serif; font-weight: 800; letter-spacing: -0.03em; }
+.prose h2 { color: #89f5e7; font-family: 'Space Grotesk', sans-serif; }
+.prose h3 { color: #bec6e0; }
+.prose p  { color: #c3c6d7; line-height: 1.7; }
+.prose ul > li::marker { color: rgba(173, 198, 255, 0.4); }
+.prose a  { color: #adc6ff; text-decoration: underline; }
+.prose strong { color: #dae2fd; font-weight: 700; }
+.prose code {
+  color: #89f5e7;
+  background: rgba(35, 45, 65, 0.8);
+  padding: 2px 6px;
+  border-radius: 3px;
+  font-size: 0.875em;
+}
+.prose pre code { background: transparent; padding: 0; }
+.prose pre {
+  background: #131b2e;
+  border: 1px solid #434655;
+  border-radius: 6px;
+  padding: 1rem 1.25rem;
+}
+.prose blockquote {
+  border-left: 3px solid #adc6ff;
+  padding-left: 1rem;
+  color: #bec6e0;
+  font-style: italic;
+}

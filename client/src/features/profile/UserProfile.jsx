@@ -17,10 +17,41 @@ function timeAgo(date) {
   return `${Math.floor(s/86400)}d ago`;
 }
 
+// Fixed Avatar with explicit sizes instead of dynamic Tailwind classes
 function Avatar({ src, name, size = 10 }) {
+  const sizeMap = {
+    6: 'w-6 h-6',
+    7: 'w-7 h-7',
+    8: 'w-8 h-8',
+    10: 'w-10 h-10',
+    12: 'w-12 h-12',
+    16: 'w-16 h-16',
+    20: 'w-20 h-20',
+    24: 'w-24 h-24',
+    32: 'w-32 h-32',
+    40: 'w-40 h-40'
+  };
+  
+  const iconSizeMap = {
+    6: 12,
+    7: 14,
+    8: 16,
+    10: 20,
+    12: 24,
+    16: 32,
+    20: 40,
+    24: 48,
+    32: 64,
+    40: 80
+  };
+
   return (
-    <div className={`w-${size} h-${size} rounded-full overflow-hidden border border-gray-700 bg-gray-900 shrink-0 flex items-center justify-center`}>
-      {src ? <img src={src} className="w-full h-full object-cover" alt="" /> : <User size={size * 2} className="text-gray-600" />}
+    <div className={`${sizeMap[size] || 'w-10 h-10'} rounded-full overflow-hidden border border-gray-700 bg-gray-900 shrink-0 flex items-center justify-center`}>
+      {src ? (
+        <img src={src} className="w-full h-full object-cover" alt={name || ''} />
+      ) : (
+        <User size={iconSizeMap[size] || 20} className="text-gray-600" />
+      )}
     </div>
   );
 }
@@ -114,7 +145,7 @@ function CommentItem({ comment, postId, postOwnerId, currentUser, onDelete, onLi
   };
 
   return (
-    <div className="space-y-2">
+    <div className="space-y-2 relative z-20">
       <div className="flex gap-2 group">
         <Avatar src={comment.author?.avatar} name={comment.author?.name} size={7} />
         <div className="flex-1 min-w-0">
@@ -212,7 +243,7 @@ function PostCard({ post, currentUser, isOwner, onDelete, onLike, onComment, onL
   const liked = post.likes?.some(l => l.userId === currentUser.id);
 
   return (
-    <div className="bg-black border border-gray-800 hover:border-gray-700 transition">
+    <div className="bg-black border border-gray-800 hover:border-gray-700 transition relative z-10">
       {/* Header */}
       <div className="flex items-center justify-between p-4 pb-2">
         <div className="flex items-center gap-3">
@@ -270,9 +301,9 @@ function PostCard({ post, currentUser, isOwner, onDelete, onLike, onComment, onL
         </button>
       </div>
 
-      {/* Comments section */}
+      {/* Comments section - CRITICAL: z-20 ensures it renders above everything */}
       {showComments && (
-        <div className="px-4 pb-4 space-y-3 border-t border-gray-900 pt-3">
+        <div className="px-4 pb-4 space-y-3 border-t border-gray-900 pt-3 relative z-20 bg-black">
           {post.comments?.length === 0 && (
             <p className="text-gray-600 text-xs font-mono italic text-center py-2">No comments yet. Be first.</p>
           )}
@@ -417,7 +448,8 @@ export default function UserProfile() {
 
         {recruiterMode ? <RecruiterView user={user} /> : (
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
-            <div className="lg:col-span-4 space-y-6">
+            {/* Left sidebar - profile card - z-0 to stay behind posts */}
+            <div className="lg:col-span-4 space-y-6 relative z-0">
               <div className="bg-gray-900/50 border border-cyan-500/30 p-6 flex flex-col items-center text-center relative">
                 <div className="w-40 h-40 rounded-full border-4 border-black outline outline-2 outline-cyan-500 overflow-hidden mb-6 bg-black flex items-center justify-center shadow-[0_0_30px_rgba(34,211,238,0.2)]">
                   {user.avatar ? <img src={user.avatar} alt="" className="w-full h-full object-cover" /> : <User size={64} className="text-gray-600" />}
@@ -459,7 +491,8 @@ export default function UserProfile() {
               </div>
             </div>
 
-            <div className="lg:col-span-8 space-y-6">
+            {/* Right content - posts feed - z-10 to render above profile */}
+            <div className="lg:col-span-8 space-y-6 relative z-10">
               <div className="bg-gray-900/50 border border-gray-800 p-6">
                 <h3 className="text-gray-500 font-mono text-xs mb-4 flex items-center gap-2"><Shield size={14} className="text-cyan-500" /> BIO_DATA_LOG</h3>
                 <p className="text-lg text-gray-300 leading-relaxed border-l-2 border-cyan-500/20 pl-4">{user.bio || 'No data.'}</p>

@@ -1,7 +1,7 @@
 import { useEffect, useState, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
-  ArrowLeft, Camera, User, Cpu, Plus, CheckCircle,
+  ArrowLeft, Camera, User, Plus, CheckCircle,
   X, Shield, Github, Linkedin, Save, Building2
 } from 'lucide-react';
 import ProfileAPI from './profileAPI';
@@ -38,14 +38,11 @@ export default function MyProfile() {
     if (Array.isArray(skills)) setAllSkills(skills.filter(s => s && s.name?.trim()));
   };
 
-  // ── Task 1: Convert selected image file to base64 ──
   const handleAvatarFileChange = (e) => {
     const file = e.target.files[0];
     if (!file) return;
     const reader = new FileReader();
-    reader.onloadend = () => {
-      setFormData(prev => ({ ...prev, avatar: reader.result }));
-    };
+    reader.onloadend = () => setFormData(prev => ({ ...prev, avatar: reader.result }));
     reader.readAsDataURL(file);
   };
 
@@ -60,8 +57,8 @@ export default function MyProfile() {
       await ProfileAPI.updateProfile(cleanedForm);
       await ProfileAPI.saveSkills(mySkillNames);
       localStorage.setItem('user_data', JSON.stringify({ ...storedUser, ...formData }));
-      alert('IDENTITY_RECORD_UPDATED');
-    } catch (e) { console.error(e); alert('UPDATE_FAILED'); }
+      alert('Profile updated successfully.');
+    } catch (e) { console.error(e); alert('Failed to save profile.'); }
     setLoading(false);
   };
 
@@ -70,58 +67,61 @@ export default function MyProfile() {
     setShowSkillSelector(false);
   };
 
-  if (!storedUser.id) return <div className="p-10 text-white bg-black h-screen font-mono">ACCESS_DENIED.</div>;
+  const labelBase = "block font-['Space_Grotesk'] text-[10px] font-bold tracking-[0.12em] uppercase text-[#8d90a0] mb-1.5";
+  const inputBase = "w-full bg-[#131b2e] border border-[#434655]/40 text-[#dae2fd] p-3 rounded-xs focus:border-[#adc6ff]/60 outline-none font-['Manrope'] text-sm transition-colors placeholder-[#434655]";
+
+  if (!storedUser.id) return (
+    <div className="p-10 text-[#dae2fd] bg-[#0b1326] h-screen font-['Manrope'] flex items-center justify-center">
+      <p className="text-[#8d90a0]">Please log in to view your profile.</p>
+    </div>
+  );
 
   return (
-    <div className="min-h-screen bg-[#050505] text-gray-300 font-['Rajdhani'] p-4 md:p-8 relative selection:bg-cyan-500 selection:text-black">
-      <div className="absolute inset-0 bg-[linear-gradient(rgba(0,240,255,0.03)_1px,transparent_1px),linear-gradient(90deg,rgba(0,240,255,0.03)_1px,transparent_1px)] bg-[size:40px_40px] pointer-events-none" />
-      <div className="max-w-4xl mx-auto relative z-10">
+    <div className="min-h-screen bg-[#0b1326] text-[#dae2fd] font-['Manrope'] p-4 md:p-8">
+      <div className="max-w-4xl mx-auto">
         <div className="flex items-center gap-4 mb-8">
-          <button onClick={() => navigate(-1)} className="p-2 border border-gray-700 hover:border-cyan-500 text-gray-500 hover:text-cyan-400 transition"><ArrowLeft size={20} /></button>
-          <h1 className="text-3xl font-black text-white font-['Orbitron'] tracking-widest">EDIT_DOSSIER</h1>
+          <button onClick={() => navigate(-1)} className="p-2 border border-[#434655]/40 rounded-xs hover:border-[#adc6ff]/40 text-[#8d90a0] hover:text-[#adc6ff] transition-all">
+            <ArrowLeft size={18} />
+          </button>
+          <h1 className="text-2xl font-extrabold text-[#dae2fd] tracking-tight">Edit Profile</h1>
         </div>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-          <div className="md:col-span-1 space-y-6">
-            <div className="bg-gray-900/50 border border-gray-800 p-6 flex flex-col items-center text-center">
-              <div className="w-32 h-32 rounded-full border-2 border-cyan-500/50 overflow-hidden mb-4 bg-black flex items-center justify-center shadow-[0_0_20px_rgba(34,211,238,0.2)]">
-                {formData.avatar ? <img src={formData.avatar} alt="Avatar" className="w-full h-full object-cover" /> : <User size={48} className="text-gray-600" />}
-              </div>
 
-              {/* ── Task 1: File upload button replaces URL input ── */}
-              <p className="text-xs text-cyan-500 font-mono mb-2">UPLOAD_AVATAR</p>
-              <input
-                ref={avatarInputRef}
-                type="file"
-                accept="image/*"
-                onChange={handleAvatarFileChange}
-                className="hidden"
-              />
-              <button
-                onClick={() => avatarInputRef.current.click()}
-                className="w-full flex items-center justify-center gap-2 bg-black border border-gray-700 hover:border-cyan-400 text-cyan-400 hover:text-cyan-300 p-2 text-xs font-mono transition"
-              >
-                <Camera size={14} /> CHOOSE_FILE
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          {/* Left column */}
+          <div className="md:col-span-1 space-y-5">
+            {/* Avatar */}
+            <div className="bg-[#171f33] border border-[#434655]/20 rounded-md p-6 flex flex-col items-center text-center">
+              <div className="w-28 h-28 rounded-full border-2 border-[#434655]/40 overflow-hidden mb-4 bg-[#131b2e] flex items-center justify-center hover:border-[#adc6ff]/40 transition-colors">
+                {formData.avatar ? <img src={formData.avatar} alt="Avatar" className="w-full h-full object-cover" /> : <User size={40} className="text-[#434655]" />}
+              </div>
+              <p className={labelBase}>Profile Photo</p>
+              <input ref={avatarInputRef} type="file" accept="image/*" onChange={handleAvatarFileChange} className="hidden" />
+              <button onClick={() => avatarInputRef.current.click()}
+                className="w-full flex items-center justify-center gap-2 bg-[#131b2e] border border-[#434655]/40 hover:border-[#adc6ff]/40 text-[#adc6ff] hover:text-[#89f5e7] p-2 text-xs font-['Space_Grotesk'] font-medium tracking-wide rounded-xs transition-all">
+                <Camera size={13} /> Upload Photo
               </button>
               {formData.avatar && (
-                <button
-                  onClick={() => setFormData(prev => ({ ...prev, avatar: '' }))}
-                  className="mt-2 text-xs text-gray-600 hover:text-red-500 font-mono transition"
-                >
-                  REMOVE_IMAGE
+                <button onClick={() => setFormData(prev => ({ ...prev, avatar: '' }))}
+                  className="mt-2 text-xs text-[#656d84] hover:text-[#ffb4ab] font-['Space_Grotesk'] transition-colors">
+                  Remove
                 </button>
               )}
             </div>
 
-            <div className="bg-gray-900/50 border border-gray-800 p-4 relative">
-              <div className="flex justify-between items-center mb-3">
-                <h3 className="text-cyan-400 font-bold font-['Orbitron'] text-sm flex items-center gap-2"><Cpu size={14} /> INSTALLED_MODULES</h3>
-                <button onClick={() => setShowSkillSelector(!showSkillSelector)} className="p-1 bg-cyan-900/30 border border-cyan-500/30 text-cyan-400 hover:bg-cyan-500 hover:text-black transition z-10 relative"><Plus size={14} /></button>
+            {/* Skills */}
+            <div className="bg-[#171f33] border border-[#434655]/20 rounded-md p-5 relative">
+              <div className="flex justify-between items-center mb-4">
+                <h3 className="font-['Space_Grotesk'] text-[10px] font-bold tracking-[0.12em] uppercase text-[#6bd8cb]">Skills</h3>
+                <button onClick={() => setShowSkillSelector(!showSkillSelector)}
+                  className="p-1 bg-[#adc6ff]/8 border border-[#adc6ff]/20 text-[#adc6ff] hover:bg-[#adc6ff] hover:text-[#002e6a] transition-all rounded-xs">
+                  <Plus size={14} />
+                </button>
               </div>
               {showSkillSelector && (
-                <div className="absolute top-12 left-0 w-full bg-black border border-cyan-500 z-[200] max-h-48 overflow-y-auto shadow-[0_0_20px_rgba(0,0,0,0.8)]">
+                <div className="absolute top-14 left-0 w-full bg-[#131b2e] border border-[#434655]/40 rounded-xs z-[200] max-h-48 overflow-y-auto shadow-2xl">
                   {allSkills.map(skill => (
                     <div key={skill.name} onClick={() => toggleSkill(skill.name)}
-                      className={`p-2 text-xs font-mono cursor-pointer hover:bg-cyan-500 hover:text-black border-b border-gray-800 ${mySkillNames.includes(skill.name) ? 'text-green-500' : 'text-gray-400'}`}>
+                      className={`p-2.5 text-xs cursor-pointer hover:bg-[#222a3d] border-b border-[#434655]/20 transition-colors ${mySkillNames.includes(skill.name) ? 'text-[#89f5e7]' : 'text-[#c3c6d7]'}`}>
                       {skill.name} {mySkillNames.includes(skill.name) && '✓'}
                     </div>
                   ))}
@@ -131,34 +131,42 @@ export default function MyProfile() {
                 {mySkillNames.length > 0 ? mySkillNames.map(skillName => {
                   const verified = verifiedSkillNames.includes(skillName);
                   return (
-                    <span key={skillName} className={`px-2 py-1 border text-xs font-bold font-mono flex items-center gap-1 group relative ${verified ? 'bg-green-900/20 border-green-500/50' : 'bg-cyan-900/20 border-cyan-500/30'}`}>
+                    <span key={skillName} className={`px-2.5 py-1 border text-[10px] font-['Space_Grotesk'] font-bold uppercase tracking-wide flex items-center gap-1 group relative rounded-xs ${verified ? 'bg-[#89f5e7]/8 border-[#89f5e7]/25 text-[#89f5e7]' : 'bg-[#adc6ff]/8 border-[#adc6ff]/20 text-[#adc6ff]'}`}>
                       {skillName}
-                      {verified && <CheckCircle size={10} className="text-green-500" />}
-                      <X size={10} className="cursor-pointer hover:text-red-500 opacity-0 group-hover:opacity-100 transition-opacity" onClick={() => toggleSkill(skillName)} />
+                      {verified && <CheckCircle size={9} className="text-[#89f5e7]" />}
+                      <X size={9} className="cursor-pointer hover:text-[#ffb4ab] opacity-0 group-hover:opacity-100 transition-opacity" onClick={() => toggleSkill(skillName)} />
                     </span>
                   );
-                }) : <span className="text-gray-600 text-xs italic">NO_DATA...</span>}
+                }) : <span className="text-[#656d84] text-xs italic">No skills added.</span>}
               </div>
             </div>
 
-            <div className="bg-black border border-purple-500/30 p-4">
+            {/* Skill Verification */}
+            <div className="bg-[#171f33] border border-[#434655]/20 rounded-md p-5">
               <div className="flex items-center gap-2 mb-3">
-                <Shield className="text-purple-400" size={16} />
-                <h3 className="text-purple-400 font-bold font-['Orbitron'] text-sm">GITHUB_VERIFICATION</h3>
+                <Shield className="text-[#adc6ff]" size={15} />
+                <h3 className="font-['Space_Grotesk'] text-[10px] font-bold tracking-[0.12em] uppercase text-[#adc6ff]">Skill Verification</h3>
               </div>
-              <p className="text-xs text-gray-500 mb-3 font-mono">Verify skills with code repositories</p>
+              <p className="text-xs text-[#8d90a0] mb-3 leading-relaxed">Verify skills with your GitHub repositories.</p>
               {mySkillNames.length === 0 ? (
-                <div className="text-center py-4 border border-gray-800 bg-gray-900/30"><p className="text-gray-600 text-xs font-mono">Add skills first</p></div>
+                <div className="text-center py-4 border border-[#434655]/20 rounded-xs bg-[#131b2e]/50">
+                  <p className="text-[#656d84] text-xs">Add skills first to verify them.</p>
+                </div>
               ) : (
                 <div className="space-y-2">
                   {mySkillNames.map(skillName => {
                     const verified = verifiedSkillNames.includes(skillName);
                     return (
-                      <button key={skillName} type="button" onClick={() => !verified && setSelectedSkillToVerify(skillName) & setShowVerifier(true)} disabled={verified}
-                        className={`w-full p-2 border text-xs font-mono flex items-center justify-between group transition ${verified ? 'bg-green-900/20 border-green-500/50 text-green-300 cursor-not-allowed opacity-60' : 'bg-purple-900/20 border-purple-500/30 text-purple-300 hover:bg-purple-500 hover:text-white cursor-pointer'}`}>
-                        <span className="flex items-center gap-2">{skillName}{verified && <CheckCircle size={12} className="text-green-500" />}</span>
-                        {!verified && <Shield size={12} className="opacity-50 group-hover:opacity-100" />}
-                        {verified && <span className="text-[10px] opacity-70">VERIFIED</span>}
+                      <button key={skillName} type="button"
+                        onClick={() => !verified && setSelectedSkillToVerify(skillName) & setShowVerifier(true)}
+                        disabled={verified}
+                        className={`w-full p-2.5 border text-xs font-['Space_Grotesk'] font-medium flex items-center justify-between group transition-all rounded-xs ${
+                          verified
+                            ? 'bg-[#89f5e7]/5 border-[#89f5e7]/20 text-[#89f5e7] cursor-not-allowed opacity-70'
+                            : 'bg-[#131b2e] border-[#434655]/30 text-[#c3c6d7] hover:border-[#adc6ff]/40 hover:text-[#adc6ff] cursor-pointer'
+                        }`}>
+                        <span className="flex items-center gap-2">{skillName}{verified && <CheckCircle size={11} className="text-[#89f5e7]" />}</span>
+                        {verified ? <span className="text-[9px] uppercase tracking-wide font-bold text-[#89f5e7]/70">Verified</span> : <Shield size={11} className="opacity-40 group-hover:opacity-100 text-[#adc6ff]" />}
                       </button>
                     );
                   })}
@@ -167,39 +175,48 @@ export default function MyProfile() {
             </div>
           </div>
 
-          <div className="md:col-span-2 bg-gray-900/50 border border-gray-800 p-8">
-            <div className="space-y-6">
+          {/* Right column — form */}
+          <div className="md:col-span-2 bg-[#171f33] border border-[#434655]/20 rounded-md p-8">
+            <div className="space-y-5">
               <div>
-                <label className="block text-xs font-mono text-gray-500 mb-1">OPERATOR_NAME</label>
-                <input value={formData.name} onChange={e => setFormData({...formData,name:e.target.value})} className="w-full bg-black border border-gray-700 text-white p-3 focus:border-cyan-500 outline-none font-bold text-lg" />
+                <label className={labelBase}>Name</label>
+                <input value={formData.name} onChange={e => setFormData({...formData,name:e.target.value})} className={`${inputBase} text-base font-semibold`} placeholder="Your full name" />
               </div>
               <div>
-                <label className="block text-xs font-mono text-purple-400 mb-1 flex items-center gap-2"><Building2 size={12} /> AFFILIATED_INSTITUTION</label>
-                <select value={formData.college} onChange={e => setFormData({...formData,college:e.target.value})} className="w-full bg-black border border-gray-700 text-purple-300 p-3 focus:border-purple-500 outline-none font-mono text-sm">
-                  <option value="">[ NO_AFFILIATION ]</option>
-                  {COLLEGES && COLLEGES.map((c,i) => <option key={i} value={c}>{c}</option>)}
-                </select>
+                <label className={labelBase}>Institution</label>
+                <div className="relative group">
+                  <Building2 className="absolute left-3 top-3.5 text-[#656d84] group-focus-within:text-[#adc6ff] transition-colors" size={15} />
+                  <select value={formData.college} onChange={e => setFormData({...formData,college:e.target.value})}
+                    className={`${inputBase} pl-10 appearance-none cursor-pointer`}>
+                    <option value="">No affiliation</option>
+                    {COLLEGES && COLLEGES.map((c,i) => <option key={i} value={c}>{c}</option>)}
+                  </select>
+                </div>
               </div>
               <div>
-                <label className="block text-xs font-mono text-cyan-500 mb-1">HEADLINE_TAG</label>
-                <input value={formData.headline} onChange={e => setFormData({...formData,headline:e.target.value})} className="w-full bg-black border border-gray-700 text-gray-300 p-3 focus:border-cyan-500 outline-none" />
+                <label className={labelBase}>Headline</label>
+                <input value={formData.headline} onChange={e => setFormData({...formData,headline:e.target.value})} className={inputBase} placeholder="e.g. Full-stack developer & ML enthusiast" />
               </div>
               <div>
-                <label className="block text-xs font-mono text-gray-500 mb-1">BIO_DATA</label>
-                <textarea value={formData.bio} onChange={e => setFormData({...formData,bio:e.target.value})} rows={4} className="w-full bg-black border border-gray-700 text-gray-300 p-3 focus:border-cyan-500 outline-none resize-none" />
+                <label className={labelBase}>Bio</label>
+                <textarea value={formData.bio} onChange={e => setFormData({...formData,bio:e.target.value})} rows={4}
+                  className={`${inputBase} resize-none`} placeholder="Tell others about yourself..." />
               </div>
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-xs font-mono text-gray-500 mb-1 flex items-center gap-1"><Github size={12} /> GITHUB_UPLINK</label>
-                  <input value={formData.github} onChange={e => setFormData({...formData,github:e.target.value})} placeholder="github.com/..." className="w-full bg-black border border-gray-700 text-cyan-400 p-3 focus:border-cyan-500 outline-none text-sm font-mono" />
+                  <label className={`${labelBase} flex items-center gap-1`}><Github size={10} /> GitHub</label>
+                  <input value={formData.github} onChange={e => setFormData({...formData,github:e.target.value})}
+                    placeholder="github.com/username" className={inputBase} />
                 </div>
                 <div>
-                  <label className="block text-xs font-mono text-gray-500 mb-1 flex items-center gap-1"><Linkedin size={12} /> LINKEDIN_NODE</label>
-                  <input value={formData.linkedin} onChange={e => setFormData({...formData,linkedin:e.target.value})} placeholder="linkedin.com/in/..." className="w-full bg-black border border-gray-700 text-cyan-400 p-3 focus:border-cyan-500 outline-none text-sm font-mono" />
+                  <label className={`${labelBase} flex items-center gap-1`}><Linkedin size={10} /> LinkedIn</label>
+                  <input value={formData.linkedin} onChange={e => setFormData({...formData,linkedin:e.target.value})}
+                    placeholder="linkedin.com/in/..." className={inputBase} />
                 </div>
               </div>
-              <button onClick={handleSave} disabled={loading} className="w-full py-4 bg-cyan-600 text-black font-black font-['Orbitron'] text-xl hover:bg-cyan-400 transition flex items-center justify-center gap-2 mt-4 disabled:opacity-50">
-                <Save size={20} /> {loading ? 'UPLOADING...' : 'SAVE_CHANGES'}
+              <button onClick={handleSave} disabled={loading}
+                className="w-full py-3.5 bg-gradient-to-r from-[#adc6ff] to-[#0f69dc] text-[#002e6a] font-['Space_Grotesk'] font-bold text-xs uppercase tracking-[0.1em] hover:opacity-90 transition-all flex items-center justify-center gap-2 mt-2 rounded-xs disabled:opacity-50 active:scale-[0.98]">
+                <Save size={15} /> {loading ? 'Saving...' : 'Save Changes'}
               </button>
             </div>
           </div>
@@ -207,10 +224,14 @@ export default function MyProfile() {
       </div>
 
       {showVerifier && (
-        <div className="fixed inset-0 bg-black/90 backdrop-blur-sm z-[300] flex items-center justify-center p-4">
+        <div className="fixed inset-0 bg-[#0b1326]/85 backdrop-blur-sm z-[300] flex items-center justify-center p-4">
           <div className="relative">
-            <button onClick={() => setShowVerifier(false)} className="absolute -top-4 -right-4 z-10 p-2 bg-red-600 hover:bg-red-500 text-white rounded-full transition"><X size={20} /></button>
-            <SkillVerifier userId={storedUser.id} skillName={selectedSkillToVerify} onVerifyComplete={() => { setShowVerifier(false); loadUserData(); }} />
+            <button onClick={() => setShowVerifier(false)}
+              className="absolute -top-3 -right-3 z-10 p-1.5 bg-[#93000a] hover:bg-[#ffb4ab] hover:text-[#002e6a] text-white rounded-full transition-all">
+              <X size={16} />
+            </button>
+            <SkillVerifier userId={storedUser.id} skillName={selectedSkillToVerify}
+              onVerifyComplete={() => { setShowVerifier(false); loadUserData(); }} />
           </div>
         </div>
       )}
