@@ -2,31 +2,47 @@ import { useEffect, useState, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import API from '../../api';
 import { Send, ArrowLeft, MessageSquare, User } from 'lucide-react';
+import { io } from 'socket.io-client';
 
 export default function ChatInterface() {
   const { id } = useParams();
   const navigate = useNavigate();
   const currentUser = JSON.parse(localStorage.getItem('user_data') || '{}');
+  const token = localStorage.getItem('token');
 
   const [mentor, setMentor] = useState(null);
   const [msg, setMsg] = useState('');
-  const [history, setHistory] = useState([
-    { sender: 'system', text: 'Session started.' },
-    { sender: 'system', text: 'Waiting for response...' },
-  ]);
+  const [history, setHistory] = useState([]);
+  const socketRef = useRef(null);
   const bottomRef = useRef(null);
 
   useEffect(() => {
-    API.get(`/users/${id}`).then(res => {
-      setMentor(res.data);
-      setTimeout(() => {
-        setHistory(h => [...h, {
-          sender: 'them',
-          text: `${res.data.name} has joined the session.`
-        }]);
-      }, 1000);
+    API.get(`/users/${id}`).then(res => setMentor(res.data));
+
+    API.get(`/chat/history/${id}`).then(res => {
+      const formatted = res.data.map(m => ({
+        sender: m.senderId === currentUser.id ? 'me' : 'them',
+        text: m.content
+      }));
+      setHistory([{ sender: 'system', text: 'Secure session established.' }, ...formatted]);
+    }).catch(err => console.error("Error fetching chat history", err));
+
+    socketRef.current = io(import.meta.env.VITE_API_URL || 'http://localhost:5001', {
+      auth: { token }
     });
-  }, [id]);
+
+    socketRef.current.on('RECEIVE_MESSAGE', (message) => {
+      // Only process messages for the current chat
+      if (message.senderId === id || message.senderId === currentUser.id) {
+        setHistory(h => [...h, {
+          sender: message.senderId === currentUser.id ? 'me' : 'them',
+          text: message.content
+        }]);
+      }
+    });
+
+    return () => socketRef.current.disconnect();
+  }, [id, currentUser.id, token]);
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -35,15 +51,8 @@ export default function ChatInterface() {
   const send = (e) => {
     e.preventDefault();
     if (!msg.trim()) return;
-    setHistory(h => [...h, { sender: 'me', text: msg }]);
+    socketRef.current.emit('SEND_MESSAGE', { receiverId: id, content: msg });
     setMsg('');
-    // Simulated response — replace with real WebSocket/API call when backend is ready
-    setTimeout(() => {
-      setHistory(h => [...h, {
-        sender: 'them',
-        text: 'I can definitely help with that. When are you free to sync?'
-      }]);
-    }, 2000);
   };
 
   if (!mentor) return <div className="bg-[#0b1326] min-h-screen" />;
