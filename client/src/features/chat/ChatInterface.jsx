@@ -1,4 +1,4 @@
-import { useEffect, useState, useRef } from 'react';
+import { useEffect, useState, useRef, useMemo } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import API from '../../api';
 import { Send, ArrowLeft, MessageSquare, User } from 'lucide-react';
@@ -7,8 +7,11 @@ import { io } from 'socket.io-client';
 export default function ChatInterface() {
   const { id } = useParams();
   const navigate = useNavigate();
-  const currentUser = JSON.parse(localStorage.getItem('user_data') || '{}');
-  const token = localStorage.getItem('token');
+  const currentUser = useMemo(() => {
+    try { return JSON.parse(localStorage.getItem('user_data') || '{}'); }
+    catch { return {}; }
+  }, []);
+  const token = useMemo(() => localStorage.getItem('token'), []);
 
   const [mentor, setMentor] = useState(null);
   const [msg, setMsg] = useState('');
@@ -17,21 +20,24 @@ export default function ChatInterface() {
   const bottomRef = useRef(null);
 
   useEffect(() => {
-    API.get(`/users/${id}`).then(res => setMentor(res.data));
+    if (!id || !token) return;
+
+    API.get(`/users/${id}`).then(res => setMentor(res.data)).catch(console.error);
 
     API.get(`/chat/history/${id}`).then(res => {
-      const formatted = res.data.map(m => ({
+      const formatted = (res.data || []).map(m => ({
         sender: m.senderId === currentUser.id ? 'me' : 'them',
         text: m.content
       }));
       setHistory([{ sender: 'system', text: 'Secure session established.' }, ...formatted]);
     }).catch(err => console.error("Error fetching chat history", err));
 
-    socketRef.current = io(import.meta.env.VITE_API_URL || 'http://localhost:5001', {
+    const socket = io(import.meta.env.VITE_API_URL || 'http://localhost:5001', {
       auth: { token }
     });
+    socketRef.current = socket;
 
-    socketRef.current.on('RECEIVE_MESSAGE', (message) => {
+    socket.on('RECEIVE_MESSAGE', (message) => {
       // Only process messages for the current chat
       if (message.senderId === id || message.senderId === currentUser.id) {
         setHistory(h => [...h, {
@@ -41,7 +47,10 @@ export default function ChatInterface() {
       }
     });
 
-    return () => socketRef.current.disconnect();
+    return () => {
+      socket.disconnect();
+      socketRef.current = null;
+    };
   }, [id, currentUser.id, token]);
 
   useEffect(() => {

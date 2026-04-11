@@ -1,10 +1,12 @@
 import { useEffect, useState, useCallback } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import API from '../api';
 import {
   AlertTriangle, CheckCircle,
-  Activity, User, Users, X, Brain, LogOut, BarChart2
+  Activity, User, Users, X, Brain, LogOut, BarChart2, MessageSquare
 } from 'lucide-react';
+import NotificationBell from '../shared/components/NotificationBell';
+import DashboardChat from '../features/chat/DashboardChat';
 
 // ─── Radar Chart ─────────────────────────────────────────────────────────────
 const RadarChart = ({ score }) => {
@@ -48,7 +50,11 @@ const RadarChart = ({ score }) => {
 // ─── Dashboard ────────────────────────────────────────────────────────────────
 export default function Dashboard({ user, onLogout }) {
   const navigate = useNavigate();
+  const location = useLocation();
   const currentUser = user || JSON.parse(localStorage.getItem('user_data') || '{}');
+
+  const queryParams = new URLSearchParams(location.search);
+  const initialChatOpen = queryParams.get('chat') === 'true';
 
   const [roles, setRoles] = useState([]);
   const [allSkills, setAllSkills] = useState([]);
@@ -60,6 +66,13 @@ export default function Dashboard({ user, onLogout }) {
   const [selectedMissingSkill, setSelectedMissingSkill] = useState(null);
   const [activities, setActivities] = useState([]);
   const [analyzing, setAnalyzing] = useState(false);
+  const [isChatOpen, setIsChatOpen] = useState(initialChatOpen);
+
+  useEffect(() => {
+    if (initialChatOpen) {
+      setIsChatOpen(true);
+    }
+  }, [initialChatOpen]);
 
   const fetchData = useCallback(async () => {
     if (!currentUser?.id) return;
@@ -148,6 +161,14 @@ export default function Dashboard({ user, onLogout }) {
         </div>
 
         <div className="flex items-center gap-3">
+          <button
+            onClick={() => setIsChatOpen(true)}
+            className="p-2 rounded-full border border-[#434655]/40 hover:border-[#adc6ff]/40 text-[#8d90a0] hover:text-[#adc6ff] transition-colors"
+            title="Messages"
+          >
+            <MessageSquare size={15} />
+          </button>
+          <NotificationBell />
           <div
             onClick={() => navigate(`/profile/${currentUser.id}`)}
             className="w-9 h-9 rounded-full border border-[#434655]/50 hover:border-[#adc6ff]/50 cursor-pointer flex items-center justify-center bg-[#171f33] transition-all hover:shadow-[0_0_12px_rgba(173,198,255,0.15)]"
@@ -294,9 +315,20 @@ export default function Dashboard({ user, onLogout }) {
                       {new Date(log.createdAt).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}
                     </div>
                     <div>
-                      <span className={log.action === 'ACQUIRED_SKILL' ? 'text-[#89f5e7] text-xs font-semibold' : 'text-[#adc6ff] text-xs font-semibold'}>
-                        {log.action === 'ACQUIRED_SKILL' ? 'Skill Added' : 'Analysis Run'}
-                      </span>
+                      {(() => {
+                        const labels = {
+                          ACQUIRED_SKILL:  { text: 'Skill Added',      color: 'text-[#89f5e7]' },
+                          DIAGNOSTIC_RUN:  { text: 'Analysis Run',     color: 'text-[#adc6ff]' },
+                          POST_CREATED:    { text: 'Post Published',   color: 'text-[#adc6ff]' },
+                          POST_DELETED:    { text: 'Post Removed',     color: 'text-[#ffb4ab]' },
+                          USER_LOGIN:      { text: 'Logged In',        color: 'text-[#8d90a0]' },
+                          USER_LOGOUT:     { text: 'Logged Out',       color: 'text-[#8d90a0]' },
+                          PROFILE_UPDATED: { text: 'Profile Updated',  color: 'text-[#6bd8cb]' },
+                          ACCOUNT_CREATED: { text: 'Account Created',  color: 'text-[#89f5e7]' },
+                        };
+                        const l = labels[log.action] || { text: log.action, color: 'text-[#adc6ff]' };
+                        return <span className={`${l.color} text-xs font-semibold`}>{l.text}</span>;
+                      })()}
                       <div className="text-[#c3c6d7] text-xs mt-0.5">{log.details}</div>
                     </div>
                   </div>
@@ -353,6 +385,9 @@ export default function Dashboard({ user, onLogout }) {
           </div>
         </div>
       )}
+
+      {/* ── Chat Drawer ── */}
+      <DashboardChat isOpen={isChatOpen} onClose={() => setIsChatOpen(false)} />
     </div>
   );
 }
