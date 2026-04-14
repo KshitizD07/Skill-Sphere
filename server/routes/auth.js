@@ -26,7 +26,7 @@ const registerSchema = z.object({
 });
 
 const loginSchema = z.object({
-  email:    z.string().email(),
+  email:    z.string().email().toLowerCase(),
   password: z.string().min(1),
 });
 
@@ -46,17 +46,6 @@ router.post('/send-otp', asyncHandler(async (req, res) => {
 
   const normalised = email.toLowerCase().trim();
 
-  // Whitelist check
-  const allowed = await prisma.allowedEmail.findUnique({ where: { email: normalised } });
-  if (!allowed) {
-    throw new ApiError(403, 'EMAIL_NOT_WHITELISTED',
-      'This email is not on the invite list. Contact the SkillSphere team to get access.'
-    );
-  }
-
-  // Already registered
-  if (allowed.usedAt) throw ApiError.conflict('An account with this email already exists');
-
   const exists = await prisma.user.findUnique({ where: { email: normalised } });
   if (exists) throw ApiError.conflict('Email already registered');
 
@@ -69,15 +58,6 @@ router.post('/send-otp', asyncHandler(async (req, res) => {
 // Step 2: verify OTP + create account
 router.post('/register', asyncHandler(async (req, res) => {
   const data = registerSchema.parse(req.body);
-
-  // Whitelist check
-  const allowed = await prisma.allowedEmail.findUnique({ where: { email: data.email } });
-  if (!allowed) {
-    throw new ApiError(403, 'EMAIL_NOT_WHITELISTED',
-      'This email is not on the invite list.'
-    );
-  }
-  if (allowed.usedAt) throw ApiError.conflict('Account already exists for this email');
 
   const exists = await prisma.user.findUnique({ where: { email: data.email } });
   if (exists) throw ApiError.conflict('Email already registered');
@@ -97,12 +77,6 @@ router.post('/register', asyncHandler(async (req, res) => {
     },
   });
 
-  // Mark whitelist entry as used
-  await prisma.allowedEmail.update({
-    where: { email: data.email },
-    data:  { usedAt: new Date() },
-  });
-
   await prisma.activityLog.create({
     data: { userId: user.id, action: 'ACCOUNT_CREATED', details: `Joined as ${data.role}` },
   });
@@ -117,8 +91,8 @@ router.post('/register', asyncHandler(async (req, res) => {
 router.post('/login', asyncHandler(async (req, res) => {
   const data = loginSchema.parse(req.body);
 
-  const user = await prisma.user.findUnique({
-    where:  { email: data.email },
+  const user = await prisma.user.findFirst({
+    where:  { email: { equals: data.email, mode: 'insensitive' } },
     select: { id: true, name: true, email: true, password: true, role: true, college: true, avatar: true, headline: true },
   });
 

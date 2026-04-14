@@ -12,15 +12,30 @@ function getClient() {
   return genAI;
 }
 
-async function generateRoadmap({ skill, role }) {
+async function generateRoadmap({ skill, role, currentScore }) {
   if (!skill?.trim() || !role?.trim()) throw ApiError.badRequest('Skill and role are required');
 
   const model = getClient().getGenerativeModel({ model: 'gemini-1.5-flash-latest' });
 
-  const prompt = `You are a senior technical mentor. Create a focused, actionable learning roadmap.
+  let proficiencyInstruction = "";
+  if (currentScore === 0) {
+    proficiencyInstruction = "(SCORE: 0/10) The user is an absolute beginner who just started an empty repository. Start from the absolute foundational basics of this technology.";
+  } else if (currentScore <= 4) {
+    proficiencyInstruction = `(SCORE: ${currentScore}/10) The user is a beginner. Cover core structural deficiencies and solidify fundamental syntax and principles.`;
+  } else if (currentScore <= 7) {
+    proficiencyInstruction = `(SCORE: ${currentScore}/10) The user is intermediate. Pivot heavily into advanced systemic integrations, common design patterns, and testing.`;
+  } else {
+    proficiencyInstruction = `(SCORE: ${currentScore}/10) The user is advanced. Focus implicitly on system scaling, security, architecture optimization, and high-performance paradigms.`;
+  }
+
+  const prompt = `You are a senior technical mentor. Create a focused, actionable learning roadmap tailored to the user's explicit skill level.
 
 Target skill: ${skill}
 Target role: ${role}
+
+CRITICAL PERSONALIZATION: 
+${proficiencyInstruction}
+Tailor ALL output content exclusively picking up from their specified proficiency!
 
 Format your response as markdown with these exact sections:
 

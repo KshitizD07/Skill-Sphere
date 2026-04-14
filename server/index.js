@@ -30,8 +30,15 @@ const squadRoutes    = require('./routes/squads');
 const postsRoutes    = require('./routes/posts');
 const activityRoutes = require('./routes/activity');
 const aiRoutes       = require('./routes/ai');
+const chatRoutes     = require('./routes/chat');
+const notificationRoutes = require('./routes/notifications');
 
 const app    = express();
+const http   = require('http');
+const server = http.createServer(app);
+const { init: initSocket } = require('./socket');
+initSocket(server);
+
 const prisma = new PrismaClient();
 
 // ── Security headers (helmet) ────────────────────────────────────────────────
@@ -102,6 +109,8 @@ app.use('/api/squads',                  squadRoutes);
 app.use('/api/posts',                   postsRoutes);
 app.use('/api/activity',                activityRoutes);
 app.use('/api/ai',       aiLimiter,     aiRoutes);
+app.use('/api/chat',                    chatRoutes);
+app.use('/api/notifications',           notificationRoutes);
 
 // ── 404 ───────────────────────────────────────────────────────────────────────
 app.use((req, res) => {
@@ -135,7 +144,7 @@ async function start() {
   setupJobs();
 
   // Signal pm2 that we're ready (for wait_ready: true in cluster mode)
-  app.listen(PORT, () => {
+  server.listen(PORT, () => {
     logger.info(`SkillSphere API running`, {
       port:    PORT,
       env:     process.env.NODE_ENV || 'development',

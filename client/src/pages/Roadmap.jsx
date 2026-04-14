@@ -11,6 +11,7 @@ export default function RoadmapPage() {
   const [roadmap, setRoadmap] = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
+  const [errorType, setErrorType] = useState(null);
   const fetchedRef = useRef(false);
 
   useEffect(() => {
@@ -20,8 +21,9 @@ export default function RoadmapPage() {
   }, []);
 
   const fetchRoadmap = async () => {
-    setLoading(true);
+      setLoading(true);
     setError(null);
+    setErrorType(null);
     try {
       const res = await API.post('/ai/generate-roadmap', {
         skill: decodeURIComponent(skill),
@@ -33,7 +35,12 @@ export default function RoadmapPage() {
         setError('No roadmap data received.');
       }
     } catch (err) {
-      setError(err.response?.data?.error || 'Failed to generate roadmap. Please try again.');
+      if (err.response?.data?.error === 'SKILL_NOT_VERIFIED') {
+        setError('You must verify your GitHub proficiency for this skill before the algorithm can build a custom roadmap.');
+        setErrorType('SKILL_NOT_VERIFIED');
+      } else {
+        setError(err.response?.data?.error || err.response?.data?.message || 'Failed to generate roadmap. Please try again.');
+      }
     } finally {
       setLoading(false);
     }
@@ -89,13 +96,22 @@ export default function RoadmapPage() {
         )}
 
         {error && !loading && (
-          <div className="bg-[#93000a]/15 border border-[#93000a]/40 rounded-md p-6">
-            <div className="text-lg font-bold text-[#ffb4ab] mb-2">Generation Failed</div>
-            <p className="text-[#c3c6d7] text-sm mb-4">{error}</p>
-            <button onClick={fetchRoadmap}
-              className="flex items-center gap-2 px-4 py-2 bg-[#93000a]/20 border border-[#ffb4ab]/30 text-[#ffb4ab] hover:bg-[#ffb4ab] hover:text-[#002e6a] transition-all rounded-xs font-['Space_Grotesk'] font-bold text-xs uppercase tracking-wide">
-              <RefreshCw size={12} /> Try Again
-            </button>
+          <div className="bg-[#171f33] border border-[#ffb4ab]/30 rounded-md p-6 shadow-xl shadow-[#93000a]/5 relative overflow-hidden">
+            <div className="absolute top-0 left-0 w-1 h-full bg-[#ffb4ab]" />
+            <div className="text-lg font-bold text-[#ffb4ab] mb-2">{errorType === 'SKILL_NOT_VERIFIED' ? 'Verification Required' : 'Generation Failed'}</div>
+            <p className="text-[#c3c6d7] text-sm mb-5 leading-relaxed">{error}</p>
+            
+            {errorType === 'SKILL_NOT_VERIFIED' ? (
+               <button onClick={() => navigate('/verify-skill')}
+                className="inline-flex items-center gap-2 px-5 py-2.5 bg-gradient-to-r from-[#adc6ff] to-[#0f69dc] text-[#002e6a] hover:opacity-90 transition-all rounded-xs font-['Space_Grotesk'] font-bold text-xs uppercase tracking-wide">
+                <Target size={14} /> Go to Skill Verifier
+              </button>
+            ) : (
+              <button onClick={fetchRoadmap}
+                className="inline-flex items-center gap-2 px-4 py-2 bg-[#93000a]/20 border border-[#ffb4ab]/30 text-[#ffb4ab] hover:bg-[#ffb4ab] hover:text-[#002e6a] transition-all rounded-xs font-['Space_Grotesk'] font-bold text-xs uppercase tracking-wide">
+                <RefreshCw size={12} /> Try Again
+              </button>
+            )}
           </div>
         )}
 

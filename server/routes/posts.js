@@ -3,6 +3,7 @@ const { PrismaClient } = require('@prisma/client');
 const { asyncHandler, ApiError } = require('../utils/errorHandler');
 const { authenticateToken, optionalAuth } = require('../middleware/auth');
 const { logActivity } = require('../services/activityService'); // ✅ added
+const { getIO } = require('../socket');
 
 const router = express.Router();
 const prisma  = new PrismaClient();
@@ -82,9 +83,10 @@ router.post('/', authenticateToken, asyncHandler(async (req, res) => {
   });
 
   // 🔥 Log major activity
-  await logActivity(req.user.userId, 'POST_CREATED', {
-    postId: post.id
-  });
+  const preview = content.trim()
+    ? (content.trim().length > 80 ? content.trim().substring(0, 77) + '...' : content.trim())
+    : (imageUrl ? 'Shared an image' : 'New post');
+  await logActivity(req.user.userId, 'POST_CREATED', preview);
 
   res.status(201).json(normalisePosts([post])[0]);
 }));
@@ -118,9 +120,10 @@ router.delete('/:id', authenticateToken, asyncHandler(async (req, res) => {
   await prisma.post.delete({ where: { id: req.params.id } });
 
   // 🔥 Log major activity
-  await logActivity(req.user.userId, 'POST_DELETED', {
-    postId: req.params.id
-  });
+  const preview = post.content?.trim()
+    ? (post.content.trim().length > 80 ? post.content.trim().substring(0, 77) + '...' : post.content.trim())
+    : (post.imageUrl ? 'Removed an image post' : 'Removed a post');
+  await logActivity(req.user.userId, 'POST_DELETED', preview);
 
   res.json({ success: true });
 }));
@@ -141,6 +144,25 @@ router.post('/:id/like', authenticateToken, asyncHandler(async (req, res) => {
   }
 
   await prisma.like.create({ data: { postId, userId } });
+
+  const post = await prisma.post.findUnique({ where: { id: postId }, include: { user: true } });
+  if (post && post.userId !== userId) {
+    const sender = await prisma.user.findUnique({ where: { id: userId } });
+    if (sender) {
+      const notif = await prisma.inAppNotification.create({
+        data: {
+          userId: post.userId,
+          type: 'LIKE',
+          title: sender.name,
+          message: 'liked your post.',
+          actionUrl: '/grid',
+          senderAvatar: sender.avatar
+        }
+      });
+      getIO().to(post.userId).emit('NOTIFICATION', notif);
+    }
+  }
+
   res.json({ liked: true });
 }));
 
@@ -165,6 +187,40 @@ router.post('/:id/comment', authenticateToken, asyncHandler(async (req, res) => 
     },
     include: COMMENT_INCLUDE,
   });
+
+  const sender = await prisma.user.findUnique({ where: { id: req.user.userId } });
+  const post = await prisma.post.findUnique({ where: { id: req.params.id } });
+  
+  if (sender) {
+    if (parentId) {
+      const parentComment = await prisma.comment.findUnique({ where: { id: parentId } });
+      if (parentComment && parentComment.userId !== req.user.userId) {
+        const notif = await prisma.inAppNotification.create({
+          data: {
+            userId: parentComment.userId,
+            type: 'REPLY',
+            title: sender.name,
+            message: 'replied to your comment.',
+            actionUrl: '/grid',
+            senderAvatar: sender.avatar
+          }
+        });
+        getIO().to(parentComment.userId).emit('NOTIFICATION', notif);
+      }
+    } else if (post && post.userId !== req.user.userId) {
+      const notif = await prisma.inAppNotification.create({
+        data: {
+          userId: post.userId,
+          type: 'COMMENT',
+          title: sender.name,
+          message: 'commented on your post.',
+          actionUrl: '/grid',
+          senderAvatar: sender.avatar
+        }
+      });
+      getIO().to(post.userId).emit('NOTIFICATION', notif);
+    }
+  }
 
   res.status(201).json(normaliseComment(comment));
 }));
@@ -201,6 +257,25 @@ router.post('/:postId/comment/:commentId/like', authenticateToken, asyncHandler(
   }
 
   await prisma.commentLike.create({ data: { commentId, userId } });
+
+  const comment = await prisma.comment.findUnique({ where: { id: commentId } });
+  if (comment && comment.userId !== userId) {
+    const sender = await prisma.user.findUnique({ where: { id: userId } });
+    if (sender) {
+      const notif = await prisma.inAppNotification.create({
+        data: {
+          userId: comment.userId,
+          type: 'LIKE',
+          title: sender.name,
+          message: 'liked your comment.',
+          actionUrl: '/grid',
+          senderAvatar: sender.avatar
+        }
+      });
+      getIO().to(comment.userId).emit('NOTIFICATION', notif);
+    }
+  }
+
   res.json({ liked: true });
 }));
 

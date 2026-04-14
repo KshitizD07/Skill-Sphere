@@ -1,6 +1,8 @@
 const { PrismaClient } = require('@prisma/client');
 const { ApiError } = require('../utils/errorHandler');
 const logger = require('../utils/logger');
+const { GoogleGenerativeAI } = require('@google/generative-ai');
+const { sendNotification } = require('../utils/notify');
 
 const prisma = new PrismaClient();
 
@@ -31,29 +33,11 @@ function parseGitHubUrl(url) {
   }
 }
 
-function buildScore({ bytes, commits, lastUpdated, isOwner }) {
-  let score = 0;
-
-  // Volume (0-4)
-  if      (bytes >= 100_000) score += 4;
-  else if (bytes >= 50_000)  score += 3;
-  else if (bytes >= 20_000)  score += 2;
-  else if (bytes >= 10_000)  score += 1;
-
-  // Commits (0-3)
-  if      (commits >= 50) score += 3;
-  else if (commits >= 20) score += 2;
-  else if (commits >= 5)  score += 1;
-
-  // Recency (0-2)
-  const monthsAgo = (Date.now() - new Date(lastUpdated)) / (1000 * 60 * 60 * 24 * 30);
-  if      (monthsAgo < 3)  score += 2;
-  else if (monthsAgo < 12) score += 1;
-
-  // Ownership bonus (0-1)
-  if (isOwner) score += 1;
-
-  return Math.min(10, score);
+async function fetchFileContent(owner, repo, branch, path) {
+  const url = `https://raw.githubusercontent.com/${owner}/${repo}/${branch}/${path}`;
+  const res = await fetch(url);
+  if (!res.ok) return null;
+  return await res.text();
 }
 
 async function verifySkill({ userId, skillName, repoUrl, showLevel }) {
@@ -93,40 +77,78 @@ async function verifySkill({ userId, skillName, repoUrl, showLevel }) {
   });
   if (existing) throw ApiError.conflict('This repository is already verified for this skill');
 
-  // ── Languages ──────────────────────────────────────────────────────────
-  const langRes  = await fetch(repo.languages_url, { headers });
-  const languages = await langRes.json();
-  const targetBytes = languages[normalized] || 0;
+  // ── Fetch Files for AI Analysis ──────────────────────────────────────────────────
+  const treeUrl = `https://api.github.com/repos/${parsed.owner}/${parsed.repo}/git/trees/${repo.default_branch}?recursive=1`;
+  const treeRes = await fetch(treeUrl, { headers });
+  const treeData = await treeRes.json();
+  
+  let score = 5;
+  let breakdownMsg = "AI analysis completed";
+  let topFiles = [];
 
-  if (targetBytes < 5000) {
-    throw ApiError.badRequest(
-      `Not enough ${normalized} code (found ${targetBytes} bytes, need ≥5000)`
-    );
+  const isRepoEmpty = !treeData.tree || treeData.tree.length === 0;
+  
+  if (isRepoEmpty) {
+    // Graceful support for absolute beginners
+    score = 0;
+    breakdownMsg = "Repository is completely empty. Scored as absolute beginner baseline (0/10).";
+  } else {
+    // Process repo contents
+    const validExtensions = ['.js', '.jsx', '.ts', '.tsx', '.py', '.java', '.go', '.rs', '.cpp', '.c', '.rb', '.swift', '.kt'];
+    const candidates = treeData.tree
+      .filter(item => item.type === 'blob')
+      .filter(item => validExtensions.some(ext => item.path.endsWith(ext)))
+      .filter(item => !item.path.includes('node_modules') && !item.path.includes('dist') && !item.path.includes('build') && !item.path.toLowerCase().includes('test'));
+
+    if (candidates.length === 0) {
+      score = 0;
+      breakdownMsg = `Could not find valid source files to analyze for ${normalized}. Scored as baseline.`;
+    } else {
+      topFiles = candidates.slice(0, 3);
+      let aggregatedCode = '';
+
+      for (const file of topFiles) {
+        const content = await fetchFileContent(parsed.owner, parsed.repo, repo.default_branch, file.path);
+        if (content) {
+          aggregatedCode += `\n\n--- File: ${file.path} ---\n${content.slice(0, 3000)}`;
+        }
+      }
+
+      if (aggregatedCode) {
+        // ── AI Evaluation ──────────────────────────────────────────────────────────────
+        if (!process.env.GOOGLE_API_KEY) throw ApiError.internal('AI verifier disabled (missing GOOGLE_API_KEY)');
+        const genAI = new GoogleGenerativeAI(process.env.GOOGLE_API_KEY);
+        const aiModel = genAI.getGenerativeModel({ model: 'gemini-1.5-flash-latest' });
+
+        const aiPrompt = `Analyze this code for architecture, paradigm adherence, efficiency, and complexity. 
+Score the user's proficiency from 1 to 10 as an integer.
+
+Code Snippets:
+${aggregatedCode}
+
+Respond ONLY with a valid JSON in exactly this format, no markdown wrapping, no extra text:
+{"score": 7, "reasoning": "A brief 2-sentence explanation of the score based on code patterns."}`;
+
+        try {
+          const result = await aiModel.generateContent(aiPrompt);
+          let aiText = result.response.text().trim();
+          if (aiText.startsWith('```json')) aiText = aiText.slice(7, -3).trim();
+          if (aiText.startsWith('```')) aiText = aiText.slice(3, -3).trim();
+          const parsedAI = JSON.parse(aiText);
+          score = Math.max(1, Math.min(10, Math.floor(parsedAI.score)));
+          breakdownMsg = parsedAI.reasoning;
+        } catch (err) {
+          logger.error('Gemini verify error', err);
+          throw ApiError.internal('AI evaluation failed during code analysis.');
+        }
+      } else {
+         score = 0;
+         breakdownMsg = "Could not fetch specific source file content, scored as baseline.";
+      }
+    }
   }
 
-  // ── Commit count (via Link header trick) ───────────────────────────────
-  let commits = 5;
-  try {
-    const cRes = await fetch(
-      `https://api.github.com/repos/${parsed.owner}/${parsed.repo}/commits?per_page=1`,
-      { headers }
-    );
-    const link = cRes.headers.get('Link');
-    if (link) {
-      const m = link.match(/page=(\d+)>; rel="last"/);
-      if (m) commits = parseInt(m[1]);
-    }
-  } catch { /* use default */ }
-
-  // ── Score ──────────────────────────────────────────────────────────────
-  const score = buildScore({
-    bytes:       targetBytes,
-    commits,
-    lastUpdated: repo.updated_at,
-    isOwner,
-  });
-
-  const level = score >= 8 ? 'Advanced' : score >= 5 ? 'Intermediate' : 'Beginner';
+  const level = score >= 8 ? 'Advanced' : score >= 5 ? 'Intermediate' : score > 0 ? 'Beginner' : 'Absolute Beginner';
 
   // ── Persist ────────────────────────────────────────────────────────────
   const skill = await prisma.skill.upsert({
@@ -139,6 +161,8 @@ async function verifySkill({ userId, skillName, repoUrl, showLevel }) {
     data: { userId, action: 'VERIFIED_SKILL', details: `GitHub verified: ${normalized} (${score}/10)` },
   });
 
+  await sendNotification(userId, 'SKILL_VERIFIED', 'Skill Verified', `Your ${normalized} repository was successfully verified. You achieved a score of ${score}/10.`);
+
   logger.info('Skill verified', { userId, skill: normalized, score, repo: repoUrl });
 
   return {
@@ -146,8 +170,8 @@ async function verifySkill({ userId, skillName, repoUrl, showLevel }) {
     score,
     skill,
     breakdown: {
-      codeVolume: `${targetBytes.toLocaleString()} bytes`,
-      commits,
+      reasoning: breakdownMsg,
+      filesAnalyzed: topFiles.map(f => f.path).join(', '),
       lastUpdate: new Date(repo.updated_at).toLocaleDateString(),
       ownership:  isOwner ? 'Owner' : 'Contributor',
     },

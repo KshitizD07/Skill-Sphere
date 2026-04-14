@@ -37,6 +37,9 @@ model User {
   applications   SquadApplication[]
   matchDecisions MatchDecision[]
   commentLikes   CommentLike[]
+  conversations  Conversation[]     @relation("UserConversations")
+  messages       Message[]
+  notifications  InAppNotification[]
 
   @@index([college])
   @@index([role])
@@ -422,4 +425,55 @@ model OtpVerification {
   createdAt DateTime @default(now())
 
   @@index([email])
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// CHAT & MESSAGING
+// ─────────────────────────────────────────────────────────────────────────────
+
+model Conversation {
+  id        String   @id @default(uuid())
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  
+  participants User[]    @relation("UserConversations")
+  messages     Message[]
+
+  @@index([updatedAt(sort: Desc)])
+}
+
+model Message {
+  id             String       @id @default(uuid())
+  conversationId String
+  conversation   Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  senderId       String
+  sender         User         @relation(fields: [senderId], references: [id], onDelete: Cascade)
+  content        String       @db.Text
+  isRead         Boolean      @default(false)
+  createdAt      DateTime     @default(now())
+
+  @@index([conversationId])
+  @@index([senderId])
+  @@index([createdAt(sort: Asc)])
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// NOTIFICATIONS
+// ─────────────────────────────────────────────────────────────────────────────
+
+model InAppNotification {
+  id        String   @id @default(uuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  type         String
+  title        String
+  message      String   @db.Text
+  isRead       Boolean  @default(false)
+  actionUrl    String?
+  senderAvatar String?
+  createdAt    DateTime @default(now())
+
+  @@index([userId])
+  @@index([createdAt(sort: Desc)])
+  @@index([isRead])
 }
