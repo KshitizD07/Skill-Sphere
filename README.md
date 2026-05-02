@@ -1,6 +1,6 @@
 # SkillSphere
 
-*Note: This project was built entirely utilizing an advanced agentic AI workflow.*
+*Note: This project was built utilizing an agentic AI workflow.*
 
 SkillSphere is a next-generation platform designed to bridge the gap between students and alumni by fostering skill-based networking, real-time collaboration, and community-driven learning. The platform intelligently matches users, verifies their skills, and provides dynamic learning roadmaps to help individuals achieve their career goals.
 

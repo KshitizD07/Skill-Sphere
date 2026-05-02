@@ -1,13 +1,12 @@
-require('dotenv').config();
-const express = require('express');
-const bcrypt  = require('bcryptjs');
-const jwt     = require('jsonwebtoken');
-const { z }   = require('zod');
-const { PrismaClient } = require('@prisma/client');
+import express from 'express';
+import bcrypt from 'bcryptjs';
+import jwt from 'jsonwebtoken';
+import { z } from 'zod';
+import { PrismaClient } from '@prisma/client';
 
-const { asyncHandler, ApiError } = require('../utils/errorHandler');
-const { authenticateToken } = require('../middleware/auth');
-const { sendOtp, verifyOtp } = require('../services/emailService');
+import { asyncHandler, ApiError } from '../utils/errorHandler.js';
+import { authenticateToken } from '../middleware/auth.js';
+import { sendOtp, verifyOtp } from '../services/emailService.js';
 
 const router = express.Router();
 const prisma = new PrismaClient();
@@ -129,4 +128,4 @@ router.post('/logout', asyncHandler(async (req, res) => {
   res.json({ success: true });
 }));
 
-module.exports = router;
+export default router;

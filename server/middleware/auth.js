@@ -1,15 +1,12 @@
-const jwt = require('jsonwebtoken');
-const { ApiError } = require('../utils/errorHandler');
-const logger = require('../utils/logger');
+import jwt from 'jsonwebtoken';
+import { ApiError } from '../utils/errorHandler.js';
 
-// ── Verify token and attach req.user ────────────────────────────────────────
-function authenticateToken(req, res, next) {
+// ── Verify token and attach req.user ─────────────────────────────────────────
+export function authenticateToken(req, res, next) {
   const header = req.headers.authorization;
   const token  = header?.startsWith('Bearer ') ? header.slice(7) : null;
 
-  if (!token) {
-    return next(ApiError.unauthorized('Access token required'));
-  }
+  if (!token) return next(ApiError.unauthorized('Access token required'));
 
   try {
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
@@ -22,7 +19,7 @@ function authenticateToken(req, res, next) {
 }
 
 // ── Same but won't block unauthenticated requests ────────────────────────────
-function optionalAuth(req, res, next) {
+export function optionalAuth(req, res, next) {
   const header = req.headers.authorization;
   const token  = header?.startsWith('Bearer ') ? header.slice(7) : null;
 
@@ -37,8 +34,8 @@ function optionalAuth(req, res, next) {
   next();
 }
 
-// ── Role guard — use after authenticateToken ─────────────────────────────────
-function requireRole(...roles) {
+// ── Role guard — use after authenticateToken ──────────────────────────────────
+export function requireRole(...roles) {
   return (req, res, next) => {
     if (!req.user) return next(ApiError.unauthorized());
     if (!roles.includes(req.user.role)) {
@@ -47,5 +44,3 @@ function requireRole(...roles) {
     next();
   };
 }
-
-module.exports = { authenticateToken, optionalAuth, requireRole };

@@ -1,10 +1,10 @@
-const express = require('express');
-const { PrismaClient } = require('@prisma/client');
-const { z } = require('zod');
+import express from 'express';
+import { PrismaClient } from '@prisma/client';
+import { z } from 'zod';
 
-const { asyncHandler, ApiError } = require('../utils/errorHandler');
-const { authenticateToken, optionalAuth } = require('../middleware/auth');
-const cache = require('../utils/cache');
+import { asyncHandler, ApiError } from '../utils/errorHandler.js';
+import { authenticateToken, optionalAuth } from '../middleware/auth.js';
+import cache from '../utils/cache.js';
 
 const router = express.Router();
 const prisma = new PrismaClient();
@@ -149,4 +149,4 @@ router.get('/:id', optionalAuth, asyncHandler(async (req, res) => {
   res.json(result);
 }));
 
-module.exports = router;
+export default router;

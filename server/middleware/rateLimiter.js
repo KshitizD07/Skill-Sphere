@@ -1,5 +1,5 @@
-const cache = require('../utils/cache');
-const logger = require('../utils/logger');
+import cache from '../utils/cache.js';
+import logger from '../utils/logger.js';
 
 function makeLimiter({ maxAttempts, windowSeconds, prefix, keyFn, message }) {
   const getKey = keyFn || ((req) => req.user?.userId || req.ip || 'anon');
@@ -23,13 +23,15 @@ function makeLimiter({ maxAttempts, windowSeconds, prefix, keyFn, message }) {
       }
       next();
     } catch (err) {
+      // Fail open — a broken rate limiter must not block legitimate traffic
       logger.error('Rate limiter error (failing open)', { err: err.message });
       next();
     }
   };
 }
 
-const authLimiter = makeLimiter({
+// 5 attempts per IP per 15 minutes — protects login/register
+export const authLimiter = makeLimiter({
   maxAttempts:   5,
   windowSeconds: 900,
   prefix:        'auth',
@@ -37,31 +39,35 @@ const authLimiter = makeLimiter({
   message:       'Too many login attempts. Try again in 15 minutes.',
 });
 
-const apiLimiter = makeLimiter({
+// 100 requests per user/IP per minute — general API guard
+export const apiLimiter = makeLimiter({
   maxAttempts:   100,
   windowSeconds: 60,
   prefix:        'api',
 });
 
-const createLimiter = makeLimiter({
+// 10 create-type operations per hour
+export const createLimiter = makeLimiter({
   maxAttempts:   10,
   windowSeconds: 3600,
   prefix:        'create',
   message:       'Creating too quickly — wait an hour.',
 });
 
-const verifyLimiter = makeLimiter({
+// 20 skill verifications per hour (GitHub API quota protection)
+export const verifyLimiter = makeLimiter({
   maxAttempts:   20,
   windowSeconds: 3600,
   prefix:        'verify',
   message:       'Too many verification attempts. Wait an hour.',
 });
 
-const aiLimiter = makeLimiter({
+// 20 AI generations per hour (Gemini quota protection)
+export const aiLimiter = makeLimiter({
   maxAttempts:   20,
   windowSeconds: 3600,
   prefix:        'ai',
   message:       'AI request limit reached. Wait an hour.',
 });
 
-module.exports = { makeLimiter, createLimiter, authLimiter, apiLimiter, verifyLimiter, aiLimiter };
+export { makeLimiter };

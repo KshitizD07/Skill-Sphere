@@ -1,6 +1,6 @@
-const cron   = require('node-cron');
-const { PrismaClient } = require('@prisma/client');
-const logger = require('../utils/logger');
+import cron from 'node-cron';
+import { PrismaClient } from '@prisma/client';
+import logger from '../utils/logger.js';
 
 const prisma = new PrismaClient();
 
@@ -51,4 +51,4 @@ function setupJobs() {
   logger.info('Squad maintenance jobs scheduled (daily at midnight)');
 }
 
-module.exports = { setupJobs, expireStaleSquads };
+export { setupJobs, expireStaleSquads };

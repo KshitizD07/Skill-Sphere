@@ -1,296 +1,145 @@
-// ============================================================================
-// MATCH ORCHESTRATOR
-// ============================================================================
-//
-// Purpose: The BRAIN of the antifragile matching system
-//
-// What it does:
-// 1. Receives match request (squad + candidates)
-// 2. Executes ALL active strategies in parallel
-// 3. Normalizes scores to comparable scale
-// 4. Attempts consensus
-// 5. Falls back to controlled randomness if needed
-// 6. Logs complete decision
-//
-// Philosophy:
-// - NO SINGLE STRATEGY DOMINATES
-// - Diversity is preserved through parallelism
-// - Randomness is a feature, not a bug
-// - Every decision is fully auditable
-//
-// This is where "antifragility" becomes real.
-// ============================================================================
-
-const { PrismaClient } = require('@prisma/client');
-const strategyRegistry = require('./strategyRegistry');
-const consensusEngine = require('./consensusEngine');
-const decisionLogger = require('./decisionLogger');
+import { PrismaClient } from '@prisma/client';
+import strategyRegistry from './strategyRegistry.js';
+import consensusEngine from './consensusEngine.js';
+import decisionLogger from './decisionLogger.js';
+import logger from '../utils/logger.js';
 
 const prisma = new PrismaClient();
 
+/**
+ * Match Orchestrator — the brain of the antifragile matching system.
+ *
+ * Execution flow:
+ *  1. Validate inputs
+ *  2. Load squad/slot context and candidate profiles
+ *  3. Fetch active + shadow strategies
+ *  4. Execute ALL strategies in parallel (Promise.allSettled)
+ *  5. Normalize scores and attempt consensus
+ *  6. Make final selection (consensus or weighted-random fallback)
+ *  7. Log the complete decision
+ *
+ * Philosophy:
+ *  - No single strategy dominates
+ *  - Diversity is preserved through parallelism
+ *  - Controlled randomness is a feature — it drives exploration
+ *  - Every decision is fully auditable
+ */
 class MatchOrchestrator {
 
-  // ============================================================================
-  // MAIN ENTRY POINT: MATCH CANDIDATES TO SLOT
-  // ============================================================================
-  //
-  // Input:
-  // - squadId: Which squad needs a member
-  // - slotId: Which specific slot (role) to fill
-  // - candidates: Array of user IDs to consider
-  //
-  // Output:
-  // - recommendedUserId: Who to show first to squad leader
-  // - alternatives: Other good options
-  // - explanation: Why this recommendation
-  // - decisionId: For tracking outcomes later
-
   async matchCandidatesForSlot(squadId, slotId, candidates) {
-    console.log('\n============================================');
-    console.log('🎯 MATCH ORCHESTRATOR: Starting new match');
-    console.log('============================================');
-    console.log(`   Squad: ${squadId}`);
-    console.log(`   Slot: ${slotId}`);
-    console.log(`   Candidates: ${candidates.length}`);
-    console.log('============================================\n');
+    if (!squadId || !slotId || !candidates?.length) {
+      throw new Error('Invalid match request: missing required fields');
+    }
 
     const startTime = Date.now();
+    logger.info('Match started', { squadId, slotId, candidates: candidates.length });
 
     try {
-      // ========================================
-      // STEP 1: Validate inputs
-      // ========================================
-      if (!squadId || !slotId || !candidates || candidates.length === 0) {
-        throw new Error('Invalid match request: missing required fields');
-      }
-
-      // ========================================
-      // STEP 2: Get squad and slot context
-      // ========================================
-      console.log('📋 Step 1: Loading squad context...');
-      
+      // ── Load context ──────────────────────────────────────────────────────
       const squad = await prisma.squadRequest.findUnique({
-        where: { id: squadId },
+        where:   { id: squadId },
         include: {
-          slots: { where: { id: slotId } },
-          leader: { select: { id: true, name: true, college: true } }
-        }
+          slots:  { where: { id: slotId } },
+          leader: { select: { id: true, name: true, college: true } },
+        },
       });
 
-      if (!squad) {
-        throw new Error(`Squad ${squadId} not found`);
-      }
-
+      if (!squad)         throw new Error(`Squad ${squadId} not found`);
       const slot = squad.slots[0];
-      if (!slot) {
-        throw new Error(`Slot ${slotId} not found`);
-      }
+      if (!slot)          throw new Error(`Slot ${slotId} not found`);
 
-      console.log(`✅ Squad: "${squad.title}"`);
-      console.log(`✅ Slot: "${slot.role}" (requires: ${slot.requiredSkill || 'any'})`);
-
-      // ========================================
-      // STEP 3: Load candidate data
-      // ========================================
-      console.log('\n📊 Step 2: Loading candidate profiles...');
-      
+      // ── Load candidate profiles ───────────────────────────────────────────
       const candidateProfiles = await prisma.user.findMany({
-        where: { id: { in: candidates } },
-        include: {
-          skills: {
-            select: {
-              name: true,
-              level: true,
-              isVerified: true,
-              calculatedScore: true
-            }
-          }
-        }
+        where:   { id: { in: candidates } },
+        include: { skills: { select: { name: true, level: true, isVerified: true, calculatedScore: true } } },
       });
 
-      console.log(`✅ Loaded ${candidateProfiles.length} candidate profiles`);
+      // ── Fetch strategies ──────────────────────────────────────────────────
+      const [activeStrategies, shadowStrategies] = await Promise.all([
+        strategyRegistry.getActiveStrategies(),
+        strategyRegistry.getShadowStrategies(),
+      ]);
 
-      // ========================================
-      // STEP 4: Get active strategies
-      // ========================================
-      console.log('\n🧠 Step 3: Loading active strategies...');
-      
-      const activeStrategies = await strategyRegistry.getActiveStrategies();
-      const shadowStrategies = await strategyRegistry.getShadowStrategies();
+      if (activeStrategies.length === 0) throw new Error('No active strategies available');
 
-      console.log(`✅ Active strategies: ${activeStrategies.length}`);
-      console.log(`👻 Shadow strategies: ${shadowStrategies.length}`);
+      // ── Execute strategies ────────────────────────────────────────────────
+      const strategyVotes = await this._executeStrategies(activeStrategies, shadowStrategies, squad, slot, candidateProfiles);
 
-      if (activeStrategies.length === 0) {
-        throw new Error('No active strategies available. System cannot make decisions.');
-      }
+      // ── Consensus check ───────────────────────────────────────────────────
+      const consensusResult = await consensusEngine.checkConsensus(strategyVotes, activeStrategies);
+      const selection       = await this._makeSelection(consensusResult, strategyVotes, candidateProfiles);
 
-      // ========================================
-      // STEP 5: Execute ALL strategies in parallel
-      // ========================================
-      console.log('\n⚡ Step 4: Executing strategies in parallel...');
-      
-      const strategyVotes = await this._executeStrategies(
-        activeStrategies,
-        shadowStrategies,
-        squad,
-        slot,
-        candidateProfiles
-      );
-
-      console.log(`✅ Collected votes from ${Object.keys(strategyVotes).length} strategies`);
-
-      // ========================================
-      // STEP 6: Attempt consensus
-      // ========================================
-      console.log('\n🤝 Step 5: Checking for consensus...');
-      
-      const consensusResult = await consensusEngine.checkConsensus(
-        strategyVotes,
-        activeStrategies
-      );
-
-      if (consensusResult.hasConsensus) {
-        console.log('✅ CONSENSUS FOUND!');
-        console.log(`   Winner: ${consensusResult.selectedUserId}`);
-        console.log(`   Agreed by: ${consensusResult.agreementCount}/${activeStrategies.length} strategies`);
-      } else {
-        console.log('❌ No consensus - strategies disagree');
-        console.log('   Falling back to controlled randomness...');
-      }
-
-      // ========================================
-      // STEP 7: Make final selection
-      // ========================================
-      console.log('\n🎲 Step 6: Final selection...');
-      
-      const selection = await this._makeSelection(
-        consensusResult,
-        strategyVotes,
-        candidateProfiles
-      );
-
-      console.log(`✅ Selected: ${selection.selectedUserId}`);
-      console.log(`   Method: ${selection.wasConsensus ? 'CONSENSUS' : 'RANDOMNESS'}`);
-
-      // ========================================
-      // STEP 8: Log decision (CRITICAL for learning)
-      // ========================================
-      console.log('\n📝 Step 7: Logging decision...');
-      
+      // ── Log decision ──────────────────────────────────────────────────────
       const decision = await decisionLogger.logDecision({
         squadId,
         slotId,
-        selectedUserId: selection.selectedUserId,
+        selectedUserId:   selection.selectedUserId,
         alternativesShown: selection.alternatives,
-        wasConsensus: selection.wasConsensus,
-        wasRandom: !selection.wasConsensus,
-        consensusCount: consensusResult.agreementCount || 0,
+        wasConsensus:     selection.wasConsensus,
+        wasRandom:        !selection.wasConsensus,
+        consensusCount:   consensusResult.agreementCount || 0,
         strategyVotes,
-        activeStrategies: activeStrategies.map(s => ({
-          id: s.id,
-          name: s.name,
-          state: s.state,
-          influenceLevel: s.influenceLevel
+        activeStrategies: activeStrategies.map((s) => ({
+          id: s.id, name: s.name, state: s.state, influenceLevel: s.influenceLevel,
         })),
-        systemVersion: '2.1'
+        systemVersion: '2.1',
       });
 
-      console.log(`✅ Decision logged: ${decision.id}`);
-
-      // ========================================
-      // STEP 9: Prepare response
-      // ========================================
       const executionTime = Date.now() - startTime;
-      
-      console.log('\n============================================');
-      console.log('✅ MATCH COMPLETE');
-      console.log(`   Execution time: ${executionTime}ms`);
-      console.log('============================================\n');
+      logger.info('Match complete', { decisionId: decision.id, executionMs: executionTime, method: selection.wasConsensus ? 'CONSENSUS' : 'RANDOM' });
 
       return {
         recommendedUserId: selection.selectedUserId,
-        alternatives: selection.alternatives,
-        decisionId: decision.id,
-        
-        // Explanation for UI
+        alternatives:      selection.alternatives,
+        decisionId:        decision.id,
         explanation: {
-          method: selection.wasConsensus ? 'consensus' : 'exploration',
-          reasoning: selection.wasConsensus
+          method:         selection.wasConsensus ? 'consensus' : 'exploration',
+          reasoning:      selection.wasConsensus
             ? `${consensusResult.agreementCount} strategies agreed on this candidate`
             : 'Exploring diverse options to discover best matches',
           strategiesUsed: activeStrategies.length,
-          confidence: selection.wasConsensus 
-            ? (consensusResult.agreementCount / activeStrategies.length) 
-            : 0.5 // Random = medium confidence
+          confidence:     selection.wasConsensus ? (consensusResult.agreementCount / activeStrategies.length) : 0.5,
         },
-
-        // Metadata
         meta: {
-          executionTimeMs: executionTime,
-          strategiesExecuted: activeStrategies.length + shadowStrategies.length,
-          consensusAchieved: selection.wasConsensus
-        }
+          executionTimeMs:     executionTime,
+          strategiesExecuted:  activeStrategies.length + shadowStrategies.length,
+          consensusAchieved:   selection.wasConsensus,
+        },
       };
-
     } catch (error) {
-      console.error('❌ MATCH ORCHESTRATOR ERROR:', error);
-      
-      // Log failure
+      logger.error('Match orchestrator error', { err: error.message, squadId, slotId });
       await this._logFailure(squadId, slotId, error);
-      
       throw error;
     }
   }
 
-  // ============================================================================
-  // EXECUTE ALL STRATEGIES
-  // ============================================================================
-  // Runs each strategy against all candidates
-  //
-  // Returns: Object mapping strategyId → { candidateId, score }
-  //
-  // Key Points:
-  // - All strategies run in parallel (Promise.allSettled)
-  // - Shadow strategies run but don't affect decision
-  // - Timeout protection (5 seconds per strategy)
-  // - Failures are logged but don't crash system
+  // ── Execute all strategies in parallel ────────────────────────────────────
 
   async _executeStrategies(activeStrategies, shadowStrategies, squad, slot, candidates) {
-    console.log('\n   🔄 Executing strategies...');
-
     const allStrategies = [
-      ...activeStrategies.map(s => ({ ...s, isShadow: false })),
-      ...shadowStrategies.map(s => ({ ...s, isShadow: true }))
+      ...activeStrategies.map((s) => ({ ...s, isShadow: false })),
+      ...shadowStrategies.map((s) => ({ ...s, isShadow: true  })),
     ];
 
-    // Execute all strategies in parallel
     const results = await Promise.allSettled(
-      allStrategies.map(strategy => 
-        this._executeStrategy(strategy, squad, slot, candidates)
-      )
+      allStrategies.map((strategy) => this._executeStrategy(strategy, squad, slot, candidates))
     );
 
-    // Collect successful votes
     const votes = {};
-    
     for (let i = 0; i < results.length; i++) {
-      const result = results[i];
+      const result   = results[i];
       const strategy = allStrategies[i];
 
       if (result.status === 'fulfilled') {
         votes[strategy.id] = {
           ...result.value,
-          strategyName: strategy.name,
-          isShadow: strategy.isShadow,
-          influenceLevel: strategy.influenceLevel
+          strategyName:   strategy.name,
+          isShadow:       strategy.isShadow,
+          influenceLevel: strategy.influenceLevel,
         };
-        
-        console.log(`   ✅ ${strategy.name}: ${result.value.candidateId} (score: ${result.value.normalizedScore.toFixed(2)})`);
+        logger.debug('Strategy voted', { name: strategy.name, candidate: result.value.candidateId, score: result.value.normalizedScore });
       } else {
-        console.error(`   ❌ ${strategy.name} FAILED: ${result.reason?.message}`);
-        
-        // Log strategy failure
+        logger.error('Strategy failed', { name: strategy.name, err: result.reason?.message });
         await this._logStrategyFailure(strategy.id, result.reason);
       }
     }
@@ -298,258 +147,122 @@ class MatchOrchestrator {
     return votes;
   }
 
-  // ============================================================================
-  // EXECUTE SINGLE STRATEGY
-  // ============================================================================
-  // Runs one strategy against all candidates
-  //
-  // Returns: { candidateId, rawScore, normalizedScore }
-  //
-  // Steps:
-  // 1. Score all candidates
-  // 2. Normalize scores to [0, 1]
-  // 3. Select top candidate
-
   async _executeStrategy(strategy, squad, slot, candidates) {
-    console.log(`   🔄 Running strategy: ${strategy.name}...`);
+    // Dynamically import each strategy implementation file — ESM equivalent
+    // of the previous `require(./strategies/${name})` call
+    const { default: StrategyImpl } = await import(`./strategies/${strategy.name}.js`);
+    const instance = new StrategyImpl(strategy.config);
 
-    // ========================================
-    // LOAD STRATEGY IMPLEMENTATION
-    // ========================================
-    // Each strategy is a separate file in /strategies folder
-    const StrategyImplementation = require(`./strategies/${strategy.name}`);
-    const strategyInstance = new StrategyImplementation(strategy.config);
-
-    // ========================================
-    // TIMEOUT PROTECTION
-    // ========================================
-    const timeoutMs = 5000; // 5 seconds max per strategy
     const timeout = new Promise((_, reject) =>
-      setTimeout(() => reject(new Error('Strategy timeout')), timeoutMs)
+      setTimeout(() => reject(new Error('Strategy timeout')), 5000)
     );
 
-    // ========================================
-    // SCORE ALL CANDIDATES
-    // ========================================
     const scoringPromise = (async () => {
       const scores = [];
-
       for (const candidate of candidates) {
         try {
-          // Call strategy's score method
-          const rawScore = await strategyInstance.score(candidate, slot, squad);
-          
-          scores.push({
-            candidateId: candidate.id,
-            rawScore
-          });
+          const rawScore = await instance.score(candidate, slot, squad);
+          scores.push({ candidateId: candidate.id, rawScore });
         } catch (error) {
-          console.error(`   ⚠️  Failed to score candidate ${candidate.id}:`, error.message);
-          // Score 0 for failed candidates
-          scores.push({
-            candidateId: candidate.id,
-            rawScore: 0
-          });
+          logger.warn('Failed to score candidate', { candidateId: candidate.id, strategy: strategy.name, err: error.message });
+          scores.push({ candidateId: candidate.id, rawScore: 0 });
         }
       }
-
       return scores;
     })();
 
-    // Race between scoring and timeout
-    const scores = await Promise.race([scoringPromise, timeout]);
+    const scores           = await Promise.race([scoringPromise, timeout]);
+    const normalizedScores = await instance.normalize(scores);
 
-    // ========================================
-    // NORMALIZE SCORES
-    // ========================================
-    // Convert raw scores to [0, 1] range for comparability
-    const normalizedScores = await strategyInstance.normalize(scores);
-
-    // ========================================
-    // SELECT TOP CANDIDATE
-    // ========================================
-    const topCandidate = normalizedScores.reduce((best, current) => 
+    const top = normalizedScores.reduce((best, current) =>
       current.normalizedScore > best.normalizedScore ? current : best
     );
 
-    return {
-      candidateId: topCandidate.candidateId,
-      rawScore: topCandidate.rawScore,
-      normalizedScore: topCandidate.normalizedScore,
-      allScores: normalizedScores // For debugging
-    };
+    return { candidateId: top.candidateId, rawScore: top.rawScore, normalizedScore: top.normalizedScore, allScores: normalizedScores };
   }
 
-  // ============================================================================
-  // MAKE FINAL SELECTION
-  // ============================================================================
-  // Chooses final candidate based on consensus or randomness
-  //
-  // Logic:
-  // - If consensus exists → use it
-  // - If no consensus → controlled randomness
-  //
-  // Also selects alternatives to show to squad leader
+  // ── Final selection ───────────────────────────────────────────────────────
 
   async _makeSelection(consensusResult, strategyVotes, candidates) {
-    const config = await strategyRegistry.getSystemConfig();
-
-    // ========================================
-    // CASE 1: Consensus exists - use it
-    // ========================================
     if (consensusResult.hasConsensus) {
-      const selectedUserId = consensusResult.selectedUserId;
-      
-      // Get alternatives (next best candidates)
-      const alternatives = this._getAlternatives(
-        selectedUserId,
-        strategyVotes,
-        candidates,
-        3 // Show top 3 alternatives
-      );
-
       return {
-        selectedUserId,
-        alternatives,
-        wasConsensus: true,
-        wasRandom: false
+        selectedUserId: consensusResult.selectedUserId,
+        alternatives:   this._getAlternatives(consensusResult.selectedUserId, strategyVotes, candidates, 3),
+        wasConsensus:   true,
+        wasRandom:      false,
       };
     }
 
-    // ========================================
-    // CASE 2: No consensus - controlled randomness
-    // ========================================
-    console.log('   🎲 Using controlled randomness for exploration...');
+    // Controlled randomness fallback — weights capped at 2.0 to prevent dominance
+    const votedCandidates = [...new Set(
+      Object.values(strategyVotes).filter((v) => !v.isShadow).map((v) => v.candidateId)
+    )];
 
-    // Get all unique candidates that strategies voted for
-    const votedCandidates = new Set();
-    Object.values(strategyVotes).forEach(vote => {
-      if (!vote.isShadow) { // Only active strategies
-        votedCandidates.add(vote.candidateId);
-      }
-    });
+    if (votedCandidates.length === 0) throw new Error('No candidates received votes from any strategy');
 
-    const candidateArray = Array.from(votedCandidates);
+    const maxWeight = 2.0;
+    const weights   = {};
 
-    if (candidateArray.length === 0) {
-      throw new Error('No candidates received votes from any strategy');
+    for (const candidateId of votedCandidates) {
+      const relevant = Object.values(strategyVotes).filter((v) => !v.isShadow && v.candidateId === candidateId);
+      weights[candidateId] = relevant.length > 0
+        ? Math.min(relevant.reduce((sum, v) => sum + v.normalizedScore, 0) / relevant.length, maxWeight)
+        : 0.5;
     }
 
-    // ========================================
-    // WEIGHTED RANDOM SELECTION
-    // ========================================
-    // Use normalized scores as weights, but cap them to prevent dominance
-    const weights = {};
-    const maxWeight = 2.0; // Cap prevents any candidate from dominating
-
-    candidateArray.forEach(candidateId => {
-      // Average normalized score across all strategies that voted for this candidate
-      const relevantVotes = Object.values(strategyVotes).filter(
-        v => !v.isShadow && v.candidateId === candidateId
-      );
-
-      if (relevantVotes.length > 0) {
-        const avgScore = relevantVotes.reduce((sum, v) => sum + v.normalizedScore, 0) / relevantVotes.length;
-        weights[candidateId] = Math.min(avgScore, maxWeight);
-      } else {
-        weights[candidateId] = 0.5; // Neutral weight
-      }
-    });
-
-    // Random selection weighted by scores
-    const selectedUserId = this._weightedRandom(candidateArray, weights);
-
-    // Get alternatives
-    const alternatives = this._getAlternatives(
-      selectedUserId,
-      strategyVotes,
-      candidates,
-      3
-    );
-
-    console.log(`   ✅ Random selection: ${selectedUserId} (from ${candidateArray.length} options)`);
+    const selectedUserId = this._weightedRandom(votedCandidates, weights);
 
     return {
       selectedUserId,
-      alternatives,
+      alternatives: this._getAlternatives(selectedUserId, strategyVotes, candidates, 3),
       wasConsensus: false,
-      wasRandom: true
+      wasRandom:    true,
     };
   }
 
-  // ============================================================================
-  // HELPER: Weighted random selection
-  // ============================================================================
   _weightedRandom(candidates, weights) {
-    const totalWeight = candidates.reduce((sum, c) => sum + (weights[c] || 1), 0);
-    let random = Math.random() * totalWeight;
+    const total = candidates.reduce((sum, c) => sum + (weights[c] || 1), 0);
+    let random  = Math.random() * total;
 
     for (const candidate of candidates) {
-      const weight = weights[candidate] || 1;
-      random -= weight;
-      if (random <= 0) {
-        return candidate;
-      }
+      random -= weights[candidate] || 1;
+      if (random <= 0) return candidate;
     }
 
-    // Fallback
     return candidates[0];
   }
 
-  // ============================================================================
-  // HELPER: Get alternative candidates
-  // ============================================================================
   _getAlternatives(selectedUserId, strategyVotes, allCandidates, count) {
-    // Aggregate scores for all candidates
-    const candidateScores = {};
+    const scores = {};
 
-    allCandidates.forEach(candidate => {
-      if (candidate.id === selectedUserId) return; // Skip selected
-
-      candidateScores[candidate.id] = 0;
+    for (const candidate of allCandidates) {
+      if (candidate.id === selectedUserId) continue;
+      scores[candidate.id] = 0;
       let voteCount = 0;
 
-      Object.values(strategyVotes).forEach(vote => {
+      for (const vote of Object.values(strategyVotes)) {
         if (!vote.isShadow && vote.candidateId === candidate.id) {
-          candidateScores[candidate.id] += vote.normalizedScore;
+          scores[candidate.id] += vote.normalizedScore;
           voteCount++;
         }
-      });
-
-      // Average score
-      if (voteCount > 0) {
-        candidateScores[candidate.id] /= voteCount;
       }
-    });
+      if (voteCount > 0) scores[candidate.id] /= voteCount;
+    }
 
-    // Sort by score and take top N
-    const alternatives = Object.entries(candidateScores)
-      .sort((a, b) => b[1] - a[1])
+    return Object.entries(scores)
+      .sort(([, a], [, b]) => b - a)
       .slice(0, count)
-      .map(([candidateId]) => candidateId);
-
-    return alternatives;
+      .map(([id]) => id);
   }
 
-  // ============================================================================
-  // HELPER: Log strategy failure
-  // ============================================================================
   async _logStrategyFailure(strategyId, error) {
-    console.error(`📝 Logging strategy failure: ${strategyId}`);
-    // TODO: Implement failure tracking
-    // This could trigger automatic demotion if failures are frequent
+    // TODO: Trigger automatic demotion if this strategy exceeds a failure threshold
+    logger.warn('Strategy failure logged', { strategyId, err: error?.message });
   }
 
-  // ============================================================================
-  // HELPER: Log orchestrator failure
-  // ============================================================================
   async _logFailure(squadId, slotId, error) {
-    console.error(`📝 Logging orchestrator failure for squad ${squadId}`);
-    // TODO: Implement failure tracking
+    logger.error('Orchestrator failure', { squadId, slotId, err: error.message });
   }
 }
 
-// ============================================================================
-// EXPORT SINGLETON
-// ============================================================================
-module.exports = new MatchOrchestrator();
+export default new MatchOrchestrator();

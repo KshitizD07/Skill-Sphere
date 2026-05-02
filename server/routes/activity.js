@@ -1,7 +1,7 @@
-const express = require('express');
-const { asyncHandler } = require('../utils/errorHandler');
-const { authenticateToken } = require('../middleware/auth');
-const activityService = require('../services/activityService');
+import express from 'express';
+import { asyncHandler } from '../utils/errorHandler.js';
+import { authenticateToken } from '../middleware/auth.js';
+import * as activityService from '../services/activityService.js';
 
 const router = express.Router();
 
@@ -11,4 +11,4 @@ router.get('/:userId', authenticateToken, asyncHandler(async (req, res) => {
   res.json(await activityService.getUserActivity(req.params.userId, limit));
 }));
 
-module.exports = router;
+export default router;

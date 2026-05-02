@@ -1,8 +1,9 @@
-const express = require('express');
+import express from 'express';
+import { PrismaClient } from '@prisma/client';
+import { authenticateToken } from '../middleware/auth.js';
+
 const router = express.Router();
-const { PrismaClient } = require('@prisma/client');
 const prisma = new PrismaClient();
-const { authenticateToken } = require('../middleware/auth');
 
 router.use(authenticateToken);
 
@@ -59,4 +60,4 @@ router.get('/history/:otherUserId', async (req, res, next) => {
   }
 });
 
-module.exports = router;
+export default router;

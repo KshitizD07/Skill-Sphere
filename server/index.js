@@ -1,4 +1,4 @@
-require('dotenv').config();
+import 'dotenv/config';
 
 // ── Startup validation ───────────────────────────────────────────────────────
 const REQUIRED_ENV = ['DATABASE_URL', 'JWT_SECRET'];
@@ -9,34 +9,36 @@ if (missing.length) {
   process.exit(1);
 }
 
-const express  = require('express');
-const cors     = require('cors');
-const helmet   = require('helmet');
-const morgan   = require('morgan');
-const { PrismaClient } = require('@prisma/client');
+import express from 'express';
+import cors from 'cors';
+import helmet from 'helmet';
+import morgan from 'morgan';
+import { PrismaClient } from '@prisma/client';
+import http from 'http';
+import fs from 'fs';
 
-const logger   = require('./utils/logger');
-const cache    = require('./utils/cache');
-const { errorMiddleware } = require('./utils/errorHandler');
-const { apiLimiter, authLimiter, verifyLimiter, aiLimiter } = require('./middleware/rateLimiter');
-const { setupJobs } = require('./jobs/squadMaintenance');
+import logger from './utils/logger.js';
+import cache from './utils/cache.js';
+import { errorMiddleware } from './utils/errorHandler.js';
+import { apiLimiter, authLimiter, verifyLimiter, aiLimiter } from './middleware/rateLimiter.js';
+import { setupJobs } from './jobs/squadMaintenance.js';
+import { init as initSocket } from './socket.js';
 
 // Routes
-const authRoutes     = require('./routes/auth');
-const userRoutes     = require('./routes/users');
-const skillRoutes    = require('./routes/skills');
-const verifyRoutes   = require('./routes/verify');
-const squadRoutes    = require('./routes/squads');
-const postsRoutes    = require('./routes/posts');
-const activityRoutes = require('./routes/activity');
-const aiRoutes       = require('./routes/ai');
-const chatRoutes     = require('./routes/chat');
-const notificationRoutes = require('./routes/notifications');
+import authRoutes from './routes/auth.js';
+import userRoutes from './routes/users.js';
+import skillRoutes from './routes/skills.js';
+import verifyRoutes from './routes/verify.js';
+import squadRoutes from './routes/squads.js';
+import postsRoutes from './routes/posts.js';
+import activityRoutes from './routes/activity.js';
+import aiRoutes from './routes/ai.js';
+import chatRoutes from './routes/chat.js';
+import notificationRoutes from './routes/notifications.js';
+import antifragileRoutes from './routes/antifragile.js';
 
 const app    = express();
-const http   = require('http');
 const server = http.createServer(app);
-const { init: initSocket } = require('./socket');
 initSocket(server);
 
 const prisma = new PrismaClient();
@@ -90,27 +92,29 @@ app.get('/health', async (_req, res) => {
   checks.cache = true; // in-memory always OK; Redis failure is a warning not a crash
 
   const healthy = checks.db;
+  const pkgVersion = JSON.parse(fs.readFileSync(new URL('./package.json', import.meta.url))).version;
   res.status(healthy ? 200 : 503).json({
     status:  healthy ? 'ok' : 'degraded',
     checks,
     uptime:  Math.floor(process.uptime()),
     memory:  `${Math.round(process.memoryUsage().heapUsed / 1024 / 1024)} MB`,
-    version: require('./package.json').version,
+    version: pkgVersion,
     ts:      new Date().toISOString(),
   });
 });
 
 // ── API routes ────────────────────────────────────────────────────────────────
-app.use('/api/auth',     authLimiter,   authRoutes);
-app.use('/api/users',                   userRoutes);
-app.use('/api/skills',                  skillRoutes);
-app.use('/api/verify',   verifyLimiter, verifyRoutes);
-app.use('/api/squads',                  squadRoutes);
-app.use('/api/posts',                   postsRoutes);
-app.use('/api/activity',                activityRoutes);
-app.use('/api/ai',       aiLimiter,     aiRoutes);
-app.use('/api/chat',                    chatRoutes);
-app.use('/api/notifications',           notificationRoutes);
+app.use('/api/auth',         authLimiter,   authRoutes);
+app.use('/api/users',                       userRoutes);
+app.use('/api/skills',                      skillRoutes);
+app.use('/api/verify',       verifyLimiter, verifyRoutes);
+app.use('/api/squads',                      squadRoutes);
+app.use('/api/posts',                       postsRoutes);
+app.use('/api/activity',                    activityRoutes);
+app.use('/api/ai',           aiLimiter,     aiRoutes);
+app.use('/api/chat',                        chatRoutes);
+app.use('/api/notifications',               notificationRoutes);
+app.use('/api/antifragile',                 antifragileRoutes);
 
 // ── 404 ───────────────────────────────────────────────────────────────────────
 app.use((req, res) => {

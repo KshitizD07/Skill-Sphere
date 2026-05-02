@@ -1,9 +1,10 @@
-const { GoogleGenerativeAI } = require('@google/generative-ai');
-const { ApiError } = require('../utils/errorHandler');
-const logger = require('../utils/logger');
+import { GoogleGenerativeAI } from '@google/generative-ai';
+import { ApiError } from '../utils/errorHandler.js';
+import logger from '../utils/logger.js';
 
 let genAI = null;
 
+// Lazy-init client — avoids crashing at startup when key is missing
 function getClient() {
   if (!genAI) {
     if (!process.env.GOOGLE_API_KEY) throw ApiError.internal('AI service not configured (missing GOOGLE_API_KEY)');
@@ -12,14 +13,15 @@ function getClient() {
   return genAI;
 }
 
-async function generateRoadmap({ skill, role, currentScore }) {
+export async function generateRoadmap({ skill, role, currentScore }) {
   if (!skill?.trim() || !role?.trim()) throw ApiError.badRequest('Skill and role are required');
 
   const model = getClient().getGenerativeModel({ model: 'gemini-1.5-flash-latest' });
 
-  let proficiencyInstruction = "";
+  // Tailor prompt instructions to the user's current skill level
+  let proficiencyInstruction;
   if (currentScore === 0) {
-    proficiencyInstruction = "(SCORE: 0/10) The user is an absolute beginner who just started an empty repository. Start from the absolute foundational basics of this technology.";
+    proficiencyInstruction = '(SCORE: 0/10) The user is an absolute beginner who just started an empty repository. Start from the absolute foundational basics of this technology.';
   } else if (currentScore <= 4) {
     proficiencyInstruction = `(SCORE: ${currentScore}/10) The user is a beginner. Cover core structural deficiencies and solidify fundamental syntax and principles.`;
   } else if (currentScore <= 7) {
@@ -33,7 +35,7 @@ async function generateRoadmap({ skill, role, currentScore }) {
 Target skill: ${skill}
 Target role: ${role}
 
-CRITICAL PERSONALIZATION: 
+CRITICAL PERSONALIZATION:
 ${proficiencyInstruction}
 Tailor ALL output content exclusively picking up from their specified proficiency!
 
@@ -47,7 +49,7 @@ One paragraph: what this roadmap covers and expected timeline.
 ## Week 1–2: Foundations
 Bullet list of 4-6 specific topics/tasks to start with.
 
-## Week 3–4: Core Skills  
+## Week 3–4: Core Skills
 Bullet list of 4-6 intermediate concepts to tackle.
 
 ## Week 5–8: Applied Practice
@@ -75,5 +77,3 @@ Keep it practical, specific, and encouraging. No filler — every bullet should 
     throw ApiError.internal('AI generation failed — try again shortly');
   }
 }
-
-module.exports = { generateRoadmap };

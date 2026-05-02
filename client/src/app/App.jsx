@@ -40,10 +40,6 @@ function App() {
     }
   }, []);
 
-  const handleLogin = (userData) => {
-    setUser(userData);
-  };
-
   const handleLogout = () => {
     localStorage.removeItem('token');
     localStorage.removeItem('user_data');
@@ -55,7 +51,7 @@ function App() {
       <Routes>
         {/* Public routes */}
         <Route path="/" element={<Landing />} />
-        <Route path="/auth" element={<AuthPage onLogin={handleLogin} />} />
+        <Route path="/auth" element={<AuthPage onLogin={setUser} />} />
 
         {/* Protected routes — require auth */}
         <Route path="/dashboard" element={

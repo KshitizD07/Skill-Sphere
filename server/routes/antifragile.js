@@ -15,14 +15,17 @@
 //
 // ============================================================================
 
-const express = require('express');
-const router = express.Router();
+import express from 'express';
+import { PrismaClient } from '@prisma/client';
 
 // Import services
-const strategyRegistry = require('../services/strategyRegistry');
-const consensusEngine = require('../services/consensusEngine');
-const decisionLogger = require('../services/decisionLogger');
-const { authenticateToken, requireRole } = require('../middleware/auth');
+import strategyRegistry from '../services/strategyRegistry.js';
+import consensusEngine from '../services/consensusEngine.js';
+import decisionLogger from '../services/decisionLogger.js';
+import { authenticateToken, requireRole } from '../middleware/auth.js';
+
+const router = express.Router();
+const prisma = new PrismaClient();
 
 // ============================================================================
 // MIDDLEWARE: Admin only
@@ -191,8 +194,7 @@ router.get('/decisions/recent', authenticateToken, async (req, res) => {
   try {
     const limit = parseInt(req.query.limit) || 50;
     
-    const { PrismaClient } = require('@prisma/client');
-    const prisma = new PrismaClient();
+    
     
     const decisions = await prisma.matchDecision.findMany({
       orderBy: { timestamp: 'desc' },
@@ -261,4 +263,4 @@ router.post('/outcomes/:decisionId', authenticateToken, async (req, res) => {
 // ============================================================================
 // EXPORT ROUTES
 // ============================================================================
-module.exports = router;
+export default router;

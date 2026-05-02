@@ -1,7 +1,9 @@
-const { PrismaClient } = require('@prisma/client');
+import { PrismaClient } from '@prisma/client';
+
 const prisma = new PrismaClient();
 
-async function getUserActivity(userId, limit = 20) {
+/** Returns the most recent activity log entries for a user. */
+export async function getUserActivity(userId, limit = 20) {
   return prisma.activityLog.findMany({
     where:   { userId },
     orderBy: { createdAt: 'desc' },
@@ -9,7 +11,8 @@ async function getUserActivity(userId, limit = 20) {
   });
 }
 
-async function logActivity(userId, action, details) {
+/** Appends a new activity log entry, serialising object details to JSON. */
+export async function logActivity(userId, action, details) {
   const detailStr = details
     ? (typeof details === 'string' ? details : JSON.stringify(details))
     : null;
@@ -17,5 +20,3 @@ async function logActivity(userId, action, details) {
     data: { userId, action, details: detailStr },
   });
 }
-
-module.exports = { getUserActivity, logActivity };

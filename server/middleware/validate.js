@@ -1,7 +1,13 @@
-const { ApiError } = require('../utils/errorHandler');
+import { ApiError } from '../utils/errorHandler.js';
 
-// Usage: router.post('/', validate(myZodSchema), handler)
-function validate(schema, target = 'body') {
+/**
+ * Zod schema validation middleware.
+ * Usage: router.post('/', validate(myZodSchema), handler)
+ *
+ * @param {import('zod').ZodTypeAny} schema - Zod schema to validate against
+ * @param {'body'|'query'|'params'} target  - Which request property to validate
+ */
+export function validate(schema, target = 'body') {
   return (req, res, next) => {
     const result = schema.safeParse(req[target]);
     if (!result.success) {
@@ -15,5 +21,3 @@ function validate(schema, target = 'body') {
     next();
   };
 }
-
-module.exports = { validate };

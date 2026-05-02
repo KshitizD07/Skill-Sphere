@@ -1,393 +1,206 @@
-// server/services/gatekeeper-production.js
-// THE GATEKEEPER - Production Version with Slot System
+import { PrismaClient } from '@prisma/client';
+import cache from '../utils/cache.js';
+import logger from '../utils/logger.js';
 
-const { PrismaClient } = require('@prisma/client');
-const cache = require('../utils/cache');
-const { tr } = require('zod/v4/locales');
 const prisma = new PrismaClient();
 
+/**
+ * Gatekeeper enforces squad application eligibility.
+ *
+ * Checks (in order):
+ *  1. Basic validation (squad exists, open, not self-applying)
+ *  2. Duplicate application guard
+ *  3. Visibility / campus access control
+ *  4. Pending application cap (Ghost Rule — max 5 per user)
+ *  5. Event exclusivity (can't join two squads for the same event)
+ *  6. Slot matching
+ *  7. Skill verification and score gate
+ */
 class GatekeeperService {
-  
-  /**
-   * MAIN CHECK: Can user apply to this squad?
-   * Now includes: slot matching, event exclusivity, pending limit
-   */
+
   async checkEligibility(userId, squadId, slotId = null) {
-    console.log(`🔍 GATEKEEPER CHECK: User ${userId} → Squad ${squadId}${slotId ? ` → Slot ${slotId}` : ''}`);
-
-    // ============================================
-    // PHASE 1: BASIC VALIDATIONS
-    // ============================================
-    
-    // 1.1: Fetch Squad
+    // Phase 1: Basic validations
     const squad = await prisma.squadRequest.findUnique({
-      where: { id: squadId },
-      include: {
-        slots: true,
-        leader: { select: { id: true, college: true } }
-      }
+      where:   { id: squadId },
+      include: { slots: true, leader: { select: { id: true, college: true } } },
     });
 
-    if (!squad) {
-      return this.reject('Squad not found');
-    }
+    if (!squad)                    return this.reject('Squad not found');
+    if (squad.status !== 'OPEN')   return this.reject(`Squad is ${squad.status.toLowerCase()}`);
+    if (squad.leaderId === userId)  return this.reject('You are the squad leader');
 
-    // 1.2: Check Squad Status
-    if (squad.status !== 'OPEN') {
-      return this.reject(`Squad is ${squad.status.toLowerCase()}`);
-    }
+    const existingApp = await prisma.squadMember.findUnique({ where: { squadId_userId: { squadId, userId } } });
+    if (existingApp?.status === 'PENDING')  return this.reject('Application already pending');
+    if (existingApp?.status === 'ACCEPTED') return this.reject('Already a member');
 
-    // 1.3: Check if user is leader
-    if (squad.leaderId === userId) {
-      return this.reject('You are the squad leader');
-    }
-
-    // 1.4: Check if already applied
-    const existingApp = await prisma.squadMember.findUnique({
-      where: { squadId_userId: { squadId, userId } }
-    });
-
-    if (existingApp) {
-      if (existingApp.status === 'PENDING') {
-        return this.reject('Application already pending');
-      }
-      if (existingApp.status === 'ACCEPTED') {
-        return this.reject('Already a member');
-      }
-      // REJECTED = can re-apply
-    }
-
-    // ============================================
-    // PHASE 2: VISIBILITY & ACCESS CONTROL
-    // ============================================
-    
+    // Phase 2: Visibility & access control
     const user = await prisma.user.findUnique({
-      where: { id: userId },
-      select: { college: true, 
-        skills: {
-          select: {
-            name: true,
-            level: true,
-            isVerified: true,
-            calculatedScore: true
-          }
-        } }
+      where:  { id: userId },
+      select: { college: true, skills: { select: { name: true, level: true, isVerified: true, calculatedScore: true } } },
     });
 
-    // 2.1: Campus-Only Check
     if (squad.visibility === 'CAMPUS_ONLY') {
       if (!user.college || user.college !== squad.campusOnly) {
-        return this.reject(
-          `This squad is only open to ${squad.campusOnly} students`,
-          { requiredCollege: squad.campusOnly }
-        );
+        return this.reject(`This squad is only open to ${squad.campusOnly} students`, { requiredCollege: squad.campusOnly });
       }
     }
 
-    // 2.2: Stealth Mode (handled at UI level - user needs invite link)
-    if (squad.visibility === 'STEALTH') {
-      // If they got here, they have the code - allow
-    }
-
-    // ============================================
-    // PHASE 3: CONSTRAINT CHECKS
-    // ============================================
-
-    // 3.1: Ghost Rule - Max 5 pending applications
-    const pendingCount = await prisma.squadMember.count({
-      where: {
-        userId,
-        status: 'PENDING'
-      }
-    });
-
+    // Phase 3: Constraint checks
+    const pendingCount = await prisma.squadMember.count({ where: { userId, status: 'PENDING' } });
     if (pendingCount >= 5) {
-      return this.reject(
-        'You have too many pending applications (max 5)',
-        { pendingCount, maxAllowed: 5 }
-      );
+      return this.reject('You have too many pending applications (max 5)', { pendingCount, maxAllowed: 5 });
     }
 
-    // 3.2: Event Exclusivity - Can't join 2 squads for same event
     if (squad.event) {
       const existingCommitment = await prisma.eventCommitment.findUnique({
-        where: {
-          userId_event: {
-            userId,
-            event: squad.event
-          }
-        },
-        include: {
-          squad: { select: { title: true } }
-        }
+        where:   { userId_event: { userId, event: squad.event } },
+        include: { squad: { select: { title: true } } },
       });
-
       if (existingCommitment) {
         return this.reject(
           `Already committed to "${existingCommitment.squad.title}" for ${squad.event}`,
-          {
-            event: squad.event,
-            existingSquad: existingCommitment.squad.title
-          }
+          { event: squad.event, existingSquad: existingCommitment.squad.title }
         );
       }
     }
 
-    // ============================================
-    // PHASE 4: SLOT MATCHING
-    // ============================================
+    // Phase 4: Slot matching
+    let targetSlot = slotId
+      ? squad.slots.find((s) => s.id === slotId)
+      : this.findBestSlotMatch(squad.slots, user.skills);
 
-    // 4.1: Check if specific slot requested
-    let targetSlot = null;
-    if (slotId) {
-      targetSlot = squad.slots.find(s => s.id === slotId);
-      
-      if (!targetSlot) {
-        return this.reject('Slot not found');
-      }
+    if (slotId && !targetSlot)            return this.reject('Slot not found');
+    if (slotId && targetSlot?.status === 'FILLED') return this.reject('Slot already filled');
+    if (!targetSlot)                       return this.reject('No available slots match your skills');
 
-      if (targetSlot.status === 'FILLED') {
-        return this.reject('Slot already filled');
-      }
-    }
-
-    // 4.2: If no specific slot, find best match
-    if (!targetSlot) {
-      targetSlot = this.findBestSlotMatch(squad.slots, user.skills);
-      
-      if (!targetSlot) {
-        return this.reject('No available slots match your skills');
-      }
-    }
-
-    // ============================================
-    // PHASE 5: SKILL VERIFICATION (The Core Gate)
-    // ============================================
-
-    // 5.1: If slot doesn't require skills (e.g., PM role)
+    // Phase 5: Skill gate (open roles bypass this)
     if (!targetSlot.requiredSkill) {
-      return {
-        allowed: true,
-        slot: {
-          id: targetSlot.id,
-          role: targetSlot.role
-        },
-        skillRequired: false
-      };
+      return { allowed: true, slot: { id: targetSlot.id, role: targetSlot.role }, skillRequired: false };
     }
 
-    // 5.2: Check if user has the required skill
-    const userSkill = user.skills.find(
-      s => s.name.toLowerCase() === targetSlot.requiredSkill.toLowerCase()
-    );
-
+    const userSkill = user.skills.find((s) => s.name.toLowerCase() === targetSlot.requiredSkill.toLowerCase());
     if (!userSkill) {
-      return this.reject(
-        `Missing required skill: ${targetSlot.requiredSkill}`,
-        {
-          slot: targetSlot.role,
-          requiredSkill: targetSlot.requiredSkill
-        }
-      );
+      return this.reject(`Missing required skill: ${targetSlot.requiredSkill}`, { slot: targetSlot.role, requiredSkill: targetSlot.requiredSkill });
     }
 
-    // 5.3: Verification Check
     if (targetSlot.requireVerified && !userSkill.isVerified) {
       return this.reject(
         `${targetSlot.requiredSkill} must be GitHub verified for this role`,
-        {
-          slot: targetSlot.role,
-          requiredSkill: targetSlot.requiredSkill,
-          userScore: userSkill.calculatedScore,
-          isVerified: false
-        }
+        { slot: targetSlot.role, requiredSkill: targetSlot.requiredSkill, userScore: userSkill.calculatedScore, isVerified: false }
       );
     }
 
-    // 5.4: Score Check
     const userScore = userSkill.calculatedScore || 0;
-    const minScore = targetSlot.minScore || 0;
+    const minScore  = targetSlot.minScore || 0;
 
     if (userScore < minScore) {
       return this.reject(
         `Insufficient skill level for ${targetSlot.role}. Required: ${minScore}/10, Your score: ${userScore}/10`,
-        {
-          slot: targetSlot.role,
-          requiredSkill: targetSlot.requiredSkill,
-          requiredScore: minScore,
-          userScore: userScore,
-          isVerified: userSkill.isVerified
-        }
+        { slot: targetSlot.role, requiredSkill: targetSlot.requiredSkill, requiredScore: minScore, userScore, isVerified: userSkill.isVerified }
       );
     }
 
-    // ============================================
-    // PHASE 6: APPROVED ✅
-    // ============================================
-
+    // Phase 6: Approved
     const result = {
       allowed: true,
-      slot: {
-        id: targetSlot.id,
-        role: targetSlot.role,
-        requiredSkill: targetSlot.requiredSkill
-      },
-      skill: {
-        name: userSkill.name,
-        score: userScore,
-        isVerified: userSkill.isVerified,
-        level: userSkill.level
-      },
-      matchScore: this.calculateMatchScore(userScore, minScore)
+      slot:  { id: targetSlot.id, role: targetSlot.role, requiredSkill: targetSlot.requiredSkill },
+      skill: { name: userSkill.name, score: userScore, isVerified: userSkill.isVerified, level: userSkill.level },
+      matchScore: this.calculateMatchScore(userScore, minScore),
     };
 
-    console.log('✅ GATEKEEPER PASSED:', result);
+    logger.debug('Gatekeeper passed', { userId, squadId, matchScore: result.matchScore });
     return result;
   }
 
-  /**
-   * Find best slot match for user's skills
-   */
+  /** Finds the best open slot for the user's skills. Prefers open roles, then highest-scoring match. */
   findBestSlotMatch(slots, userSkills) {
-    const openSlots = slots.filter(s => s.status === 'OPEN');
-    
-    // Priority 1: Slots without skill requirements (open roles)
-    const openRoles = openSlots.filter(s => !s.requiredSkill);
+    const open = slots.filter((s) => s.status === 'OPEN');
+
+    // Prefer slots without skill requirements (e.g. PM / Designer)
+    const openRoles = open.filter((s) => !s.requiredSkill);
     if (openRoles.length > 0) return openRoles[0];
 
-    // Priority 2: Slots where user exceeds requirements
-    for (const slot of openSlots) {
-      const userSkill = userSkills.find(
-        s => s.name.toLowerCase() === slot.requiredSkill?.toLowerCase()
-      );
-      
+    for (const slot of open) {
+      const userSkill = userSkills.find((s) => s.name.toLowerCase() === slot.requiredSkill?.toLowerCase());
       if (userSkill && userSkill.calculatedScore >= (slot.minScore || 0)) {
-        if (!slot.requireVerified || userSkill.isVerified) {
-          return slot;
-        }
+        if (!slot.requireVerified || userSkill.isVerified) return slot;
       }
     }
 
     return null;
   }
 
-  /**
-   * Calculate compatibility percentage
-   */
-  calculateMatchScore(userScore, requiredScore) {
-    if (requiredScore === 0) return 100;
-    const ratio = userScore / requiredScore;
-    return Math.min(100, Math.round(ratio * 100));
-  }
-
-  /**
-   * Check if user qualifies for ANY slot in squad
-   * Used for UI filtering
-   */
+  /** Returns compatibility percentage across all open slots. Used for UI filtering. */
   async checkSquadCompatibility(userId, squadId) {
-    const user = await prisma.user.findUnique({
-      where: { id: userId },
-      select: { skills: {
-        select: {
-          name: true,
-          level: true,
-          isVerified: true,
-          calculatedScore: true
-        }
-      }
-
-       }
-    });
-
-    const squad = await prisma.squadRequest.findUnique({
-      where: { id: squadId },
-      include: { slots: { where: { status: 'OPEN' } } }
-    });
+    const [user, squad] = await Promise.all([
+      prisma.user.findUnique({
+        where:  { id: userId },
+        select: { skills: { select: { name: true, level: true, isVerified: true, calculatedScore: true } } },
+      }),
+      prisma.squadRequest.findUnique({
+        where:   { id: squadId },
+        include: { slots: { where: { status: 'OPEN' } } },
+      }),
+    ]);
 
     if (!squad) return { compatible: false };
 
-    let totalSlots = squad.slots.length;
     let matchedSlots = 0;
-    let bestMatch = null;
-    let maxScore = 0;
+    let maxScore     = 0;
+    let bestMatch    = null;
 
     for (const slot of squad.slots) {
-      // Open role (no skill required)
-      if (!slot.requiredSkill) {
+      if (!slot.requiredSkill) { matchedSlots++; continue; }
+
+      const userSkill = user.skills.find((s) => s.name.toLowerCase() === slot.requiredSkill.toLowerCase());
+      if (!userSkill) continue;
+
+      const score    = userSkill.calculatedScore || 0;
+      const minScore = slot.minScore || 0;
+
+      if (score >= minScore && (!slot.requireVerified || userSkill.isVerified)) {
         matchedSlots++;
-        continue;
-      }
-
-      // Check user's skills
-      const userSkill = user.skills.find(
-        s => s.name.toLowerCase() === slot.requiredSkill.toLowerCase()
-      );
-
-      if (userSkill) {
-        const score = userSkill.calculatedScore || 0;
-        const minScore = slot.minScore || 0;
-
-        if (score >= minScore) {
-          if (!slot.requireVerified || userSkill.isVerified) {
-            matchedSlots++;
-            
-            const matchPercent = this.calculateMatchScore(score, minScore);
-            if (matchPercent > maxScore) {
-              maxScore = matchPercent;
-              bestMatch = {
-                slot: slot.role,
-                skill: userSkill.name,
-                score: score
-              };
-            }
-          }
+        const matchPercent = this.calculateMatchScore(score, minScore);
+        if (matchPercent > maxScore) {
+          maxScore  = matchPercent;
+          bestMatch = { slot: slot.role, skill: userSkill.name, score };
         }
       }
     }
 
-    const compatibilityPercent = totalSlots > 0 
-      ? Math.round((matchedSlots / totalSlots) * 100) 
-      : 0;
+    const total = squad.slots.length || 1;
 
     return {
-      compatible: matchedSlots > 0,
-      compatibilityPercent,
+      compatible:           matchedSlots > 0,
+      compatibilityPercent: Math.round((matchedSlots / total) * 100),
       matchedSlots,
-      totalSlots,
-      bestMatch
+      totalSlots:           squad.slots.length,
+      bestMatch,
     };
   }
 
-  /**
-   * Get skill snapshot for application record
-   */
+  /** Fetches the current skill snapshot to store alongside an application record. */
   async getSkillSnapshot(userId, skillName) {
     const skill = await prisma.skill.findFirst({
-      where: { 
-        userId,
-        name: { equals: skillName, mode: 'insensitive' }
-      }
+      where: { userId, name: { equals: skillName, mode: 'insensitive' } },
     });
 
     return {
-      skillName: skill?.name || skillName,
-      skillScoreSnapshot: skill?.calculatedScore || 0,
-      wasVerifiedSnapshot: skill?.isVerified || false
+      skillName:            skill?.name || skillName,
+      skillScoreSnapshot:   skill?.calculatedScore || 0,
+      wasVerifiedSnapshot:  skill?.isVerified || false,
     };
   }
 
-  /**
-   * Rejection helper
-   */
+  calculateMatchScore(userScore, requiredScore) {
+    if (requiredScore === 0) return 100;
+    return Math.min(100, Math.round((userScore / requiredScore) * 100));
+  }
+
   reject(reason, meta = {}) {
-    const result = {
-      allowed: false,
-      reason,
-      ...meta
-    };
-    console.log('❌ GATEKEEPER REJECTED:', result);
-    return result;
+    logger.debug('Gatekeeper rejected', { reason, ...meta });
+    return { allowed: false, reason, ...meta };
   }
 }
 
-module.exports = new GatekeeperService();
+export default new GatekeeperService();

@@ -1,8 +1,8 @@
-const express = require('express');
-const { PrismaClient } = require('@prisma/client');
-const { asyncHandler, ApiError } = require('../utils/errorHandler');
-const { authenticateToken } = require('../middleware/auth');
-const aiService = require('../services/aiService');
+import express from 'express';
+import { PrismaClient } from '@prisma/client';
+import { asyncHandler, ApiError } from '../utils/errorHandler.js';
+import { authenticateToken } from '../middleware/auth.js';
+import * as aiService from '../services/aiService.js';
 
 const router = express.Router();
 const prisma = new PrismaClient();
@@ -23,4 +23,4 @@ router.post('/generate-roadmap', authenticateToken, asyncHandler(async (req, res
   res.json(await aiService.generateRoadmap({ skill, role, currentScore: existingSkill.calculatedScore }));
 }));
 
-module.exports = router;
+export default router;

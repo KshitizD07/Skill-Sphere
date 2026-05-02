@@ -1,13 +1,12 @@
-const { Server } = require('socket.io');
-const { PrismaClient } = require('@prisma/client');
-const prisma = new PrismaClient();
-const jwt = require('jsonwebtoken');
+import { Server } from 'socket.io';
+import { PrismaClient } from '@prisma/client';
+import jwt from 'jsonwebtoken';
 
+const prisma = new PrismaClient();
 let io;
 
-module.exports = {
-  init: (server) => {
-    io = new Server(server, {
+export function init(server) {
+  io = new Server(server, {
       cors: {
         origin: (process.env.ALLOWED_ORIGINS || 'http://localhost:5173,http://localhost:3000').split(',').map(s => s.trim()),
         methods: ['GET', 'POST'],
@@ -93,10 +92,10 @@ module.exports = {
       });
     });
 
-    return io;
-  },
-  getIO: () => {
-    if (!io) throw new Error('Socket.io not initialized!');
-    return io;
-  }
-};
+  return io;
+}
+
+export function getIO() {
+  if (!io) throw new Error('Socket.io not initialized!');
+  return io;
+}

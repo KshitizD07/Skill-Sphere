@@ -1,12 +1,12 @@
-const express = require('express');
-const { PrismaClient } = require('@prisma/client');
-const { asyncHandler, ApiError } = require('../utils/errorHandler');
-const { authenticateToken, optionalAuth } = require('../middleware/auth');
-const { logActivity } = require('../services/activityService'); // ✅ added
-const { getIO } = require('../socket');
+import express from 'express';
+import { PrismaClient } from '@prisma/client';
+import { asyncHandler, ApiError } from '../utils/errorHandler.js';
+import { authenticateToken, optionalAuth } from '../middleware/auth.js';
+import { logActivity } from '../services/activityService.js';
+import { getIO } from '../socket.js';
 
 const router = express.Router();
-const prisma  = new PrismaClient();
+const prisma = new PrismaClient();
 
 const COMMENT_INCLUDE = {
   user:         { select: { id: true, name: true, avatar: true } },
@@ -279,4 +279,4 @@ router.post('/:postId/comment/:commentId/like', authenticateToken, asyncHandler(
   res.json({ liked: true });
 }));
 
-module.exports = router;
+export default router;

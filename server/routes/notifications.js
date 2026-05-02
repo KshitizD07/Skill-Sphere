@@ -1,9 +1,9 @@
-const express = require('express');
-const router = express.Router();
-const { PrismaClient } = require('@prisma/client');
-const prisma = new PrismaClient();
-const { authenticateToken } = require('../middleware/auth');
+import express from 'express';
+import { PrismaClient } from '@prisma/client';
+import { authenticateToken } from '../middleware/auth.js';
 
+const router = express.Router();
+const prisma = new PrismaClient();
 router.use(authenticateToken);
 
 router.get('/', async (req, res, next) => {
@@ -31,4 +31,4 @@ router.patch('/:id/read', async (req, res, next) => {
   }
 });
 
-module.exports = router;
+export default router;

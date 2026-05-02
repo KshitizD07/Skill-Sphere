@@ -1,11 +1,11 @@
-const nodemailer = require('nodemailer');
-const { PrismaClient } = require('@prisma/client');
-const { ApiError } = require('../utils/errorHandler');
-const logger = require('../utils/logger');
+import nodemailer from 'nodemailer';
+import { PrismaClient } from '@prisma/client';
+import { ApiError } from '../utils/errorHandler.js';
+import logger from '../utils/logger.js';
 
 const prisma = new PrismaClient();
 
-// ── Transporter — lazy init so missing config fails at send time not startup ─
+// Lazy-init transporter — missing SMTP config fails at send time, not startup
 let transporter = null;
 
 function getTransporter() {
@@ -17,31 +17,26 @@ function getTransporter() {
       service: 'gmail',
       auth: {
         user: process.env.SMTP_USER,
-        pass: process.env.SMTP_PASS, // App password, not your Gmail password
+        pass: process.env.SMTP_PASS, // Gmail App Password, not your account password
       },
     });
   }
   return transporter;
 }
 
-// ── Generate a 6-digit OTP ────────────────────────────────────────────────────
 function generateOtp() {
   return String(Math.floor(100000 + Math.random() * 900000));
 }
 
 // ── Send OTP email ────────────────────────────────────────────────────────────
-async function sendOtp(email) {
-  // Clean up any existing unused OTPs for this email
-  await prisma.otpVerification.deleteMany({
-    where: { email, used: false },
-  });
+export async function sendOtp(email) {
+  // Clean up any existing unused OTPs for this email before creating a new one
+  await prisma.otpVerification.deleteMany({ where: { email, used: false } });
 
   const otp       = generateOtp();
   const expiresAt = new Date(Date.now() + 10 * 60 * 1000); // 10 minutes
 
-  await prisma.otpVerification.create({
-    data: { email, otp, expiresAt },
-  });
+  await prisma.otpVerification.create({ data: { email, otp, expiresAt } });
 
   const mail = {
     from:    `"SkillSphere" <${process.env.SMTP_USER}>`,
@@ -72,7 +67,6 @@ async function sendOtp(email) {
     logger.info('OTP sent', { email });
   } catch (err) {
     logger.error('Failed to send OTP email', { err: err.message, email });
-    // Delete the OTP record since email failed
     await prisma.otpVerification.deleteMany({ where: { email, used: false } });
     throw ApiError.internal('Failed to send verification email — check SMTP config');
   }
@@ -81,21 +75,15 @@ async function sendOtp(email) {
 }
 
 // ── Verify OTP ────────────────────────────────────────────────────────────────
-async function verifyOtp(email, otp) {
+export async function verifyOtp(email, otp) {
   const record = await prisma.otpVerification.findFirst({
-    where: { email, otp, used: false },
+    where:   { email, otp, used: false },
     orderBy: { createdAt: 'desc' },
   });
 
-  if (!record) {
-    throw ApiError.badRequest('Invalid verification code');
-  }
+  if (!record) throw ApiError.badRequest('Invalid verification code');
+  if (new Date() > record.expiresAt) throw ApiError.badRequest('Verification code has expired — request a new one');
 
-  if (new Date() > record.expiresAt) {
-    throw ApiError.badRequest('Verification code has expired — request a new one');
-  }
-
-  // Mark as used
   await prisma.otpVerification.update({
     where: { id: record.id },
     data:  { used: true },
@@ -103,5 +91,3 @@ async function verifyOtp(email, otp) {
 
   return { verified: true };
 }
-
-module.exports = { sendOtp, verifyOtp };

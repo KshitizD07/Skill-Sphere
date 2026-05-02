@@ -1,9 +1,9 @@
-const logger = require('./logger');
+import logger from './logger.js';
 
-// ── In-memory store (fallback when Redis unavailable) ───────────────────────
+// ── In-memory store (fallback when Redis is unavailable) ─────────────────────
 class MemoryStore {
   constructor() {
-    this.store = new Map();   // key → { value, expiresAt }
+    this.store    = new Map(); // key → { value, expiresAt }
     this.counters = new Map(); // key → { count, expiresAt }
 
     // Sweep expired keys every 60 seconds
@@ -33,8 +33,8 @@ class MemoryStore {
   }
 
   async checkRateLimit(identifier, prefix, maxAttempts, windowSeconds) {
-    const key = `${prefix}:${identifier}`;
-    const now = Date.now();
+    const key   = `${prefix}:${identifier}`;
+    const now   = Date.now();
     const entry = this.counters.get(key);
 
     if (!entry || now > entry.expiresAt) {
@@ -43,32 +43,23 @@ class MemoryStore {
     }
 
     entry.count += 1;
-    const remaining = Math.max(0, maxAttempts - entry.count);
-    const resetIn = Math.ceil((entry.expiresAt - now) / 1000);
-
     return {
-      allowed: entry.count <= maxAttempts,
-      remaining,
-      resetIn,
+      allowed:   entry.count <= maxAttempts,
+      remaining: Math.max(0, maxAttempts - entry.count),
+      resetIn:   Math.ceil((entry.expiresAt - now) / 1000),
     };
   }
 
   _sweep() {
     const now = Date.now();
-    for (const [key, entry] of this.store) {
-      if (entry.expiresAt && now > entry.expiresAt) this.store.delete(key);
-    }
-    for (const [key, entry] of this.counters) {
-      if (now > entry.expiresAt) this.counters.delete(key);
-    }
+    for (const [key, entry] of this.store)    { if (entry.expiresAt && now > entry.expiresAt) this.store.delete(key); }
+    for (const [key, entry] of this.counters) { if (now > entry.expiresAt) this.counters.delete(key); }
   }
 }
 
-// ── Redis store ─────────────────────────────────────────────────────────────
+// ── Redis store ───────────────────────────────────────────────────────────────
 class RedisStore {
-  constructor(client) {
-    this.client = client;
-  }
+  constructor(client) { this.client = client; }
 
   async get(key) {
     const val = await this.client.get(key);
@@ -77,38 +68,29 @@ class RedisStore {
 
   async set(key, value, ttlSeconds) {
     const serialized = JSON.stringify(value);
-    if (ttlSeconds) {
-      await this.client.setex(key, ttlSeconds, serialized);
-    } else {
-      await this.client.set(key, serialized);
-    }
+    ttlSeconds ? await this.client.setex(key, ttlSeconds, serialized)
+               : await this.client.set(key, serialized);
   }
 
-  async del(key) {
-    await this.client.del(key);
-  }
+  async del(key) { await this.client.del(key); }
 
   async checkRateLimit(identifier, prefix, maxAttempts, windowSeconds) {
-    const key = `rl:${prefix}:${identifier}`;
+    const key   = `rl:${prefix}:${identifier}`;
     const count = await this.client.incr(key);
 
-    if (count === 1) {
-      await this.client.expire(key, windowSeconds);
-    }
+    if (count === 1) await this.client.expire(key, windowSeconds);
 
     const ttl = await this.client.ttl(key);
-    const remaining = Math.max(0, maxAttempts - count);
-
     return {
-      allowed: count <= maxAttempts,
-      remaining,
-      resetIn: ttl > 0 ? ttl : windowSeconds,
+      allowed:   count <= maxAttempts,
+      remaining: Math.max(0, maxAttempts - count),
+      resetIn:   ttl > 0 ? ttl : windowSeconds,
     };
   }
 }
 
-// ── Cache factory — tries Redis, falls back silently ────────────────────────
-let store = new MemoryStore();
+// ── Cache factory — tries Redis, falls back silently ─────────────────────────
+let store      = new MemoryStore();
 let usingRedis = false;
 
 async function init() {
@@ -118,11 +100,12 @@ async function init() {
   }
 
   try {
-    const Redis = require('ioredis');
+    // Dynamic import so the ioredis module is only loaded when REDIS_URL is set
+    const { default: Redis } = await import('ioredis');
     const client = new Redis(process.env.REDIS_URL, {
       maxRetriesPerRequest: 2,
-      connectTimeout: 3000,
-      lazyConnect: true,
+      connectTimeout:       3000,
+      lazyConnect:          true,
     });
 
     await client.connect();
@@ -130,13 +113,10 @@ async function init() {
 
     client.on('error', (err) => {
       logger.warn('Redis error, falling back to memory store', { err: err.message });
-      if (usingRedis) {
-        store = new MemoryStore();
-        usingRedis = false;
-      }
+      if (usingRedis) { store = new MemoryStore(); usingRedis = false; }
     });
 
-    store = new RedisStore(client);
+    store      = new RedisStore(client);
     usingRedis = true;
     logger.info('Cache: Redis connected ✓');
   } catch (err) {
@@ -144,13 +124,13 @@ async function init() {
   }
 }
 
-// ── Public API ───────────────────────────────────────────────────────────────
+// ── Public API ────────────────────────────────────────────────────────────────
 const cache = {
   init,
   isRedis: () => usingRedis,
-  get: (key) => store.get(key),
-  set: (key, value, ttl) => store.set(key, value, ttl),
-  del: (key) => store.del(key),
+  get:     (key)            => store.get(key),
+  set:     (key, value, ttl) => store.set(key, value, ttl),
+  del:     (key)            => store.del(key),
   checkRateLimit: (id, prefix, max, window) => store.checkRateLimit(id, prefix, max, window),
 
   // Convenience: cache-aside pattern
@@ -163,4 +143,4 @@ const cache = {
   },
 };
 
-module.exports = cache;
+export default cache;
