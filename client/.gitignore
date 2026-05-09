@@ -7,10 +7,17 @@ yarn-error.log*
 pnpm-debug.log*
 lerna-debug.log*
 
+# Dependencies
 /node_modules
-dist
-dist-ssr
-*.local
+
+# Build output
+/dist
+/dist-ssr
+
+# Environment (Vite loads .env.local / .env.*.local)
+.env.local
+.env.*.local
+# .env.example should be committed — do NOT add it here
 
 # Editor directories and files
 .vscode/*
@@ -22,6 +29,4 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
-
-/public
-vite.config.js
+Thumbs.db

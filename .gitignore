@@ -1,0 +1,35 @@
+# ──────────────────────────────────────────────────
+# SkillSphere — Root .gitignore
+# ──────────────────────────────────────────────────
+
+# Environment files (never commit secrets)
+.env
+.env.local
+.env.*.local
+# .env.example files are intentionally committed
+
+# Dependencies
+**/node_modules/
+
+# Build outputs
+client/dist/
+client/dist-ssr/
+
+# Prisma generated client
+server/generated/
+
+# PM2 / Winston logs
+server/logs/
+*.log
+
+# OS artefacts
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Editor
+.vscode/*
+!.vscode/extensions.json
+.idea/
+*.suo
+*.sw?

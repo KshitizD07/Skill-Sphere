@@ -16,7 +16,7 @@ export default function NotificationBell() {
 
     API.get('/notifications').then(res => setNotifications(res.data)).catch(console.error);
 
-    const socket = io(import.meta.env.VITE_API_URL || 'http://localhost:5001', {
+    const socket = io(import.meta.env.VITE_SOCKET_URL || 'http://localhost:5001', {
       auth: { token }
     });
 

@@ -1,8 +1,23 @@
+# Dependencies
 /node_modules
-# Keep environment variables out of version control
+
+# Environment — keep secrets out of version control
 .env
-.env.example
+.env.local
+# .env.example should be committed — do NOT add it here
+
+# Prisma generated client
 /generated/prisma
 
+# Prisma migrations (committed separately in production)
 /prisma/migrations/
 **/migrations/
+
+# PM2 / Winston logs
+/logs/
+*.log
+npm-debug.log*
+
+# OS artefacts
+.DS_Store
+Thumbs.db

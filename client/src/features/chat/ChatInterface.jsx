@@ -32,7 +32,7 @@ export default function ChatInterface() {
       setHistory([{ sender: 'system', text: 'Secure session established.' }, ...formatted]);
     }).catch(err => console.error("Error fetching chat history", err));
 
-    const socket = io(import.meta.env.VITE_API_URL || 'http://localhost:5001', {
+    const socket = io(import.meta.env.VITE_SOCKET_URL || 'http://localhost:5001', {
       auth: { token }
     });
     socketRef.current = socket;
