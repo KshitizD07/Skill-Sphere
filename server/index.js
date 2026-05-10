@@ -10,6 +10,7 @@ if (missing.length) {
 }
 
 import express from 'express';
+import cookieParser from 'cookie-parser';
 import cors from 'cors';
 import helmet from 'helmet';
 import morgan from 'morgan';
@@ -62,6 +63,9 @@ app.use(cors({
   credentials: true,
   methods:     ['GET', 'POST', 'PATCH', 'PUT', 'DELETE', 'OPTIONS'],
 }));
+
+// ── Cookie parsing ───────────────────────────────────────────────────────────
+app.use(cookieParser());
 
 // ── Body parsing ─────────────────────────────────────────────────────────────
 app.use(express.json({ limit: '10mb' }));

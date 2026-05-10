@@ -1,6 +1,7 @@
 import { Server } from 'socket.io';
 import { PrismaClient } from '@prisma/client';
 import jwt from 'jsonwebtoken';
+import cookie from 'cookie';
 
 const prisma = new PrismaClient();
 let io;
@@ -15,7 +16,19 @@ export function init(server) {
     });
 
     io.use((socket, next) => {
-      const token = socket.handshake.auth?.token || socket.handshake.query?.token;
+      // Try httpOnly cookie first, then fall back to auth token
+      let token = null;
+
+      const cookieHeader = socket.handshake.headers?.cookie;
+      if (cookieHeader) {
+        const cookies = cookie.parse(cookieHeader);
+        token = cookies.ss_token || null;
+      }
+
+      if (!token) {
+        token = socket.handshake.auth?.token || socket.handshake.query?.token || null;
+      }
+
       if (!token) {
         return next(new Error('Authentication error'));
       }

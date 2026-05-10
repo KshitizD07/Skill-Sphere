@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+import API from '../api';
 
 // Auth
 import AuthPage from '../features/auth/AuthPage';
@@ -27,21 +28,38 @@ import ProtectedRoute from '../shared/components/ProtectedRoute';
 
 function App() {
   const [user, setUser] = useState(null);
+  const [authChecked, setAuthChecked] = useState(false);
 
-  // Rehydrate user from localStorage on mount — fixes refresh logout
+  // Rehydrate user from httpOnly cookie session on mount
   useEffect(() => {
+    // First try localStorage cache for instant render
     const stored = localStorage.getItem('user_data');
     if (stored) {
-      try {
-        setUser(JSON.parse(stored));
-      } catch {
-        localStorage.removeItem('user_data');
-      }
+      try { setUser(JSON.parse(stored)); } catch { /* ignore bad JSON */ }
     }
+
+    // Then verify the cookie-based session with the server
+    API.get('/auth/verify')
+      .then((res) => {
+        const serverUser = res.data.user;
+        setUser(serverUser);
+        localStorage.setItem('user_data', JSON.stringify(serverUser));
+      })
+      .catch(() => {
+        // Cookie invalid or expired — clear stale data
+        setUser(null);
+        localStorage.removeItem('user_data');
+      })
+      .finally(() => setAuthChecked(true));
   }, []);
 
-  const handleLogout = () => {
-    localStorage.removeItem('token');
+  const handleLogin = (userData) => {
+    setUser(userData);
+    localStorage.setItem('user_data', JSON.stringify(userData));
+  };
+
+  const handleLogout = async () => {
+    try { await API.post('/auth/logout'); } catch { /* ignore */ }
     localStorage.removeItem('user_data');
     setUser(null);
   };
@@ -51,68 +69,68 @@ function App() {
       <Routes>
         {/* Public routes */}
         <Route path="/" element={<Landing />} />
-        <Route path="/auth" element={<AuthPage onLogin={setUser} />} />
+        <Route path="/auth" element={<AuthPage onLogin={handleLogin} />} />
 
         {/* Protected routes — require auth */}
         <Route path="/dashboard" element={
-          <ProtectedRoute>
+          <ProtectedRoute user={user} authChecked={authChecked}>
             <Dashboard user={user} onLogout={handleLogout} />
           </ProtectedRoute>
         } />
         <Route path="/my-profile" element={
-          <ProtectedRoute>
+          <ProtectedRoute user={user} authChecked={authChecked}>
             <MyProfile />
           </ProtectedRoute>
         } />
         <Route path="/profile/:id" element={
-          <ProtectedRoute>
+          <ProtectedRoute user={user} authChecked={authChecked}>
             <UserProfile />
           </ProtectedRoute>
         } />
         <Route path="/chat/:id" element={
-          <ProtectedRoute>
+          <ProtectedRoute user={user} authChecked={authChecked}>
             <ChatInterface />
           </ProtectedRoute>
         } />
         <Route path="/grid" element={
-          <ProtectedRoute>
+          <ProtectedRoute user={user} authChecked={authChecked}>
             <GlobalFeed />
           </ProtectedRoute>
         } />
         <Route path="/network" element={
-          <ProtectedRoute>
+          <ProtectedRoute user={user} authChecked={authChecked}>
             <Network />
           </ProtectedRoute>
         } />
         <Route path="/roadmap/:skill/:role" element={
-          <ProtectedRoute>
+          <ProtectedRoute user={user} authChecked={authChecked}>
             <RoadmapPage />
           </ProtectedRoute>
         } />
         <Route path="/nexus" element={
-          <ProtectedRoute>
+          <ProtectedRoute user={user} authChecked={authChecked}>
             <MissionBoard />
           </ProtectedRoute>
         } />
         <Route path="/squad/:id" element={
-          <ProtectedRoute>
+          <ProtectedRoute user={user} authChecked={authChecked}>
             <SquadDetail />
           </ProtectedRoute>
         } />
         <Route path="/squad/:id/manage" element={
-          <ProtectedRoute>
+          <ProtectedRoute user={user} authChecked={authChecked}>
             <SquadManage />
           </ProtectedRoute>
         } />
         <Route path="/verify-skill" element={
-          <ProtectedRoute>
+          <ProtectedRoute user={user} authChecked={authChecked}>
             <SkillVerifier />
           </ProtectedRoute>
         } />
 
         {/* Admin */}
         <Route path="/antifragile-admin" element={
-          <ProtectedRoute>
+          <ProtectedRoute user={user} authChecked={authChecked}>
             <AntifragileAdmin />
           </ProtectedRoute>
         } />

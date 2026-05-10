@@ -11,13 +11,10 @@ export default function NotificationBell() {
   const navigate = useNavigate();
 
   useEffect(() => {
-    const token = localStorage.getItem('token');
-    if (!token) return;
-
-    API.get('/notifications').then(res => setNotifications(res.data)).catch(console.error);
+    API.get('/notifications').then(res => setNotifications(res.data)).catch(() => {});
 
     const socket = io(import.meta.env.VITE_SOCKET_URL || 'http://localhost:5001', {
-      auth: { token }
+      withCredentials: true
     });
 
     socket.on('NOTIFICATION', (notif) => {

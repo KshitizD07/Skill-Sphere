@@ -11,7 +11,6 @@ export default function ChatInterface() {
     try { return JSON.parse(localStorage.getItem('user_data') || '{}'); }
     catch { return {}; }
   }, []);
-  const token = useMemo(() => localStorage.getItem('token'), []);
 
   const [mentor, setMentor] = useState(null);
   const [msg, setMsg] = useState('');
@@ -20,7 +19,7 @@ export default function ChatInterface() {
   const bottomRef = useRef(null);
 
   useEffect(() => {
-    if (!id || !token) return;
+    if (!id) return;
 
     API.get(`/users/${id}`).then(res => setMentor(res.data)).catch(console.error);
 
@@ -33,7 +32,7 @@ export default function ChatInterface() {
     }).catch(err => console.error("Error fetching chat history", err));
 
     const socket = io(import.meta.env.VITE_SOCKET_URL || 'http://localhost:5001', {
-      auth: { token }
+      withCredentials: true
     });
     socketRef.current = socket;
 
@@ -51,7 +50,7 @@ export default function ChatInterface() {
       socket.disconnect();
       socketRef.current = null;
     };
-  }, [id, currentUser.id, token]);
+  }, [id, currentUser.id]);
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: 'smooth' });

@@ -2,9 +2,13 @@ import jwt from 'jsonwebtoken';
 import { ApiError } from '../utils/errorHandler.js';
 
 // ── Verify token and attach req.user ─────────────────────────────────────────
+// Reads from httpOnly cookie first, falls back to Authorization header
 export function authenticateToken(req, res, next) {
-  const header = req.headers.authorization;
-  const token  = header?.startsWith('Bearer ') ? header.slice(7) : null;
+  const token =
+    req.cookies?.ss_token ||
+    (req.headers.authorization?.startsWith('Bearer ')
+      ? req.headers.authorization.slice(7)
+      : null);
 
   if (!token) return next(ApiError.unauthorized('Access token required'));
 
@@ -20,8 +24,11 @@ export function authenticateToken(req, res, next) {
 
 // ── Same but won't block unauthenticated requests ────────────────────────────
 export function optionalAuth(req, res, next) {
-  const header = req.headers.authorization;
-  const token  = header?.startsWith('Bearer ') ? header.slice(7) : null;
+  const token =
+    req.cookies?.ss_token ||
+    (req.headers.authorization?.startsWith('Bearer ')
+      ? req.headers.authorization.slice(7)
+      : null);
 
   if (!token) { req.user = null; return next(); }
 

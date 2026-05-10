@@ -8,7 +8,6 @@ export default function DashboardChat({ isOpen, onClose }) {
     try { return JSON.parse(localStorage.getItem('user_data') || '{}'); }
     catch { return {}; }
   }, []);
-  const token = useMemo(() => localStorage.getItem('token'), []);
 
   const [conversations, setConversations] = useState([]);
   const [activeChat, setActiveChat] = useState(null);
@@ -26,14 +25,14 @@ export default function DashboardChat({ isOpen, onClose }) {
 
   // Socket lifecycle — only connect when drawer is open
   useEffect(() => {
-    if (!isOpen || !token) return;
+    if (!isOpen) return;
 
     API.get('/chat/conversations')
       .then(res => setConversations(res.data || []))
       .catch(console.error);
 
     const socket = io(import.meta.env.VITE_SOCKET_URL || 'http://localhost:5001', {
-      auth: { token }
+      withCredentials: true
     });
     socketRef.current = socket;
 
@@ -55,7 +54,7 @@ export default function DashboardChat({ isOpen, onClose }) {
       socket.disconnect();
       socketRef.current = null;
     };
-  }, [isOpen, token, currentUser.id]);
+  }, [isOpen, currentUser.id]);
 
   // Auto-scroll to bottom on new messages
   useEffect(() => {

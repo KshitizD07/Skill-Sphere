@@ -29,6 +29,36 @@ const loginSchema = z.object({
   password: z.string().min(1),
 });
 
+const resetPasswordSchema = z.object({
+  email:       z.string().email().toLowerCase(),
+  otp:         z.string().length(6, 'OTP must be 6 digits'),
+  newPassword: z.string()
+    .min(8, 'Password must be at least 8 characters')
+    .regex(PASSWORD_REGEX, 'Password must contain uppercase, lowercase, number and special character'),
+});
+
+// ── Cookie helper ─────────────────────────────────────────────────────────────
+const IS_PROD = process.env.NODE_ENV === 'production';
+
+function setTokenCookie(res, token) {
+  res.cookie('ss_token', token, {
+    httpOnly:  true,                          // Not accessible via JS
+    secure:    IS_PROD,                       // HTTPS only in production
+    sameSite:  IS_PROD ? 'none' : 'lax',      // cross-origin in prod (Vercel → Railway)
+    maxAge:    7 * 24 * 60 * 60 * 1000,       // 7 days
+    path:      '/',
+  });
+}
+
+function clearTokenCookie(res) {
+  res.clearCookie('ss_token', {
+    httpOnly:  true,
+    secure:    IS_PROD,
+    sameSite:  IS_PROD ? 'none' : 'lax',
+    path:      '/',
+  });
+}
+
 function signToken(user) {
   return jwt.sign(
     { userId: user.id, email: user.email, role: user.role },
@@ -80,8 +110,10 @@ router.post('/register', asyncHandler(async (req, res) => {
     data: { userId: user.id, action: 'ACCOUNT_CREATED', details: `Joined as ${data.role}` },
   });
 
+  const token = signToken(user);
+  setTokenCookie(res, token);
+
   res.status(201).json({
-    token: signToken(user),
     user:  { id: user.id, name: user.name, email: user.email, role: user.role, college: user.college },
   });
 }));
@@ -104,7 +136,10 @@ router.post('/login', asyncHandler(async (req, res) => {
   }).catch(() => {});
 
   const { password: _, ...safeUser } = user;
-  res.json({ token: signToken(user), user: safeUser });
+  const token = signToken(user);
+  setTokenCookie(res, token);
+
+  res.json({ user: safeUser });
 }));
 
 // ── GET /api/auth/verify ──────────────────────────────────────────────────────
@@ -119,13 +154,65 @@ router.get('/verify', authenticateToken, asyncHandler(async (req, res) => {
 
 // ── POST /api/auth/logout ─────────────────────────────────────────────────────
 router.post('/logout', asyncHandler(async (req, res) => {
-  const { userId } = req.body;
-  if (userId) {
-    await prisma.activityLog.create({
-      data: { userId, action: 'USER_LOGOUT', details: 'Logged out' },
-    }).catch(() => {});
-  }
+  // Try to log the activity if a userId is in the cookie
+  try {
+    const token = req.cookies?.ss_token;
+    if (token) {
+      const decoded = jwt.verify(token, process.env.JWT_SECRET);
+      await prisma.activityLog.create({
+        data: { userId: decoded.userId, action: 'USER_LOGOUT', details: 'Logged out' },
+      });
+    }
+  } catch { /* ignore — token may be expired or invalid, still clear cookie */ }
+
+  clearTokenCookie(res);
   res.json({ success: true });
+}));
+
+// ── POST /api/auth/forgot-password ────────────────────────────────────────────
+// Send an OTP to reset the password
+router.post('/forgot-password', asyncHandler(async (req, res) => {
+  const { email } = req.body;
+  if (!email) throw ApiError.badRequest('Email is required');
+
+  const normalised = email.toLowerCase().trim();
+
+  const user = await prisma.user.findUnique({ where: { email: normalised } });
+  // Always return success (even if no user) to prevent email enumeration
+  if (!user) {
+    return res.json({ success: true, message: 'If an account exists, a verification code has been sent.' });
+  }
+
+  await sendOtp(normalised);
+
+  res.json({ success: true, message: 'If an account exists, a verification code has been sent.' });
+}));
+
+// ── POST /api/auth/reset-password ─────────────────────────────────────────────
+// Verify OTP and set new password
+router.post('/reset-password', asyncHandler(async (req, res) => {
+  const data = resetPasswordSchema.parse(req.body);
+
+  // Verify OTP
+  await verifyOtp(data.email, data.otp);
+
+  const user = await prisma.user.findUnique({ where: { email: data.email } });
+  if (!user) throw ApiError.notFound('User');
+
+  const hashed = await bcrypt.hash(data.newPassword, 12);
+  await prisma.user.update({
+    where: { id: user.id },
+    data:  { password: hashed },
+  });
+
+  await prisma.activityLog.create({
+    data: { userId: user.id, action: 'PASSWORD_RESET', details: 'Password was reset via OTP' },
+  }).catch(() => {});
+
+  // Clear any existing session after password reset (force re-login)
+  clearTokenCookie(res);
+
+  res.json({ success: true, message: 'Password has been reset. Please sign in with your new password.' });
 }));
 
 export default router;

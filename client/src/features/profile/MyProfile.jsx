@@ -6,6 +6,7 @@ import {
   LogOut, BarChart2
 } from 'lucide-react';
 import ProfileAPI from './profileAPI';
+import API from '../../api';
 import { COLLEGES } from '../../data/colleges';
 import SkillVerifier from '../skills/SkillVerifier';
 import NotificationBell from '../../shared/components/NotificationBell';
@@ -69,8 +70,8 @@ export default function MyProfile() {
     setShowSkillSelector(false);
   };
 
-  const handleLogout = () => {
-    localStorage.removeItem('token');
+  const handleLogout = async () => {
+    try { await API.post('/auth/logout'); } catch {}
     localStorage.removeItem('user_data');
     window.location.href = '/'; 
   };
