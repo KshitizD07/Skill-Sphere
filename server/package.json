@@ -5,7 +5,7 @@
   "type": "module",
   "main": "index.js",
   "scripts": {
-    "start": "node index.js",
+    "start": "npx prisma migrate deploy && node index.js",
     "dev": "nodemon index.js",
     "dev:cluster": "pm2 start pm2.config.cjs --env development",
     "prod": "pm2 start pm2.config.cjs --env production",

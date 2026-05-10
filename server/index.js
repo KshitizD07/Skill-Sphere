@@ -152,7 +152,7 @@ async function start() {
   setupJobs();
 
   // Signal pm2 that we're ready (for wait_ready: true in cluster mode)
-  server.listen(PORT, () => {
+  server.listen(PORT, '0.0.0.0', () => {
     logger.info(`SkillSphere API running`, {
       port:    PORT,
       env:     process.env.NODE_ENV || 'development',
