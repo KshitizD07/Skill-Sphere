@@ -156,7 +156,7 @@ export default function Dashboard({ user, onLogout }) {
         >
           <BarChart2 size={18} className="text-[#adc6ff] group-hover:text-[#89f5e7] transition-colors" />
           <span className="text-lg font-bold text-[#dae2fd] tracking-tight group-hover:text-[#adc6ff] transition-colors">
-            Skill Intelligence
+            Insights
           </span>
         </div>
 

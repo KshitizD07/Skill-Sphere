@@ -55,7 +55,7 @@ export default function SquadManage() {
 
         {/* Header */}
         <div className="flex items-center gap-4 mb-8 border-b border-gray-800 pb-6">
-          <button onClick={() => navigate('/nexus')} className="p-2 border border-gray-700 hover:border-cyan-500 text-gray-500 hover:text-cyan-400 transition">
+          <button onClick={() => navigate(`/squad/${id}`)} className="p-2 border border-gray-700 hover:border-cyan-500 text-gray-500 hover:text-cyan-400 transition">
             <ArrowLeft size={20} />
           </button>
           <div className="flex-1">

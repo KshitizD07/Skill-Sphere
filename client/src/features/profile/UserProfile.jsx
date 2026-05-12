@@ -426,7 +426,7 @@ export default function UserProfile() {
     <div className="min-h-screen bg-[#0b1326] text-[#c3c6d7] font-['Manrope'] p-4 md:p-8 relative selection:bg-[#adc6ff] selection:text-[#002e6a]">
       <div className="max-w-5xl mx-auto relative z-10">
         <div className="flex items-center justify-between mb-8">
-          <button type="button" onClick={() => navigate('/dashboard')} className="p-2 border border-[#434655]/40 hover:border-[#adc6ff] text-[#8d90a0] hover:text-[#adc6ff] transition">
+          <button type="button" onClick={() => navigate(-1)} className="p-2 border border-[#434655]/40 hover:border-[#adc6ff] text-[#8d90a0] hover:text-[#adc6ff] transition">
             <ArrowLeft size={20} />
           </button>
           <div className="flex items-center gap-3">
@@ -438,7 +438,7 @@ export default function UserProfile() {
             {isOwner && (
               <button type="button" onClick={() => navigate('/my-profile')}
                 className="flex items-center gap-2 px-4 py-1 border border-[#adc6ff]/20 text-[#adc6ff] hover:bg-[#adc6ff] hover:text-[#002e6a] transition font-['Space_Grotesk'] tracking-wide text-xs font-bold">
-                <Edit3 size={14} /> EDIT_DOSSIER
+                <Edit3 size={14} /> Edit Profile
               </button>
             )}
           </div>
