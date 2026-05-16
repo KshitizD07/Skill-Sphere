@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import {
   ArrowLeft, Camera, User, Plus, CheckCircle,
   X, Shield, Github, Linkedin, Save, Building2,
-  LogOut, BarChart2
+  LogOut, BarChart2, Zap
 } from 'lucide-react';
 import ProfileAPI from './profileAPI';
 import API from '../../api';

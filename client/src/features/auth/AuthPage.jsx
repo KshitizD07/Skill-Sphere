@@ -5,7 +5,7 @@ import { COLLEGES } from '../../data/colleges';
 import {
   Shield, Lock, User, Mail, ArrowRight,
   GraduationCap, Briefcase, Building2, Check, X, RefreshCw,
-  Eye, EyeOff, KeyRound
+  Eye, EyeOff, KeyRound, Zap
 } from 'lucide-react';
 
 const PASSWORD_RULES = [
