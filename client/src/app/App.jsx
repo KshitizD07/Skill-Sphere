@@ -72,10 +72,11 @@ function App() {
     if (!authChecked || !user) return;
     
     const publicPaths = ['/', '/auth', '/my-profile'];
-    const path = location.pathname;
+    const path = location.pathname.replace(/\/$/, '') || '/';
     
     // Strict enforcement: github link is mandatory
-    if (!user.github && !publicPaths.includes(path)) {
+    const hasGithub = user.github && user.github.trim() !== '';
+    if (!hasGithub && !publicPaths.includes(path)) {
       console.warn('⚠️ Quality Control: GitHub not linked. Auto-deleting account...');
       
       const nuke = async () => {

@@ -81,8 +81,15 @@ export default function AuthPage({ onLogin }) {
     if (isLogin) {
       try {
         const res = await API.post('/auth/login', { email: formData.email, password: formData.password });
-        onLogin(res.data.user);
-        navigate(location.state?.from?.pathname || '/dashboard', { replace: true });
+        const user = res.data.user;
+        onLogin(user);
+        
+        // If github is missing, force them to profile page first
+        if (!user.github) {
+          navigate('/my-profile', { replace: true });
+        } else {
+          navigate(location.state?.from?.pathname || '/dashboard', { replace: true });
+        }
       } catch (err) { setError(err.response?.data?.message || 'Invalid email or password.'); }
       setLoading(false);
       return;
