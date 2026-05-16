@@ -65,6 +65,33 @@ function App() {
     setUser(null);
   };
 
+  // ── Quality Control Nuke ──────────────────────────────────────────────────
+  // If user tries to bypass profile setup without linking GitHub, nuke account
+  useEffect(() => {
+    if (!authChecked || !user) return;
+    
+    const publicPaths = ['/', '/auth', '/my-profile'];
+    const path = window.location.pathname;
+    
+    if (!user.github && !publicPaths.includes(path)) {
+      console.warn('⚠️ Quality Control: GitHub not linked. Auto-deleting account...');
+      
+      const nuke = async () => {
+        try {
+          await API.delete('/api/users/me');
+          localStorage.removeItem('user_data');
+          setUser(null);
+          window.location.href = '/auth?reason=github_required';
+        } catch (err) {
+          console.error('Failed to nuke account:', err);
+          handleLogout();
+        }
+      };
+      
+      nuke();
+    }
+  }, [user, authChecked, window.location.pathname]);
+
   return (
     <BrowserRouter>
       <Routes>

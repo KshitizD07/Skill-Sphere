@@ -149,4 +149,19 @@ router.get('/:id', optionalAuth, asyncHandler(async (req, res) => {
   res.json(result);
 }));
 
+// ── DELETE /api/users/me ──────────────────────────────────────────────────────
+// Used for 'nuke' enforcement if user tries to bypass profile setup
+router.delete('/me', authenticateToken, asyncHandler(async (req, res) => {
+  await prisma.user.delete({ where: { id: req.user.userId } });
+  
+  res.clearCookie('ss_token', {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === 'production',
+    sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
+    path: '/',
+  });
+
+  res.json({ success: true, message: 'Account deleted' });
+}));
+
 export default router;

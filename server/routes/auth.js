@@ -19,7 +19,7 @@ const registerSchema = z.object({
     .min(8, 'Password must be at least 8 characters')
     .regex(PASSWORD_REGEX, 'Password must contain uppercase, lowercase, number and special character'),
   name:     z.string().min(2, 'Name must be at least 2 characters').max(60),
-  role:     z.enum(['STUDENT', 'ALUMNI'], { errorMap: () => ({ message: 'Role must be STUDENT or ALUMNI' }) }),
+  role:     z.enum(['STUDENT', 'ALUMNI', 'GUEST'], { errorMap: () => ({ message: 'Role must be STUDENT, ALUMNI or GUEST' }) }),
   college:  z.string().min(1).optional(),
   otp:      z.string().length(6, 'OTP must be 6 digits'),
 });

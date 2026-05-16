@@ -126,6 +126,23 @@ export default function MyProfile() {
       </div>
 
       <div className="max-w-6xl mx-auto">
+        {!formData.github && (
+          <div className="mb-8 p-5 bg-[#fbbf24]/5 border-2 border-[#fbbf24]/30 rounded-md flex items-start gap-4 animate-pulse">
+            <div className="p-2 bg-[#fbbf24]/10 rounded-sm">
+              <Zap size={24} className="text-[#fbbf24]" />
+            </div>
+            <div>
+              <h3 className="text-[#fbbf24] font-['Space_Grotesk'] font-bold uppercase tracking-widest text-sm mb-1">Mandatory Authorization Required</h3>
+              <p className="text-[#c3c6d7] text-xs leading-relaxed max-w-2xl">
+                To maintain the quality of our professional network, linking your <strong className="text-[#dae2fd]">GitHub Account</strong> is mandatory. 
+                <span className="block mt-2 font-bold text-[#ffb4ab] uppercase tracking-tighter">
+                  Warning: Navigating away from this page without a linked GitHub will result in automatic account deletion.
+                </span>
+              </p>
+            </div>
+          </div>
+        )}
+
         <div className="flex items-center justify-between mb-8">
           <div className="flex items-center gap-4">
             <button onClick={() => navigate(-1)} className="p-2 border border-[#434655]/40 rounded-xs hover:border-[#adc6ff]/40 text-[#8d90a0] hover:text-[#adc6ff] transition-all">

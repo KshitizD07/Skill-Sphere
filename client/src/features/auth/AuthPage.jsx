@@ -43,7 +43,15 @@ export default function AuthPage({ onLogin }) {
 
   useEffect(() => {
     setIsLogin(location.state?.mode !== 'register');
-    setError('');
+    
+    // Check for reason in URL
+    const params = new URLSearchParams(location.search);
+    if (params.get('reason') === 'github_required') {
+      setError('Account deleted: Linking GitHub is mandatory to ensure quality profiles. Please register again and link your GitHub.');
+    } else {
+      setError('');
+    }
+
     setStep('form');
     setOtp(['','','','','','']);
     setFormData({ name:'', email:'', password:'', confirmPassword:'', role:'STUDENT', college:'' });
@@ -284,6 +292,11 @@ export default function AuthPage({ onLogin }) {
           <p className="text-[#8d90a0] text-sm mt-2">
             A 6-digit code was sent to <span className="text-[#adc6ff] font-medium">{formData.email}</span>
           </p>
+          {formData.role === 'GUEST' && (
+            <p className="text-[#fbbf24] text-[11px] mt-2 font-['Space_Grotesk'] font-bold tracking-tight bg-[#fbbf24]/5 border border-[#fbbf24]/20 py-1.5 px-3 inline-block rounded-xs">
+              GUEST MODE: Use code 123456
+            </p>
+          )}
           <p className="text-[#656d84] text-xs mt-1">Check your inbox and spam folder.</p>
         </div>
 
@@ -355,10 +368,21 @@ export default function AuthPage({ onLogin }) {
               {/* Role selector */}
               <div>
                 <label className={labelBase}>Account Type</label>
-                <div className="grid grid-cols-2 gap-3">
+                {formData.role === 'GUEST' && (
+                  <div className="mb-3 p-3 bg-[#adc6ff]/5 border border-[#adc6ff]/20 rounded-xs">
+                    <p className="text-[#adc6ff] text-[10px] font-['Space_Grotesk'] font-bold uppercase tracking-wider flex items-center gap-1.5">
+                      <Zap size={10} className="fill-[#adc6ff]" /> Portfolio Guest Mode
+                    </p>
+                    <p className="text-[#8d90a0] text-[11px] mt-1 leading-relaxed">
+                      Use any email. In the next step, use verification code <strong className="text-[#dae2fd]">123456</strong>.
+                    </p>
+                  </div>
+                )}
+                <div className="grid grid-cols-3 gap-3">
                   {[
                     { value: 'STUDENT', label: 'Student', icon: Briefcase },
                     { value: 'ALUMNI',  label: 'Alumni',  icon: GraduationCap },
+                    { value: 'GUEST',   label: 'Guest',   icon: Shield },
                   ].map(({ value, label, icon: Icon }) => (
                     <div key={value} onClick={() => setFormData({...formData, role: value})}
                       className={`cursor-pointer p-3 border rounded-xs flex flex-col items-center justify-center gap-2 transition-all ${
