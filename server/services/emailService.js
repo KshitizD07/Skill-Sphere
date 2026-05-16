@@ -81,13 +81,14 @@ export async function sendOtp(email) {
 // ── Verify OTP ────────────────────────────────────────────────────────────────
 export async function verifyOtp(email, otp) {
   // Allow universal code in demo mode for portfolio showcasing
-  const demoModeVal = process.env.DEMO_MODE;
-  const isDemo = String(demoModeVal).toLowerCase().trim() === 'true';
+  const demoVar = process.env.DEMO_MODE || process.env.PORTFOLIO_MODE;
+  const isDemo = String(demoVar).toLowerCase().trim() === 'true' || demoVar === true || demoVar === '1';
   
-  logger.info('OTP Verification attempt', { 
+  logger.info('OTP Verification debug', { 
     email, 
     otpReceived: otp, 
-    demoModeVar: demoModeVal,
+    rawDemoVar: demoVar,
+    demoVarType: typeof demoVar,
     isDemoCalculated: isDemo 
   });
 

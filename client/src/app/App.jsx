@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+import { Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import API from '../api';
 
 // Auth
@@ -30,6 +30,7 @@ import ProtectedRoute from '../shared/components/ProtectedRoute';
 function App() {
   const [user, setUser] = useState(null);
   const [authChecked, setAuthChecked] = useState(false);
+  const location = useLocation();
 
   // Rehydrate user from httpOnly cookie session on mount
   useEffect(() => {
@@ -71,8 +72,9 @@ function App() {
     if (!authChecked || !user) return;
     
     const publicPaths = ['/', '/auth', '/my-profile'];
-    const path = window.location.pathname;
+    const path = location.pathname;
     
+    // Strict enforcement: github link is mandatory
     if (!user.github && !publicPaths.includes(path)) {
       console.warn('⚠️ Quality Control: GitHub not linked. Auto-deleting account...');
       
@@ -90,88 +92,86 @@ function App() {
       
       nuke();
     }
-  }, [user, authChecked, window.location.pathname]);
+  }, [user, authChecked, location.pathname]);
 
   return (
-    <BrowserRouter>
-      <Routes>
-        {/* Public routes */}
-        <Route path="/" element={<Landing />} />
-        <Route path="/auth" element={<AuthPage onLogin={handleLogin} />} />
+    <Routes>
+      {/* Public routes */}
+      <Route path="/" element={<Landing />} />
+      <Route path="/auth" element={<AuthPage onLogin={handleLogin} />} />
 
-        {/* Protected routes — require auth */}
-        <Route path="/dashboard" element={
-          <ProtectedRoute user={user} authChecked={authChecked}>
-            <Dashboard user={user} onLogout={handleLogout} />
-          </ProtectedRoute>
-        } />
-        <Route path="/my-profile" element={
-          <ProtectedRoute user={user} authChecked={authChecked}>
-            <MyProfile />
-          </ProtectedRoute>
-        } />
-        <Route path="/profile/:id" element={
-          <ProtectedRoute user={user} authChecked={authChecked}>
-            <UserProfile />
-          </ProtectedRoute>
-        } />
-        <Route path="/chat/:id" element={
-          <ProtectedRoute user={user} authChecked={authChecked}>
-            <ChatInterface />
-          </ProtectedRoute>
-        } />
-        <Route path="/grid" element={
-          <ProtectedRoute user={user} authChecked={authChecked}>
-            <GlobalFeed />
-          </ProtectedRoute>
-        } />
-        <Route path="/network" element={
-          <ProtectedRoute user={user} authChecked={authChecked}>
-            <Network />
-          </ProtectedRoute>
-        } />
-        <Route path="/roadmap/:skill/:role" element={
-          <ProtectedRoute user={user} authChecked={authChecked}>
-            <RoadmapPage />
-          </ProtectedRoute>
-        } />
-        <Route path="/nexus" element={
-          <ProtectedRoute user={user} authChecked={authChecked}>
-            <MissionBoard />
-          </ProtectedRoute>
-        } />
-        <Route path="/squad/:id" element={
-          <ProtectedRoute user={user} authChecked={authChecked}>
-            <SquadDetail />
-          </ProtectedRoute>
-        } />
-        <Route path="/squad/:id/manage" element={
-          <ProtectedRoute user={user} authChecked={authChecked}>
-            <SquadManage />
-          </ProtectedRoute>
-        } />
-        <Route path="/my-squads" element={
-          <ProtectedRoute user={user} authChecked={authChecked}>
-            <MyApplications />
-          </ProtectedRoute>
-        } />
-        <Route path="/verify-skill" element={
-          <ProtectedRoute user={user} authChecked={authChecked}>
-            <SkillVerifier />
-          </ProtectedRoute>
-        } />
+      {/* Protected routes — require auth */}
+      <Route path="/dashboard" element={
+        <ProtectedRoute user={user} authChecked={authChecked}>
+          <Dashboard user={user} onLogout={handleLogout} />
+        </ProtectedRoute>
+      } />
+      <Route path="/my-profile" element={
+        <ProtectedRoute user={user} authChecked={authChecked}>
+          <MyProfile onUserUpdate={setUser} />
+        </ProtectedRoute>
+      } />
+      <Route path="/profile/:id" element={
+        <ProtectedRoute user={user} authChecked={authChecked}>
+          <UserProfile />
+        </ProtectedRoute>
+      } />
+      <Route path="/chat/:id" element={
+        <ProtectedRoute user={user} authChecked={authChecked}>
+          <ChatInterface />
+        </ProtectedRoute>
+      } />
+      <Route path="/grid" element={
+        <ProtectedRoute user={user} authChecked={authChecked}>
+          <GlobalFeed />
+        </ProtectedRoute>
+      } />
+      <Route path="/network" element={
+        <ProtectedRoute user={user} authChecked={authChecked}>
+          <Network />
+        </ProtectedRoute>
+      } />
+      <Route path="/roadmap/:skill/:role" element={
+        <ProtectedRoute user={user} authChecked={authChecked}>
+          <RoadmapPage />
+        </ProtectedRoute>
+      } />
+      <Route path="/nexus" element={
+        <ProtectedRoute user={user} authChecked={authChecked}>
+          <MissionBoard />
+        </ProtectedRoute>
+      } />
+      <Route path="/squad/:id" element={
+        <ProtectedRoute user={user} authChecked={authChecked}>
+          <SquadDetail />
+        </ProtectedRoute>
+      } />
+      <Route path="/squad/:id/manage" element={
+        <ProtectedRoute user={user} authChecked={authChecked}>
+          <SquadManage />
+        </ProtectedRoute>
+      } />
+      <Route path="/my-squads" element={
+        <ProtectedRoute user={user} authChecked={authChecked}>
+          <MyApplications />
+        </ProtectedRoute>
+      } />
+      <Route path="/verify-skill" element={
+        <ProtectedRoute user={user} authChecked={authChecked}>
+          <SkillVerifier />
+        </ProtectedRoute>
+      } />
 
-        {/* Admin */}
-        <Route path="/antifragile-admin" element={
-          <ProtectedRoute user={user} authChecked={authChecked}>
-            <AntifragileAdmin />
-          </ProtectedRoute>
-        } />
+      {/* Admin */}
+      <Route path="/antifragile-admin" element={
+        <ProtectedRoute user={user} authChecked={authChecked}>
+          <AntifragileAdmin />
+        </ProtectedRoute>
+      } />
 
-        {/* 404 — must be last */}
-        <Route path="*" element={<NotFound />} />
-      </Routes>
-    </BrowserRouter>
+      {/* 404 — must be last */}
+      <Route path="*" element={<NotFound />} />
+    </Routes>
   );
 }
 

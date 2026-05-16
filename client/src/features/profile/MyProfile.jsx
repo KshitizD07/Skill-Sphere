@@ -11,7 +11,7 @@ import { COLLEGES } from '../../data/colleges';
 import SkillVerifier from '../skills/SkillVerifier';
 import NotificationBell from '../../shared/components/NotificationBell';
 
-export default function MyProfile() {
+export default function MyProfile({ onUserUpdate }) {
   const navigate = useNavigate();
   const storedUser = JSON.parse(localStorage.getItem('user_data') || '{}');
   const [loading, setLoading] = useState(false);
@@ -59,7 +59,11 @@ export default function MyProfile() {
       };
       await ProfileAPI.updateProfile(cleanedForm);
       await ProfileAPI.saveSkills(mySkillNames);
-      localStorage.setItem('user_data', JSON.stringify({ ...storedUser, ...formData }));
+      
+      const updatedUser = { ...storedUser, ...cleanedForm };
+      localStorage.setItem('user_data', JSON.stringify(updatedUser));
+      if (onUserUpdate) onUserUpdate(updatedUser);
+      
       alert('Profile updated successfully.');
     } catch (e) { console.error(e); alert('Failed to save profile.'); }
     setLoading(false);
