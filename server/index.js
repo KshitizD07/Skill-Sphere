@@ -1,5 +1,13 @@
 import 'dotenv/config';
 
+console.log('🚀 SkillSphere API: Process starting...');
+console.log('Environment:', {
+  NODE_ENV: process.env.NODE_ENV,
+  PORT: process.env.PORT,
+  HAS_DB: !!process.env.DATABASE_URL,
+  HAS_JWT: !!process.env.JWT_SECRET
+});
+
 // ── Startup validation ───────────────────────────────────────────────────────
 const REQUIRED_ENV = ['DATABASE_URL', 'JWT_SECRET'];
 const missing = REQUIRED_ENV.filter((k) => !process.env[k]);
