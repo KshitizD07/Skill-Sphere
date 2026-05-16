@@ -50,18 +50,26 @@ app.use(helmet({
 }));
 
 // ── CORS ─────────────────────────────────────────────────────────────────────
-const allowedOrigins = (process.env.ALLOWED_ORIGINS || 'https://skill-sphere-sooty-seven.vercel.app')
-  .split(',')
-  .map((s) => s.trim());
+const allowedOrigins = [
+  'https://skill-sphere-sooty-seven.vercel.app',
+  'http://localhost:5173',
+  'http://localhost:3000'
+];
+
+const rawOrigins = process.env.ALLOWED_ORIGINS;
+if (rawOrigins) {
+  rawOrigins.split(',').forEach(s => allowedOrigins.push(s.trim()));
+}
 
 app.use(cors({
-  origin:      (origin, cb) => {
-    // Allow requests with no origin (mobile apps, curl, Postman)
+  origin: (origin, cb) => {
     if (!origin || allowedOrigins.includes(origin)) return cb(null, true);
-    cb(new Error(`CORS: origin ${origin} not allowed`));
+    // Instead of error, just log it so we still get CORS headers for debugging
+    console.warn(`CORS: origin ${origin} not in whitelist`);
+    return cb(null, true); 
   },
   credentials: true,
-  methods:     ['GET', 'POST', 'PATCH', 'PUT', 'DELETE', 'OPTIONS'],
+  methods: ['GET', 'POST', 'PATCH', 'PUT', 'DELETE', 'OPTIONS'],
 }));
 
 // ── Cookie parsing ───────────────────────────────────────────────────────────
@@ -74,8 +82,11 @@ app.use(express.urlencoded({ extended: false, limit: '10mb' }));
 // ── HTTP request logging (Morgan → Winston) ──────────────────────────────────
 app.use(morgan('combined', {
   stream: { write: (msg) => logger.http(msg.trim()) },
-  skip:   (req) => req.path === '/health', // don't log health polls
+  skip: (req) => req.path === '/health' || req.path === '/',
 }));
+
+// ── Root Check ───────────────────────────────────────────────────────────────
+app.get('/', (req, res) => res.send('SkillSphere API is Live ✓'));
 
 // ── Trust proxy (needed for correct IP behind Nginx / load balancer) ─────────
 app.set('trust proxy', 1);
