@@ -70,4 +70,20 @@ export const aiLimiter = makeLimiter({
   message:       'AI request limit reached. Wait an hour.',
 });
 
+// 5 squad creations per hour
+export const squadCreateLimiter = makeLimiter({
+  maxAttempts:   5,
+  windowSeconds: 3600,
+  prefix:        'squad-create',
+  message:       'Too many squads created. Wait an hour.',
+});
+
+// 20 squad applications per hour
+export const squadApplyLimiter = makeLimiter({
+  maxAttempts:   20,
+  windowSeconds: 3600,
+  prefix:        'squad-apply',
+  message:       'Too many applications. Wait an hour.',
+});
+
 export { makeLimiter };

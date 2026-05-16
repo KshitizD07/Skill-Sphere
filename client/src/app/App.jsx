@@ -19,6 +19,7 @@ import ChatInterface from '../features/chat/ChatInterface';
 import MissionBoard from '../features/squads/MissionBoard';
 import SquadDetail from '../features/squads/SquadDetail';
 import SquadManage from '../features/squads/SquadManage';
+import MyApplications from '../features/squads/MyApplications';
 import SkillVerifier from '../features/skills/SkillVerifier';
 import Network from '../features/network/Network';
 import AntifragileAdmin from '../features/admin/AntifragileAdmin';
@@ -120,6 +121,11 @@ function App() {
         <Route path="/squad/:id/manage" element={
           <ProtectedRoute user={user} authChecked={authChecked}>
             <SquadManage />
+          </ProtectedRoute>
+        } />
+        <Route path="/my-squads" element={
+          <ProtectedRoute user={user} authChecked={authChecked}>
+            <MyApplications />
           </ProtectedRoute>
         } />
         <Route path="/verify-skill" element={

@@ -20,7 +20,7 @@ class GatekeeperService {
 
   async checkEligibility(userId, squadId, slotId = null) {
     // Phase 1: Basic validations
-    const squad = await prisma.squadRequest.findUnique({
+    const squad = await prisma.squad.findUnique({
       where:   { id: squadId },
       include: { slots: true, leader: { select: { id: true, college: true } } },
     });
@@ -29,7 +29,7 @@ class GatekeeperService {
     if (squad.status !== 'OPEN')   return this.reject(`Squad is ${squad.status.toLowerCase()}`);
     if (squad.leaderId === userId)  return this.reject('You are the squad leader');
 
-    const existingApp = await prisma.squadMember.findUnique({ where: { squadId_userId: { squadId, userId } } });
+    const existingApp = await prisma.squadApplication.findUnique({ where: { squadId_userId: { squadId, userId } } });
     if (existingApp?.status === 'PENDING')  return this.reject('Application already pending');
     if (existingApp?.status === 'ACCEPTED') return this.reject('Already a member');
 
@@ -40,20 +40,27 @@ class GatekeeperService {
     });
 
     if (squad.visibility === 'CAMPUS_ONLY') {
-      if (!user.college || user.college !== squad.campusOnly) {
-        return this.reject(`This squad is only open to ${squad.campusOnly} students`, { requiredCollege: squad.campusOnly });
+      const leaderCollege = squad.leader?.college;
+      if (!user.college || !leaderCollege || user.college !== leaderCollege) {
+        return this.reject(`This squad is only open to ${leaderCollege || 'campus'} students`, { requiredCollege: leaderCollege });
       }
     }
 
     // Phase 3: Constraint checks
-    const pendingCount = await prisma.squadMember.count({ where: { userId, status: 'PENDING' } });
+    const pendingCount = await prisma.squadApplication.count({ where: { userId, status: 'PENDING' } });
     if (pendingCount >= 5) {
       return this.reject('You have too many pending applications (max 5)', { pendingCount, maxAllowed: 5 });
     }
 
+    // Event exclusivity — check if user already committed to another squad for the same event
     if (squad.event) {
-      const existingCommitment = await prisma.eventCommitment.findUnique({
-        where:   { userId_event: { userId, event: squad.event } },
+      const existingCommitment = await prisma.squadApplication.findFirst({
+        where: {
+          userId,
+          status: 'ACCEPTED',
+          squad: { event: squad.event },
+          squadId: { not: squadId },
+        },
         include: { squad: { select: { title: true } } },
       });
       if (existingCommitment) {
@@ -75,18 +82,18 @@ class GatekeeperService {
 
     // Phase 5: Skill gate (open roles bypass this)
     if (!targetSlot.requiredSkill) {
-      return { allowed: true, slot: { id: targetSlot.id, role: targetSlot.role }, skillRequired: false };
+      return { allowed: true, slot: { id: targetSlot.id, role: targetSlot.roleTitle }, skillRequired: false };
     }
 
     const userSkill = user.skills.find((s) => s.name.toLowerCase() === targetSlot.requiredSkill.toLowerCase());
     if (!userSkill) {
-      return this.reject(`Missing required skill: ${targetSlot.requiredSkill}`, { slot: targetSlot.role, requiredSkill: targetSlot.requiredSkill });
+      return this.reject(`Missing required skill: ${targetSlot.requiredSkill}`, { slot: targetSlot.roleTitle, requiredSkill: targetSlot.requiredSkill });
     }
 
     if (targetSlot.requireVerified && !userSkill.isVerified) {
       return this.reject(
         `${targetSlot.requiredSkill} must be GitHub verified for this role`,
-        { slot: targetSlot.role, requiredSkill: targetSlot.requiredSkill, userScore: userSkill.calculatedScore, isVerified: false }
+        { slot: targetSlot.roleTitle, requiredSkill: targetSlot.requiredSkill, userScore: userSkill.calculatedScore, isVerified: false }
       );
     }
 
@@ -95,15 +102,15 @@ class GatekeeperService {
 
     if (userScore < minScore) {
       return this.reject(
-        `Insufficient skill level for ${targetSlot.role}. Required: ${minScore}/10, Your score: ${userScore}/10`,
-        { slot: targetSlot.role, requiredSkill: targetSlot.requiredSkill, requiredScore: minScore, userScore, isVerified: userSkill.isVerified }
+        `Insufficient skill level for ${targetSlot.roleTitle}. Required: ${minScore}/10, Your score: ${userScore}/10`,
+        { slot: targetSlot.roleTitle, requiredSkill: targetSlot.requiredSkill, requiredScore: minScore, userScore, isVerified: userSkill.isVerified }
       );
     }
 
     // Phase 6: Approved
     const result = {
       allowed: true,
-      slot:  { id: targetSlot.id, role: targetSlot.role, requiredSkill: targetSlot.requiredSkill },
+      slot:  { id: targetSlot.id, role: targetSlot.roleTitle, requiredSkill: targetSlot.requiredSkill },
       skill: { name: userSkill.name, score: userScore, isVerified: userSkill.isVerified, level: userSkill.level },
       matchScore: this.calculateMatchScore(userScore, minScore),
     };
@@ -137,7 +144,7 @@ class GatekeeperService {
         where:  { id: userId },
         select: { skills: { select: { name: true, level: true, isVerified: true, calculatedScore: true } } },
       }),
-      prisma.squadRequest.findUnique({
+      prisma.squad.findUnique({
         where:   { id: squadId },
         include: { slots: { where: { status: 'OPEN' } } },
       }),
@@ -163,7 +170,7 @@ class GatekeeperService {
         const matchPercent = this.calculateMatchScore(score, minScore);
         if (matchPercent > maxScore) {
           maxScore  = matchPercent;
-          bestMatch = { slot: slot.role, skill: userSkill.name, score };
+          bestMatch = { slot: slot.roleTitle, skill: userSkill.name, score };
         }
       }
     }

@@ -5,13 +5,12 @@
 // Purpose: Initialize the antifragile matching system with:
 // - System configuration
 // - Initial strategies
-// - Sample data for testing
 //
 // Run with: node server/seed-antifragile.js
 //
 // ============================================================================
 
-const { PrismaClient } = require('@prisma/client');
+import { PrismaClient } from '@prisma/client';
 const prisma = new PrismaClient();
 
 async function main() {
@@ -24,10 +23,9 @@ async function main() {
     // STEP 1: Create System Configuration
     // ========================================
     console.log('⚙️  Creating system configuration...');
-    
-    // Check if config already exists
+
     const existingConfig = await prisma.systemConfig.findFirst();
-    
+
     if (existingConfig) {
       console.log('   ℹ️  System config already exists, skipping');
     } else {
@@ -35,8 +33,8 @@ async function main() {
         data: {
           maxActiveStrategies: 5,
           maxShadowStrategies: 3,
-          minRandomnessRate: 0.10,  // 10%
-          maxRandomnessRate: 0.30,  // 30%
+          minRandomnessRate: 0.10,
+          maxRandomnessRate: 0.30,
           minConsensusStrategies: 2,
           influenceDecayDays: 30,
           performanceWindowDays: 7,
@@ -52,13 +50,12 @@ async function main() {
     // ========================================
     console.log('\n🧠 Creating initial strategies...');
 
-    // Strategy 1: Verified Skills Matcher
-    const strategy1 = await createStrategy({
+    await createStrategy({
       name: 'verified_skills_v1',
       displayName: 'Verified Skills Matcher',
       description: 'Prioritizes candidates with verified GitHub skills matching the required role',
       version: '1.0.0',
-      state: 'ACTIVE', // Start as active
+      state: 'ACTIVE',
       influenceLevel: 'MEDIUM',
       config: {
         verifiedBonus: 0.3,
@@ -67,13 +64,12 @@ async function main() {
       }
     });
 
-    // Strategy 2: Activity Score Matcher
-    const strategy2 = await createStrategy({
+    await createStrategy({
       name: 'activity_score_v1',
       displayName: 'Activity Score Matcher',
       description: 'Prioritizes candidates with recent platform activity and engagement',
       version: '1.0.0',
-      state: 'ACTIVE', // Start as active
+      state: 'ACTIVE',
       influenceLevel: 'MEDIUM',
       config: {
         recentDays: 30,
@@ -84,13 +80,12 @@ async function main() {
       }
     });
 
-    // Strategy 3: College Proximity (SHADOW - testing)
-    const strategy3 = await createStrategy({
+    await createStrategy({
       name: 'college_proximity_v1',
       displayName: 'College Proximity Matcher',
       description: 'Prefers candidates from the same college as squad leader',
       version: '1.0.0',
-      state: 'SHADOW', // Start in shadow mode
+      state: 'SHADOW',
       influenceLevel: 'MEDIUM',
       config: {
         sameCollegeBonus: 5.0,
@@ -110,10 +105,6 @@ async function main() {
     console.log('  • System Configuration');
     console.log('  • 2 Active Strategies');
     console.log('  • 1 Shadow Strategy');
-    console.log('\nNext steps:');
-    console.log('  1. Start the server: npm start');
-    console.log('  2. Access admin dashboard: /antifragile');
-    console.log('  3. Make some matches to see system in action');
     console.log('============================================\n');
 
   } catch (error) {
@@ -122,9 +113,6 @@ async function main() {
   }
 }
 
-// ============================================================================
-// HELPER: Create or update strategy
-// ============================================================================
 async function createStrategy(data) {
   const existing = await prisma.matchStrategy.findUnique({
     where: { name: data.name }
@@ -158,9 +146,6 @@ async function createStrategy(data) {
   });
 }
 
-// ============================================================================
-// RUN SEED
-// ============================================================================
 main()
   .catch((e) => {
     console.error(e);

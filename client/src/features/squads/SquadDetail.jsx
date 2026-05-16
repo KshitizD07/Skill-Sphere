@@ -3,7 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import SquadAPI from './squadAPI';
 import {
   ArrowLeft, Users, Shield, Lock, CheckCircle,
-  AlertCircle, Calendar, Target, User
+  AlertCircle, Target, User, ChevronDown
 } from 'lucide-react';
 
 export default function SquadDetail() {
@@ -17,6 +17,8 @@ export default function SquadDetail() {
   const [applying, setApplying] = useState(false);
   const [applied, setApplied] = useState(false);
   const [applyError, setApplyError] = useState('');
+  const [selectedSlot, setSelectedSlot] = useState(null);
+  const [applyMessage, setApplyMessage] = useState('');
 
   useEffect(() => {
     loadSquad();
@@ -27,7 +29,10 @@ export default function SquadDetail() {
     const data = await SquadAPI.getSquad(id);
     if (!data.error) {
       setSquad(data);
-      // Check qualification after squad loads
+      // Check if user already applied
+      const existingApp = data.applications?.find(a => a.userId === currentUser.id);
+      if (existingApp) setApplied(true);
+      // Check qualification
       const qual = await SquadAPI.checkQualification(id, currentUser.id);
       if (!qual.error) setQualification(qual);
     }
@@ -37,7 +42,7 @@ export default function SquadDetail() {
   const handleApply = async () => {
     setApplying(true);
     setApplyError('');
-    const res = await SquadAPI.applyToSquad(id, currentUser.id);
+    const res = await SquadAPI.applyToSquad(id, applyMessage, selectedSlot);
     if (res.error) {
       setApplyError(res.message);
     } else {
@@ -60,6 +65,7 @@ export default function SquadDetail() {
 
   const isLeader = squad.leader?.id === currentUser.id;
   const isFull = squad.currentMembers >= squad.maxMembers;
+  const openSlots = squad.slots?.filter(s => s.status === 'OPEN') || [];
   const canApply = !isLeader && !isFull && !applied && qualification?.qualifies;
 
   return (
@@ -93,54 +99,78 @@ export default function SquadDetail() {
             {/* Slots */}
             <div className="bg-gray-900/50 border border-gray-800 p-6">
               <h3 className="text-yellow-400 font-bold font-['Orbitron'] text-sm mb-4 flex items-center gap-2">
-                <Target size={16} /> OPEN_SLOTS
+                <Target size={16} /> ROLE_SLOTS ({openSlots.length} open)
               </h3>
               <div className="space-y-3">
-                {squad.slots?.map((slot, i) => (
-                  <div key={i} className="flex items-center justify-between p-3 bg-black border border-gray-800">
-                    <div>
-                      <div className="text-white font-bold text-sm">{slot.roleTitle}</div>
-                      <div className="text-xs font-mono text-gray-500 mt-1">
-                        Requires: <span className="text-cyan-400">{slot.requiredSkill}</span>
+                {squad.slots?.map((slot) => {
+                  const isOpen = slot.status === 'OPEN';
+                  const isSelected = selectedSlot === slot.id;
+                  return (
+                    <div
+                      key={slot.id}
+                      onClick={() => isOpen && !isLeader && !applied && setSelectedSlot(isSelected ? null : slot.id)}
+                      className={`flex items-center justify-between p-3 bg-black border transition ${
+                        isSelected ? 'border-cyan-500 bg-cyan-900/10' :
+                        isOpen && canApply ? 'border-gray-800 hover:border-gray-600 cursor-pointer' :
+                        'border-gray-800'
+                      }`}
+                    >
+                      <div className="flex items-center gap-3">
+                        {isOpen && canApply && (
+                          <div className={`w-4 h-4 border-2 flex items-center justify-center transition ${
+                            isSelected ? 'border-cyan-500 bg-cyan-500' : 'border-gray-600'
+                          }`}>
+                            {isSelected && <CheckCircle size={10} className="text-black" />}
+                          </div>
+                        )}
+                        <div>
+                          <div className="text-white font-bold text-sm">{slot.roleTitle}</div>
+                          <div className="text-xs font-mono text-gray-500 mt-1">
+                            {slot.requiredSkill ? (
+                              <>Requires: <span className="text-cyan-400">{slot.requiredSkill}</span></>
+                            ) : (
+                              <span className="text-gray-600">No skill requirement</span>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                      <div className="text-right">
+                        {slot.requiredSkill && (
+                          <div className="flex items-center gap-1 text-yellow-400 font-mono text-sm font-bold">
+                            <Lock size={12} />
+                            ≥{slot.minScore}/10
+                          </div>
+                        )}
+                        {slot.filledBy ? (
+                          <div className="text-xs text-green-400 font-mono mt-1">FILLED</div>
+                        ) : (
+                          <div className="text-xs text-gray-600 font-mono mt-1">OPEN</div>
+                        )}
                       </div>
                     </div>
-                    <div className="text-right">
-                      <div className="flex items-center gap-1 text-yellow-400 font-mono text-sm font-bold">
-                        <Lock size={12} />
-                        ≥{slot.minScore}/10
-                      </div>
-                      {slot.filledBy ? (
-                        <div className="text-xs text-green-400 font-mono mt-1">FILLED</div>
-                      ) : (
-                        <div className="text-xs text-gray-600 font-mono mt-1">OPEN</div>
-                      )}
-                    </div>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
             </div>
 
-            {/* Members */}
-            {squad.members?.length > 0 && (
+            {/* Accepted Members */}
+            {squad.applications?.filter(a => a.status === 'ACCEPTED').length > 0 && (
               <div className="bg-gray-900/50 border border-gray-800 p-6">
                 <h3 className="text-cyan-400 font-bold font-['Orbitron'] text-sm mb-4 flex items-center gap-2">
-                  <Users size={16} /> CURRENT_MEMBERS ({squad.currentMembers}/{squad.maxMembers})
+                  <Users size={16} /> SQUAD_MEMBERS ({squad.currentMembers}/{squad.maxMembers})
                 </h3>
                 <div className="space-y-2">
-                  {squad.members.map(member => (
-                    <div key={member.id} className="flex items-center gap-3 p-2">
+                  {squad.applications.filter(a => a.status === 'ACCEPTED').map(app => (
+                    <div key={app.id} className="flex items-center gap-3 p-2">
                       <div className="w-8 h-8 rounded-full bg-gray-800 overflow-hidden">
-                        {member.avatar
-                          ? <img src={member.avatar} className="w-full h-full object-cover" />
+                        {app.user?.avatar
+                          ? <img src={app.user.avatar} className="w-full h-full object-cover" />
                           : <div className="w-full h-full flex items-center justify-center"><User size={14} className="text-gray-500" /></div>}
                       </div>
                       <div>
-                        <div className="text-white text-sm font-bold">{member.name}</div>
-                        <div className="text-xs font-mono text-gray-500">{member.role}</div>
+                        <div className="text-white text-sm font-bold">{app.user?.name}</div>
+                        <div className="text-xs font-mono text-gray-500">{app.slot?.roleTitle || 'Member'}</div>
                       </div>
-                      {member.id === squad.leader?.id && (
-                        <span className="ml-auto text-[10px] bg-yellow-900/30 border border-yellow-500/50 text-yellow-400 px-2 py-0.5 font-mono">LEADER</span>
-                      )}
                     </div>
                   ))}
                 </div>
@@ -182,6 +212,22 @@ export default function SquadDetail() {
                 </div>
               )}
 
+              {/* Apply message */}
+              {canApply && !applied && (
+                <div className="mb-4">
+                  <label className="block text-[10px] font-mono text-gray-500 mb-1">MESSAGE (optional)</label>
+                  <textarea
+                    value={applyMessage}
+                    onChange={e => setApplyMessage(e.target.value)}
+                    maxLength={200}
+                    rows={2}
+                    placeholder="Why do you want to join?"
+                    className="w-full bg-black border border-gray-700 text-white p-2 focus:border-cyan-500 outline-none font-mono text-xs resize-none"
+                  />
+                  <div className="text-right text-[10px] text-gray-600 font-mono">{applyMessage.length}/200</div>
+                </div>
+              )}
+
               {/* Apply error */}
               {applyError && (
                 <div className="p-3 mb-4 bg-red-900/20 border border-red-500/30 text-red-400 text-xs font-mono">
@@ -215,7 +261,7 @@ export default function SquadDetail() {
                   disabled={applying}
                   className="w-full py-3 bg-cyan-600 text-black hover:bg-cyan-400 transition font-bold font-['Orbitron'] text-sm disabled:opacity-50"
                 >
-                  {applying ? 'SUBMITTING...' : 'APPLY_NOW'}
+                  {applying ? 'SUBMITTING...' : selectedSlot ? 'APPLY_FOR_SLOT' : 'APPLY_NOW'}
                 </button>
               )}
 

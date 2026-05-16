@@ -36,7 +36,7 @@ class MatchOrchestrator {
 
     try {
       // ── Load context ──────────────────────────────────────────────────────
-      const squad = await prisma.squadRequest.findUnique({
+      const squad = await prisma.squad.findUnique({
         where:   { id: squadId },
         include: {
           slots:  { where: { id: slotId } },
@@ -82,7 +82,6 @@ class MatchOrchestrator {
         activeStrategies: activeStrategies.map((s) => ({
           id: s.id, name: s.name, state: s.state, influenceLevel: s.influenceLevel,
         })),
-        systemVersion: '2.1',
       });
 
       const executionTime = Date.now() - startTime;

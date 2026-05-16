@@ -223,6 +223,8 @@ model SquadSlot {
   position        Int        @default(0)
   createdAt       DateTime   @default(now())
 
+  applications SquadApplication[]
+
   @@index([squadId, status])
   @@index([requiredSkill])
 }
@@ -238,15 +240,20 @@ model SquadApplication {
   squad      Squad             @relation(fields: [squadId], references: [id], onDelete: Cascade)
   userId     String
   user       User              @relation(fields: [userId], references: [id], onDelete: Cascade)
+  slotId     String?
+  slot       SquadSlot?        @relation(fields: [slotId], references: [id])
   message    String?           @db.VarChar(200)
   status     ApplicationStatus @default(PENDING)
   matchScore Int?
+  matchDecisionId String?      @unique
+  matchDecision   MatchDecision? @relation(fields: [matchDecisionId], references: [id])
   appliedAt  DateTime          @default(now())
   decidedAt  DateTime?
 
   @@unique([squadId, userId])
   @@index([userId, status])
   @@index([squadId, status])
+  @@index([slotId])
 }
 
 enum ApplicationStatus {
@@ -318,8 +325,9 @@ model MatchDecision {
   strategyVotes    Json // { strategyId: { candidateId, score } }
   activeStrategies Json
 
-  outcome    MatchOutcome?
-  strategies MatchStrategy[] @relation("StrategyDecisions")
+  outcome     MatchOutcome?
+  application SquadApplication?
+  strategies  MatchStrategy[] @relation("StrategyDecisions")
 
   @@index([squadId])
   @@index([selectedUserId])

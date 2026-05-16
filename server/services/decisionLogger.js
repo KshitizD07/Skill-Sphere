@@ -38,7 +38,7 @@ class DecisionLogger {
           consensusCount:   data.consensusCount || 0,
           strategyVotes:    JSON.stringify(data.strategyVotes),
           activeStrategies: JSON.stringify(data.activeStrategies || []),
-          systemVersion:    data.systemVersion || 'unknown',
+
         },
       });
 
@@ -81,7 +81,7 @@ class DecisionLogger {
           retention60d:   outcomeData.retention60d    || null,
           squadCompleted: outcomeData.squadCompleted  || null,
           leaderRating:   outcomeData.leaderRating    || null,
-          memberRating:   outcomeData.memberRating    || null,
+
         },
       });
 

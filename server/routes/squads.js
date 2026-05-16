@@ -1,6 +1,7 @@
 import express from 'express';
 import { asyncHandler, ApiError } from '../utils/errorHandler.js';
 import { authenticateToken } from '../middleware/auth.js';
+import { squadCreateLimiter, squadApplyLimiter } from '../middleware/rateLimiter.js';
 import * as squadService from '../services/squadService.js';
 
 const router = express.Router();
@@ -16,14 +17,14 @@ router.get('/my-squads', authenticateToken, asyncHandler(async (req, res) => {
   res.json(await squadService.getMySquads(req.user.userId));
 }));
 
-// GET /api/squads/my-applications  (alias)
+// GET /api/squads/my-applications
 router.get('/my-applications', authenticateToken, asyncHandler(async (req, res) => {
-  const { applications } = await squadService.getMySquads(req.user.userId);
-  res.json(applications);
+  const applications = await squadService.getMyApplications(req.user.userId);
+  res.json({ applications });
 }));
 
 // POST /api/squads
-router.post('/', authenticateToken, asyncHandler(async (req, res) => {
+router.post('/', authenticateToken, squadCreateLimiter, asyncHandler(async (req, res) => {
   const { title, description, event, maxMembers, visibility, slots } = req.body;
   const squad = await squadService.createSquad(
     { title, description, event, maxMembers, visibility, slots: slots || [] },
@@ -44,9 +45,11 @@ router.get('/:id/qualify', authenticateToken, asyncHandler(async (req, res) => {
 }));
 
 // POST /api/squads/:id/apply
-router.post('/:id/apply', authenticateToken, asyncHandler(async (req, res) => {
-  const { message } = req.body;
-  const application = await squadService.applyToSquad(req.params.id, req.user.userId, message);
+router.post('/:id/apply', authenticateToken, squadApplyLimiter, asyncHandler(async (req, res) => {
+  const { message, slotId } = req.body;
+  const application = await squadService.applyToSquad(
+    req.params.id, req.user.userId, message, slotId
+  );
   res.status(201).json(application);
 }));
 

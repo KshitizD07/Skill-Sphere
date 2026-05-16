@@ -4,8 +4,8 @@ const SquadAPI = {
   getFeed: (params) => BaseAPI.get('/squads/feed', params),
   getSquad: (squadId) => BaseAPI.get(`/squads/${squadId}`),
   createSquad: (data) => BaseAPI.post('/squads', data),
-  applyToSquad: (squadId, userId) =>
-    BaseAPI.post(`/squads/${squadId}/apply`, { userId }),
+  applyToSquad: (squadId, message, slotId) =>
+    BaseAPI.post(`/squads/${squadId}/apply`, { message, slotId }),
   getMyApplications: () => BaseAPI.get('/squads/my-applications'),
   getMySquads: () => BaseAPI.get('/squads/my-squads'),
   updateApplicationStatus: (squadId, applicationId, status) =>

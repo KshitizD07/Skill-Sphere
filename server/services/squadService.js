@@ -1,6 +1,9 @@
 import { PrismaClient } from '@prisma/client';
 import { ApiError } from '../utils/errorHandler.js';
 import logger from '../utils/logger.js';
+import gatekeeper from './gatekeeper.js';
+import matchOrchestrator from './matchOrchestrator.js';
+import decisionLogger from './decisionLogger.js';
 
 const prisma = new PrismaClient();
 
@@ -17,7 +20,10 @@ const SQUAD_SELECT = {
 // ── Create squad ──────────────────────────────────────────────────────────────
 export async function createSquad({ title, description, event, maxMembers = 4, visibility = 'PUBLIC', slots = [] }, leaderId) {
   if (!title?.trim())       throw ApiError.badRequest('Title is required');
+  if (title.trim().length < 3 || title.trim().length > 200) throw ApiError.badRequest('Title must be 3-200 characters');
   if (!description?.trim()) throw ApiError.badRequest('Description is required');
+  if (description.trim().length < 10 || description.trim().length > 5000) throw ApiError.badRequest('Description must be 10-5000 characters');
+  if (slots.length > 10)    throw ApiError.badRequest('Maximum 10 slots per squad');
 
   const squad = await prisma.squad.create({
     data: {
@@ -32,7 +38,7 @@ export async function createSquad({ title, description, event, maxMembers = 4, v
         create: slots.map((s, i) => ({
           roleTitle:      s.roleTitle || 'Member',
           requiredSkill:  s.requiredSkill || null,
-          minScore:       s.minScore || 0,
+          minScore:       Math.min(10, Math.max(0, s.minScore || 0)),
           requireVerified: s.requireVerified || false,
           position:       i,
         })),
@@ -62,7 +68,7 @@ export async function getFeed({ skill, maxScore, page = 1, limit = 12 } = {}) {
     prisma.squad.count({ where }),
   ]);
 
-  return { squads, total, page, limit };
+  return { squads, total, page, limit, totalPages: Math.ceil(total / limit) };
 }
 
 // ── Single squad ──────────────────────────────────────────────────────────────
@@ -77,9 +83,10 @@ export async function getSquad(squadId) {
           user: {
             select: {
               id: true, name: true, avatar: true, college: true, role: true,
-              skills: { select: { id: true, name: true, isVerified: true, calculatedScore: true, skill: { select: { id: true, name: true } } } },
+              skills: { select: { id: true, name: true, isVerified: true, calculatedScore: true } },
             },
           },
+          slot: { select: { id: true, roleTitle: true, requiredSkill: true } },
         },
         orderBy: { appliedAt: 'desc' },
       },
@@ -119,23 +126,77 @@ export async function checkQualification(squadId, userId) {
   return { qualifies: false, reason: 'Score too low or missing required skill' };
 }
 
-// ── Apply to squad ────────────────────────────────────────────────────────────
-export async function applyToSquad(squadId, userId, message) {
-  const qual = await checkQualification(squadId, userId);
-  if (!qual.qualifies) throw ApiError.forbidden(qual.reason || 'You do not qualify for this squad');
+// ── Apply to squad (with Gatekeeper + Antifragile AI) ─────────────────────────
+export async function applyToSquad(squadId, userId, message, slotId = null) {
+  // Step 1: Gatekeeper check
+  const gate = await gatekeeper.checkEligibility(userId, squadId, slotId);
+  if (!gate.allowed) throw ApiError.forbidden(gate.reason || 'You do not qualify for this squad');
 
-  const existing = await prisma.squadApplication.findUnique({ where: { squadId_userId: { squadId, userId } } });
+  // Step 2: Duplicate check
+  const existing = await prisma.squadApplication.findUnique({
+    where: { squadId_userId: { squadId, userId } },
+  });
   if (existing) throw ApiError.conflict('You have already applied to this squad');
 
+  // Step 3: Antifragile matching (graceful fallback if engine fails)
+  let matchResult = null;
+  try {
+    matchResult = await matchOrchestrator.matchCandidatesForSlot(
+      squadId, gate.slot.id, [userId]
+    );
+  } catch (err) {
+    logger.warn('Antifragile matching failed, proceeding with gatekeeper score', { err: err.message });
+  }
+
+  // Step 4: Create application with AI results
   const application = await prisma.squadApplication.create({
-    data: { squadId, userId, message: message?.trim() || null, matchScore: qual.matchScore },
+    data: {
+      squadId,
+      userId,
+      slotId: gate.slot.id,
+      message: message?.trim() || null,
+      matchScore: matchResult?.explanation?.confidence
+        ? Math.round(matchResult.explanation.confidence * 10)
+        : gate.matchScore || 5,
+      matchDecisionId: matchResult?.decisionId || null,
+    },
   });
 
   await prisma.activityLog.create({
     data: { userId, action: 'SQUAD_APPLIED', details: `Applied to squad ${squadId}` },
   });
 
-  return application;
+  // Step 5: Notify squad leader
+  try {
+    const [squad, user] = await Promise.all([
+      prisma.squad.findUnique({ where: { id: squadId }, select: { title: true, leaderId: true } }),
+      prisma.user.findUnique({ where: { id: userId }, select: { name: true, avatar: true } }),
+    ]);
+
+    if (squad && user) {
+      const notif = await prisma.inAppNotification.create({
+        data: {
+          userId: squad.leaderId,
+          type: 'SQUAD_APPLICATION',
+          title: 'New Application',
+          message: `${user.name} applied for ${gate.slot.role} in ${squad.title}`,
+          actionUrl: `/squad/${squadId}/manage`,
+          senderAvatar: user.avatar,
+        },
+      });
+
+      // Emit real-time notification if socket available
+      try {
+        const { getIO } = await import('../socket.js');
+        getIO().to(squad.leaderId).emit('NOTIFICATION', notif);
+      } catch { /* socket not available */ }
+    }
+  } catch (err) {
+    logger.warn('Failed to send application notification', { err: err.message });
+  }
+
+  logger.info('Application submitted', { squadId, userId, slotId: gate.slot.id, matchScore: application.matchScore });
+  return { ...application, explanation: matchResult?.explanation || null };
 }
 
 // ── Update application status (leader only) ───────────────────────────────────
@@ -153,11 +214,56 @@ export async function updateApplicationStatus(squadId, applicationId, status, le
   if (status === 'ACCEPTED') {
     await prisma.squad.update({ where: { id: squadId }, data: { currentMembers: { increment: 1 } } });
 
+    // Fill the specific slot if application was slot-targeted
+    if (application.slotId) {
+      await prisma.squadSlot.update({
+        where: { id: application.slotId },
+        data:  { status: 'FILLED', filledBy: application.userId },
+      });
+    }
+
     // Auto-close if the squad is now full
     const updated = await prisma.squad.findUnique({ where: { id: squadId } });
     if (updated.currentMembers >= updated.maxMembers) {
       await prisma.squad.update({ where: { id: squadId }, data: { status: 'FULL' } });
     }
+  }
+
+  // Log outcome for antifragile learning
+  if (application.matchDecisionId) {
+    try {
+      const minutesSinceApplication = Math.round(
+        (Date.now() - application.appliedAt.getTime()) / 60000
+      );
+      await decisionLogger.logOutcome(application.matchDecisionId, {
+        accepted: status === 'ACCEPTED',
+        timeToDecision: minutesSinceApplication,
+      });
+    } catch (err) {
+      logger.warn('Failed to log match outcome', { err: err.message });
+    }
+  }
+
+  // Notify applicant of decision
+  try {
+    const notif = await prisma.inAppNotification.create({
+      data: {
+        userId: application.userId,
+        type: status === 'ACCEPTED' ? 'APPLICATION_ACCEPTED' : 'APPLICATION_REJECTED',
+        title: status === 'ACCEPTED' ? 'Application Accepted!' : 'Application Update',
+        message: status === 'ACCEPTED'
+          ? `You've been accepted to ${squad.title}!`
+          : `Your application to ${squad.title} was not selected.`,
+        actionUrl: `/squad/${squadId}`,
+      },
+    });
+
+    try {
+      const { getIO } = await import('../socket.js');
+      getIO().to(application.userId).emit('NOTIFICATION', notif);
+    } catch { /* socket not available */ }
+  } catch (err) {
+    logger.warn('Failed to send decision notification', { err: err.message });
   }
 
   return application;
@@ -167,8 +273,32 @@ export async function updateApplicationStatus(squadId, applicationId, status, le
 export async function getMySquads(userId) {
   const [led, applied] = await Promise.all([
     prisma.squad.findMany({ where: { leaderId: userId }, select: SQUAD_SELECT, orderBy: { createdAt: 'desc' } }),
-    prisma.squadApplication.findMany({ where: { userId }, include: { squad: { select: SQUAD_SELECT } }, orderBy: { appliedAt: 'desc' } }),
+    prisma.squadApplication.findMany({
+      where: { userId },
+      include: {
+        squad: { select: SQUAD_SELECT },
+        slot: { select: { id: true, roleTitle: true, requiredSkill: true } },
+      },
+      orderBy: { appliedAt: 'desc' },
+    }),
   ]);
 
   return { led, applications: applied };
+}
+
+// ── My applications (dedicated endpoint) ──────────────────────────────────────
+export async function getMyApplications(userId) {
+  return prisma.squadApplication.findMany({
+    where: { userId },
+    include: {
+      squad: {
+        select: {
+          id: true, title: true, status: true, event: true,
+          leader: { select: { id: true, name: true, avatar: true } },
+        },
+      },
+      slot: { select: { id: true, roleTitle: true, requiredSkill: true } },
+    },
+    orderBy: { appliedAt: 'desc' },
+  });
 }
