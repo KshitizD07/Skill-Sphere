@@ -30,9 +30,9 @@ function makeLimiter({ maxAttempts, windowSeconds, prefix, keyFn, message }) {
   };
 }
 
-// 5 attempts per IP per 15 minutes — protects login/register
+// 50 attempts per IP per 15 minutes — protects login/register
 export const authLimiter = makeLimiter({
-  maxAttempts:   5,
+  maxAttempts:   50,
   windowSeconds: 900,
   prefix:        'auth',
   keyFn:         (req) => req.ip || 'anon',

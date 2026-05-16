@@ -10,7 +10,9 @@ const API = axios.create({
 API.interceptors.response.use(
   (response) => response,
   (error) => {
-    if (error.response?.status === 401) {
+    const isVerifyRequest = error.config?.url?.includes('/auth/verify');
+    
+    if (error.response?.status === 401 && !isVerifyRequest) {
       // Token expired or invalid — clear user data and redirect
       localStorage.removeItem('user_data');
       window.location.href = '/auth';
