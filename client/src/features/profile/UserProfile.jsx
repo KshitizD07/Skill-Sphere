@@ -5,7 +5,7 @@ import {
   User, ArrowLeft, Github, Linkedin, Cpu, MessageSquare,
   Shield, Edit3, Building2, Heart, MessageCircle, Send,
   Image as ImageIcon, Eye, EyeOff, CheckCircle, Clock,
-  ExternalLink, X, Trash2, Pencil, CornerDownRight
+  ExternalLink, X, Trash2, Pencil, CornerDownRight, Award
 } from 'lucide-react';
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
