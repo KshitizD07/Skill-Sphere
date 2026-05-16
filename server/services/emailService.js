@@ -81,7 +81,16 @@ export async function sendOtp(email) {
 // ── Verify OTP ────────────────────────────────────────────────────────────────
 export async function verifyOtp(email, otp) {
   // Allow universal code in demo mode for portfolio showcasing
-  const isDemo = String(process.env.DEMO_MODE).toLowerCase().trim() === 'true';
+  const demoModeVal = process.env.DEMO_MODE;
+  const isDemo = String(demoModeVal).toLowerCase().trim() === 'true';
+  
+  logger.info('OTP Verification attempt', { 
+    email, 
+    otpReceived: otp, 
+    demoModeVar: demoModeVal,
+    isDemoCalculated: isDemo 
+  });
+
   if (isDemo && otp === '123456') {
     logger.info('Demo Mode: Bypassing OTP verification', { email });
     return { verified: true };
