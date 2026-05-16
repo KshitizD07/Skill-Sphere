@@ -50,7 +50,7 @@ app.use(helmet({
 }));
 
 // ── CORS ─────────────────────────────────────────────────────────────────────
-const allowedOrigins = (process.env.ALLOWED_ORIGINS || 'http://localhost:5173,http://localhost:3000')
+const allowedOrigins = (process.env.ALLOWED_ORIGINS || 'https://skill-sphere-sooty-seven.vercel.app')
   .split(',')
   .map((s) => s.trim());
 
