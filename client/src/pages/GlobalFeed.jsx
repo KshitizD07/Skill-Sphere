@@ -307,6 +307,10 @@ export default function GlobalFeed() {
             <Layers size={16} className="text-[#adc6ff] group-hover:text-[#89f5e7] transition-colors" />
             <span className="text-sm font-bold text-[#dae2fd] group-hover:text-[#adc6ff] tracking-tight transition-colors">Feed</span>
           </div>
+          <div onClick={() => navigate('/network')} className="flex items-center gap-2 cursor-pointer group">
+            <Users size={16} className="text-[#656d84] group-hover:text-[#89f5e7] transition-colors" />
+            <span className="text-sm font-bold text-[#8d90a0] group-hover:text-[#dae2fd] tracking-tight transition-colors">Network</span>
+          </div>
           <div onClick={() => navigate('/nexus')} className="flex items-center gap-2 cursor-pointer group">
             <Users size={16} className="text-[#656d84] group-hover:text-[#89f5e7] transition-colors" />
             <span className="text-sm font-bold text-[#8d90a0] group-hover:text-[#dae2fd] tracking-tight transition-colors">Teams</span>

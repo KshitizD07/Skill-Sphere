@@ -150,14 +150,25 @@ export default function Dashboard({ user, onLogout }) {
           </span>
         </div>
 
-        <div
-          onClick={() => navigate('/grid')}
-          className="absolute left-1/2 transform -translate-x-1/2 flex items-center gap-2 cursor-pointer group hidden md:flex"
-        >
-          <BarChart2 size={18} className="text-[#adc6ff] group-hover:text-[#89f5e7] transition-colors" />
-          <span className="text-lg font-bold text-[#dae2fd] tracking-tight group-hover:text-[#adc6ff] transition-colors">
-            Insights
-          </span>
+        <div className="absolute left-1/2 transform -translate-x-1/2 flex items-center gap-6 hidden md:flex">
+          <div
+            onClick={() => navigate('/grid')}
+            className="flex items-center gap-2 cursor-pointer group"
+          >
+            <BarChart2 size={18} className="text-[#adc6ff] group-hover:text-[#89f5e7] transition-colors" />
+            <span className="text-lg font-bold text-[#dae2fd] tracking-tight group-hover:text-[#adc6ff] transition-colors">
+              Insights
+            </span>
+          </div>
+          <div
+            onClick={() => navigate('/network')}
+            className="flex items-center gap-2 cursor-pointer group"
+          >
+            <Users size={18} className="text-[#656d84] group-hover:text-[#89f5e7] transition-colors" />
+            <span className="text-lg font-bold text-[#8d90a0] tracking-tight group-hover:text-[#dae2fd] transition-colors">
+              Network
+            </span>
+          </div>
         </div>
 
         <div className="flex items-center gap-3">
