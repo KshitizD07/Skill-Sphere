@@ -20,6 +20,7 @@ const registerSchema = z.object({
     .regex(PASSWORD_REGEX, 'Password must contain uppercase, lowercase, number and special character'),
   name:     z.string().min(2, 'Name must be at least 2 characters').max(60),
   role:     z.enum(['STUDENT', 'ALUMNI', 'GUEST'], { errorMap: () => ({ message: 'Role must be STUDENT, ALUMNI or GUEST' }) }),
+  guestPersona: z.string().optional(),
   college:  z.string().min(1).optional(),
   otp:      z.string().length(6, 'OTP must be 6 digits'),
 });
@@ -102,6 +103,7 @@ router.post('/register', asyncHandler(async (req, res) => {
       password: hashed,
       name:     data.name,
       role:     data.role,
+      guestPersona: data.guestPersona || null,
       college:  data.college || null,
     },
   });
@@ -114,7 +116,7 @@ router.post('/register', asyncHandler(async (req, res) => {
   setTokenCookie(res, token);
 
   res.status(201).json({
-    user:  { id: user.id, name: user.name, email: user.email, role: user.role, college: user.college, github: user.github },
+    user:  { id: user.id, name: user.name, email: user.email, role: user.role, college: user.college, github: user.github, guestPersona: user.guestPersona },
   });
 }));
 
@@ -124,7 +126,7 @@ router.post('/login', asyncHandler(async (req, res) => {
 
   const user = await prisma.user.findFirst({
     where:  { email: { equals: data.email, mode: 'insensitive' } },
-    select: { id: true, name: true, email: true, password: true, role: true, college: true, avatar: true, headline: true, github: true },
+    select: { id: true, name: true, email: true, password: true, role: true, college: true, avatar: true, headline: true, github: true, guestPersona: true },
   });
 
   if (!user || !(await bcrypt.compare(data.password, user.password))) {
@@ -146,7 +148,7 @@ router.post('/login', asyncHandler(async (req, res) => {
 router.get('/verify', authenticateToken, asyncHandler(async (req, res) => {
   const user = await prisma.user.findUnique({
     where:  { id: req.user.userId },
-    select: { id: true, name: true, email: true, role: true, college: true, avatar: true, headline: true, github: true },
+    select: { id: true, name: true, email: true, role: true, college: true, avatar: true, headline: true, github: true, guestPersona: true },
   });
   if (!user) throw ApiError.notFound('User');
   res.json({ valid: true, user });

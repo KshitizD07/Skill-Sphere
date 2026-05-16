@@ -54,7 +54,7 @@ export default function AuthPage({ onLogin }) {
 
     setStep('form');
     setOtp(['','','','','','']);
-    setFormData({ name:'', email:'', password:'', confirmPassword:'', role:'STUDENT', college:'' });
+    setFormData({ name:'', email:'', password:'', confirmPassword:'', role:'STUDENT', guestPersona:'STUDENT', college:'' });
     setForgotEmail(''); setNewPassword(''); setNewPasswordConfirm('');
     setForgotOtp(['','','','','','']);
     setShowPassword(false); setShowConfirm(false);
@@ -403,6 +403,27 @@ export default function AuthPage({ onLogin }) {
                   ))}
                 </div>
               </div>
+
+              {formData.role === 'GUEST' && (
+                <div>
+                  <label className={labelBase}>Simulate Identity As</label>
+                  <div className="grid grid-cols-2 gap-3">
+                    {[
+                      { value: 'STUDENT', label: 'Student' },
+                      { value: 'ALUMNI',  label: 'Alumni' },
+                    ].map(({ value, label }) => (
+                      <div key={value} onClick={() => setFormData({...formData, guestPersona: value})}
+                        className={`cursor-pointer py-2 px-3 border rounded-xs text-center transition-all ${
+                          formData.guestPersona === value
+                            ? 'bg-[#89f5e7]/10 border-[#89f5e7]/50 text-[#89f5e7]'
+                            : 'bg-[#131b2e] border-[#434655]/40 text-[#656d84] hover:border-[#434655]/70'
+                        }`}>
+                        <span className="font-['Space_Grotesk'] text-[10px] font-bold uppercase tracking-widest">{label}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
 
               <div>
                 <label className={labelBase}>Full Name</label>

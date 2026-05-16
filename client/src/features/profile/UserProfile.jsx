@@ -454,7 +454,11 @@ export default function UserProfile() {
                 </div>
                 <h2 className="text-2xl font-black text-[#dae2fd] font-['Space_Grotesk'] tracking-wide uppercase tracking-wider">{user.name}</h2>
                 <p className="text-[#adc6ff] font-['Space_Grotesk'] tracking-wide text-sm mt-1">{user.headline || 'NO_HEADLINE_TAG'}</p>
-                <div className="mt-4 px-3 py-1 bg-[#adc6ff]/10 border border-[#adc6ff]/20 rounded text-xs font-bold tracking-widest text-[#dae2fd]">{user.role} CLASS</div>
+                <div className="mt-4 px-3 py-1 bg-[#adc6ff]/10 border border-[#adc6ff]/20 rounded text-xs font-bold tracking-widest text-[#dae2fd]">
+                  {user.role === 'GUEST' 
+                    ? `GUEST ${user.guestPersona || 'STUDENT'}` 
+                    : `${user.role} CLASS`}
+                </div>
                 {!isOwner && (
                   <button type="button" onClick={() => navigate(`/chat/${user.id}`)} className="w-full mt-6 py-3 bg-[#adc6ff] text-[#002e6a] font-bold hover:bg-[#89f5e7] transition flex items-center justify-center gap-2 font-['Space_Grotesk'] tracking-wide">
                     <MessageSquare size={16} /> INITIALIZE_UPLINK
