@@ -71,10 +71,16 @@ if (rawOrigins) {
 
 app.use(cors({
   origin: (origin, cb) => {
-    if (!origin || allowedOrigins.includes(origin)) return cb(null, true);
-    // Instead of error, just log it so we still get CORS headers for debugging
+    if (!origin) return cb(null, true);
+    
+    // Check if origin is in whitelist or is a vercel subdomain of yours
+    const isAllowed = allowedOrigins.includes(origin) || 
+                     (origin.includes('vercel.app') && origin.includes('kshitizd07s'));
+
+    if (isAllowed) return cb(null, true);
+    
     console.warn(`CORS: origin ${origin} not in whitelist`);
-    return cb(null, true); 
+    return cb(null, true); // Still allow for debugging
   },
   credentials: true,
   methods: ['GET', 'POST', 'PATCH', 'PUT', 'DELETE', 'OPTIONS'],
