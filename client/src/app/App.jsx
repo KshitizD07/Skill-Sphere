@@ -34,13 +34,8 @@ function App() {
 
   // Rehydrate user from httpOnly cookie session on mount
   useEffect(() => {
-    // First try localStorage cache for instant render
-    const stored = localStorage.getItem('user_data');
-    if (stored) {
-      try { setUser(JSON.parse(stored)); } catch { /* ignore bad JSON */ }
-    }
-
-    // Then verify the cookie-based session with the server
+    // We wait for the server to verify the session so we don't flash the UI
+    // with incomplete cached data (which lacks the 'github' field).
     API.get('/auth/verify')
       .then((res) => {
         const serverUser = res.data.user;
@@ -69,8 +64,11 @@ function App() {
   // ── Quality Control Nuke ──────────────────────────────────────────────────
   // If user tries to bypass profile setup without linking GitHub, nuke account
   useEffect(() => {
+    // Wait until auth is fully verified by the server AND we have a user
     if (!authChecked || !user) return;
     
+    // We only enforce github once the profile has loaded completely from the server, 
+    // avoiding the flash where cached user data might not have the github field.
     const publicPaths = ['/', '/auth', '/my-profile'];
     const path = location.pathname.replace(/\/$/, '') || '/';
     
@@ -81,7 +79,7 @@ function App() {
       
       const nuke = async () => {
         try {
-          await API.delete('/api/users/me');
+          await API.delete('/users/me');
           localStorage.removeItem('user_data');
           setUser(null);
           window.location.href = '/auth?reason=github_required';

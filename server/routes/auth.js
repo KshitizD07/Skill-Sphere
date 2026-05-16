@@ -114,7 +114,7 @@ router.post('/register', asyncHandler(async (req, res) => {
   setTokenCookie(res, token);
 
   res.status(201).json({
-    user:  { id: user.id, name: user.name, email: user.email, role: user.role, college: user.college },
+    user:  { id: user.id, name: user.name, email: user.email, role: user.role, college: user.college, github: user.github },
   });
 }));
 
@@ -124,7 +124,7 @@ router.post('/login', asyncHandler(async (req, res) => {
 
   const user = await prisma.user.findFirst({
     where:  { email: { equals: data.email, mode: 'insensitive' } },
-    select: { id: true, name: true, email: true, password: true, role: true, college: true, avatar: true, headline: true },
+    select: { id: true, name: true, email: true, password: true, role: true, college: true, avatar: true, headline: true, github: true },
   });
 
   if (!user || !(await bcrypt.compare(data.password, user.password))) {
@@ -146,7 +146,7 @@ router.post('/login', asyncHandler(async (req, res) => {
 router.get('/verify', authenticateToken, asyncHandler(async (req, res) => {
   const user = await prisma.user.findUnique({
     where:  { id: req.user.userId },
-    select: { id: true, name: true, email: true, role: true, college: true, avatar: true, headline: true },
+    select: { id: true, name: true, email: true, role: true, college: true, avatar: true, headline: true, github: true },
   });
   if (!user) throw ApiError.notFound('User');
   res.json({ valid: true, user });

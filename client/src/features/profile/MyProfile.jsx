@@ -16,6 +16,7 @@ export default function MyProfile({ onUserUpdate }) {
   const navigate = useNavigate();
   const storedUser = JSON.parse(localStorage.getItem('user_data') || '{}');
   const [loading, setLoading] = useState(false);
+  const [initialLoadDone, setInitialLoadDone] = useState(false);
   const [formData, setFormData] = useState({ name:'',headline:'',bio:'',avatar:'',github:'',linkedin:'',college:'' });
   const [allSkills, setAllSkills] = useState([]);
   const [mySkillNames, setMySkillNames] = useState([]);
@@ -27,7 +28,13 @@ export default function MyProfile({ onUserUpdate }) {
   const [selectedSkillToVerify, setSelectedSkillToVerify] = useState(null);
   const avatarInputRef = useRef(null);
 
-  useEffect(() => { if (storedUser.id) { loadUserData(); loadAllSkills(); } }, []);
+  useEffect(() => { 
+    if (storedUser.id) { 
+      Promise.all([loadUserData(), loadAllSkills()]).finally(() => setInitialLoadDone(true));
+    } else {
+      setInitialLoadDone(true);
+    }
+  }, []);
 
   const loadUserData = async () => {
     const userData = await ProfileAPI.getMyProfile();
@@ -134,7 +141,7 @@ export default function MyProfile({ onUserUpdate }) {
       </div>
 
       <div className="max-w-6xl mx-auto">
-        {!formData.github && (
+        {initialLoadDone && !formData.github && (
           <div className="mb-8 p-5 bg-[#fbbf24]/5 border-2 border-[#fbbf24]/30 rounded-md flex items-start gap-4 animate-pulse">
             <div className="p-2 bg-[#fbbf24]/10 rounded-sm">
               <Zap size={24} className="text-[#fbbf24]" />
