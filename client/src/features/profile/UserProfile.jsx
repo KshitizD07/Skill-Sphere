@@ -76,7 +76,7 @@ function RecruiterView({ user }) {
           <div className="flex items-center gap-3 mt-2 text-xs font-['Space_Grotesk'] tracking-wide text-[#8d90a0]">
             {user.college && <span className="flex items-center gap-1"><Building2 size={12} /> {user.college}</span>}
             <span className="text-[#434655]">|</span>
-            <span>{user.role}</span>
+            <span>{user.role === 'GUEST' ? `GUEST ${user.guestPersona || 'STUDENT'}` : user.role}</span>
           </div>
         </div>
       </div>

@@ -107,7 +107,7 @@ function App() {
       } />
       <Route path="/my-profile" element={
         <ProtectedRoute user={user} authChecked={authChecked}>
-          <MyProfile onUserUpdate={setUser} />
+          <MyProfile user={user} onUserUpdate={setUser} />
         </ProtectedRoute>
       } />
       <Route path="/profile/:id" element={

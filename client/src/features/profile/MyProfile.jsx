@@ -12,9 +12,11 @@ import SkillVerifier from '../skills/SkillVerifier';
 import ProofVerifier from '../skills/ProofVerifier';
 import NotificationBell from '../../shared/components/NotificationBell';
 
-export default function MyProfile({ onUserUpdate }) {
+export default function MyProfile({ user, onUserUpdate }) {
   const navigate = useNavigate();
-  const storedUser = JSON.parse(localStorage.getItem('user_data') || '{}');
+  // Prefer the prop user, fall back to localStorage
+  const activeUser = user || JSON.parse(localStorage.getItem('user_data') || '{}');
+  
   const [loading, setLoading] = useState(false);
   const [initialLoadDone, setInitialLoadDone] = useState(false);
   const [formData, setFormData] = useState({ name:'',headline:'',bio:'',avatar:'',github:'',linkedin:'',college:'' });
@@ -25,25 +27,37 @@ export default function MyProfile({ onUserUpdate }) {
   const [showSkillSelector, setShowSkillSelector] = useState(false);
   const [showVerifier, setShowVerifier] = useState(false);
   const [showProofVerifier, setShowProofVerifier] = useState(false);
-  const [selectedSkillToVerify, setSelectedSkillToVerify] = useState(null);
+  const [selectedSkill, setSelectedSkill] = useState(null); 
   const avatarInputRef = useRef(null);
 
   useEffect(() => { 
-    if (storedUser.id) { 
+    if (activeUser?.id) { 
       Promise.all([loadUserData(), loadAllSkills()]).finally(() => setInitialLoadDone(true));
     } else {
       setInitialLoadDone(true);
     }
-  }, []);
+  }, [activeUser?.id]);
 
   const loadUserData = async () => {
-    const userData = await ProfileAPI.getMyProfile();
-    if (userData.error) return;
-    setFormData({ name:userData.name||'', headline:userData.headline||'', bio:userData.bio||'', avatar:userData.avatar||'', github:userData.github||'', linkedin:userData.linkedin||'', college:userData.college||'' });
-    if (userData.skills) {
-      setMySkillsRaw(userData.skills);
-      setMySkillNames(userData.skills.map(us => us.name || us.skill?.name).filter(Boolean));
-      setVerifiedSkillNames(userData.skills.filter(us => us.isVerified).map(us => us.name || us.skill?.name).filter(Boolean));
+    try {
+      const userData = await ProfileAPI.getMyProfile();
+      if (userData.error) return;
+      setFormData({ 
+        name:     userData.name || '', 
+        headline: userData.headline || '', 
+        bio:      userData.bio || '', 
+        avatar:   userData.avatar || '', 
+        github:   userData.github || '', 
+        linkedin: userData.linkedin || '', 
+        college:  userData.college || '' 
+      });
+      if (userData.skills) {
+        setMySkillsRaw(userData.skills);
+        setMySkillNames(userData.skills.map(us => us.name || us.skill?.name).filter(Boolean));
+        setVerifiedSkillNames(userData.skills.filter(us => us.isVerified).map(us => us.name || us.skill?.name).filter(Boolean));
+      }
+    } catch (err) {
+      console.error('Failed to load user data:', err);
     }
   };
 
@@ -71,7 +85,7 @@ export default function MyProfile({ onUserUpdate }) {
       await ProfileAPI.updateProfile(cleanedForm);
       await ProfileAPI.saveSkills(mySkillNames);
       
-      const updatedUser = { ...storedUser, ...cleanedForm };
+      const updatedUser = { ...activeUser, ...cleanedForm };
       localStorage.setItem('user_data', JSON.stringify(updatedUser));
       if (onUserUpdate) onUserUpdate(updatedUser);
       
@@ -94,7 +108,7 @@ export default function MyProfile({ onUserUpdate }) {
   const labelBase = "block font-['Space_Grotesk'] text-[10px] font-bold tracking-[0.12em] uppercase text-[#8d90a0] mb-1.5";
   const inputBase = "w-full bg-[#131b2e] border border-[#434655]/40 text-[#dae2fd] p-3 rounded-xs focus:border-[#adc6ff]/60 outline-none font-['Manrope'] text-sm transition-colors placeholder-[#434655]";
 
-  if (!storedUser.id) return (
+  if (!activeUser?.id) return (
     <div className="p-10 text-[#dae2fd] bg-[#0b1326] h-screen font-['Manrope'] flex items-center justify-center">
       <p className="text-[#8d90a0]">Please log in to view your profile.</p>
     </div>
@@ -125,7 +139,7 @@ export default function MyProfile({ onUserUpdate }) {
             className="flex items-center gap-2 cursor-pointer group"
           >
             <Users size={18} className="text-[#656d84] group-hover:text-[#89f5e7] transition-colors" />
-            <span className="text-lg font-bold text-[#8d90a0] tracking-tight group-hover:text-[#dae2fd] transition-colors">
+            <span className="text-lg font-bold text-[#8d90a0] tracking-tight group-hover:text-dae2fd transition-colors">
               Network
             </span>
           </div>
@@ -134,11 +148,11 @@ export default function MyProfile({ onUserUpdate }) {
         <div className="flex items-center gap-3">
           <NotificationBell />
           <div
-            onClick={() => navigate(`/profile/${storedUser.id}`)}
+            onClick={() => navigate(`/profile/${activeUser.id}`)}
             className="w-9 h-9 rounded-full border border-[#434655]/50 hover:border-[#adc6ff]/50 cursor-pointer flex items-center justify-center bg-[#171f33] transition-all hover:shadow-[0_0_12px_rgba(173,198,255,0.15)] overflow-hidden"
           >
-            {formData.avatar || storedUser.avatar
-              ? <img src={formData.avatar || storedUser.avatar} className="w-full h-full object-cover" alt="" />
+            {formData.avatar || activeUser.avatar
+              ? <img src={formData.avatar || activeUser.avatar} className="w-full h-full object-cover" alt="" />
               : <User size={16} className="text-[#adc6ff]" />}
           </div>
           <button
@@ -194,7 +208,13 @@ export default function MyProfile({ onUserUpdate }) {
               <div className="w-28 h-28 rounded-full border-2 border-[#434655]/40 overflow-hidden mb-4 mt-2 bg-[#131b2e] flex items-center justify-center group-hover:border-[#adc6ff]/40 transition-colors shadow-lg shadow-[#0b1326]">
                 {formData.avatar ? <img src={formData.avatar} alt="Avatar" className="w-full h-full object-cover" /> : <User size={40} className="text-[#434655]" />}
               </div>
-              <p className={labelBase}>Profile Photo</p>
+              <p className="text-[#adc6ff] font-['Space_Grotesk'] tracking-wide text-xs mt-1">{formData.headline || 'NO_HEADLINE_TAG'}</p>
+              <div className="mt-3 px-3 py-1 bg-[#adc6ff]/10 border border-[#adc6ff]/20 rounded text-[10px] font-bold tracking-widest text-[#dae2fd]">
+                {activeUser.role === 'GUEST' 
+                  ? `GUEST ${activeUser.guestPersona || 'STUDENT'}` 
+                  : `${activeUser.role} CLASS`}
+              </div>
+              <p className={labelBase + " mt-4"}>Profile Photo</p>
               <input ref={avatarInputRef} type="file" accept="image/*" onChange={handleAvatarFileChange} className="hidden" />
               <button onClick={() => avatarInputRef.current.click()}
                 className="w-full flex items-center justify-center gap-2 bg-[#131b2e] border border-[#434655]/40 hover:border-[#adc6ff]/40 text-[#adc6ff] hover:text-[#89f5e7] p-2 text-xs font-['Space_Grotesk'] font-medium tracking-wide rounded-xs transition-all outline-none">
@@ -278,11 +298,11 @@ export default function MyProfile({ onUserUpdate }) {
 
                         {!verified && (
                           <div className="flex gap-2 mt-1">
-                            <button onClick={() => { setSelectedSkillToVerify(skillName); setShowVerifier(true); }}
+                            <button onClick={() => { setSelectedSkill(skill); setShowVerifier(true); }}
                               className="flex-1 py-1.5 bg-[#adc6ff]/10 hover:bg-[#adc6ff]/20 text-[#adc6ff] border border-[#adc6ff]/20 text-[9px] uppercase font-bold tracking-wider rounded-xs flex items-center justify-center gap-1">
                               <Github size={10} /> GitHub
                             </button>
-                            <button onClick={() => { setSelectedSkillToVerify(skill); setShowProofVerifier(true); }}
+                            <button onClick={() => { setSelectedSkill(skill); setShowProofVerifier(true); }}
                               className="flex-1 py-1.5 bg-[#89f5e7]/10 hover:bg-[#89f5e7]/20 text-[#89f5e7] border border-[#89f5e7]/20 text-[9px] uppercase font-bold tracking-wider rounded-xs flex items-center justify-center gap-1">
                               <Award size={10} /> Certificate
                             </button>
@@ -352,27 +372,27 @@ export default function MyProfile({ onUserUpdate }) {
         </div>
       </div>
 
-      {showVerifier && (
+      {showVerifier && selectedSkill && (
         <div className="fixed inset-0 bg-[#0b1326]/85 backdrop-blur-sm z-[300] flex items-center justify-center p-4">
           <div className="relative w-full max-w-lg">
             <button onClick={() => setShowVerifier(false)}
               className="absolute -top-3 -right-3 z-10 p-1.5 bg-[#93000a] hover:bg-[#ffb4ab] hover:text-[#002e6a] text-white rounded-full transition-all border border-[#ffb4ab]/30 flex items-center justify-center">
               <X size={16} />
             </button>
-            <SkillVerifier userId={storedUser.id} skillName={selectedSkillToVerify}
+            <SkillVerifier userId={activeUser.id} skillName={selectedSkill.name || selectedSkill.skill?.name}
               onVerifyComplete={() => { setShowVerifier(false); loadUserData(); }} />
           </div>
         </div>
       )}
 
-      {showProofVerifier && (
+      {showProofVerifier && selectedSkill && (
         <div className="fixed inset-0 bg-[#0b1326]/85 backdrop-blur-sm z-[300] flex items-center justify-center p-4">
           <div className="relative w-full max-w-lg">
             <button onClick={() => setShowProofVerifier(false)}
               className="absolute -top-3 -right-3 z-10 p-1.5 bg-[#93000a] hover:bg-[#ffb4ab] hover:text-[#002e6a] text-white rounded-full transition-all border border-[#ffb4ab]/30 flex items-center justify-center">
               <X size={16} />
             </button>
-            <ProofVerifier skillId={selectedSkillToVerify.id} skillName={selectedSkillToVerify.name}
+            <ProofVerifier skillId={selectedSkill.id} skillName={selectedSkill.name || selectedSkill.skill?.name}
               onVerifyComplete={() => { setShowProofVerifier(false); loadUserData(); }} />
           </div>
         </div>
