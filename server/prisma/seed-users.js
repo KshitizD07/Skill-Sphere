@@ -4,22 +4,21 @@ const bcrypt = require('bcryptjs');
 
 const prisma = new PrismaClient();
 
-// ── Dummy users ───────────────────────────────────────────────────────────────
+// ── Dummy Users — Multi-Tier Verification ─────────────────────────────────────
 const USERS = [
   {
     name: 'Aryan Mehta',
     email: 'aryan@test.com',
     role: 'STUDENT',
     college: 'IIT Bombay',
-    headline: 'Full Stack Dev | React + Node.js enthusiast',
-    bio: 'Building scalable web apps. Love open source and hackathons. Currently exploring system design.',
+    headline: 'Full Stack Engineer | Distributed Systems Enthusiast',
+    bio: 'Building scalable microservices with Node.js and Go. Passionate about system design and performance optimization. GitHub contributor to several high-traffic libraries.',
     github: 'github.com/aryanmehta',
     skills: [
-      { name: 'JavaScript', level: 'Advanced',      isVerified: true,  calculatedScore: 9 },
-      { name: 'React',      level: 'Advanced',      isVerified: true,  calculatedScore: 8 },
-      { name: 'Node.js',    level: 'Intermediate',  isVerified: true,  calculatedScore: 7 },
-      { name: 'PostgreSQL', level: 'Intermediate',  isVerified: false, calculatedScore: null },
-      { name: 'Docker',     level: 'Beginner',      isVerified: false, calculatedScore: null },
+      { name: 'JavaScript', level: 'Advanced', isVerified: true, source: 'GITHUB', score: 9, url: 'github.com/aryanmehta/node-dist-lock' },
+      { name: 'Node.js', level: 'Advanced', isVerified: true, source: 'GITHUB', score: 8, url: 'github.com/aryanmehta/express-router-core' },
+      { name: 'React', level: 'Intermediate', isVerified: true, source: 'GITHUB', score: 7, url: 'github.com/aryanmehta/nexus-ui' },
+      { name: 'System Design', level: 'Beginner', isVerified: false, source: 'MANUAL' },
     ],
   },
   {
@@ -27,16 +26,15 @@ const USERS = [
     email: 'priya@test.com',
     role: 'ALUMNI',
     college: 'NIT Trichy',
-    headline: 'SDE @ Flipkart | Python & ML',
-    bio: 'Graduated 2023. Working on recommendation systems. Passionate about making ML accessible to everyone.',
-    github: 'github.com/priyasharma',
+    headline: 'Senior SDE @ Flipkart | AI/ML Architect',
+    bio: 'Lead Engineer in the recommendation systems team. Expert in Python, TensorFlow, and large-scale data processing pipelines. Graduated 2021.',
+    github: 'github.com/priyasharma-ml',
     linkedin: 'linkedin.com/in/priyasharma',
     skills: [
-      { name: 'Python',           level: 'Advanced',     isVerified: true,  calculatedScore: 9 },
-      { name: 'Machine Learning', level: 'Advanced',     isVerified: true,  calculatedScore: 8 },
-      { name: 'TensorFlow',       level: 'Intermediate', isVerified: true,  calculatedScore: 7 },
-      { name: 'SQL',              level: 'Intermediate', isVerified: false, calculatedScore: null },
-      { name: 'Docker',           level: 'Intermediate', isVerified: true,  calculatedScore: 6 },
+      { name: 'Python', level: 'Advanced', isVerified: true, source: 'GITHUB', score: 10, url: 'github.com/priyasharma-ml/nlp-pipelines' },
+      { name: 'Machine Learning', level: 'Advanced', isVerified: true, source: 'CREDENTIAL', url: 'credly.com/certs/ml-architect-001' },
+      { name: 'TensorFlow', level: 'Advanced', isVerified: true, source: 'CREDENTIAL', url: 'coursera.org/verify/tf-specialization' },
+      { name: 'AWS/Azure', level: 'Intermediate', isVerified: true, source: 'CREDENTIAL', url: 'aws.amazon.com/certs/solutions-architect' },
     ],
   },
   {
@@ -44,15 +42,14 @@ const USERS = [
     email: 'rohan@test.com',
     role: 'STUDENT',
     college: 'BITS Pilani',
-    headline: 'Backend Dev | Go & Rust explorer',
-    bio: 'Third year CSE. Building a distributed key-value store for fun. Love low-level systems.',
-    github: 'github.com/rohanverma',
+    headline: 'Cloud Infrastructure & DevOps Specialist',
+    bio: 'Managing hybrid cloud environments. Kubernetes expert and Terraform advocate. Currently automating everything at a high-growth fintech startup.',
+    github: 'github.com/rohan-infra',
     skills: [
-      { name: 'Go',         level: 'Intermediate', isVerified: true,  calculatedScore: 7 },
-      { name: 'Rust',       level: 'Beginner',     isVerified: true,  calculatedScore: 5 },
-      { name: 'Linux',      level: 'Advanced',     isVerified: true,  calculatedScore: 8 },
-      { name: 'Docker',     level: 'Advanced',     isVerified: true,  calculatedScore: 9 },
-      { name: 'PostgreSQL', level: 'Intermediate', isVerified: false, calculatedScore: null },
+      { name: 'Docker', level: 'Advanced', isVerified: true, source: 'GITHUB', score: 9, url: 'github.com/rohan-infra/k8s-config' },
+      { name: 'Terraform', level: 'Advanced', isVerified: true, source: 'GITHUB', score: 8, url: 'github.com/rohan-infra/terraform-aws-modules' },
+      { name: 'Kubernetes', level: 'Advanced', isVerified: true, source: 'CREDENTIAL', url: 'credly.com/certs/cka-rohan' },
+      { name: 'Linux Administration', level: 'Advanced', isVerified: false, source: 'MANUAL' },
     ],
   },
   {
@@ -60,16 +57,15 @@ const USERS = [
     email: 'ananya@test.com',
     role: 'ALUMNI',
     college: 'IIT Madras',
-    headline: 'Frontend Engineer @ Razorpay | Design Systems',
-    bio: 'IIT Madras 2022. Building design systems and accessible UIs. Mentor for women in tech.',
-    github: 'github.com/ananyaiyer',
+    headline: 'Frontend Architect @ Razorpay | Design Systems Expert',
+    bio: 'Focused on building accessible, high-performance web applications. Creator of the OpenScale UI library. Mentor for aspiring frontend engineers.',
+    github: 'github.com/ananya-ui',
     linkedin: 'linkedin.com/in/ananyaiyer',
     skills: [
-      { name: 'JavaScript',  level: 'Advanced',     isVerified: true,  calculatedScore: 9 },
-      { name: 'TypeScript',  level: 'Advanced',     isVerified: true,  calculatedScore: 9 },
-      { name: 'React',       level: 'Advanced',     isVerified: true,  calculatedScore: 10 },
-      { name: 'CSS',         level: 'Advanced',     isVerified: false, calculatedScore: null },
-      { name: 'Figma',       level: 'Intermediate', isVerified: false, calculatedScore: null },
+      { name: 'TypeScript', level: 'Advanced', isVerified: true, source: 'GITHUB', score: 10, url: 'github.com/ananya-ui/scale-design-system' },
+      { name: 'React', level: 'Advanced', isVerified: true, source: 'GITHUB', score: 9, url: 'github.com/ananya-ui/react-perf-tools' },
+      { name: 'Web Performance', level: 'Advanced', isVerified: true, source: 'CREDENTIAL', url: 'linkedin.com/learning/web-performance-certs' },
+      { name: 'Tailwind CSS', level: 'Advanced', isVerified: true, source: 'GITHUB', score: 9, url: 'github.com/ananya-ui/tailwind-plugin-grid' },
     ],
   },
   {
@@ -77,14 +73,14 @@ const USERS = [
     email: 'karan@test.com',
     role: 'STUDENT',
     college: 'NIT Warangal',
-    headline: 'Android Dev | Kotlin | Open source contributor',
-    bio: 'Building Android apps since 2021. Google Summer of Code 2024 contributor. Coffee-fueled coder.',
-    github: 'github.com/karanpatel',
+    headline: 'Mobile App Developer | React Native | Flutter',
+    bio: 'Building cross-platform apps with a focus on buttery-smooth animations and offline-first architecture. 2x Hackathon winner.',
+    github: 'github.com/karan-native',
     skills: [
-      { name: 'Kotlin',       level: 'Advanced',     isVerified: true,  calculatedScore: 8 },
-      { name: 'Java',         level: 'Intermediate', isVerified: true,  calculatedScore: 7 },
-      { name: 'Android',      level: 'Advanced',     isVerified: false, calculatedScore: null },
-      { name: 'React Native', level: 'Beginner',     isVerified: false, calculatedScore: null },
+      { name: 'React Native', level: 'Advanced', isVerified: true, source: 'GITHUB', score: 9, url: 'github.com/karan-native/chat-crypto-app' },
+      { name: 'JavaScript', level: 'Advanced', isVerified: true, source: 'GITHUB', score: 8, url: 'github.com/karan-native/js-core-utils' },
+      { name: 'Mobile UI/UX', level: 'Intermediate', isVerified: false, source: 'MANUAL' },
+      { name: 'Firebase', level: 'Intermediate', isVerified: true, source: 'CREDENTIAL', url: 'coursera.org/verify/firebase-apps' },
     ],
   },
   {
@@ -92,16 +88,15 @@ const USERS = [
     email: 'sneha@test.com',
     role: 'ALUMNI',
     college: 'IIIT Hyderabad',
-    headline: 'DevOps @ Microsoft | Kubernetes | CI/CD',
-    bio: 'IIIT-H 2021. Running 200+ microservices in production. AMA about infra, scaling, and burnout recovery.',
-    github: 'github.com/snehareddy',
-    linkedin: 'linkedin.com/in/snehareddy',
+    headline: 'Cybersecurity Analyst @ Microsoft | Security Operations',
+    bio: 'Securing global infrastructure. Expert in penetration testing, incident response, and security automation. Certified Ethical Hacker.',
+    github: 'github.com/sneha-security',
+    linkedin: 'linkedin.com/in/snehareddy-sec',
     skills: [
-      { name: 'Kubernetes', level: 'Advanced',     isVerified: true,  calculatedScore: 9 },
-      { name: 'Docker',     level: 'Advanced',     isVerified: true,  calculatedScore: 10 },
-      { name: 'AWS',        level: 'Advanced',     isVerified: true,  calculatedScore: 8 },
-      { name: 'Python',     level: 'Intermediate', isVerified: true,  calculatedScore: 7 },
-      { name: 'Linux',      level: 'Advanced',     isVerified: false, calculatedScore: null },
+      { name: 'Python', level: 'Advanced', isVerified: true, source: 'GITHUB', score: 8, url: 'github.com/sneha-security/vuln-scanner' },
+      { name: 'Linux Administration', level: 'Advanced', isVerified: true, source: 'CREDENTIAL', url: 'credly.com/certs/comptia-linux-plus' },
+      { name: 'Security Compliance', level: 'Intermediate', isVerified: true, source: 'CREDENTIAL', url: 'credly.com/certs/ceh-v12' },
+      { name: 'Go', level: 'Beginner', isVerified: true, source: 'GITHUB', score: 6, url: 'github.com/sneha-security/go-log-parser' },
     ],
   },
   {
@@ -109,15 +104,14 @@ const USERS = [
     email: 'dev@test.com',
     role: 'STUDENT',
     college: 'IIT Delhi',
-    headline: 'ML Researcher | NLP | Transformers',
-    bio: 'Final year. Research intern at AI4Bharat. Obsessed with making LLMs understand Indian languages.',
-    github: 'github.com/devjoshi',
+    headline: 'Data Engineer | Spark | Big Data Pipelines',
+    bio: 'Processing petabytes of data with Apache Spark and Flink. Optimizing ETL pipelines for low-latency analytics. Researching streaming data architectures.',
+    github: 'github.com/dev-bigdata',
     skills: [
-      { name: 'Python',           level: 'Advanced',     isVerified: true,  calculatedScore: 9 },
-      { name: 'Machine Learning', level: 'Advanced',     isVerified: true,  calculatedScore: 9 },
-      { name: 'TensorFlow',       level: 'Advanced',     isVerified: true,  calculatedScore: 8 },
-      { name: 'PyTorch',          level: 'Intermediate', isVerified: true,  calculatedScore: 7 },
-      { name: 'SQL',              level: 'Beginner',     isVerified: false, calculatedScore: null },
+      { name: 'Python', level: 'Advanced', isVerified: true, source: 'GITHUB', score: 9, url: 'github.com/dev-bigdata/spark-streaming-demo' },
+      { name: 'Data Engineering', level: 'Advanced', isVerified: true, source: 'CREDENTIAL', url: 'credly.com/certs/gcp-data-engineer' },
+      { name: 'PostgreSQL', level: 'Advanced', isVerified: true, source: 'GITHUB', score: 8, url: 'github.com/dev-bigdata/sql-query-optimizer' },
+      { name: 'Docker', level: 'Intermediate', isVerified: false, source: 'MANUAL' },
     ],
   },
   {
@@ -125,99 +119,33 @@ const USERS = [
     email: 'meera@test.com',
     role: 'ALUMNI',
     college: 'VIT Vellore',
-    headline: 'Fullstack @ Swiggy | React Native | Node',
-    bio: 'VIT 2022. Shipping features used by 10M+ users daily. Side project: building a local food discovery app.',
-    github: 'github.com/meeranair',
-    linkedin: 'linkedin.com/in/meeranair',
+    headline: 'Product Manager @ Swiggy | Technical PM',
+    bio: 'Bridging the gap between engineering and business. Former Full Stack dev turned PM. Expertise in data-driven product roadmap planning.',
+    linkedin: 'linkedin.com/in/meeranair-pm',
     skills: [
-      { name: 'React Native', level: 'Advanced',     isVerified: true,  calculatedScore: 9 },
-      { name: 'JavaScript',   level: 'Advanced',     isVerified: true,  calculatedScore: 8 },
-      { name: 'Node.js',      level: 'Advanced',     isVerified: true,  calculatedScore: 8 },
-      { name: 'MongoDB',      level: 'Intermediate', isVerified: false, calculatedScore: null },
-      { name: 'AWS',          level: 'Intermediate', isVerified: false, calculatedScore: null },
-    ],
-  },
-  {
-    name: 'Aditya Kulkarni',
-    email: 'aditya@test.com',
-    role: 'STUDENT',
-    college: 'COEP Technological University',
-    headline: 'Web3 Dev | Solidity | DeFi protocols',
-    bio: 'Building on Ethereum. Hackathon addict — 8 wins so far. Looking for co-founders for a DeFi project.',
-    github: 'github.com/adityakulkarni',
-    skills: [
-      { name: 'JavaScript', level: 'Advanced',     isVerified: true,  calculatedScore: 8 },
-      { name: 'React',      level: 'Intermediate', isVerified: true,  calculatedScore: 6 },
-      { name: 'Node.js',    level: 'Intermediate', isVerified: false, calculatedScore: null },
-      { name: 'Python',     level: 'Beginner',     isVerified: false, calculatedScore: null },
-    ],
-  },
-  {
-    name: 'Tanvi Singh',
-    email: 'tanvi@test.com',
-    role: 'ALUMNI',
-    college: 'Jadavpur University',
-    headline: 'Security Engineer @ Zerodha | VAPT | Bug Bounty',
-    bio: 'Jadavpur 2020. Bug bounty hunter in free time. Found critical vulns in 3 unicorns. OSCP certified.',
-    github: 'github.com/tanvisingh',
-    linkedin: 'linkedin.com/in/tanvisingh',
-    skills: [
-      { name: 'Python',    level: 'Advanced',     isVerified: true,  calculatedScore: 8 },
-      { name: 'Linux',     level: 'Advanced',     isVerified: true,  calculatedScore: 9 },
-      { name: 'Docker',    level: 'Intermediate', isVerified: true,  calculatedScore: 7 },
-      { name: 'Go',        level: 'Beginner',     isVerified: false, calculatedScore: null },
-    ],
-  },
-  {
-    name: 'Rahul Gupta',
-    email: 'rahul@test.com',
-    role: 'STUDENT',
-    college: 'IIT Kanpur',
-    headline: 'Systems Programmer | C++ | OS internals',
-    bio: 'Writing a toy OS kernel for fun. Interested in compilers and garbage collectors. Competitive programmer.',
-    github: 'github.com/rahulgupta',
-    skills: [
-      { name: 'C++',    level: 'Advanced',     isVerified: true,  calculatedScore: 10 },
-      { name: 'C',      level: 'Advanced',     isVerified: true,  calculatedScore: 9 },
-      { name: 'Python', level: 'Intermediate', isVerified: false, calculatedScore: null },
-      { name: 'Linux',  level: 'Advanced',     isVerified: true,  calculatedScore: 8 },
-    ],
-  },
-  {
-    name: 'Ishaan Kapoor',
-    email: 'ishaan@test.com',
-    role: 'ALUMNI',
-    college: 'Delhi Technological University',
-    headline: 'Cloud Architect @ Infosys | AWS Solutions Architect',
-    bio: 'DTU 2019. Helping enterprises migrate to cloud. AWS Solutions Architect Professional certified.',
-    github: 'github.com/ishaankapoor',
-    linkedin: 'linkedin.com/in/ishaankapoor',
-    skills: [
-      { name: 'AWS',        level: 'Advanced',     isVerified: true,  calculatedScore: 10 },
-      { name: 'Terraform',  level: 'Advanced',     isVerified: true,  calculatedScore: 9 },
-      { name: 'Docker',     level: 'Advanced',     isVerified: true,  calculatedScore: 8 },
-      { name: 'Kubernetes', level: 'Intermediate', isVerified: true,  calculatedScore: 7 },
-      { name: 'Python',     level: 'Intermediate', isVerified: false, calculatedScore: null },
+      { name: 'React', level: 'Advanced', isVerified: true, source: 'CREDENTIAL', url: 'linkedin.com/learning/react-legacy' },
+      { name: 'Node.js', level: 'Intermediate', isVerified: true, source: 'CREDENTIAL', url: 'linkedin.com/learning/node-architecture' },
+      { name: 'System Design', level: 'Advanced', isVerified: true, source: 'CREDENTIAL', url: 'coursera.org/verify/system-design' },
     ],
   },
 ];
 
-// ── Sample posts ──────────────────────────────────────────────────────────────
+// ── Sample Posts — Realistic technical discourse ──────────────────────────────
 const POSTS = [
-  { userEmail: 'aryan@test.com',   content: 'Just shipped a real-time collaborative code editor using WebSockets + React. The diff-sync algorithm was the hardest part. Happy to share the repo if anyone\'s interested! #buildinpublic' },
-  { userEmail: 'priya@test.com',   content: 'Tip for juniors: Don\'t skip data structures. I was asked to implement a trie from scratch in my Flipkart interview. Spent 2 years avoiding it, 2 hours regretting it 😅' },
-  { userEmail: 'sneha@test.com',   content: 'Our Kubernetes cluster hit 1000 pods today. 18 months ago we were running everything on a single EC2. The journey from chaos to GitOps has been wild. Thread incoming 🧵' },
-  { userEmail: 'ananya@test.com',  content: 'Hot take: Most React performance problems I see in code reviews aren\'t solved by useMemo or useCallback — they\'re solved by better component architecture. Stop optimizing, start restructuring.' },
-  { userEmail: 'dev@test.com',     content: 'Our multilingual NLP model now supports 12 Indian languages with 91% accuracy on the IndicGLUE benchmark. The key insight: shared subword tokenizer trained on all languages simultaneously.' },
-  { userEmail: 'rohan@test.com',   content: 'Day 47 of building a distributed KV store in Rust. Finally got Raft consensus working correctly. The hardest bug: leader election during network partition. Sleep is overrated anyway.' },
-  { userEmail: 'meera@test.com',   content: 'Pushed a feature to prod at 11pm, woke up to 0 Sentry errors. This is the way. Also shoutout to the QA team — you are the real heroes.' },
-  { userEmail: 'aditya@test.com',  content: 'Won ETHIndia 2024! Built a decentralized skill verification system — ironically similar to what SkillSphere is doing but on-chain. Great minds think alike 👀' },
-  { userEmail: 'ishaan@test.com',  content: 'AWS bill went from $45k/month to $12k after rightsizing + reserved instances + Savings Plans. The cloud isn\'t expensive — running it without observability is.' },
-  { userEmail: 'karan@test.com',   content: 'My GSoC project got merged into the main Android repo! 3 months of work, 47 PR iterations, and one very patient mentor. If you\'re a student — apply to GSoC, it changes everything.' },
+  { userEmail: 'aryan@test.com', content: 'Just benchmarked the new SkillSphere Nexus matching engine. The move from a basic filter to an Antifragile weighted strategy reduced squad formation latency by 40%. #SystemDesign #Optimization' },
+  { userEmail: 'priya@test.com', content: 'Tip for engineers: When building AI pipelines, observability is more important than the model architecture itself. If you can\'t trace why a recommendation failed, you can\'t fix it. Use OpenTelemetry! 🚀' },
+  { userEmail: 'ananya@test.com', content: 'Hot take: TypeScript interfaces are better than Types for API responses, but Types are better for complex unions and utilities. Change my mind. #TypeScript #CleanCode' },
+  { userEmail: 'rohan@test.com', content: 'Successfully migrated our legacy staging environment to a full GitOps workflow using ArgoCD. The "drift detection" alone has saved us hours of debugging "it works on my machine" issues.' },
+  { userEmail: 'sneha@test.com', content: 'If you aren\'t signing your commits and rotating your API keys every 90 days, you aren\'t doing security. A simple GitHub action can automate 90% of your security posture. Don\'t be the weak link!' },
+  { userEmail: 'dev@test.com', content: 'Interesting find today: Postgres window functions are significantly faster than multiple self-joins for complex time-series analysis. If you\'re processing logs in SQL, check out PARTITION BY.' },
+  { userEmail: 'karan@test.com', content: 'Finally achieved 60fps on our complex list view in React Native. The secret? moving from FlatList to FlashList and offloading expensive calculations to a JSI module. Native-like speed is possible!' },
+  { userEmail: 'priya@test.com', content: 'I\'ll be hosting a 30-min mock interview session for students interested in AI/ML roles next weekend. Drop a comment if you want a slot! Priority to those with verified GitHub modules.' },
+  { userEmail: 'aryan@test.com', content: 'Highly recommend the "Campus Proximity" strategy on Nexus if you\'re looking for a hackathon squad. Building with people from your own college makes the coordination 10x easier.' },
+  { userEmail: 'meera@test.com', content: 'Great to see so many alumni giving back to the network. As a PM, I look for "Proof of Work" (GitHub/Certs) over just resumes. SkillSphere makes that so much clearer. #ProductManagement' },
 ];
 
 async function main() {
-  console.log('🌱 Seeding dummy users...\n');
+  console.log('🌱 Seeding Professional Personas...\n');
 
   const password = await bcrypt.hash('test1234', 12);
   const created  = [];
@@ -234,7 +162,7 @@ async function main() {
       },
     });
 
-    // Delete old skills and recreate
+    // Delete old skills and recreate with multi-tier source
     await prisma.skill.deleteMany({ where: { userId: user.id } });
     await prisma.skill.createMany({
       data: u.skills.map((s) => ({
@@ -242,24 +170,22 @@ async function main() {
         name:            s.name,
         level:           s.level,
         isVerified:      s.isVerified,
-        calculatedScore: s.calculatedScore,
+        verificationSource: s.source || 'MANUAL',
+        verificationUrl: s.url || null,
+        calculatedScore: s.score || null,
         showLevel:       true,
         verifiedAt:      s.isVerified ? new Date() : null,
       })),
       skipDuplicates: true,
     });
 
-    // Activity log
-    await prisma.activityLog.create({
-      data: { userId: user.id, action: 'ACCOUNT_CREATED', details: `Seeded user: ${u.role}` },
-    }).catch(() => {});
-
     created.push(user);
-    console.log(`  ✓ ${u.name} (${u.role}) — ${u.college} — ${u.skills.length} skills`);
+    console.log(`  ✓ ${u.name} (${u.role}) — ${u.skills.length} verified modules attached`);
   }
 
   // ── Posts ────────────────────────────────────────────────────────────────
-  console.log('\n📝 Seeding posts...');
+  console.log('\n📝 Seeding Technical Activity Stream...');
+  await prisma.post.deleteMany({}); // Clean posts for fresh seed
   for (const p of POSTS) {
     const author = created.find((u) => u.email === p.userEmail);
     if (!author) continue;
@@ -267,14 +193,11 @@ async function main() {
     await prisma.post.create({
       data: { userId: author.id, content: p.content },
     });
-    console.log(`  ✓ Post by ${author.name}`);
+    console.log(`  ✓ Technical log from ${author.name}`);
   }
 
-  console.log(`\n✅ Done!`);
-  console.log(`   ${USERS.length} users seeded`);
-  console.log(`   ${POSTS.length} posts seeded`);
-  console.log(`\n🔑 All test accounts use password: test1234`);
-  console.log('   Example: aryan@test.com / test1234\n');
+  console.log(`\n✅ Persona Seed Complete!`);
+  console.log(`\n🔑 ALL ACCOUNTS: [password: test1234]`);
 }
 
 main()

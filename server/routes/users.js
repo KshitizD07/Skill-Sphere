@@ -17,6 +17,7 @@ const PROFILE_SELECT = {
     select: {
       id: true, name: true, level: true, isVerified: true,
       calculatedScore: true, showLevel: true, verificationUrl: true,
+      verificationSource: true,
     },
   },
 };
@@ -73,8 +74,14 @@ router.patch('/me', authenticateToken, asyncHandler(async (req, res) => {
 router.post('/me/skills', authenticateToken, asyncHandler(async (req, res) => {
   const { skillIds } = z.object({ skillIds: z.array(z.string()) }).parse(req.body);
 
-  // Delete all unverified skills then recreate
-  await prisma.skill.deleteMany({ where: { userId: req.user.userId, isVerified: false } });
+  // Delete all unverified skills that don't have a manual proof URL yet
+  await prisma.skill.deleteMany({ 
+    where: { 
+      userId: req.user.userId, 
+      isVerified: false,
+      verificationUrl: null 
+    } 
+  });
 
   if (skillIds.length) {
     await prisma.skill.createMany({
@@ -87,6 +94,33 @@ router.post('/me/skills', authenticateToken, asyncHandler(async (req, res) => {
 
   await cache.del(`user:profile:${req.user.userId}`);
   res.json({ success: true, count: skillIds.length });
+}));
+
+// PATCH /api/users/me/skills/:id — Add proof URL for manual/credential verification
+router.patch('/me/skills/:id', authenticateToken, asyncHandler(async (req, res) => {
+  const schema = z.object({
+    verificationUrl: z.string().url(),
+    source: z.enum(['CREDENTIAL', 'MANUAL']).default('MANUAL'),
+  });
+
+  const { verificationUrl, source } = schema.parse(req.body);
+  const skillId = req.params.id;
+
+  const skill = await prisma.skill.update({
+    where: { id: skillId, userId: req.user.userId },
+    data: {
+      verificationUrl,
+      verificationSource: source,
+      // For now, providing a URL from trusted domains auto-verifies
+      isVerified: verificationUrl.includes('credly.com') || 
+                  verificationUrl.includes('aws.amazon.com') || 
+                  verificationUrl.includes('coursera.org'),
+      verifiedAt: new Date(),
+    }
+  });
+
+  await cache.del(`user:profile:${req.user.userId}`);
+  res.json(skill);
 }));
 
 // GET /api/users/search?q=

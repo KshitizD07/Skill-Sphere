@@ -63,13 +63,14 @@ model Skill {
   userId String
   user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
 
-  name            String
-  level           String    @default("Beginner")
-  isVerified      Boolean   @default(false)
-  verificationUrl String?
-  verifiedAt      DateTime?
-  calculatedScore Int?
-  showLevel       Boolean   @default(true)
+  name               String
+  level              String             @default("Beginner")
+  isVerified         Boolean            @default(false)
+  verificationUrl    String?
+  verificationSource VerificationSource @default(MANUAL)
+  verifiedAt         DateTime?
+  calculatedScore    Int?
+  showLevel          Boolean            @default(true)
 
   createdAt DateTime @default(now())
 
@@ -77,6 +78,12 @@ model Skill {
   @@index([userId])
   @@index([name])
   @@index([isVerified])
+}
+
+enum VerificationSource {
+  GITHUB
+  CREDENTIAL
+  MANUAL
 }
 
 // ─────────────────────────────────────────────────────────────────────────────

@@ -10,6 +10,8 @@ const SkillAPI = {
   getMentors: (skillId) => BaseAPI.get(`/skills/mentors/${skillId}`),
   verifySkill: (userId, skillName, repoUrl, showLevel) =>
     BaseAPI.post('/verify/skill', { userId, skillName, repoUrl, showLevel }),
+  verifySkillManual: (skillId, verificationUrl, source) =>
+    BaseAPI.patch(`/users/me/skills/${skillId}`, { verificationUrl, source }),
 };
 
 export default SkillAPI;

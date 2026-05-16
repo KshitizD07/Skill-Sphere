@@ -3,12 +3,13 @@ import { useNavigate } from 'react-router-dom';
 import {
   ArrowLeft, Camera, User, Plus, CheckCircle,
   X, Shield, Github, Linkedin, Save, Building2,
-  LogOut, BarChart2, Zap
+  LogOut, BarChart2, Zap, Award
 } from 'lucide-react';
 import ProfileAPI from './profileAPI';
 import API from '../../api';
 import { COLLEGES } from '../../data/colleges';
 import SkillVerifier from '../skills/SkillVerifier';
+import ProofVerifier from '../skills/ProofVerifier';
 import NotificationBell from '../../shared/components/NotificationBell';
 
 export default function MyProfile({ onUserUpdate }) {
@@ -18,9 +19,11 @@ export default function MyProfile({ onUserUpdate }) {
   const [formData, setFormData] = useState({ name:'',headline:'',bio:'',avatar:'',github:'',linkedin:'',college:'' });
   const [allSkills, setAllSkills] = useState([]);
   const [mySkillNames, setMySkillNames] = useState([]);
+  const [mySkillsRaw, setMySkillsRaw] = useState([]);
   const [verifiedSkillNames, setVerifiedSkillNames] = useState([]);
   const [showSkillSelector, setShowSkillSelector] = useState(false);
   const [showVerifier, setShowVerifier] = useState(false);
+  const [showProofVerifier, setShowProofVerifier] = useState(false);
   const [selectedSkillToVerify, setSelectedSkillToVerify] = useState(null);
   const avatarInputRef = useRef(null);
 
@@ -31,6 +34,7 @@ export default function MyProfile({ onUserUpdate }) {
     if (userData.error) return;
     setFormData({ name:userData.name||'', headline:userData.headline||'', bio:userData.bio||'', avatar:userData.avatar||'', github:userData.github||'', linkedin:userData.linkedin||'', college:userData.college||'' });
     if (userData.skills) {
+      setMySkillsRaw(userData.skills);
       setMySkillNames(userData.skills.map(us => us.name || us.skill?.name).filter(Boolean));
       setVerifiedSkillNames(userData.skills.filter(us => us.isVerified).map(us => us.name || us.skill?.name).filter(Boolean));
     }
@@ -207,11 +211,18 @@ export default function MyProfile({ onUserUpdate }) {
               )}
               <div className="flex flex-wrap gap-2">
                 {mySkillNames.length > 0 ? mySkillNames.map(skillName => {
-                  const verified = verifiedSkillNames.includes(skillName);
+                  const skill = mySkillsRaw.find(s => (s.name || s.skill?.name) === skillName);
+                  const verified = skill?.isVerified;
+                  const source = skill?.verificationSource;
+
                   return (
                     <span key={skillName} className={`px-2.5 py-1 border text-[10px] font-['Space_Grotesk'] font-bold uppercase tracking-wide flex items-center gap-1 group/skill relative rounded-xs transition-colors ${verified ? 'bg-[#89f5e7]/8 border-[#89f5e7]/30 text-[#89f5e7]' : 'bg-[#adc6ff]/8 border-[#adc6ff]/20 text-[#adc6ff]'}`}>
                       {skillName}
-                      {verified && <CheckCircle size={9} className="text-[#89f5e7]" />}
+                      {verified && (
+                        source === 'GITHUB' ? <Github size={9} className="text-[#89f5e7]" /> :
+                        source === 'CREDENTIAL' ? <Award size={9} className="text-[#89f5e7]" /> :
+                        <CheckCircle size={9} className="text-[#89f5e7]" />
+                      )}
                       <X size={9} className="cursor-pointer hover:text-[#ffb4ab] opacity-0 group-hover/skill:opacity-100 transition-opacity ml-1" onClick={() => toggleSkill(skillName)} />
                     </span>
                   );
@@ -225,7 +236,7 @@ export default function MyProfile({ onUserUpdate }) {
                 <Shield className="text-[#adc6ff]" size={15} />
                 <h3 className="font-['Space_Grotesk'] text-[10px] font-bold tracking-[0.12em] uppercase text-[#adc6ff]">Verification Interface</h3>
               </div>
-              <p className="text-xs text-[#8d90a0] mb-4 leading-relaxed">Establish credentials via repository analysis.</p>
+              <p className="text-xs text-[#8d90a0] mb-4 leading-relaxed">Establish credentials via repository analysis or certification.</p>
               {mySkillNames.length === 0 ? (
                 <div className="text-center py-4 border border-[#434655]/20 rounded-xs bg-[#131b2e]/50">
                   <p className="text-[#656d84] text-[10px] font-['Space_Grotesk'] uppercase tracking-wide">Awaiting modules</p>
@@ -233,19 +244,33 @@ export default function MyProfile({ onUserUpdate }) {
               ) : (
                 <div className="space-y-2">
                   {mySkillNames.map(skillName => {
-                    const verified = verifiedSkillNames.includes(skillName);
+                    const skill = mySkillsRaw.find(s => (s.name || s.skill?.name) === skillName);
+                    const verified = skill?.isVerified;
+
                     return (
-                      <button key={skillName} type="button"
-                        onClick={() => !verified && setSelectedSkillToVerify(skillName) & setShowVerifier(true)}
-                        disabled={verified}
-                        className={`w-full p-2.5 border text-xs font-['Space_Grotesk'] font-medium flex items-center justify-between group transition-all rounded-xs outline-none ${
+                      <div key={skillName} className={`w-full p-2 border text-xs font-['Space_Grotesk'] font-medium flex flex-col gap-2 transition-all rounded-xs ${
                           verified
-                            ? 'bg-[#89f5e7]/5 border-[#89f5e7]/20 text-[#89f5e7] cursor-not-allowed opacity-70'
-                            : 'bg-[#131b2e] border-[#434655]/30 text-[#c3c6d7] hover:border-[#adc6ff]/40 hover:text-[#adc6ff] cursor-pointer'
+                            ? 'bg-[#89f5e7]/5 border-[#89f5e7]/20 text-[#89f5e7]'
+                            : 'bg-[#131b2e] border-[#434655]/30 text-[#c3c6d7]'
                         }`}>
-                        <span className="flex items-center gap-2">{skillName}{verified && <CheckCircle size={11} className="text-[#89f5e7]" />}</span>
-                        {verified ? <span className="text-[9px] uppercase tracking-[0.1em] font-bold text-[#89f5e7]/70">Verified</span> : <Shield size={11} className="opacity-40 group-hover:opacity-100 text-[#adc6ff]" />}
-                      </button>
+                        <div className="flex items-center justify-between">
+                          <span className="flex items-center gap-2">{skillName}{verified && <CheckCircle size={11} className="text-[#89f5e7]" />}</span>
+                          {verified && <span className="text-[8px] uppercase tracking-[0.1em] font-bold text-[#89f5e7]/70">Verified</span>}
+                        </div>
+
+                        {!verified && (
+                          <div className="flex gap-2 mt-1">
+                            <button onClick={() => { setSelectedSkillToVerify(skillName); setShowVerifier(true); }}
+                              className="flex-1 py-1.5 bg-[#adc6ff]/10 hover:bg-[#adc6ff]/20 text-[#adc6ff] border border-[#adc6ff]/20 text-[9px] uppercase font-bold tracking-wider rounded-xs flex items-center justify-center gap-1">
+                              <Github size={10} /> GitHub
+                            </button>
+                            <button onClick={() => { setSelectedSkillToVerify(skill); setShowProofVerifier(true); }}
+                              className="flex-1 py-1.5 bg-[#89f5e7]/10 hover:bg-[#89f5e7]/20 text-[#89f5e7] border border-[#89f5e7]/20 text-[9px] uppercase font-bold tracking-wider rounded-xs flex items-center justify-center gap-1">
+                              <Award size={10} /> Certificate
+                            </button>
+                          </div>
+                        )}
+                      </div>
                     );
                   })}
                 </div>
@@ -318,6 +343,19 @@ export default function MyProfile({ onUserUpdate }) {
             </button>
             <SkillVerifier userId={storedUser.id} skillName={selectedSkillToVerify}
               onVerifyComplete={() => { setShowVerifier(false); loadUserData(); }} />
+          </div>
+        </div>
+      )}
+
+      {showProofVerifier && (
+        <div className="fixed inset-0 bg-[#0b1326]/85 backdrop-blur-sm z-[300] flex items-center justify-center p-4">
+          <div className="relative w-full max-w-lg">
+            <button onClick={() => setShowProofVerifier(false)}
+              className="absolute -top-3 -right-3 z-10 p-1.5 bg-[#93000a] hover:bg-[#ffb4ab] hover:text-[#002e6a] text-white rounded-full transition-all border border-[#ffb4ab]/30 flex items-center justify-center">
+              <X size={16} />
+            </button>
+            <ProofVerifier skillId={selectedSkillToVerify.id} skillName={selectedSkillToVerify.name}
+              onVerifyComplete={() => { setShowProofVerifier(false); loadUserData(); }} />
           </div>
         </div>
       )}

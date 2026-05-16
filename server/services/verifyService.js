@@ -142,8 +142,26 @@ Respond ONLY with a valid JSON in exactly this format, no markdown wrapping, no 
   // ── Persist result ────────────────────────────────────────────────────────
   const skill = await prisma.skill.upsert({
     where:  { userId_name: { userId, name: normalized } },
-    update: { isVerified: true, verificationUrl: repoUrl, verifiedAt: new Date(), calculatedScore: score, showLevel: !!showLevel, level },
-    create: { userId, name: normalized, level, isVerified: true, verificationUrl: repoUrl, verifiedAt: new Date(), calculatedScore: score, showLevel: !!showLevel },
+    update: { 
+      isVerified: true, 
+      verificationUrl: repoUrl, 
+      verificationSource: 'GITHUB',
+      verifiedAt: new Date(), 
+      calculatedScore: score, 
+      showLevel: !!showLevel, 
+      level 
+    },
+    create: { 
+      userId, 
+      name: normalized, 
+      level, 
+      isVerified: true, 
+      verificationUrl: repoUrl, 
+      verificationSource: 'GITHUB',
+      verifiedAt: new Date(), 
+      calculatedScore: score, 
+      showLevel: !!showLevel 
+    },
   });
 
   await prisma.activityLog.create({

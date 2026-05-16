@@ -502,11 +502,14 @@ export default function UserProfile() {
                   {user.skills?.map(record => (
                     <span key={record.id} className={`px-3 py-1 border font-['Space_Grotesk'] tracking-wide text-xs font-bold flex items-center gap-1 ${record.isVerified ? 'bg-[#89f5e7]/10 border-[#89f5e7]/30 text-[#6bd8cb]' : 'bg-[#131b2e] border-[#adc6ff]/20 text-[#adc6ff]'}`}>
                       {record.skill?.name || record.name}
-                      {record.isVerified && <CheckCircle size={10} className="text-[#89f5e7]" />}
+                      {record.isVerified && (
+                        record.verificationSource === 'GITHUB' ? <Github size={10} className="text-[#89f5e7]" /> :
+                        record.verificationSource === 'CREDENTIAL' ? <Award size={10} className="text-[#89f5e7]" /> :
+                        <CheckCircle size={10} className="text-[#89f5e7]" />
+                      )}
                     </span>
                   ))}
-                </div>
-              </div>
+                </div>              </div>
 
               <div className="pt-8 border-t border-[#434655]/20">
                 <h3 className="text-2xl font-black text-[#dae2fd] font-['Space_Grotesk'] tracking-wide mb-6 flex items-center gap-2">
