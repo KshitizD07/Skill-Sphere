@@ -93,7 +93,13 @@ While the core platform is fully functional, there are a few areas currently lac
 * **Automated Testing:** Comprehensive unit, integration, and end-to-end test coverage needs to be implemented.
 * **Deployment Infrastructure:** Lacks CI/CD pipelines, Docker containerization, and production-grade caching orchestration.
 * **Mobile Optimization:** Certain complex UI components require further refinement for smaller mobile viewports.
-* **Advanced Error Recovery:** Redis failovers and deeper rate-limiting strategies are not yet fully hardened for massive scale.
+*   **Advanced Error Recovery:** Redis failovers and deeper rate-limiting strategies are not yet fully hardened for massive scale.
+
+## 📄 License
+
+Copyright (c) 2026 Kshitiz Dixit. All rights reserved.
+
+This project is **proprietary**. All rights are reserved by the author. See the [LICENSE](LICENSE) file for the full legal text regarding usage, restrictions, and permissions.
 
 ---
 *SkillSphere — Connect. Learn. Build.*
