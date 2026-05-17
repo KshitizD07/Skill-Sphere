@@ -16,11 +16,25 @@ router.post('/generate-roadmap', authenticateToken, asyncHandler(async (req, res
     where: { userId, name: { equals: skill, mode: 'insensitive' } }
   });
 
-  if (!existingSkill || !existingSkill.isVerified) {
-    throw ApiError.forbidden('SKILL_NOT_VERIFIED');
+  let currentScore = 0;
+  if (existingSkill) {
+    if (!existingSkill.isVerified) {
+      throw ApiError.forbidden('SKILL_NOT_VERIFIED');
+    }
+    currentScore = existingSkill.calculatedScore || 0;
   }
 
-  res.json(await aiService.generateRoadmap({ skill, role, currentScore: existingSkill.calculatedScore }));
+  const verifiedSkills = await prisma.skill.findMany({
+    where: { userId, isVerified: true },
+    select: { name: true, calculatedScore: true }
+  });
+
+  res.json(await aiService.generateRoadmap({ 
+    skill, 
+    role, 
+    currentScore,
+    existingSkills: verifiedSkills
+  }));
 }));
 
 export default router;

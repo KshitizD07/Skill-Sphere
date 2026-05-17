@@ -13,7 +13,7 @@ function getClient() {
   return genAI;
 }
 
-export async function generateRoadmap({ skill, role, currentScore }) {
+export async function generateRoadmap({ skill, role, currentScore, existingSkills = [] }) {
   if (!skill?.trim() || !role?.trim()) throw ApiError.badRequest('Skill and role are required');
 
   const model = getClient().getGenerativeModel({ model: 'gemini-1.5-flash-latest' });
@@ -30,14 +30,22 @@ export async function generateRoadmap({ skill, role, currentScore }) {
     proficiencyInstruction = `(SCORE: ${currentScore}/10) The user is advanced. Focus implicitly on system scaling, security, architecture optimization, and high-performance paradigms.`;
   }
 
+  const contextSkills = existingSkills.filter(s => s.name.toLowerCase() !== skill.toLowerCase());
+  let contextInstruction = '';
+  if (contextSkills.length > 0) {
+    const skillList = contextSkills.map(s => `${s.name} (Score: ${s.calculatedScore || 0}/10)`).join(', ');
+    contextInstruction = `\n\nCONTEXT - THE USER ALREADY KNOWS:\nThe user has verified experience with: ${skillList}. \nCRITICAL: Leverage this existing knowledge! Do NOT teach them fundamental programming concepts they already know from these other languages/tools. Use analogies to their existing skills (e.g., if they know React, relate target concepts to React paradigms where applicable). Fast-track the roadmap by skipping basics they already possess.`;
+  }
+
   const prompt = `You are a senior technical mentor. Create a focused, actionable learning roadmap tailored to the user's explicit skill level.
 
 Target skill: ${skill}
 Target role: ${role}
 
 CRITICAL PERSONALIZATION:
-${proficiencyInstruction}
-Tailor ALL output content exclusively picking up from their specified proficiency!
+${proficiencyInstruction}${contextInstruction}
+
+Tailor ALL output content exclusively picking up from their specified proficiency and background context!
 
 Format your response as markdown with these exact sections:
 
