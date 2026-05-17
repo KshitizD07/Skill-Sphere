@@ -6,31 +6,42 @@ SkillSphere is a next-generation platform designed to bridge the gap between stu
 
 ## 🚀 Key Features
 
-* **Dynamic User Profiles & Skill Verification:** Users can build comprehensive profiles. Skills can be verified through integrations (e.g., GitHub API) to ensure authenticity.
-* **Antifragile Nexus Engine:** A sophisticated, multi-strategy consensus engine that intelligently matches users for mentorship, collaboration, and networking based on verified skills and dynamic scoring algorithms.
-* **Squads & Missions:** Users can form or join "Squads" to collaborate on specific projects, events, or learning missions.
-* **AI-Powered Learning Roadmaps:** Generates customized learning paths and roadmaps based on a user's current verified skills and desired career roles.
-* **Real-Time Communication:** Instant messaging and chat functionality powered by WebSockets.
-* **Global Feed & Social Interactions:** Share updates, post content, and engage with the community through likes and nested comments.
-* **In-App Notifications:** Real-time alerts for messages, squad applications, post interactions, and network updates.
+*   **Secure Authentication & User Management:** Robust user authentication using JSON Web Tokens (JWTs) stored in secure, `httpOnly` cookies. Features include One-Time Password (OTP) verification for sign-up and password resets.
+*   **Dynamic User Profiles & Skill Verification:** Users build comprehensive profiles, with a strong emphasis on quality. **A linked GitHub account is required**, and profiles without one are automatically pruned by a daily background job to maintain a high-quality network.
+*   **Antifragile Nexus Engine:** A sophisticated, multi-strategy consensus engine that intelligently matches users. It uses a dynamic, data-driven feedback loop where different matching algorithms compete, and their success is tracked to promote the most effective strategies over time. This system is managed via a dedicated, admin-only API.
+*   **Squads & Missions:** Users can form or join "Squads" to collaborate on specific projects, events, or learning missions. A daily background job handles maintenance of these squads.
+*   **AI-Powered Learning Roadmaps:** Generates customized learning paths based on a user's current skills and desired career roles using the Google Generative AI API.
+*   **Real-Time Communication & Notifications:** Instant messaging and global notifications are powered by a WebSocket server using Socket.io, providing immediate feedback for all user interactions.
+*   **Global Feed & Social Interactions:** A central feed for users to share updates, post content, and engage with the community through likes and nested comments.
+
+## 🏛️ Architecture
+
+The SkillSphere platform is built on a modern, decoupled, full-stack architecture that emphasizes separation of concerns and scalability.
+
+*   **Backend (Service-Oriented):** The Node.js server is designed with a service-oriented approach. Core business logic is encapsulated into distinct modules (e.g., Auth, Squads, Antifragile Engine). It exposes a comprehensive RESTful API for the client and handles real-time communication via a WebSocket layer. A background job scheduler (`node-cron`) manages routine database maintenance tasks.
+*   **Frontend (Feature-Sliced):** The React client is structured using a **feature-sliced design**. Instead of grouping files by type (e.g., `components`, `hooks`), the codebase is organized by feature (e.g., `profile`, `chat`, `squads`). This makes the application highly modular, scalable, and easier for developers to navigate.
 
 ## 🛠 Tech Stack
 
 **Frontend (Client)**
-* React 19 (Vite)
-* Tailwind CSS & Framer Motion (Styling and Animations)
-* React Three Fiber (3D visual elements)
-* Socket.io-client (Real-time updates)
-* React Router DOM (Navigation)
+*   **Framework:** React 19 (with Hooks) & Vite
+*   **Architecture:** Feature-Sliced Design
+*   **Styling:** Tailwind CSS & Framer Motion
+*   **3D Elements:** React Three Fiber
+*   **API Communication:** Axios
+*   **Real-Time:** Socket.io-client
+*   **Navigation:** React Router DOM
 
 **Backend (Server)**
-* Node.js (Full ES Modules architecture)
-* Express.js (RESTful APIs)
-* Prisma ORM (PostgreSQL database management)
-* Socket.io (WebSocket server)
-* Winston (Structured logging)
-* Zod (Schema validation)
-* Node-cron (Background task scheduling)
+*   **Framework:** Node.js (ES Modules) with Express.js
+*   **Architecture:** Service-Oriented
+*   **Database:** PostgreSQL with Prisma ORM
+*   **Authentication:** JWTs in `httpOnly` Cookies, OTPs
+*   **Real-Time:** Socket.io
+*   **Schema Validation:** Zod
+*   **Background Jobs:** Node-cron
+*   **Logging:** Winston
+*   **AI:** `@google/generative-ai`
 
 ## 📦 Getting Started
 
