@@ -16,7 +16,7 @@ function getClient() {
 export async function generateRoadmap({ skill, role, currentScore, existingSkills = [] }) {
   if (!skill?.trim() || !role?.trim()) throw ApiError.badRequest('Skill and role are required');
 
-  const model = getClient().getGenerativeModel({ model: 'gemini-1.5-flash-latest' });
+  const model = getClient().getGenerativeModel({ model: 'gemini-1.5-flash' });
 
   // Tailor prompt instructions to the user's current skill level
   let proficiencyInstruction;
