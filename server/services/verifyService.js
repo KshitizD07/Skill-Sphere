@@ -107,7 +107,7 @@ export async function verifySkill({ userId, skillName, repoUrl, showLevel }) {
         if (!process.env.GOOGLE_API_KEY) throw ApiError.internal('AI verifier disabled (missing GOOGLE_API_KEY)');
 
         const genAI   = new GoogleGenerativeAI(process.env.GOOGLE_API_KEY);
-        const aiModel = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' });
+        const aiModel = genAI.getGenerativeModel({ model: 'gemini-2.5-flash' });
 
         const aiPrompt = `Analyze this code for architecture, paradigm adherence, efficiency, and complexity.
 Score the user's proficiency from 1 to 10 as an integer.
