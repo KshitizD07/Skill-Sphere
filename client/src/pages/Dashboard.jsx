@@ -56,14 +56,30 @@ export default function Dashboard({ user, onLogout }) {
 
   const [roles, setRoles] = useState([]);
   const [allSkills, setAllSkills] = useState([]);
-  const [selectedRole, setSelectedRole] = useState('');
+  const [selectedRole, setSelectedRole] = useState(() => {
+    return sessionStorage.getItem('dash_selected_role') || '';
+  });
   const [mySkills, setMySkills] = useState([]);
-  const [analysis, setAnalysis] = useState(null);
+  const [analysis, setAnalysis] = useState(() => {
+    const saved = sessionStorage.getItem('dash_analysis');
+    return saved ? JSON.parse(saved) : null;
+  });
   const [mentors, setMentors] = useState([]);
   const [loadingMentors, setLoadingMentors] = useState(false);
   const [selectedMissingSkill, setSelectedMissingSkill] = useState(null);
   const [activities, setActivities] = useState([]);
   const [analyzing, setAnalyzing] = useState(false);
+
+  // Persist analysis state
+  useEffect(() => {
+    if (analysis) {
+      sessionStorage.setItem('dash_analysis', JSON.stringify(analysis));
+    }
+  }, [analysis]);
+
+  useEffect(() => {
+    sessionStorage.setItem('dash_selected_role', selectedRole);
+  }, [selectedRole]);
 
   const fetchData = useCallback(async () => {
     if (!currentUser?.id) return;
