@@ -6,7 +6,6 @@ import {
   Activity, User, Users, X, Brain, LogOut, BarChart2, MessageSquare
 } from 'lucide-react';
 import Navbar from '../shared/components/Navbar';
-import DashboardChat from '../features/chat/DashboardChat';
 
 // ─── Radar Chart ─────────────────────────────────────────────────────────────
 const RadarChart = ({ score }) => {
@@ -54,7 +53,6 @@ export default function Dashboard({ user, onLogout }) {
   const currentUser = user || JSON.parse(localStorage.getItem('user_data') || '{}');
 
   const queryParams = new URLSearchParams(location.search);
-  const initialChatOpen = queryParams.get('chat') === 'true';
 
   const [roles, setRoles] = useState([]);
   const [allSkills, setAllSkills] = useState([]);
@@ -66,13 +64,6 @@ export default function Dashboard({ user, onLogout }) {
   const [selectedMissingSkill, setSelectedMissingSkill] = useState(null);
   const [activities, setActivities] = useState([]);
   const [analyzing, setAnalyzing] = useState(false);
-  const [isChatOpen, setIsChatOpen] = useState(initialChatOpen);
-
-  useEffect(() => {
-    if (initialChatOpen) {
-      setIsChatOpen(true);
-    }
-  }, [initialChatOpen]);
 
   const fetchData = useCallback(async () => {
     if (!currentUser?.id) return;
@@ -342,9 +333,6 @@ export default function Dashboard({ user, onLogout }) {
           </div>
         </div>
       )}
-
-      {/* ── Chat Drawer ── */}
-      <DashboardChat isOpen={isChatOpen} onClose={() => setIsChatOpen(false)} />
     </div>
   );
 }

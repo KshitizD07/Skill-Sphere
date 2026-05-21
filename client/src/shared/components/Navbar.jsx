@@ -3,12 +3,14 @@ import { useNavigate, useLocation } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
   Menu, X, BarChart2, Users, Layers, ShieldCheck, 
-  User, LogOut, LayoutDashboard, Bell 
+  User, LogOut, LayoutDashboard, Bell, MessageSquare
 } from 'lucide-react';
 import NotificationBell from './NotificationBell';
+import DashboardChat from '../../features/chat/DashboardChat';
 
 const Navbar = ({ user, onLogout }) => {
   const [isOpen, setIsOpen] = useState(false);
+  const [isChatOpen, setIsChatOpen] = useState(false);
   const navigate = useNavigate();
   const location = useLocation();
 
@@ -17,12 +19,16 @@ const Navbar = ({ user, onLogout }) => {
     { name: 'Insights', path: '/grid', icon: BarChart2 },
     { name: 'Network', path: '/network', icon: Users },
     { name: 'Teams', path: '/nexus', icon: Layers },
-    { name: 'Verify', path: '/verify-skill', icon: ShieldCheck },
+    { name: 'Chat', path: 'chat_drawer', icon: MessageSquare },
     { name: 'Profile', path: '/my-profile', icon: User },
   ];
 
   const handleNavigate = (path) => {
-    navigate(path);
+    if (path === 'chat_drawer') {
+      setIsChatOpen(true);
+    } else {
+      navigate(path);
+    }
     setIsOpen(false);
   };
 
@@ -162,6 +168,8 @@ const Navbar = ({ user, onLogout }) => {
           </>
         )}
       </AnimatePresence>
+
+      <DashboardChat isOpen={isChatOpen} onClose={() => setIsChatOpen(false)} />
     </nav>
   );
 };
