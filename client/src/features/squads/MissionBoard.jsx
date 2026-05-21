@@ -230,7 +230,7 @@ function SquadCard({ squad, currentUser }) {
           <div className="flex items-center gap-2">
             <div className="w-5 h-5 rounded-full bg-[#222a3d] overflow-hidden border border-[#434655]/30">
               {squad.leader?.avatar
-                ? <img src={squad.leader.avatar} className="w-full h-full object-cover" alt="" />
+                ? <img src={squad.leader.avatar} loading="lazy" className="w-full h-full object-cover" alt="" />
                 : <div className="w-full h-full bg-[#0f69dc]/20" />}
             </div>
             <span className="text-[#8d90a0]">{squad.leader?.name}</span>

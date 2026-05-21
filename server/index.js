@@ -24,6 +24,7 @@ if (missing.length) {
 }
 
 import express from 'express';
+import compression from 'compression';
 import cookieParser from 'cookie-parser';
 import cors from 'cors';
 import helmet from 'helmet';
@@ -53,6 +54,7 @@ import notificationRoutes from './routes/notifications.js';
 import antifragileRoutes from './routes/antifragile.js';
 
 const app    = express();
+app.use(compression());
 const server = http.createServer(app);
 initSocket(server);
 

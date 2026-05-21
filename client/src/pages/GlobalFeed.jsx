@@ -22,7 +22,7 @@ function Avatar({ src, size = 10 }) {
   const iconSizeMap = { 6:12, 7:14, 8:16, 10:20, 12:24 };
   return (
     <div className={`${sizeMap[size]||'w-10 h-10'} rounded-full overflow-hidden border border-[#434655]/40 bg-[#222a3d] shrink-0 flex items-center justify-center`}>
-      {src ? <img src={src} className="w-full h-full object-cover" alt="" /> : <User size={iconSizeMap[size]||20} className="text-[#656d84]" />}
+      {src ? <img src={src} loading="lazy" className="w-full h-full object-cover" alt="" /> : <User size={iconSizeMap[size]||20} className="text-[#656d84]" />}
     </div>
   );
 }
@@ -164,9 +164,10 @@ function PostCard({ post, currentUser, onDelete, onEdit, onLike, onComment, onLi
         ) : (
           <p className="text-[#c3c6d7] text-sm leading-relaxed whitespace-pre-wrap">{post.content}</p>
         )}
-        {post.imageUrl && !editing && (
-          <img src={post.imageUrl} alt="" className="w-full rounded-xs border border-[#434655]/20 mt-3 max-h-96 object-cover" />
+        {post.imageUrl && (
+          <img src={post.imageUrl} loading="lazy" alt="" className="w-full rounded-xs border border-[#434655]/20 mt-3 max-h-96 object-cover" />
         )}
+
       </div>
 
       <div className="flex items-center gap-4 px-4 py-2.5 border-t border-[#434655]/15">
