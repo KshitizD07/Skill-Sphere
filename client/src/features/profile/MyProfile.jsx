@@ -143,13 +143,13 @@ export default function MyProfile({ user, onUserUpdate }) {
               <ArrowLeft size={18} />
             </button>
             <div>
-              <h1 className="text-2xl font-extrabold text-[#dae2fd] tracking-tight">Configuration Matrix</h1>
-              <p className="font-['Space_Grotesk'] text-[10px] tracking-[0.12em] uppercase text-[#8d90a0]">Edit user profile data</p>
+              <h1 className="text-2xl font-extrabold text-[#dae2fd] tracking-tight">Personal Profile</h1>
+              <p className="font-['Space_Grotesk'] text-[10px] tracking-[0.12em] uppercase text-[#8d90a0]">Manage your professional identity and skill network</p>
             </div>
           </div>
           <button onClick={handleSave} disabled={loading}
-            className="px-6 py-2.5 bg-[#adc6ff]/10 text-[#adc6ff] border border-[#adc6ff]/20 font-['Space_Grotesk'] font-bold text-xs uppercase tracking-[0.1em] hover:bg-[#adc6ff] hover:text-[#002e6a] transition-all flex items-center gap-2 rounded-xs disabled:opacity-50 active:scale-[0.98]">
-            <Save size={15} /> {loading ? 'Saving Data...' : 'Commit Changes'}
+            className="px-4 py-2 bg-[#adc6ff]/10 text-[#adc6ff] border border-[#adc6ff]/20 font-['Space_Grotesk'] font-bold text-xs uppercase tracking-[0.1em] hover:bg-[#adc6ff] hover:text-[#002e6a] transition-all flex items-center gap-2 rounded-xs disabled:opacity-50 active:scale-[0.98]">
+            <Save size={14} /> {loading ? 'Saving...' : 'Save Changes'}
           </button>
         </div>
 
@@ -158,7 +158,7 @@ export default function MyProfile({ user, onUserUpdate }) {
           <div className="md:col-span-4 space-y-5">
             {/* Avatar block */}
             <div className="bg-[#171f33] border border-[#434655]/20 rounded-md p-6 flex flex-col items-center text-center relative overflow-hidden group hover:border-[#adc6ff]/15 transition-colors">
-              <div className="absolute top-0 right-0 bg-[#434655]/20 text-[#8d90a0] px-2 py-1 text-[9px] font-['Space_Grotesk'] uppercase tracking-widest font-bold">Identity</div>
+              <div className="absolute top-0 right-0 bg-[#434655]/20 text-[#8d90a0] px-2 py-1 text-[9px] font-['Space_Grotesk'] uppercase tracking-widest font-bold">Profile Card</div>
               <div className="w-28 h-28 rounded-full border-2 border-[#434655]/40 overflow-hidden mb-4 mt-2 bg-[#131b2e] flex items-center justify-center group-hover:border-[#adc6ff]/40 transition-colors shadow-lg shadow-[#0b1326]">
                 {formData.avatar ? <img src={formData.avatar} alt="Avatar" className="w-full h-full object-cover" /> : <User size={40} className="text-[#434655]" />}
               </div>
@@ -185,7 +185,7 @@ export default function MyProfile({ user, onUserUpdate }) {
             {/* Skills */}
             <div className="bg-[#171f33] border border-[#434655]/20 rounded-md p-6 relative group hover:border-[#6bd8cb]/15 transition-colors">
               <div className="flex justify-between items-center mb-4">
-                <h3 className="font-['Space_Grotesk'] text-[10px] font-bold tracking-[0.12em] uppercase text-[#6bd8cb]">Technical Modules</h3>
+                <h3 className="font-['Space_Grotesk'] text-[10px] font-bold tracking-[0.12em] uppercase text-[#6bd8cb]">Technical Skills</h3>
                 <button onClick={() => setShowSkillSelector(!showSkillSelector)}
                   className="p-1 bg-[#adc6ff]/8 border border-[#adc6ff]/20 text-[#adc6ff] hover:bg-[#adc6ff] hover:text-[#002e6a] transition-all rounded-xs focus:outline-none">
                   <Plus size={14} />
@@ -226,12 +226,12 @@ export default function MyProfile({ user, onUserUpdate }) {
             <div className="bg-[#171f33] border border-[#434655]/20 rounded-md p-6 hover:border-[#adc6ff]/15 transition-colors">
               <div className="flex items-center gap-2 mb-2">
                 <Shield className="text-[#adc6ff]" size={15} />
-                <h3 className="font-['Space_Grotesk'] text-[10px] font-bold tracking-[0.12em] uppercase text-[#adc6ff]">Verification Interface</h3>
+                <h3 className="font-['Space_Grotesk'] text-[10px] font-bold tracking-[0.12em] uppercase text-[#adc6ff]">Skill Verification</h3>
               </div>
               <p className="text-xs text-[#8d90a0] mb-4 leading-relaxed">Establish credentials via repository analysis or certification.</p>
               {mySkillNames.length === 0 ? (
                 <div className="text-center py-4 border border-[#434655]/20 rounded-xs bg-[#131b2e]/50">
-                  <p className="text-[#656d84] text-[10px] font-['Space_Grotesk'] uppercase tracking-wide">Awaiting modules</p>
+                  <p className="text-[#656d84] text-[10px] font-['Space_Grotesk'] uppercase tracking-wide">Add skills to verify</p>
                 </div>
               ) : (
                 <div className="space-y-2">
@@ -273,16 +273,16 @@ export default function MyProfile({ user, onUserUpdate }) {
           {/* Right column — form */}
           <div className="md:col-span-8 bg-[#171f33] border border-[#434655]/20 rounded-md p-8 relative">
             <h3 className="font-['Space_Grotesk'] text-[10px] font-bold tracking-[0.12em] uppercase text-[#8d90a0] mb-6 flex items-center gap-2 border-b border-[#434655]/30 pb-4">
-              <User size={12} /> Core Profile Data
+              <User size={12} /> Profile Details
             </h3>
             <div className="space-y-6">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div>
-                  <label className={labelBase}>Full Designation</label>
+                  <label className={labelBase}>Full Name</label>
                   <input value={formData.name} onChange={e => setFormData({...formData,name:e.target.value})} className={`${inputBase} text-base font-semibold`} placeholder="Your full name" />
                 </div>
                 <div>
-                  <label className={labelBase}>Affiliated Organization</label>
+                  <label className={labelBase}>Institutional Affiliation</label>
                   <div className="relative group">
                     <Building2 className="absolute left-3 top-3.5 text-[#656d84] group-focus-within:text-[#adc6ff] transition-colors" size={15} />
                     <select value={formData.college} onChange={e => setFormData({...formData,college:e.target.value})}
@@ -295,26 +295,26 @@ export default function MyProfile({ user, onUserUpdate }) {
               </div>
               
               <div>
-                <label className={labelBase}>Headline</label>
+                <label className={labelBase}>Professional Headline</label>
                 <input value={formData.headline} onChange={e => setFormData({...formData,headline:e.target.value})} className={inputBase} placeholder="e.g. Full-stack developer & ML enthusiast" />
               </div>
               
               <div>
-                <label className={labelBase}>Bio Data</label>
+                <label className={labelBase}>Professional Bio</label>
                 <textarea value={formData.bio} onChange={e => setFormData({...formData,bio:e.target.value})} rows={5}
                   className={`${inputBase} resize-none leading-relaxed`} placeholder="Brief description of your expertise and goals..." />
               </div>
 
               <div className="pt-4 border-t border-[#434655]/20">
-                <h3 className="font-['Space_Grotesk'] text-[10px] font-bold tracking-[0.12em] uppercase text-[#8d90a0] mb-4">External Links</h3>
+                <h3 className="font-['Space_Grotesk'] text-[10px] font-bold tracking-[0.12em] uppercase text-[#8d90a0] mb-4">Social Connections</h3>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
                   <div>
-                    <label className={`${labelBase} flex items-center gap-1.5`}><Github size={12} /> GitHub Registry</label>
+                    <label className={`${labelBase} flex items-center gap-1.5`}><Github size={12} /> GitHub Profile</label>
                     <input value={formData.github} onChange={e => setFormData({...formData,github:e.target.value})}
                       placeholder="github.com/username" className={inputBase} />
                   </div>
                   <div>
-                    <label className={`${labelBase} flex items-center gap-1.5`}><Linkedin size={12} /> LinkedIn Network</label>
+                    <label className={`${labelBase} flex items-center gap-1.5`}><Linkedin size={12} /> LinkedIn Profile</label>
                     <input value={formData.linkedin} onChange={e => setFormData({...formData,linkedin:e.target.value})}
                       placeholder="linkedin.com/in/..." className={inputBase} />
                   </div>
