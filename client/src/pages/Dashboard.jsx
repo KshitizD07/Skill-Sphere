@@ -5,7 +5,7 @@ import {
   AlertTriangle, CheckCircle,
   Activity, User, Users, X, Brain, LogOut, BarChart2, MessageSquare
 } from 'lucide-react';
-import NotificationBell from '../shared/components/NotificationBell';
+import Navbar from '../shared/components/Navbar';
 import DashboardChat from '../features/chat/DashboardChat';
 
 // ─── Radar Chart ─────────────────────────────────────────────────────────────
@@ -142,61 +142,7 @@ export default function Dashboard({ user, onLogout }) {
   return (
     <div className="min-h-screen bg-[#0b1326] text-[#dae2fd] font-['Manrope'] p-4 md:p-8">
 
-      {/* ── Header ── */}
-      <div className="max-w-6xl mx-auto flex justify-between items-center mb-10 border-b border-[#434655]/30 pb-5">
-        <div onClick={() => navigate('/')} className="cursor-pointer group flex items-center gap-2">
-          <span className="text-xl font-extrabold text-[#dae2fd] group-hover:text-[#adc6ff] transition-colors tracking-tight">
-            Skill<span className="text-[#adc6ff] group-hover:text-[#89f5e7]">Sphere</span>
-          </span>
-        </div>
-
-        <div className="absolute left-1/2 transform -translate-x-1/2 flex items-center gap-6 hidden md:flex">
-          <div
-            onClick={() => navigate('/grid')}
-            className="flex items-center gap-2 cursor-pointer group"
-          >
-            <BarChart2 size={18} className="text-[#adc6ff] group-hover:text-[#89f5e7] transition-colors" />
-            <span className="text-lg font-bold text-[#dae2fd] tracking-tight group-hover:text-[#adc6ff] transition-colors">
-              Insights
-            </span>
-          </div>
-          <div
-            onClick={() => navigate('/network')}
-            className="flex items-center gap-2 cursor-pointer group"
-          >
-            <Users size={18} className="text-[#656d84] group-hover:text-[#89f5e7] transition-colors" />
-            <span className="text-lg font-bold text-[#8d90a0] tracking-tight group-hover:text-[#dae2fd] transition-colors">
-              Network
-            </span>
-          </div>
-        </div>
-
-        <div className="flex items-center gap-3">
-          <button
-            onClick={() => setIsChatOpen(true)}
-            className="p-2 rounded-full border border-[#434655]/40 hover:border-[#adc6ff]/40 text-[#8d90a0] hover:text-[#adc6ff] transition-colors"
-            title="Messages"
-          >
-            <MessageSquare size={15} />
-          </button>
-          <NotificationBell />
-          <div
-            onClick={() => navigate(`/profile/${currentUser.id}`)}
-            className="w-9 h-9 rounded-full border border-[#434655]/50 hover:border-[#adc6ff]/50 cursor-pointer flex items-center justify-center bg-[#171f33] transition-all hover:shadow-[0_0_12px_rgba(173,198,255,0.15)]"
-          >
-            {currentUser.avatar
-              ? <img src={currentUser.avatar} className="w-full h-full object-cover rounded-full" alt="" />
-              : <User size={16} className="text-[#adc6ff]" />}
-          </div>
-          <button
-            onClick={handleLogout}
-            className="p-2 rounded-xs border border-[#434655]/40 hover:border-[#ffb4ab]/40 text-[#8d90a0] hover:text-[#ffb4ab] transition-colors"
-            title="Sign out"
-          >
-            <LogOut size={15} />
-          </button>
-        </div>
-      </div>
+      <Navbar user={currentUser} onLogout={handleLogout} />
 
       {/* ── Main Grid ── */}
       <div className="max-w-6xl mx-auto grid grid-cols-1 md:grid-cols-12 gap-6">

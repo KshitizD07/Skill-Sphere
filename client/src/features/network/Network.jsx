@@ -2,6 +2,7 @@ import { useEffect, useState, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import API from '../../api';
 import { Users, ArrowLeft, Building2, Shield, Search } from 'lucide-react';
+import Navbar from '../../shared/components/Navbar';
 
 export default function Network() {
   const navigate = useNavigate();
@@ -45,6 +46,9 @@ export default function Network() {
 
   return (
     <div className="min-h-screen bg-[#0b1326] text-[#dae2fd] font-['Manrope'] p-4 md:p-8">
+      
+      <Navbar user={currentUser} onLogout={() => { API.post('/auth/logout').catch(()=>{}); localStorage.removeItem('user_data'); navigate('/'); }} />
+
       <div className="max-w-5xl mx-auto">
 
         {/* Header */}

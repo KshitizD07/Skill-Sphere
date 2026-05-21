@@ -26,6 +26,7 @@ server/logs/
 .DS_Store
 Thumbs.db
 desktop.ini
+PROJECT_LOG.md
 
 # Editor
 .vscode/*

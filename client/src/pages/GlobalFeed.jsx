@@ -1,7 +1,7 @@
 import { useEffect, useState, useRef, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import API from '../api';
-import NotificationBell from '../shared/components/NotificationBell';
+import Navbar from '../shared/components/Navbar';
 import {
   Search, ArrowLeft, Heart, User, Building2,
   Users, Image as ImageIcon, X, MessageCircle,
@@ -294,48 +294,8 @@ export default function GlobalFeed() {
 
   return (
     <div className="min-h-screen bg-[#0b1326] text-[#dae2fd] font-['Manrope'] p-4 md:p-8">
-      {/* ── Global App Header ── */}
-      <div className="max-w-6xl mx-auto flex justify-between items-center mb-10 border-b border-[#434655]/30 pb-5">
-        <div onClick={() => navigate('/dashboard')} className="cursor-pointer group flex items-center gap-2">
-          <span className="text-xl font-extrabold text-[#dae2fd] group-hover:text-[#adc6ff] transition-colors tracking-tight">
-            Skill<span className="text-[#adc6ff] group-hover:text-[#89f5e7]">Sphere</span>
-          </span>
-        </div>
 
-        <div className="hidden md:flex items-center gap-6">
-          <div onClick={() => navigate('/grid')} className="flex items-center gap-2 cursor-pointer group">
-            <Layers size={16} className="text-[#adc6ff] group-hover:text-[#89f5e7] transition-colors" />
-            <span className="text-sm font-bold text-[#dae2fd] group-hover:text-[#adc6ff] tracking-tight transition-colors">Feed</span>
-          </div>
-          <div onClick={() => navigate('/network')} className="flex items-center gap-2 cursor-pointer group">
-            <Users size={16} className="text-[#656d84] group-hover:text-[#89f5e7] transition-colors" />
-            <span className="text-sm font-bold text-[#8d90a0] group-hover:text-[#dae2fd] tracking-tight transition-colors">Network</span>
-          </div>
-          <div onClick={() => navigate('/nexus')} className="flex items-center gap-2 cursor-pointer group">
-            <Users size={16} className="text-[#656d84] group-hover:text-[#89f5e7] transition-colors" />
-            <span className="text-sm font-bold text-[#8d90a0] group-hover:text-[#dae2fd] tracking-tight transition-colors">Teams</span>
-          </div>
-        </div>
-
-        <div className="flex items-center gap-3">
-          <NotificationBell />
-          <div
-            onClick={() => navigate(`/my-profile`)}
-            className="w-9 h-9 rounded-full border border-[#434655]/50 hover:border-[#adc6ff]/50 cursor-pointer flex items-center justify-center bg-[#171f33] transition-all hover:shadow-[0_0_12px_rgba(173,198,255,0.15)] overflow-hidden"
-          >
-            {currentUser.avatar
-              ? <img src={currentUser.avatar} className="w-full h-full object-cover" alt="" />
-              : <User size={16} className="text-[#adc6ff]" />}
-          </div>
-          <button
-            onClick={handleLogout}
-            className="p-2 rounded-xs border border-[#434655]/40 hover:border-[#ffb4ab]/40 text-[#8d90a0] hover:text-[#ffb4ab] transition-colors"
-            title="Sign out"
-          >
-            <LogOut size={15} />
-          </button>
-        </div>
-      </div>
+      <Navbar user={currentUser} onLogout={handleLogout} />
 
       <div className="max-w-3xl mx-auto">
         {/* Search */}

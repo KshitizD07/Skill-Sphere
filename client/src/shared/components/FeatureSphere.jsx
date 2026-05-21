@@ -14,7 +14,20 @@ export default function FeatureSphere({ scrollToSection }) {
   const [isHovering, setIsHovering] = useState(false);
   const mouseRafRef  = useRef(null);
 
+  const [isVisible, setIsVisible] = useState(true);
+
   useEffect(() => {
+    const observer = new IntersectionObserver(
+      ([entry]) => setIsVisible(entry.isIntersecting),
+      { threshold: 0.1 }
+    );
+    if (containerRef.current) observer.observe(containerRef.current);
+    return () => observer.disconnect();
+  }, []);
+
+  useEffect(() => {
+    if (!isVisible) return;
+
     let animationFrameId;
     const animate = () => {
       if (containerRef.current) {
@@ -23,9 +36,11 @@ export default function FeatureSphere({ scrollToSection }) {
           rotationRef.current.y += 0.004;
         }
         const nodes = containerRef.current.querySelectorAll('.feature-node');
+        const isMobile = window.innerWidth < 768;
+        const radius = isMobile ? 140 : 180;
+
         nodes.forEach((node, i) => {
           const baseAngle = (i / features.length) * 2 * Math.PI;
-          const radius = 180;
           const ex = rotationRef.current.y + baseAngle;
           const ey = rotationRef.current.x;
           const x = radius * Math.cos(ex) - radius * Math.sin(ey) * Math.sin(ex);
@@ -41,7 +56,7 @@ export default function FeatureSphere({ scrollToSection }) {
     };
     animate();
     return () => cancelAnimationFrame(animationFrameId);
-  }, [isHovering]);
+  }, [isHovering, isVisible]);
 
   const handleMouseMove = (e) => {
     if (!containerRef.current || mouseRafRef.current) return;

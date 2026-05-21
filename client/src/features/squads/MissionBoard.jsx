@@ -6,6 +6,7 @@ import {
   ArrowLeft, Plus, Search, Filter, Users, Shield,
   Lock, Target, AlertCircle, X, ChevronRight
 } from 'lucide-react';
+import Navbar from '../../shared/components/Navbar';
 
 // ─── Create Team Modal ─────────────────────────────────────────────────────────
 function CreateSquadModal({ onClose, onCreated }) {
@@ -308,6 +309,9 @@ export default function MissionBoard() {
 
   return (
     <div className="min-h-screen bg-[#0b1326] text-[#dae2fd] font-['Manrope'] p-4 md:p-8">
+      
+      <Navbar user={currentUser} onLogout={() => { API.post('/auth/logout').catch(()=>{}); localStorage.removeItem('user_data'); navigate('/'); }} />
+
       <div className="max-w-7xl mx-auto">
 
         {/* Header */}

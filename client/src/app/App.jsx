@@ -1,31 +1,38 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, lazy, Suspense } from 'react';
 import { Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import API from '../api';
 
 // Auth
-import AuthPage from '../features/auth/AuthPage';
+const AuthPage = lazy(() => import('../features/auth/AuthPage'));
 
 // Pages
-import Landing from '../pages/Landing';
-import Dashboard from '../pages/Dashboard';
-import GlobalFeed from '../pages/GlobalFeed';
-import RoadmapPage from '../pages/Roadmap';
-import NotFound from '../pages/NotFound';
+const Landing = lazy(() => import('../pages/Landing'));
+const Dashboard = lazy(() => import('../pages/Dashboard'));
+const GlobalFeed = lazy(() => import('../pages/GlobalFeed'));
+const RoadmapPage = lazy(() => import('../pages/Roadmap'));
+const NotFound = lazy(() => import('../pages/NotFound'));
 
 // Features
-import MyProfile from '../features/profile/MyProfile';
-import UserProfile from '../features/profile/UserProfile';
-import ChatInterface from '../features/chat/ChatInterface';
-import MissionBoard from '../features/squads/MissionBoard';
-import SquadDetail from '../features/squads/SquadDetail';
-import SquadManage from '../features/squads/SquadManage';
-import MyApplications from '../features/squads/MyApplications';
-import SkillVerifier from '../features/skills/SkillVerifier';
-import Network from '../features/network/Network';
-import AntifragileAdmin from '../features/admin/AntifragileAdmin';
+const MyProfile = lazy(() => import('../features/profile/MyProfile'));
+const UserProfile = lazy(() => import('../features/profile/UserProfile'));
+const ChatInterface = lazy(() => import('../features/chat/ChatInterface'));
+const MissionBoard = lazy(() => import('../features/squads/MissionBoard'));
+const SquadDetail = lazy(() => import('../features/squads/SquadDetail'));
+const SquadManage = lazy(() => import('../features/squads/SquadManage'));
+const MyApplications = lazy(() => import('../features/squads/MyApplications'));
+const SkillVerifier = lazy(() => import('../features/skills/SkillVerifier'));
+const Network = lazy(() => import('../features/network/Network'));
+const AntifragileAdmin = lazy(() => import('../features/admin/AntifragileAdmin'));
 
 // Shared
 import ProtectedRoute from '../shared/components/ProtectedRoute';
+
+// Loading fallback
+const PageLoader = () => (
+  <div className="min-h-screen bg-[#0b1326] flex items-center justify-center">
+    <div className="w-12 h-12 border-4 border-[#adc6ff]/20 border-t-[#adc6ff] rounded-full animate-spin" />
+  </div>
+);
 
 function App() {
   const [user, setUser] = useState(null);
@@ -94,83 +101,85 @@ function App() {
   }, [user, authChecked, location.pathname]);
 
   return (
-    <Routes>
-      {/* Public routes */}
-      <Route path="/" element={<Landing />} />
-      <Route path="/auth" element={<AuthPage onLogin={handleLogin} />} />
+    <Suspense fallback={<PageLoader />}>
+      <Routes>
+        {/* Public routes */}
+        <Route path="/" element={<Landing />} />
+        <Route path="/auth" element={<AuthPage onLogin={handleLogin} />} />
 
-      {/* Protected routes — require auth */}
-      <Route path="/dashboard" element={
-        <ProtectedRoute user={user} authChecked={authChecked}>
-          <Dashboard user={user} onLogout={handleLogout} />
-        </ProtectedRoute>
-      } />
-      <Route path="/my-profile" element={
-        <ProtectedRoute user={user} authChecked={authChecked}>
-          <MyProfile user={user} onUserUpdate={setUser} />
-        </ProtectedRoute>
-      } />
-      <Route path="/profile/:id" element={
-        <ProtectedRoute user={user} authChecked={authChecked}>
-          <UserProfile />
-        </ProtectedRoute>
-      } />
-      <Route path="/chat/:id" element={
-        <ProtectedRoute user={user} authChecked={authChecked}>
-          <ChatInterface />
-        </ProtectedRoute>
-      } />
-      <Route path="/grid" element={
-        <ProtectedRoute user={user} authChecked={authChecked}>
-          <GlobalFeed />
-        </ProtectedRoute>
-      } />
-      <Route path="/network" element={
-        <ProtectedRoute user={user} authChecked={authChecked}>
-          <Network />
-        </ProtectedRoute>
-      } />
-      <Route path="/roadmap/:skill/:role" element={
-        <ProtectedRoute user={user} authChecked={authChecked}>
-          <RoadmapPage />
-        </ProtectedRoute>
-      } />
-      <Route path="/nexus" element={
-        <ProtectedRoute user={user} authChecked={authChecked}>
-          <MissionBoard />
-        </ProtectedRoute>
-      } />
-      <Route path="/squad/:id" element={
-        <ProtectedRoute user={user} authChecked={authChecked}>
-          <SquadDetail />
-        </ProtectedRoute>
-      } />
-      <Route path="/squad/:id/manage" element={
-        <ProtectedRoute user={user} authChecked={authChecked}>
-          <SquadManage />
-        </ProtectedRoute>
-      } />
-      <Route path="/my-squads" element={
-        <ProtectedRoute user={user} authChecked={authChecked}>
-          <MyApplications />
-        </ProtectedRoute>
-      } />
-      <Route path="/verify-skill" element={
-        <ProtectedRoute user={user} authChecked={authChecked}>
-          <SkillVerifier />
-        </ProtectedRoute>
-      } />
+        {/* Protected routes — require auth */}
+        <Route path="/dashboard" element={
+          <ProtectedRoute user={user} authChecked={authChecked}>
+            <Dashboard user={user} onLogout={handleLogout} />
+          </ProtectedRoute>
+        } />
+        <Route path="/my-profile" element={
+          <ProtectedRoute user={user} authChecked={authChecked}>
+            <MyProfile user={user} onUserUpdate={setUser} />
+          </ProtectedRoute>
+        } />
+        <Route path="/profile/:id" element={
+          <ProtectedRoute user={user} authChecked={authChecked}>
+            <UserProfile />
+          </ProtectedRoute>
+        } />
+        <Route path="/chat/:id" element={
+          <ProtectedRoute user={user} authChecked={authChecked}>
+            <ChatInterface />
+          </ProtectedRoute>
+        } />
+        <Route path="/grid" element={
+          <ProtectedRoute user={user} authChecked={authChecked}>
+            <GlobalFeed />
+          </ProtectedRoute>
+        } />
+        <Route path="/network" element={
+          <ProtectedRoute user={user} authChecked={authChecked}>
+            <Network />
+          </ProtectedRoute>
+        } />
+        <Route path="/roadmap/:skill/:role" element={
+          <ProtectedRoute user={user} authChecked={authChecked}>
+            <RoadmapPage />
+          </ProtectedRoute>
+        } />
+        <Route path="/nexus" element={
+          <ProtectedRoute user={user} authChecked={authChecked}>
+            <MissionBoard />
+          </ProtectedRoute>
+        } />
+        <Route path="/squad/:id" element={
+          <ProtectedRoute user={user} authChecked={authChecked}>
+            <SquadDetail />
+          </ProtectedRoute>
+        } />
+        <Route path="/squad/:id/manage" element={
+          <ProtectedRoute user={user} authChecked={authChecked}>
+            <SquadManage />
+          </ProtectedRoute>
+        } />
+        <Route path="/my-squads" element={
+          <ProtectedRoute user={user} authChecked={authChecked}>
+            <MyApplications />
+          </ProtectedRoute>
+        } />
+        <Route path="/verify-skill" element={
+          <ProtectedRoute user={user} authChecked={authChecked}>
+            <SkillVerifier />
+          </ProtectedRoute>
+        } />
 
-      {/* Admin */}
-      <Route path="/antifragile-admin" element={
-        <ProtectedRoute user={user} authChecked={authChecked}>
-          <AntifragileAdmin />
-        </ProtectedRoute>
-      } />
+        {/* Admin */}
+        <Route path="/antifragile-admin" element={
+          <ProtectedRoute user={user} authChecked={authChecked}>
+            <AntifragileAdmin />
+          </ProtectedRoute>
+        } />
 
-      {/* 404 — must be last */}
-      <Route path="*" element={<NotFound />} />
-    </Routes>
+        {/* 404 — must be last */}
+        <Route path="*" element={<NotFound />} />
+      </Routes>
+    </Suspense>
   );
 }
 
