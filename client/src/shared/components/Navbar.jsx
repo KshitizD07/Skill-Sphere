@@ -96,76 +96,97 @@ const Navbar = ({ user, onLogout }) => {
         </button>
       </div>
 
-      {/* Mobile Menu Overlay */}
+      {/* Mobile Menu Overlay - Nexus Portal */}
       <AnimatePresence>
         {isOpen && (
-          <>
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              onClick={() => setIsOpen(false)}
-              className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[60] md:hidden"
-            />
-            <motion.div
-              initial={{ x: '100%' }}
-              animate={{ x: 0 }}
-              exit={{ x: '100%' }}
-              transition={{ type: 'spring', damping: 25, stiffness: 200 }}
-              className="fixed right-0 top-0 h-full w-[280px] bg-[#0b1326] border-l border-[#434655]/30 z-[70] p-6 shadow-2xl md:hidden"
-            >
-              <div className="flex flex-col h-full">
-                <div className="flex justify-between items-center mb-10">
-                  <span className="text-xl font-bold text-[#dae2fd]">Menu</span>
-                  <button onClick={() => setIsOpen(false)} className="p-2 text-[#8d90a0]">
-                    <X size={24} />
-                  </button>
-                </div>
+          <motion.div
+            initial={{ clipPath: 'circle(0% at calc(100% - 40px) 40px)' }}
+            animate={{ clipPath: 'circle(150% at calc(100% - 40px) 40px)' }}
+            exit={{ clipPath: 'circle(0% at calc(100% - 40px) 40px)' }}
+            transition={{ type: 'spring', damping: 25, stiffness: 80 }}
+            className="fixed inset-0 bg-[#0b1326] z-[60] md:hidden overflow-hidden flex flex-col"
+          >
+            {/* Animated Background Aurora */}
+            <div className="absolute inset-0 overflow-hidden pointer-events-none opacity-40">
+              <div className="absolute -top-[10%] -left-[10%] w-[50%] h-[50%] bg-[#adc6ff]/20 blur-[120px] rounded-full animate-pulse" />
+              <div className="absolute -bottom-[10%] -right-[10%] w-[50%] h-[50%] bg-[#6bd8cb]/20 blur-[120px] rounded-full animate-pulse" style={{ animationDelay: '1s' }} />
+            </div>
 
-                <div className="space-y-2 flex-grow">
-                  {navLinks.map((link) => (
-                    <button
-                      key={link.path}
-                      onClick={() => handleNavigate(link.path)}
-                      className={`w-full flex items-center gap-4 p-4 rounded-xl transition-all ${
-                        isActive(link.path) 
-                          ? 'bg-[#adc6ff]/10 text-[#adc6ff] border border-[#adc6ff]/20' 
-                          : 'text-[#8d90a0] hover:bg-[#171f33] hover:text-[#dae2fd]'
-                      }`}
-                    >
-                      <link.icon size={22} />
-                      <span className="text-lg font-semibold">{link.name}</span>
-                    </button>
-                  ))}
-                </div>
+            {/* Content Container */}
+            <div className="relative z-10 flex flex-col h-full p-8 pt-20">
+              
+              {/* Close Button - Large & Morphing-style */}
+              <button 
+                onClick={() => setIsOpen(false)}
+                className="absolute top-6 right-6 p-3 text-[#dae2fd] hover:text-[#ffb4ab] transition-colors bg-[#171f33]/50 rounded-full border border-[#434655]/30"
+              >
+                <X size={32} />
+              </button>
 
-                <div className="pt-6 border-t border-[#434655]/30 mt-auto">
-                  <div className="flex items-center gap-4 mb-6 p-2">
-                    <div className="w-12 h-12 rounded-full border border-[#adc6ff]/20 overflow-hidden">
-                      {user?.avatar ? (
-                        <img src={user.avatar} alt="User" className="w-full h-full object-cover" />
-                      ) : (
-                        <div className="w-full h-full flex items-center justify-center bg-[#171f33]">
-                          <User size={24} className="text-[#adc6ff]" />
-                        </div>
-                      )}
-                    </div>
-                    <div className="flex flex-col">
-                      <span className="font-bold text-[#dae2fd] truncate w-32">{user?.name}</span>
-                      <span className="text-xs text-[#8d90a0]">{user?.role}</span>
-                    </div>
+              {/* Core Identity Node */}
+              <motion.div 
+                initial={{ y: -20, opacity: 0 }}
+                animate={{ y: 0, opacity: 1 }}
+                transition={{ delay: 0.2 }}
+                className="flex flex-col items-center text-center mb-12"
+              >
+                <div className="relative">
+                  <div className="absolute inset-0 rounded-full border border-[#adc6ff]/30 animate-[spin_10s_linear_infinite]" />
+                  <div className="absolute -inset-1 rounded-full border border-[#6bd8cb]/20 animate-[spin_15s_linear_infinite_reverse]" />
+                  <div className="w-24 h-28 rounded-full border-2 border-[#adc6ff]/50 overflow-hidden bg-[#171f33] p-1">
+                    {user?.avatar ? (
+                      <img src={user.avatar} alt="Avatar" className="w-full h-full object-cover rounded-full" />
+                    ) : (
+                      <div className="w-full h-full flex items-center justify-center text-[#adc6ff]">
+                        <User size={40} />
+                      </div>
+                    )}
                   </div>
-                  <button
-                    onClick={() => { onLogout(); setIsOpen(false); }}
-                    className="w-full flex items-center gap-4 p-4 rounded-xl text-red-400 hover:bg-red-500/10 transition-all border border-red-500/10"
-                  >
-                    <LogOut size={22} />
-                    <span className="text-lg font-semibold">Logout</span>
-                  </button>
                 </div>
+                <h3 className="mt-4 text-2xl font-black text-[#dae2fd] tracking-tighter">{user?.name}</h3>
+                <span className="text-[10px] font-['Space_Grotesk'] font-bold tracking-[0.2em] uppercase text-[#8d90a0] mt-1">{user?.role}</span>
+              </motion.div>
+
+              {/* Floating Grid Navigation */}
+              <div className="grid grid-cols-2 gap-4 flex-grow">
+                {navLinks.map((link, i) => (
+                  <motion.button
+                    key={link.path}
+                    initial={{ scale: 0.8, opacity: 0 }}
+                    animate={{ scale: 1, opacity: 1 }}
+                    transition={{ delay: 0.1 + i * 0.05 }}
+                    onClick={() => handleNavigate(link.path)}
+                    className={`flex flex-col items-center justify-center p-6 rounded-2xl border transition-all ${
+                      isActive(link.path)
+                        ? 'bg-[#adc6ff]/10 border-[#adc6ff]/40 text-[#adc6ff] shadow-[0_0_20px_rgba(173,198,255,0.15)]'
+                        : 'bg-[#171f33]/40 border-[#434655]/30 text-[#8d90a0] hover:border-[#adc6ff]/30'
+                    }`}
+                  >
+                    <link.icon size={28} className="mb-3" />
+                    <span className="font-['Space_Grotesk'] font-bold text-xs uppercase tracking-widest">{link.name}</span>
+                  </motion.button>
+                ))}
               </div>
-            </motion.div>
-          </>
+
+              {/* System Footer */}
+              <motion.div 
+                initial={{ y: 20, opacity: 0 }}
+                animate={{ y: 0, opacity: 1 }}
+                transition={{ delay: 0.5 }}
+                className="mt-12 pt-6 border-t border-[#434655]/30 flex justify-between items-center"
+              >
+                <div onClick={() => handleNavigate('/')} className="cursor-pointer">
+                  <span className="font-extrabold text-[#dae2fd]">Skill<span className="text-[#adc6ff]">Sphere</span></span>
+                </div>
+                <button
+                  onClick={() => { onLogout(); setIsOpen(false); }}
+                  className="flex items-center gap-2 text-red-400 font-bold uppercase text-[10px] tracking-widest"
+                >
+                  Terminate Session <LogOut size={14} />
+                </button>
+              </motion.div>
+            </div>
+          </motion.div>
         )}
       </AnimatePresence>
 
