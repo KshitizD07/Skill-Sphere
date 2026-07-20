@@ -65,14 +65,29 @@ export async function sendOtp(email) {
   try {
     if (resendClient) {
       await resendClient.emails.send({ from, to: email, subject, html });
-    } else {
+      logger.info('OTP sent via Resend', { email });
+    } else if (process.env.SMTP_USER && process.env.SMTP_PASS) {
       await getTransporter().sendMail({ from: `"SkillSphere" <${process.env.SMTP_USER}>`, to: email, subject, html });
+      logger.info('OTP sent via SMTP', { email });
+    } else {
+      logger.warn('Email service not configured. OTP generated in Demo/Mock Mode', { email, otp });
     }
-    logger.info('OTP sent', { email, provider: resendClient ? 'Resend' : 'SMTP' });
   } catch (err) {
     logger.error('Failed to send OTP email', { err: err.message, email });
-    await prisma.otpVerification.deleteMany({ where: { email, used: false } });
-    throw ApiError.internal('Failed to send verification email');
+    
+    // Graceful fallback: check if we are running in demo mode or if email options are omitted
+    const demoVar = process.env.DEMO_MODE || process.env.PORTFOLIO_MODE;
+    const isDemo = String(demoVar).toLowerCase().trim() === 'true' || 
+                   demoVar === true || 
+                   demoVar === '1' || 
+                   (!process.env.RESEND_API_KEY && (!process.env.SMTP_USER || !process.env.SMTP_PASS));
+                   
+    if (isDemo) {
+      logger.warn('Email delivery failed/unconfigured, but running in Demo/Mock Mode. Proceeding with OTP database log.', { email, otp });
+    } else {
+      await prisma.otpVerification.deleteMany({ where: { email, used: false } });
+      throw ApiError.internal('Failed to send verification email');
+    }
   }
 
   return { sent: true };
@@ -80,9 +95,12 @@ export async function sendOtp(email) {
 
 // ── Verify OTP ────────────────────────────────────────────────────────────────
 export async function verifyOtp(email, otp) {
-  // Allow universal code in demo mode for portfolio showcasing
+  // Allow universal code in demo mode for portfolio showcasing, or if email service is not configured
   const demoVar = process.env.DEMO_MODE || process.env.PORTFOLIO_MODE;
-  const isDemo = String(demoVar).toLowerCase().trim() === 'true' || demoVar === true || demoVar === '1';
+  const isDemo = String(demoVar).toLowerCase().trim() === 'true' || 
+                 demoVar === true || 
+                 demoVar === '1' || 
+                 (!process.env.RESEND_API_KEY && (!process.env.SMTP_USER || !process.env.SMTP_PASS));
   
   logger.info('OTP Verification debug', { 
     email, 
