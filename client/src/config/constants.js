@@ -1,5 +1,5 @@
-export const API_BASE_URL = import.meta.env.VITE_API_URL || 'https://skill-sphere-production.up.railway.app/api';
-export const SOCKET_URL   = import.meta.env.VITE_SOCKET_URL || 'https://skill-sphere-production.up.railway.app';
+export const API_BASE_URL = import.meta.env.VITE_API_URL || 'https://skill-sphere-backend-29kn.onrender.com/api';
+export const SOCKET_URL   = import.meta.env.VITE_SOCKET_URL || 'https://skill-sphere-backend-29kn.onrender.com';
 
 export const APP_VERSION= '1.0.0';
 export const APP_NAME='SKILLSPHERE';
