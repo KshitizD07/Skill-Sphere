@@ -702,6 +702,10 @@ flowchart TD
     DEMOTE_ACT & PROMOTE_ACT --> ADJUST --> REGISTRY
 ```
 
+### Visual Overview
+
+![N.E.X.U.S. Engine Architecture Diagram](C:\Users\kshit\.gemini\antigravity-cli\brain\e8e30b91-a3f8-43ef-8aec-1930e161a4de\nexus_engine_architecture_1784868453174.jpg)
+
 ---
 
 ## 5.9 AI Roadmap Architecture
