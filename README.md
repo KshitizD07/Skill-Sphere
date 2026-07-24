@@ -21,6 +21,14 @@ The SkillSphere platform is built on a modern, decoupled, full-stack architectur
 *   **Backend (Service-Oriented):** The Node.js server is designed with a service-oriented approach. Core business logic is encapsulated into distinct modules (e.g., Auth, Squads, Antifragile Engine). It exposes a comprehensive RESTful API for the client and handles real-time communication via a WebSocket layer. A background job scheduler (`node-cron`) manages routine database maintenance tasks.
 *   **Frontend (Feature-Sliced):** The React client is structured using a **feature-sliced design**. Instead of grouping files by type (e.g., `components`, `hooks`), the codebase is organized by feature (e.g., `profile`, `chat`, `squads`). This makes the application highly modular, scalable, and easier for developers to navigate.
 
+## 📚 Documentation
+
+For deep-dives into the platform design, technical details, and APIs, refer to the following guides:
+*   **[System Architecture](file:///C:/Users/kshit/cs/skillsphere/docs/ARCHITECTURE.md)**: Details structural layout, state machines, sequence diagrams, and N.E.X.U.S. Engine architecture.
+*   **[API Reference Manual](file:///C:/Users/kshit/cs/skillsphere/docs/API_REFERENCE.md)**: Lists all public and admin endpoints, query params, schemas, and verification rules.
+*   **[Key Features](file:///C:/Users/kshit/cs/skillsphere/docs/Features.md)**: Detailed breakdown of N.E.X.U.S., Squads, Verification, and AI roadmap generation.
+*   **[Product Requirements](file:///C:/Users/kshit/cs/skillsphere/docs/Product_Requirements.md)**: Product specs, constraints, and target users.
+
 ## 🛠 Tech Stack
 
 **Frontend (Client)**
