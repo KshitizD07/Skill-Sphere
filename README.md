@@ -24,6 +24,7 @@ The SkillSphere platform is built on a modern, decoupled, full-stack architectur
 ## 📚 Documentation
 
 For deep-dives into the platform design, technical details, and APIs, refer to the following guides:
+*   **[System Design Specification](file:///C:/Users/kshit/cs/skillsphere/docs/system_design.md)**: Follows industry standards to details system overview, high-level layouts, components, flows, external services, security, and future plans.
 *   **[System Architecture](file:///C:/Users/kshit/cs/skillsphere/docs/ARCHITECTURE.md)**: Details structural layout, state machines, sequence diagrams, and N.E.X.U.S. Engine architecture.
 *   **[API Reference Manual](file:///C:/Users/kshit/cs/skillsphere/docs/API_REFERENCE.md)**: Lists all public and admin endpoints, query params, schemas, and verification rules.
 *   **[Key Features](file:///C:/Users/kshit/cs/skillsphere/docs/Features.md)**: Detailed breakdown of N.E.X.U.S., Squads, Verification, and AI roadmap generation.
