@@ -25,15 +25,23 @@ export const asyncHandler = (fn) => (req, res, next) =>
 
 // ── Global error middleware — must be registered last ────────────────────────
 export function errorMiddleware(err, req, res, next) {
-  logger.error('Request error', {
+  const status = err.status || 500;
+  const logData = {
     method:  req.method,
     path:    req.path,
-    status:  err.status || 500,
+    status,
     code:    err.code   || 'UNKNOWN',
     message: err.message,
     userId:  req.user?.userId,
     stack:   process.env.NODE_ENV !== 'production' ? err.stack : undefined,
-  });
+  };
+
+  if (status >= 500) {
+    logger.error('Request error', logData);
+  } else {
+    logger.warn('Request warning', logData);
+  }
+
 
   if (err instanceof ApiError) {
     return res.status(err.status).json({

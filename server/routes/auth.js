@@ -6,7 +6,7 @@ import { PrismaClient } from '@prisma/client';
 
 import { asyncHandler, ApiError } from '../utils/errorHandler.js';
 import { authenticateToken } from '../middleware/auth.js';
-import { sendOtp, verifyOtp } from '../services/emailService.js';
+import { sendOtp, verifyOtp, sendVerificationEmail, generateAndSaveOtp } from '../services/emailService.js';
 
 const router = express.Router();
 const prisma = new PrismaClient();
@@ -79,7 +79,8 @@ router.post('/send-otp', asyncHandler(async (req, res) => {
   const exists = await prisma.user.findUnique({ where: { email: normalised } });
   if (exists) throw ApiError.conflict('Email already registered');
 
-  await sendOtp(normalised);
+  const code = await generateAndSaveOtp(normalised);
+  await sendVerificationEmail(normalised, code);
 
   res.json({ success: true, message: 'Verification code sent to your email' });
 }));
@@ -185,7 +186,8 @@ router.post('/forgot-password', asyncHandler(async (req, res) => {
     return res.json({ success: true, message: 'If an account exists, a verification code has been sent.' });
   }
 
-  await sendOtp(normalised);
+  const code = await generateAndSaveOtp(normalised);
+  await sendVerificationEmail(normalised, code);
 
   res.json({ success: true, message: 'If an account exists, a verification code has been sent.' });
 }));
