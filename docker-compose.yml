@@ -1,0 +1,70 @@
+version: '3.8'
+
+services:
+  db:
+    image: postgres:16-alpine
+    container_name: skillsphere-db
+    restart: always
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: password
+      POSTGRES_DB: skillsphere
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d skillsphere"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  redis:
+    image: redis:7-alpine
+    container_name: skillsphere-redis
+    restart: always
+    ports:
+      - "6379:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+
+  server:
+    build:
+      context: ./server
+      dockerfile: Dockerfile
+    container_name: skillsphere-server
+    restart: always
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    ports:
+      - "5001:5001"
+    env_file:
+      - ./server/.env
+    environment:
+      - DATABASE_URL=postgresql://postgres:password@db:5432/skillsphere?schema=public
+      - DIRECT_URL=postgresql://postgres:password@db:5432/skillsphere?schema=public
+      - REDIS_URL=redis://redis:6379
+    command: sh -c "npm run db:deploy && npm start"
+
+  client:
+    build:
+      context: ./client
+      dockerfile: Dockerfile
+      args:
+        - VITE_API_URL=/api
+        - VITE_SOCKET_URL=/
+    container_name: skillsphere-client
+    restart: always
+    depends_on:
+      - server
+    ports:
+      - "80:80"
+
+volumes:
+  postgres_data:
