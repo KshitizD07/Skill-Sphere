@@ -1,8 +1,13 @@
 {
-  "name": "client",
+  "name": "skillsphere-client",
   "private": true,
-  "version": "0.0.0",
+  "version": "0.1.0",
   "type": "module",
+  "engines": {
+    "node": ">=22",
+    "npm": ">=10"
+  },
+  "license":"MIT",
   "scripts": {
     "dev": "vite",
     "build": "vite build",
