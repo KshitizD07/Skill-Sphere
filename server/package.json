@@ -1,20 +1,27 @@
 {
   "name": "skillsphere-server",
+  "private": true,
   "version": "2.0.0",
   "description": "SkillSphere Intelligence Engine — Production Backend",
   "type": "module",
   "main": "index.js",
+  "engines": {
+    "node": ">=22.0.0",
+    "npm": ">=10"
+  },
+  "license":"MIT",
   "scripts": {
     "start": "node index.js",
-    "start:migrate": "npx prisma generate && npx prisma migrate deploy && node index.js",
     "dev": "nodemon index.js",
+    "start:migrate": "npx prisma generate && npx prisma migrate deploy && node index.js",
+    
     "dev:cluster": "pm2 start pm2.config.cjs --env development",
     "prod": "pm2 start pm2.config.cjs --env production",
-    "seed": "node prisma/seed.js",
-    "migrate": "npx prisma migrate dev",
-    "migrate:prod": "npx prisma migrate deploy",
-    "generate": "npx prisma generate",
-    "studio": "npx prisma studio",
+    "db:seed": "node prisma/seed.js",
+    "db:migrate": "prisma migrate dev",
+    "db:deploy": "prisma migrate deploy",
+    "db:generate": "prisma generate",
+    "db:studio": "prisma studio",
     "test": "node --experimental-vm-modules node_modules/jest/bin/jest.js --runInBand"
   },
   "dependencies": {
