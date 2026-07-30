@@ -9,12 +9,11 @@
     "node": ">=22.0.0",
     "npm": ">=10"
   },
-  "license":"MIT",
+  "license": "MIT",
   "scripts": {
     "start": "node server.js",
     "dev": "nodemon server.js",
     "start:migrate": "npx prisma generate && npx prisma migrate deploy && node server.js",
-    
     "dev:cluster": "pm2 start pm2.config.cjs --env development",
     "prod": "pm2 start pm2.config.cjs --env production",
     "db:seed": "node prisma/seed.js",
@@ -22,6 +21,7 @@
     "db:deploy": "prisma migrate deploy",
     "db:generate": "prisma generate",
     "db:studio": "prisma studio",
+    "lint": "eslint .",
     "test": "node --experimental-vm-modules node_modules/jest/bin/jest.js --runInBand"
   },
   "dependencies": {
@@ -46,6 +46,9 @@
     "zod": "^3.23.8"
   },
   "devDependencies": {
+    "@eslint/js": "^10.0.1",
+    "eslint": "^10.8.0",
+    "globals": "^17.8.0",
     "jest": "^30.3.0",
     "nodemon": "^3.1.0",
     "pm2": "^5.3.1",

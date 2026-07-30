@@ -75,8 +75,8 @@ export async function verifySkill({ userId, skillName, repoUrl, showLevel }) {
   const treeRes  = await fetch(`https://api.github.com/repos/${parsed.owner}/${parsed.repo}/git/trees/${repo.default_branch}?recursive=1`, { headers });
   const treeData = await treeRes.json();
 
-  let score       = 5;
-  let breakdownMsg = 'AI analysis completed';
+  let score;
+  let breakdownMsg;
   let topFiles    = [];
 
   const isRepoEmpty = !treeData.tree || treeData.tree.length === 0;
