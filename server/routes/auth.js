@@ -11,7 +11,7 @@ import { sendOtp, verifyOtp, sendVerificationEmail, generateAndSaveOtp } from '.
 const router = express.Router();
 const prisma = new PrismaClient();
 
-const PASSWORD_REGEX = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]).{8,}$/;
+const PASSWORD_REGEX = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[!@#$%^&*()_+\-=[\]{};':"\\|,.<>/?]).{8,}$/;
 
 const registerSchema = z.object({
   email:    z.string().email('Invalid email format').toLowerCase(),
