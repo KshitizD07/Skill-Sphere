@@ -281,6 +281,7 @@ export default function MissionBoard() {
   const [skillFilter, setSkillFilter] = useState('');
   const [minScoreFilter, setMinScoreFilter] = useState('');
 
+  // eslint-disable-next-line
   useEffect(() => { loadSquads(); }, [skillFilter, minScoreFilter]);
 
   const loadSquads = async () => {

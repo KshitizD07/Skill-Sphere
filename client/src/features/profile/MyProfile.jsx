@@ -32,6 +32,7 @@ export default function MyProfile({ user, onUserUpdate }) {
 
   useEffect(() => { 
     if (activeUser?.id) { 
+      // eslint-disable-next-line
       Promise.all([loadUserData(), loadAllSkills()]).finally(() => setInitialLoadDone(true));
     } else {
       setInitialLoadDone(true);
@@ -100,7 +101,7 @@ export default function MyProfile({ user, onUserUpdate }) {
   };
 
   const handleLogout = async () => {
-    try { await API.post('/auth/logout'); } catch {}
+    try { await API.post('/auth/logout'); } catch (err) { console.error('Logout error', err); }
     localStorage.removeItem('user_data');
     window.location.href = '/'; 
   };

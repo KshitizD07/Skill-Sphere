@@ -13,7 +13,7 @@ const PASSWORD_RULES = [
   { id: 'upper',   label: 'One uppercase letter (A-Z)',     test: p => /[A-Z]/.test(p) },
   { id: 'lower',   label: 'One lowercase letter (a-z)',     test: p => /[a-z]/.test(p) },
   { id: 'number',  label: 'One number (0-9)',               test: p => /\d/.test(p) },
-  { id: 'special', label: 'One special character (!@#$…)',  test: p => /[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/.test(p) },
+  { id: 'special', label: 'One special character (!@#$…)',  test: p => /[!@#$%^&*()_+\-=[\]{};':"\\|,.<>/?]/.test(p) },
 ];
 
 export default function AuthPage({ onLogin }) {
@@ -42,6 +42,7 @@ export default function AuthPage({ onLogin }) {
   const navigate = useNavigate();
 
   useEffect(() => {
+    // eslint-disable-next-line
     setIsLogin(location.state?.mode !== 'register');
     
     // Check for reason in URL
