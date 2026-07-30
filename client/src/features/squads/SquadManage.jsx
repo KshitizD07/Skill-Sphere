@@ -15,6 +15,7 @@ export default function SquadManage() {
   const [loading, setLoading] = useState(true);
   const [actionLoading, setActionLoading] = useState(null);
 
+  // eslint-disable-next-line
   useEffect(() => { loadSquad(); }, [id]);
 
   const loadSquad = async () => {

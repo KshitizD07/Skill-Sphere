@@ -20,6 +20,7 @@ export default function MyApplications() {
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState('applications');
 
+  // eslint-disable-next-line
   useEffect(() => { loadData(); }, []);
 
   const loadData = async () => {

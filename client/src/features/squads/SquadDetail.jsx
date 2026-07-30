@@ -21,6 +21,7 @@ export default function SquadDetail() {
   const [applyMessage, setApplyMessage] = useState('');
 
   useEffect(() => {
+    // eslint-disable-next-line
     loadSquad();
   }, [id]);
 

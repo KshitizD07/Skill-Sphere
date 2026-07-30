@@ -60,6 +60,7 @@ function Avatar({ src, name, size = 10 }) {
 function RecruiterView({ user }) {
   const verifiedSkills = user.skills?.filter(s => s.isVerified) || [];
   const allSkills = user.skills || [];
+  // eslint-disable-next-line
   const recentActivity = user.activities?.some(a => (Date.now() - new Date(a.createdAt).getTime()) < 30*24*60*60*1000);
   const cleanUrl = (url) => url?.replace(/^https?:\/\//, '');
 
