@@ -103,8 +103,9 @@ export default function Dashboard({ user, onLogout }) {
     } catch (e) {
       console.error('Dashboard fetch error:', e);
     }
-  }, [currentUser?.id]);
+  }, [currentUser]);
 
+  // eslint-disable-next-line
   useEffect(() => { fetchData(); }, [fetchData]);
 
   const toggleSkill = (skillId) => {

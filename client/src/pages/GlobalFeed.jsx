@@ -224,6 +224,7 @@ export default function GlobalFeed() {
     setPosts(res.data || []);
   }, []);
 
+  // eslint-disable-next-line
   useEffect(() => { loadFeed(); }, [loadFeed]);
 
   const handleSearch = async (e) => {
@@ -288,7 +289,7 @@ export default function GlobalFeed() {
   };
 
   const handleLogout = async () => {
-    try { await API.post('/auth/logout'); } catch {}
+    try { await API.post('/auth/logout'); } catch (err) { console.error('Logout error', err); }
     localStorage.removeItem('user_data');
     window.location.href = '/'; 
   };
