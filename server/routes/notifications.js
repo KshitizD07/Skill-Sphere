@@ -21,8 +21,8 @@ router.get('/', async (req, res, next) => {
 
 router.patch('/:id/read', async (req, res, next) => {
   try {
-    await prisma.inAppNotification.update({
-      where: { id: req.params.id },
+    await prisma.inAppNotification.updateMany({
+      where: { id: req.params.id, userId: req.user.userId },
       data: { isRead: true }
     });
     res.json({ success: true });
