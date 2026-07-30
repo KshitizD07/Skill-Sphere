@@ -22,6 +22,8 @@ const PROFILE_SELECT = {
   },
 };
 
+const { email, ...PUBLIC_PROFILE_SELECT } = PROFILE_SELECT;
+
 function normaliseSkills(user) {
   if (!user?.skills) return user;
   return {
@@ -175,7 +177,7 @@ router.get('/:id', optionalAuth, asyncHandler(async (req, res) => {
   const cached   = await cache.get(cacheKey);
   if (cached) return res.json(cached);
 
-  const user = await prisma.user.findUnique({ where: { id: req.params.id }, select: PROFILE_SELECT });
+  const user = await prisma.user.findUnique({ where: { id: req.params.id }, select: PUBLIC_PROFILE_SELECT });
   if (!user) throw ApiError.notFound('User');
 
   const result = normaliseSkills(user);
