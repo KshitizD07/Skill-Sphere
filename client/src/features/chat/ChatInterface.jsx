@@ -32,7 +32,10 @@ export default function ChatInterface() {
     }).catch(err => console.error("Error fetching chat history", err));
 
     const socket = io(import.meta.env.VITE_SOCKET_URL || 'http://localhost:5001', {
-      withCredentials: true
+      withCredentials: true,
+      auth: {
+        token: localStorage.getItem('ss_token')
+      }
     });
     socketRef.current = socket;
 

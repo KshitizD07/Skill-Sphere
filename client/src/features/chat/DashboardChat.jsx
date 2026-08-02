@@ -32,7 +32,10 @@ export default function DashboardChat({ isOpen, onClose }) {
       .catch(console.error);
 
     const socket = io(import.meta.env.VITE_SOCKET_URL || 'http://localhost:5001', {
-      withCredentials: true
+      withCredentials: true,
+      auth: {
+        token: localStorage.getItem('ss_token')
+      }
     });
     socketRef.current = socket;
 

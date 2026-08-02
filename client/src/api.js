@@ -6,6 +6,18 @@ const API = axios.create({
   withCredentials: true, // Send httpOnly cookies on every request
 });
 
+// Request interceptor to attach JWT token
+API.interceptors.request.use(
+  (config) => {
+    const token = localStorage.getItem('ss_token');
+    if (token) {
+      config.headers.Authorization = `Bearer ${token}`;
+    }
+    return config;
+  },
+  (error) => Promise.reject(error)
+);
+
 // Global response error handler
 API.interceptors.response.use(
   (response) => response,

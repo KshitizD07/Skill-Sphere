@@ -53,6 +53,7 @@ function App() {
         // Cookie invalid or expired — clear stale data
         setUser(null);
         localStorage.removeItem('user_data');
+        localStorage.removeItem('ss_token');
       })
       .finally(() => setAuthChecked(true));
   }, []);
@@ -65,6 +66,7 @@ function App() {
   const handleLogout = async () => {
     try { await API.post('/auth/logout'); } catch { /* ignore */ }
     localStorage.removeItem('user_data');
+    localStorage.removeItem('ss_token');
     setUser(null);
   };
 

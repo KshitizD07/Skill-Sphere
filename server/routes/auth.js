@@ -118,6 +118,7 @@ router.post('/register', asyncHandler(async (req, res) => {
 
   res.status(201).json({
     user:  { id: user.id, name: user.name, email: user.email, role: user.role, college: user.college, github: user.github, guestPersona: user.guestPersona },
+    token
   });
 }));
 
@@ -142,7 +143,7 @@ router.post('/login', asyncHandler(async (req, res) => {
   const token = signToken(user);
   setTokenCookie(res, token);
 
-  res.json({ user: safeUser });
+  res.json({ user: safeUser, token });
 }));
 
 // ── GET /api/auth/verify ──────────────────────────────────────────────────────

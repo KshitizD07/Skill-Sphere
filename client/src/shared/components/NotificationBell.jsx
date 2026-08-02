@@ -14,7 +14,10 @@ export default function NotificationBell() {
     API.get('/notifications').then(res => setNotifications(res.data)).catch(() => {});
 
     const socket = io(import.meta.env.VITE_SOCKET_URL || 'http://localhost:5001', {
-      withCredentials: true
+      withCredentials: true,
+      auth: {
+        token: localStorage.getItem('ss_token')
+      }
     });
 
     socket.on('NOTIFICATION', (notif) => {

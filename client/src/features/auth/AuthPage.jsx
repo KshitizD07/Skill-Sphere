@@ -83,6 +83,10 @@ export default function AuthPage({ onLogin }) {
       try {
         const res = await API.post('/auth/login', { email: formData.email, password: formData.password });
         const user = res.data.user;
+        const token = res.data.token;
+        if (token) {
+          localStorage.setItem('ss_token', token);
+        }
         onLogin(user);
         
         // If github is missing, force them to profile page first
@@ -128,6 +132,10 @@ export default function AuthPage({ onLogin }) {
     setLoading(true); setError('');
     try {
       const res = await API.post('/auth/register', { ...formData, otp: otpValue });
+      const token = res.data.token;
+      if (token) {
+        localStorage.setItem('ss_token', token);
+      }
       onLogin(res.data.user);
       navigate('/my-profile', { replace: true });
     } catch (err) {
