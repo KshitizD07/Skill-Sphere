@@ -3,7 +3,8 @@ import { Shield, Github, Check, X, Eye, Lock } from 'lucide-react';
 import SkillAPI from './skillAPI';
 
 export default function SkillVerifier({ userId, skillName, onVerifyComplete }) {
-  const [repoUrl, setRepoUrl] = useState('');
+  const [method, setMethod] = useState('github'); // 'github' or 'leetcode'
+  const [inputValue, setInputValue] = useState('');
   const [isStealth, setIsStealth] = useState(false);
   const [loading, setLoading] = useState(false);
   const [status, setStatus] = useState('idle'); // idle | scanning | success | error
@@ -11,13 +12,18 @@ export default function SkillVerifier({ userId, skillName, onVerifyComplete }) {
   const [errorMsg, setErrorMsg] = useState('');
 
   const handleVerify = async () => {
-    if (!repoUrl) return;
+    if (!inputValue) return;
 
     setLoading(true);
     setStatus('scanning');
     setErrorMsg('');
 
-    const data = await SkillAPI.verifySkill(userId, skillName, repoUrl, !isStealth);
+    let data;
+    if (method === 'github') {
+      data = await SkillAPI.verifySkill(userId, skillName, inputValue, !isStealth);
+    } else {
+      data = await SkillAPI.verifyLeetCodeSkill(userId, skillName, inputValue, !isStealth);
+    }
 
     if (data.error) {
       setStatus('error');
@@ -48,22 +54,39 @@ export default function SkillVerifier({ userId, skillName, onVerifyComplete }) {
           <h3 className="text-base font-extrabold text-text-primary tracking-tight">
             Verify: <span className="text-primary">{skillName}</span>
           </h3>
-          <p className="font-syne text-[9px] font-bold tracking-[0.12em] uppercase text-outline">GitHub Repository Verification</p>
+          <p className="font-syne text-[9px] font-bold tracking-[0.12em] uppercase text-outline">Skill Verification</p>
         </div>
       </div>
 
       {/* Input section */}
       {status !== 'success' && (
         <div className="space-y-4">
+          <div className="flex gap-2 mb-4">
+            <button
+              onClick={() => { setMethod('github'); setInputValue(''); }}
+              className={`flex-1 py-1.5 text-xs font-bold font-syne uppercase tracking-wider rounded-xs transition-colors ${method === 'github' ? 'bg-primary/20 text-primary border border-primary/30' : 'bg-surface-mid/50 text-outline border border-transparent'}`}
+            >
+              GitHub
+            </button>
+            <button
+              onClick={() => { setMethod('leetcode'); setInputValue(''); }}
+              className={`flex-1 py-1.5 text-xs font-bold font-syne uppercase tracking-wider rounded-xs transition-colors ${method === 'leetcode' ? 'bg-[#ffa116]/20 text-[#ffa116] border border-[#ffa116]/30' : 'bg-surface-mid/50 text-outline border border-transparent'}`}
+            >
+              LeetCode
+            </button>
+          </div>
+
           <div>
-            <label className="block font-syne text-[10px] font-bold tracking-[0.12em] uppercase text-outline mb-1.5">Repository URL</label>
-            <div className="flex items-center bg-surface-mid rounded-xs border border-outline-var/40 focus-within:border-primary/50 transition-colors">
-              <Github className="w-4 h-4 text-[#656d84] ml-3 shrink-0" />
+            <label className="block font-syne text-[10px] font-bold tracking-[0.12em] uppercase text-outline mb-1.5">
+              {method === 'github' ? 'Repository URL' : 'LeetCode Username'}
+            </label>
+            <div className={`flex items-center bg-surface-mid rounded-xs border border-outline-var/40 focus-within:border-primary/50 transition-colors`}>
+              {method === 'github' ? <Github className="w-4 h-4 text-[#656d84] ml-3 shrink-0" /> : <div className="ml-3 font-bold text-[#ffa116]">LC</div>}
               <input
                 type="text"
-                value={repoUrl}
-                onChange={e => setRepoUrl(e.target.value)}
-                placeholder="https://github.com/username/project"
+                value={inputValue}
+                onChange={e => setInputValue(e.target.value)}
+                placeholder={method === 'github' ? "https://github.com/username/project" : "e.g., striver_79"}
                 className="w-full bg-transparent p-3 text-sm text-text-primary outline-none placeholder-outline-var font-outfit"
               />
             </div>
@@ -89,7 +112,7 @@ export default function SkillVerifier({ userId, skillName, onVerifyComplete }) {
 
           <button
             onClick={handleVerify}
-            disabled={loading || !repoUrl}
+            disabled={loading || !inputValue}
             className="w-full py-3 rounded-xs font-syne font-bold text-xs tracking-[0.1em] uppercase flex items-center justify-center gap-2 transition-all active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed bg-gradient-to-r from-primary to-primary-container text-on-primary hover:opacity-90 shadow-lg shadow-primary-container/20"
           >
             {loading ? 'Scanning...' : 'Verify Skill'}
