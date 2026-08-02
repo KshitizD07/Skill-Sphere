@@ -134,11 +134,11 @@ export default function Dashboard({ user, onLogout }) {
     }
   };
 
-  const handleAnalyze = async () => {
+  const handleAnalyze = async (forceRegenerate = false) => {
     if (!selectedRole) return alert('Please select a target role first.');
     setAnalyzing(true);
     try {
-      const res = await API.get(`/skills/analyze?userId=${currentUser.id}&roleIdOrName=${selectedRole}`);
+      const res = await API.get(`/skills/analyze?userId=${currentUser.id}&roleIdOrName=${selectedRole}${forceRegenerate === true ? '&forceRegenerate=true' : ''}`);
       setAnalysis(res.data);
     } catch (e) {
       console.error(e);
@@ -246,13 +246,23 @@ export default function Dashboard({ user, onLogout }) {
               </div>
             </div>
 
-            <button
-              onClick={handleAnalyze}
-              disabled={analyzing}
-              className="w-full py-4 rounded-xl bg-gradient-to-r from-primary to-primary-dim text-on-primary font-syne font-bold text-xs tracking-widest uppercase hover:brightness-110 transition-all active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed shadow-[0_0_20px_rgba(245,158,11,0.2)]"
-            >
-              {analyzing ? 'Analyzing Core...' : 'Run Diagnostics'}
-            </button>
+            <div className="flex gap-3">
+              <button
+                onClick={() => handleAnalyze(false)}
+                disabled={analyzing}
+                className="flex-1 py-4 rounded-xl bg-gradient-to-r from-primary to-primary-dim text-on-primary font-syne font-bold text-xs tracking-widest uppercase hover:brightness-110 transition-all active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed shadow-[0_0_20px_rgba(245,158,11,0.2)]"
+              >
+                {analyzing ? 'Analyzing...' : 'Run Diagnostics'}
+              </button>
+              <button
+                onClick={() => handleAnalyze(true)}
+                disabled={analyzing}
+                title="Force regenerate role requirements using AI"
+                className="px-5 py-4 rounded-xl bg-surface-mid border border-outline-var/40 text-primary font-syne font-bold text-xs hover:border-primary/50 transition-all active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center shadow-lg group"
+              >
+                <Brain size={18} className="group-hover:animate-pulse" />
+              </button>
+            </div>
           </div>
 
           {/* Right Column: Output + Activity */}
