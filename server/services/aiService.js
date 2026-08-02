@@ -19,7 +19,7 @@ export async function generateRoadmap({ skill, role, currentScore, existingSkill
   const model = getClient().getGenerativeModel({ model: 'gemini-2.5-flash' });
 
   // 1. Establish progression based on score
-  let proficiencyInstruction = '';
+  let proficiencyInstruction;
   if (currentScore === 0) {
     proficiencyInstruction = `(SCORE: 0/10) The user is an absolute beginner. Start from the absolute foundational basics of ${skill}.`;
   } else if (currentScore <= 4) {
@@ -124,8 +124,8 @@ Provide 5-8 highly relevant skills. Ensure 'importance' is exactly "Required" or
   try {
     const result = await model.generateContent(prompt);
     let aiText = result.response.text().trim();
-    if (aiText.startsWith('\`\`\`json')) aiText = aiText.slice(7, -3).trim();
-    if (aiText.startsWith('\`\`\`')) aiText = aiText.slice(3, -3).trim();
+    if (aiText.startsWith('```json')) aiText = aiText.slice(7, -3).trim();
+    if (aiText.startsWith('```')) aiText = aiText.slice(3, -3).trim();
     
     return JSON.parse(aiText);
   } catch (err) {
@@ -137,26 +137,26 @@ Provide 5-8 highly relevant skills. Ensure 'importance' is exactly "Required" or
 export async function generateDiagnosticReport({ role, currentScore, missingSkills, verifiedSkills }) {
   const model = getClient().getGenerativeModel({ model: 'gemini-2.5-flash' });
 
-  const verifiedList = verifiedSkills.length > 0 ? verifiedSkills.map(s => \`\${s.name} (\${s.calculatedScore}/10)\`).join(', ') : 'None';
+  const verifiedList = verifiedSkills.length > 0 ? verifiedSkills.map(s => `${s.name} (${s.calculatedScore}/10)`).join(', ') : 'None';
   const missingList = missingSkills.length > 0 ? missingSkills.map(s => s.name).join(', ') : 'None';
 
-  const prompt = \`Act as a technical career advisor. Write a short, encouraging 3-bullet diagnostic report for a user targeting the "\${role}" role.
-Their competency match score is \${currentScore}%.
-Verified Skills (1-10): \${verifiedList}
-Missing Core Skills: \${missingList}
+  const prompt = `Act as a technical career advisor. Write a short, encouraging 3-bullet diagnostic report for a user targeting the "${role}" role.
+Their competency match score is ${currentScore}%.
+Verified Skills (1-10): ${verifiedList}
+Missing Core Skills: ${missingList}
 
 Output format (Markdown):
 - **Strengths:** [Highlight what they do well based on verified skills]
 - **Vulnerability:** [Highlight the critical gap from missing skills]
 - **Immediate Action:** [Give exactly 1 concrete next step, e.g. "We recommend verifying a repository with X"]
 
-Keep it under 80 words total.\`;
+Keep it under 80 words total.`;
 
   try {
     const result = await model.generateContent(prompt);
     return result.response.text().trim();
   } catch (err) {
     logger.error('Gemini diagnostic report error', { err: err.message });
-    return '- **Strengths:** Your profile is building up.\\n- **Vulnerability:** You are missing some core skills.\\n- **Immediate Action:** Start verifying your missing skills.';
+    return '- **Strengths:** Your profile is building up.\n- **Vulnerability:** You are missing some core skills.\n- **Immediate Action:** Start verifying your missing skills.';
   }
 }
