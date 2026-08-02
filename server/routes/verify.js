@@ -18,6 +18,20 @@ router.post('/skill', authenticateToken, asyncHandler(async (req, res) => {
   res.json(result);
 }));
 
+import { verifyLeetCodeSkill } from '../services/leetcodeService.js';
+
+// POST /api/verify/leetcode
+router.post('/leetcode', authenticateToken, asyncHandler(async (req, res) => {
+  const { userId, skillName, username, showLevel } = req.body;
+
+  if (req.user.userId !== userId) {
+    return res.status(403).json({ error: 'FORBIDDEN', message: 'Can only verify your own skills' });
+  }
+
+  const result = await verifyLeetCodeSkill({ userId, skillName, username, showLevel });
+  res.json(result);
+}));
+
 // GET /api/verify/rate-limit  — useful for checking GitHub quota
 router.get('/rate-limit', asyncHandler(async (_req, res) => {
   const headers = {
