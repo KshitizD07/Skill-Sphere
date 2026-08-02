@@ -16,10 +16,10 @@ router.get('/roles', asyncHandler(async (req, res) => {
   res.json(await skillService.getAllRoles());
 }));
 
-// GET /api/skills/analyze?userId=&roleId=
+// GET /api/skills/analyze?userId=&roleIdOrName=
 router.get('/analyze', authenticateToken, asyncHandler(async (req, res) => {
-  const { userId, roleId } = req.query;
-  const analysis = await skillService.analyzeSkillGap(userId, roleId);
+  const { userId, roleIdOrName, roleId } = req.query;
+  const analysis = await skillService.analyzeSkillGap(userId, roleIdOrName || roleId);
   await activityService.logActivity(req.user.userId, 'DIAGNOSTIC_RUN', `Analyzed skill gap for: ${analysis.role}`);
   res.json(analysis);
 }));

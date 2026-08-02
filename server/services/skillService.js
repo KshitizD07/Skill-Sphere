@@ -1,6 +1,7 @@
 import { PrismaClient } from '@prisma/client';
 import cache from '../utils/cache.js';
 import { ApiError } from '../utils/errorHandler.js';
+import * as aiService from './aiService.js';
 
 const prisma = new PrismaClient();
 
@@ -27,34 +28,82 @@ export async function getAllRoles() {
   );
 }
 
-// ── Skill gap analysis ────────────────────────────────────────────────────────
-export async function analyzeSkillGap(userId, roleId) {
-  const [user, role] = await Promise.all([
-    prisma.user.findUnique({
-      where:   { id: userId },
-      include: { skills: { select: { name: true, isVerified: true, calculatedScore: true } } },
-    }),
-    prisma.jobRole.findUnique({
-      where:   { id: roleId },
+// ── Dynamic Role Resolution ───────────────────────────────────────────────────
+export async function getOrCreateRole(roleIdentifier) {
+  let role = await prisma.jobRole.findFirst({
+    where: { OR: [{ id: roleIdentifier }, { title: { equals: roleIdentifier, mode: 'insensitive' } }] },
+    include: { skills: { select: { skillName: true, importance: true } } },
+  });
+
+  if (!role) {
+    const generatedRole = await aiService.generateRoleRequirements(roleIdentifier);
+    role = await prisma.jobRole.create({
+      data: {
+        title: generatedRole.title,
+        description: generatedRole.description,
+        skills: {
+          create: generatedRole.skills.map(s => ({
+            skillName: s.name,
+            importance: s.importance
+          }))
+        }
+      },
       include: { skills: { select: { skillName: true, importance: true } } },
-    }),
-  ]);
+    });
+    await cache.del('catalogue:roles');
+    await cache.del('catalogue:skills');
+  }
+
+  return role;
+}
+
+// ── Skill gap analysis ────────────────────────────────────────────────────────
+export async function analyzeSkillGap(userId, roleIdOrName) {
+  const user = await prisma.user.findUnique({
+    where:   { id: userId },
+    include: { skills: { select: { name: true, isVerified: true, calculatedScore: true } } },
+  });
 
   if (!user) throw ApiError.notFound('User');
-  if (!role) throw ApiError.notFound('Role');
+  const role = await getOrCreateRole(roleIdOrName);
 
-  const userSkillNames = new Set(user.skills.map((s) => s.name.toLowerCase()));
-  const requiredSkills = role.skills.filter((s) => s.importance === 'Required');
-  const totalRequired  = requiredSkills.length || 1;
+  const userSkillsMap = new Map(user.skills.map((s) => [s.name.toLowerCase(), s]));
 
-  const missingSkills  = requiredSkills
-    .filter((rs) => !userSkillNames.has(rs.skillName.toLowerCase()))
-    .map((rs) => ({ id: rs.skillName, name: rs.skillName }));
+  let totalWeight = 0;
+  let earnedScore = 0;
+  const missingSkills = [];
 
-  const matchedCount = totalRequired - missingSkills.length;
-  const score        = Math.round((matchedCount / totalRequired) * 100);
+  for (const rs of role.skills) {
+    const weight = rs.importance === 'Required' ? 1.0 : 0.5;
+    totalWeight += weight;
 
-  return { role: role.title, score, matchedCount, totalRequired, missingSkills, userSkills: user.skills };
+    const userSkill = userSkillsMap.get(rs.skillName.toLowerCase());
+    
+    if (userSkill) {
+      let coefficient = 0.4;
+      if (userSkill.isVerified) {
+        coefficient = 1.0;
+        if (userSkill.calculatedScore >= 8) coefficient = 1.1;
+      }
+      earnedScore += (weight * coefficient);
+    } else {
+      if (rs.importance === 'Required') {
+        missingSkills.push({ id: rs.skillName, name: rs.skillName });
+      }
+    }
+  }
+
+  const rawPercentage = (earnedScore / (totalWeight || 1)) * 100;
+  const score = Math.min(100, Math.round(rawPercentage));
+
+  const diagnosticReport = await aiService.generateDiagnosticReport({
+    role: role.title,
+    currentScore: score,
+    missingSkills,
+    verifiedSkills: user.skills.filter(s => s.isVerified && userSkillsMap.has(s.name.toLowerCase()))
+  });
+
+  return { role: role.title, score, missingSkills, userSkills: user.skills, diagnosticReport };
 }
 
 // ── Update user skills (bulk replace unverified) ──────────────────────────────
