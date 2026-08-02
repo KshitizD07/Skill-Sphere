@@ -4,9 +4,11 @@ import { motion, AnimatePresence } from 'framer-motion';
 import API from '../api';
 import {
   AlertTriangle, CheckCircle,
-  Activity, Users, X, Brain, BarChart2
+  Activity, Users, X, Brain, BarChart2, ShieldAlert
 } from 'lucide-react';
 import Navbar from '../shared/components/Navbar';
+import ReactMarkdown from 'react-markdown';
+import SkillVerifier from '../features/skills/SkillVerifier';
 
 // ─── Radar Chart (Upgraded to Glowing Bronze) ────────────────────────────────
 const RadarChart = ({ score }) => {
@@ -68,6 +70,7 @@ export default function Dashboard({ user, onLogout }) {
     return sessionStorage.getItem('dash_selected_role') || '';
   });
   const [mySkills, setMySkills] = useState([]);
+  const [userSkillsData, setUserSkillsData] = useState([]);
   const [analysis, setAnalysis] = useState(() => {
     const saved = sessionStorage.getItem('dash_analysis');
     return saved ? JSON.parse(saved) : null;
@@ -75,6 +78,7 @@ export default function Dashboard({ user, onLogout }) {
   const [mentors, setMentors] = useState([]);
   const [loadingMentors, setLoadingMentors] = useState(false);
   const [selectedMissingSkill, setSelectedMissingSkill] = useState(null);
+  const [verifySkillModal, setVerifySkillModal] = useState(null);
   const [activities, setActivities] = useState([]);
   const [analyzing, setAnalyzing] = useState(false);
 
@@ -103,6 +107,7 @@ export default function Dashboard({ user, onLogout }) {
 
       const profileRes = await API.get('/users/me');
       if (profileRes.data?.skills) {
+        setUserSkillsData(profileRes.data.skills);
         const savedNames = profileRes.data.skills.map(s => s.name);
         const matchedIds = catalogue.filter(c => savedNames.includes(c.name)).map(c => c.id);
         setMySkills(matchedIds);
@@ -115,17 +120,25 @@ export default function Dashboard({ user, onLogout }) {
   // eslint-disable-next-line react-hooks/set-state-in-effect
   useEffect(() => { fetchData(); }, [fetchData]);
 
-  const toggleSkill = (skillId) => {
-    setMySkills(prev =>
-      prev.includes(skillId) ? prev.filter(id => id !== skillId) : [...prev, skillId]
-    );
+  const toggleSkill = async (skillId) => {
+    let newSkills = [];
+    setMySkills(prev => {
+      newSkills = prev.includes(skillId) ? prev.filter(id => id !== skillId) : [...prev, skillId];
+      return newSkills;
+    });
+    try {
+      await API.post('/skills/update', { userId: currentUser.id, skillIds: newSkills });
+      fetchData(); // Sync detailed skill verification status
+    } catch (e) {
+      console.error('Failed to sync skills', e);
+    }
   };
 
   const handleAnalyze = async () => {
     if (!selectedRole) return alert('Please select a target role first.');
     setAnalyzing(true);
     try {
-      const res = await API.get(`/skills/analyze?userId=${currentUser.id}&roleId=${selectedRole}`);
+      const res = await API.get(`/skills/analyze?userId=${currentUser.id}&roleIdOrName=${selectedRole}`);
       setAnalysis(res.data);
     } catch (e) {
       console.error(e);
@@ -182,16 +195,20 @@ export default function Dashboard({ user, onLogout }) {
               <h3 className="font-syne text-[10px] font-bold tracking-widest uppercase text-primary mb-4 flex items-center gap-2">
                 <BarChart2 size={12} /> Target Role
               </h3>
-              <select
-                className="w-full p-3.5 rounded-lg border border-outline-var/40 bg-surface-mid text-text-primary focus:border-primary/60 outline-none font-outfit text-sm cursor-pointer transition-colors shadow-inner"
-                onChange={(e) => setSelectedRole(e.target.value)}
-                value={selectedRole}
-              >
-                <option value="">Select a role to analyze...</option>
-                {roles.map(r => (
-                  <option key={r.id} value={r.id}>{r.title}</option>
-                ))}
-              </select>
+              <div className="relative">
+                <input
+                  list="roles-list"
+                  className="w-full p-3.5 rounded-lg border border-outline-var/40 bg-surface-mid text-text-primary focus:border-primary/60 outline-none font-outfit text-sm transition-colors shadow-inner"
+                  placeholder="Select or type a target role..."
+                  value={selectedRole}
+                  onChange={(e) => setSelectedRole(e.target.value)}
+                />
+                <datalist id="roles-list">
+                  {roles.map(r => (
+                    <option key={r.id} value={r.title} />
+                  ))}
+                </datalist>
+              </div>
             </div>
 
             {/* Skill checklist panel */}
@@ -214,9 +231,15 @@ export default function Dashboard({ user, onLogout }) {
                       }`}>
                         {mySkills.includes(skill.id) && <div className="w-1.5 h-1.5 bg-on-primary rounded-sm" />}
                       </div>
-                      <span className={`text-sm select-none transition-colors ${mySkills.includes(skill.id) ? 'text-text-primary font-medium' : 'text-text-muted'}`}>
+                      <span className={`text-sm select-none transition-colors flex-1 ${mySkills.includes(skill.id) ? 'text-text-primary font-medium' : 'text-text-muted'}`}>
                         {skill.name}
                       </span>
+                      {(() => {
+                        const userSk = userSkillsData.find(s => s.name.toLowerCase() === skill.name.toLowerCase());
+                        if (userSk && userSk.isVerified) return <span title={`Verified Score: ${userSk.calculatedScore}/10`} className="text-[10px] text-secondary-bright font-syne uppercase tracking-wider font-bold">🛡️ {userSk.calculatedScore}/10</span>;
+                        if (userSk) return <span title="Self-Declared" className="text-[10px] text-error font-syne uppercase tracking-wider font-bold cursor-pointer hover:underline" onClick={(e) => { e.stopPropagation(); setVerifySkillModal(skill.name); }}>⚠️ Verify</span>;
+                        return null;
+                      })()}
                     </div>
                   ))
                   : <div className="text-outline text-sm p-4">Loading skills...</div>}
@@ -247,6 +270,15 @@ export default function Dashboard({ user, onLogout }) {
                       <p className="font-syne text-[10px] font-bold tracking-widest uppercase text-outline mb-1">Diagnostic Results</p>
                       <h2 className="text-3xl font-extrabold text-text-primary tracking-tight mb-6">{analysis.role}</h2>
                       
+                      {analysis.diagnosticReport && (
+                        <div className="mb-6 p-4 bg-surface-mid/80 border border-outline-var/40 rounded-xl shadow-inner">
+                          <h4 className="font-syne text-[10px] font-bold tracking-widest uppercase text-primary mb-2 flex items-center gap-2"><Brain size={12}/> AI Diagnostic Report</h4>
+                          <div className="text-sm text-text-primary space-y-2 [&_strong]:text-primary [&_li]:ml-4 [&_ul]:list-disc">
+                            <ReactMarkdown>{analysis.diagnosticReport}</ReactMarkdown>
+                          </div>
+                        </div>
+                      )}
+
                       <div className="flex items-center gap-2 mb-4 bg-error-container/10 border border-error-container/20 px-3 py-1.5 rounded w-max">
                         <AlertTriangle size={14} className="text-error" />
                         <span className="font-syne text-[10px] font-bold tracking-widest uppercase text-error">Missing Core Skills</span>
@@ -255,14 +287,20 @@ export default function Dashboard({ user, onLogout }) {
                       {analysis.missingSkills?.length > 0 ? (
                         <div className="space-y-3">
                           {analysis.missingSkills.map(s => (
-                            <div key={s.id} className="flex flex-wrap items-center justify-between group bg-surface-mid/50 border border-outline-var/20 p-3 rounded-lg hover:border-primary/30 transition-colors">
-                              <span className="text-text-primary text-sm font-semibold mb-2 sm:mb-0">{s.name}</span>
-                              <div className="flex gap-2 w-full sm:w-auto">
+                            <div key={s.id} className="flex flex-col sm:flex-row sm:items-center justify-between group bg-surface-mid/50 border border-outline-var/20 p-3 rounded-lg hover:border-primary/30 transition-colors gap-3">
+                              <span className="text-text-primary text-sm font-semibold">{s.name}</span>
+                              <div className="flex flex-wrap gap-2 w-full sm:w-auto">
                                 <button
                                   onClick={() => handleGenerateRoadmap(s.name)}
                                   className="flex-1 sm:flex-none justify-center text-[10px] bg-primary/10 text-primary border border-primary/20 px-3 py-1.5 rounded hover:bg-primary hover:text-on-primary transition-all flex items-center gap-1.5 font-syne font-bold tracking-widest uppercase"
                                 >
-                                  <Brain size={12} /> AI Roadmap
+                                  <Brain size={12} /> Roadmap
+                                </button>
+                                <button
+                                  onClick={() => setVerifySkillModal(s.name)}
+                                  className="flex-1 sm:flex-none justify-center text-[10px] bg-secondary-bright/10 text-secondary-bright border border-secondary-bright/20 px-3 py-1.5 rounded hover:bg-secondary-bright hover:text-on-primary transition-all flex items-center gap-1.5 font-syne font-bold tracking-widest uppercase"
+                                >
+                                  <ShieldAlert size={12} /> Verify
                                 </button>
                                 <button
                                   onClick={() => handleFindMentors(s)}
@@ -392,6 +430,36 @@ export default function Dashboard({ user, onLogout }) {
                   </div>
                 )}
               </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
+
+      {/* ── Verify Modal Drawer ── */}
+      <AnimatePresence>
+        {verifySkillModal && (
+          <div className="fixed inset-0 bg-bg-base/80 backdrop-blur-md z-[100] flex items-center justify-center p-4">
+            <motion.div 
+              initial={{ scale: 0.95, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.95, opacity: 0 }}
+              className="relative w-full max-w-md"
+            >
+               <button
+                  onClick={() => setVerifySkillModal(null)}
+                  className="absolute -top-10 right-0 text-text-muted hover:text-text-primary transition-colors"
+                >
+                  <X size={24} />
+               </button>
+               <SkillVerifier 
+                 userId={currentUser.id} 
+                 skillName={verifySkillModal} 
+                 onVerifyComplete={() => {
+                   fetchData();
+                   if (selectedRole) handleAnalyze();
+                   setTimeout(() => setVerifySkillModal(null), 2000);
+                 }}
+               />
             </motion.div>
           </div>
         )}
