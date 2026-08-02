@@ -1,5 +1,5 @@
 import nodemailer from 'nodemailer';
-import { Resend } from 'resend';
+// import { Resend } from 'resend'; // Disabled: using Nodemailer (SMTP) instead of Resend
 import { PrismaClient } from '@prisma/client';
 import { ApiError } from '../utils/errorHandler.js';
 import logger from '../utils/logger.js';
@@ -8,27 +8,39 @@ const prisma = new PrismaClient();
 
 // ── Email Client Initialization ──────────────────────────────────────────────
 let transporter = null;
-let resendClient = null;
+// let resendClient = null; // Disabled: Resend client setup commented out
 
-if (process.env.RESEND_API_KEY) {
-  resendClient = new Resend(process.env.RESEND_API_KEY);
-  logger.info('Email: Using Resend API ✓');
-} else {
-  logger.info('Email: Using SMTP Transporter');
-}
+logger.info('Email: Using Nodemailer (SMTP Transporter)');
 
 function getTransporter() {
   if (!transporter) {
     if (!process.env.SMTP_USER || !process.env.SMTP_PASS) {
-      throw ApiError.internal('Email service not configured — add RESEND_API_KEY or SMTP config');
+      throw ApiError.internal('Email service not configured — add SMTP_USER and SMTP_PASS to environment variables');
     }
-    transporter = nodemailer.createTransport({
-      service: 'gmail',
-      auth: {
-        user: process.env.SMTP_USER,
-        pass: process.env.SMTP_PASS,
-      },
-    });
+    const service = process.env.SMTP_SERVICE || 'gmail';
+    const host    = process.env.SMTP_HOST;
+    const port    = process.env.SMTP_PORT ? Number(process.env.SMTP_PORT) : undefined;
+    const secure  = process.env.SMTP_SECURE === 'true';
+
+    if (host) {
+      transporter = nodemailer.createTransport({
+        host,
+        port: port || 587,
+        secure: secure || false,
+        auth: {
+          user: process.env.SMTP_USER,
+          pass: process.env.SMTP_PASS,
+        },
+      });
+    } else {
+      transporter = nodemailer.createTransport({
+        service,
+        auth: {
+          user: process.env.SMTP_USER,
+          pass: process.env.SMTP_PASS,
+        },
+      });
+    }
   }
   return transporter;
 }
@@ -50,9 +62,9 @@ export async function generateAndSaveOtp(email) {
 
 // ── Send Verification Email ──────────────────────────────────────────────────
 export async function sendVerificationEmail(email, code) {
-  const subject = `${code} — Your SkillSphere verification code`;
-  const from    = process.env.RESEND_FROM || `"SkillSphere" <onboarding@resend.dev>`;
-  const html    = `
+  const subject  = `${code} — Your SkillSphere verification code`;
+  const fromAddr = process.env.SMTP_FROM || process.env.RESEND_FROM || `"SkillSphere" <${process.env.SMTP_USER}>`;
+  const html     = `
       <div style="font-family: monospace; background: #050505; color: #e2e8f0; padding: 40px; max-width: 480px;">
         <h1 style="color: #22d3ee; font-size: 24px; margin-bottom: 8px;">SKILLSPHERE</h1>
         <p style="color: #94a3b8; font-size: 12px; margin-bottom: 32px;">IDENTITY_VERIFICATION_PROTOCOL</p>
@@ -67,15 +79,18 @@ export async function sendVerificationEmail(email, code) {
     `;
 
   try {
+    /* Resend block disabled
     if (resendClient) {
-      const response = await resendClient.emails.send({ from, to: email, subject, html });
+      const response = await resendClient.emails.send({ from: fromAddr, to: email, subject, html });
       if (response.error) {
         throw new Error(response.error.message || JSON.stringify(response.error));
       }
       logger.info('Verification email sent via Resend', { email });
-    } else if (process.env.SMTP_USER && process.env.SMTP_PASS) {
-      await getTransporter().sendMail({ from: `"SkillSphere" <${process.env.SMTP_USER}>`, to: email, subject, html });
-      logger.info('Verification email sent via SMTP', { email });
+    } else
+    */
+    if (process.env.SMTP_USER && process.env.SMTP_PASS) {
+      await getTransporter().sendMail({ from: fromAddr, to: email, subject, html });
+      logger.info('Verification email sent via Nodemailer (SMTP)', { email });
     } else {
       logger.warn(`Email service not configured. Verification email generated in Demo/Mock Mode. OTP Code: ${code}`, { email, code });
     }
@@ -88,7 +103,7 @@ export async function sendVerificationEmail(email, code) {
                    demoVar === true || 
                    demoVar === '1' || 
                    process.env.NODE_ENV === 'development' ||
-                   (!process.env.RESEND_API_KEY && (!process.env.SMTP_USER || !process.env.SMTP_PASS));
+                   (!process.env.SMTP_USER || !process.env.SMTP_PASS);
                    
     if (isDemo) {
       logger.warn(`Email delivery failed/unconfigured, but running in Demo/Mock Mode. Proceeding with OTP database log. OTP Code: ${code}`, { email });
@@ -114,7 +129,7 @@ export async function verifyOtp(email, otp) {
   const isDemo = String(demoVar).toLowerCase().trim() === 'true' || 
                  demoVar === true || 
                  demoVar === '1' || 
-                 (!process.env.RESEND_API_KEY && (!process.env.SMTP_USER || !process.env.SMTP_PASS));
+                 (!process.env.SMTP_USER || !process.env.SMTP_PASS);
   
   logger.info('OTP Verification debug', { 
     email, 
