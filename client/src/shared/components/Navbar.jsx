@@ -35,163 +35,143 @@ const Navbar = ({ user, onLogout }) => {
   const isActive = (path) => location.pathname === path;
 
   return (
-    <nav className="max-w-6xl mx-auto flex justify-between items-center mb-10 border-b border-[#434655]/30 pb-5 relative z-50">
-      {/* Logo */}
-      <div onClick={() => navigate('/')} className="cursor-pointer group flex items-center gap-2">
-        <span className="text-xl font-extrabold text-[#dae2fd] group-hover:text-[#adc6ff] transition-colors tracking-tight">
-          Skill<span className="text-[#adc6ff] group-hover:text-[#89f5e7]">Sphere</span>
-        </span>
-      </div>
-
-      {/* Desktop Links - Centralized */}
-      <div className="absolute left-1/2 transform -translate-x-1/2 hidden md:flex items-center gap-8">
-        {navLinks.slice(1, 4).map((link) => (
-          <div
-            key={link.path}
-            onClick={() => navigate(link.path)}
-            className="flex items-center gap-2 cursor-pointer group"
-          >
-            <link.icon 
-              size={18} 
-              className={`transition-colors ${isActive(link.path) ? 'text-[#adc6ff]' : 'text-[#656d84] group-hover:text-[#89f5e7]'}`} 
-            />
-            <span className={`text-lg font-bold tracking-tight transition-colors ${isActive(link.path) ? 'text-[#dae2fd]' : 'text-[#8d90a0] group-hover:text-[#dae2fd]'}`}>
-              {link.name}
-            </span>
-          </div>
-        ))}
-      </div>
-
-      {/* Right Side Actions */}
-      <div className="flex items-center gap-4">
-        <NotificationBell />
-        
-        {/* Desktop Logout/Profile */}
-        <div className="hidden md:flex items-center gap-3">
-          <button
-            onClick={() => navigate('/my-profile')}
-            className="flex items-center justify-center w-10 h-10 rounded-full border border-[#adc6ff]/20 bg-[#171f33] hover:border-[#adc6ff]/50 transition-all overflow-hidden"
-          >
-            {user?.avatar ? (
-              <img src={user.avatar} alt="Avatar" className="w-full h-full object-cover" />
-            ) : (
-              <User size={20} className="text-[#adc6ff]" />
-            )}
-          </button>
-          <button
-            onClick={onLogout}
-            className="p-2.5 rounded-xl border border-red-500/20 bg-red-500/5 text-red-400 hover:bg-red-500/10 transition-all"
-            title="Logout"
-          >
-            <LogOut size={18} />
+    <>
+      {/* ── Mobile Top Header ── */}
+      <div className="md:hidden flex justify-between items-center p-4 bg-bg-base border-b border-outline-var/30 fixed top-0 w-full z-40">
+        <div onClick={() => navigate('/')} className="font-syne font-extrabold text-xl text-text-primary tracking-tight">
+          Skill<span className="text-primary">Sphere</span>
+        </div>
+        <div className="flex items-center gap-3">
+          <NotificationBell />
+          <button onClick={() => setIsOpen(true)} className="text-text-primary">
+            <Menu size={24} />
           </button>
         </div>
-
-        {/* Mobile Hamburger Button */}
-        <button 
-          className="md:hidden p-2 text-[#dae2fd] hover:bg-[#171f33] rounded-lg transition-colors"
-          onClick={() => setIsOpen(!isOpen)}
-        >
-          {isOpen ? <X size={28} /> : <Menu size={28} />}
-        </button>
       </div>
 
-      {/* Mobile Menu Overlay - Nexus Portal */}
+      {/* ── Desktop Sidebar ── */}
+      <nav className="hidden md:flex flex-col w-64 h-screen fixed inset-y-0 left-0 bg-bg-sidebar border-r border-outline-var/30 z-50 shadow-2xl">
+        
+        {/* Logo Section */}
+        <div 
+          onClick={() => navigate('/')} 
+          className="cursor-pointer p-6 border-b border-outline-var/20 flex items-center gap-2"
+        >
+          <div className="w-8 h-8 rounded bg-primary/10 flex items-center justify-center border border-primary/20">
+            <Layers size={18} className="text-primary" />
+          </div>
+          <span className="text-2xl font-syne font-extrabold text-text-primary tracking-tight">
+            Skill<span className="text-primary">Sphere</span>
+          </span>
+        </div>
+
+        {/* Navigation Links */}
+        <div className="flex-1 py-6 px-4 space-y-2 overflow-y-auto">
+          <div className="text-[10px] font-syne font-bold tracking-widest uppercase text-outline mb-4 px-2">Workspace</div>
+          
+          {navLinks.map((link) => {
+            const active = isActive(link.path);
+            return (
+              <div
+                key={link.path}
+                onClick={() => handleNavigate(link.path)}
+                className={`flex items-center gap-3 px-4 py-3 rounded-md cursor-pointer transition-all duration-200 group ${
+                  active 
+                    ? 'bg-primary/10 border border-primary/20 shadow-[0_0_15px_rgba(245,158,11,0.05)]' 
+                    : 'hover:bg-surface border border-transparent hover:border-outline-var/30'
+                }`}
+              >
+                <link.icon 
+                  size={18} 
+                  className={`transition-colors ${active ? 'text-primary' : 'text-outline group-hover:text-primary-dim'}`} 
+                />
+                <span className={`text-sm font-semibold tracking-wide ${active ? 'text-text-primary' : 'text-text-muted group-hover:text-text-primary'}`}>
+                  {link.name}
+                </span>
+                
+                {/* Active Indicator Line */}
+                {active && (
+                  <motion.div layoutId="activeNav" className="absolute left-0 w-1 h-6 bg-primary rounded-r-md" />
+                )}
+              </div>
+            );
+          })}
+        </div>
+
+        {/* Bottom Profile Section */}
+        <div className="p-4 border-t border-outline-var/30 bg-surface-mid/30">
+          <div className="flex items-center gap-3 p-2 rounded-md hover:bg-surface cursor-pointer transition-colors" onClick={() => navigate('/my-profile')}>
+            <div className="w-10 h-10 rounded-full bg-surface border border-primary/20 overflow-hidden flex items-center justify-center shrink-0">
+              {user?.avatar ? (
+                <img src={user.avatar} alt="Avatar" className="w-full h-full object-cover" />
+              ) : (
+                <User size={20} className="text-primary" />
+              )}
+            </div>
+            <div className="flex-1 min-w-0">
+              <div className="text-sm font-bold text-text-primary truncate">{user?.name || 'User'}</div>
+              <div className="text-[10px] text-primary font-syne uppercase tracking-wider truncate">{user?.role || 'Member'}</div>
+            </div>
+          </div>
+          
+          <div className="flex items-center justify-between mt-3 px-2">
+            <NotificationBell />
+            <button
+              onClick={onLogout}
+              className="p-2 rounded-md hover:bg-error-container/20 text-text-muted hover:text-error transition-colors"
+              title="Logout"
+            >
+              <LogOut size={16} />
+            </button>
+          </div>
+        </div>
+      </nav>
+
+      {/* ── Mobile Sidebar Overlay ── */}
       <AnimatePresence>
         {isOpen && (
           <motion.div
-            initial={{ clipPath: 'circle(0% at calc(100% - 40px) 40px)' }}
-            animate={{ clipPath: 'circle(150% at calc(100% - 40px) 40px)' }}
-            exit={{ clipPath: 'circle(0% at calc(100% - 40px) 40px)' }}
-            transition={{ type: 'spring', damping: 25, stiffness: 80 }}
-            className="fixed inset-0 bg-[#0b1326] z-[60] md:hidden overflow-hidden flex flex-col"
+            initial={{ x: '-100%' }}
+            animate={{ x: 0 }}
+            exit={{ x: '-100%' }}
+            transition={{ type: 'spring', damping: 25, stiffness: 200 }}
+            className="fixed inset-0 z-50 md:hidden bg-bg-sidebar border-r border-outline-var/30 flex flex-col w-3/4 max-w-xs shadow-2xl"
           >
-            {/* Animated Background Aurora */}
-            <div className="absolute inset-0 overflow-hidden pointer-events-none opacity-40">
-              <div className="absolute -top-[10%] -left-[10%] w-[50%] h-[50%] bg-[#adc6ff]/20 blur-[120px] rounded-full animate-pulse" />
-              <div className="absolute -bottom-[10%] -right-[10%] w-[50%] h-[50%] bg-[#6bd8cb]/20 blur-[120px] rounded-full animate-pulse" style={{ animationDelay: '1s' }} />
-            </div>
-
-            {/* Content Container */}
-            <div className="relative z-10 flex flex-col h-full p-8 pt-20">
-              
-              {/* Close Button - Large & Morphing-style */}
-              <button 
-                onClick={() => setIsOpen(false)}
-                className="absolute top-6 right-6 p-3 text-[#dae2fd] hover:text-[#ffb4ab] transition-colors bg-[#171f33]/50 rounded-full border border-[#434655]/30"
-              >
-                <X size={32} />
+            <div className="p-4 border-b border-outline-var/20 flex justify-between items-center">
+               <span className="font-syne font-extrabold text-xl text-text-primary tracking-tight">
+                Skill<span className="text-primary">Sphere</span>
+              </span>
+              <button onClick={() => setIsOpen(false)} className="text-text-muted hover:text-text-primary">
+                <X size={24} />
               </button>
-
-              {/* Core Identity Node */}
-              <motion.div 
-                initial={{ y: -20, opacity: 0 }}
-                animate={{ y: 0, opacity: 1 }}
-                transition={{ delay: 0.2 }}
-                className="flex flex-col items-center text-center mb-12"
-              >
-                <div className="relative">
-                  <div className="absolute inset-0 rounded-full border border-[#adc6ff]/30 animate-[spin_10s_linear_infinite]" />
-                  <div className="absolute -inset-1 rounded-full border border-[#6bd8cb]/20 animate-[spin_15s_linear_infinite_reverse]" />
-                  <div className="w-24 h-28 rounded-full border-2 border-[#adc6ff]/50 overflow-hidden bg-[#171f33] p-1">
-                    {user?.avatar ? (
-                      <img src={user.avatar} alt="Avatar" className="w-full h-full object-cover rounded-full" />
-                    ) : (
-                      <div className="w-full h-full flex items-center justify-center text-[#adc6ff]">
-                        <User size={40} />
-                      </div>
-                    )}
-                  </div>
-                </div>
-                <h3 className="mt-4 text-2xl font-black text-[#dae2fd] tracking-tighter">{user?.name}</h3>
-                <span className="text-[10px] font-['Space_Grotesk'] font-bold tracking-[0.2em] uppercase text-[#8d90a0] mt-1">{user?.role}</span>
-              </motion.div>
-
-              {/* Floating Grid Navigation */}
-              <div className="grid grid-cols-2 gap-4 flex-grow">
-                {navLinks.map((link, i) => (
-                  <motion.button
-                    key={link.path}
-                    initial={{ scale: 0.8, opacity: 0 }}
-                    animate={{ scale: 1, opacity: 1 }}
-                    transition={{ delay: 0.1 + i * 0.05 }}
-                    onClick={() => handleNavigate(link.path)}
-                    className={`flex flex-col items-center justify-center p-6 rounded-2xl border transition-all ${
-                      isActive(link.path)
-                        ? 'bg-[#adc6ff]/10 border-[#adc6ff]/40 text-[#adc6ff] shadow-[0_0_20px_rgba(173,198,255,0.15)]'
-                        : 'bg-[#171f33]/40 border-[#434655]/30 text-[#8d90a0] hover:border-[#adc6ff]/30'
-                    }`}
-                  >
-                    <link.icon size={28} className="mb-3" />
-                    <span className="font-['Space_Grotesk'] font-bold text-xs uppercase tracking-widest">{link.name}</span>
-                  </motion.button>
-                ))}
-              </div>
-
-              {/* System Footer */}
-              <motion.div 
-                initial={{ y: 20, opacity: 0 }}
-                animate={{ y: 0, opacity: 1 }}
-                transition={{ delay: 0.5 }}
-                className="mt-12 pt-6 border-t border-[#434655]/30 flex justify-between items-center"
-              >
-                <div onClick={() => handleNavigate('/')} className="cursor-pointer">
-                  <span className="font-extrabold text-[#dae2fd]">Skill<span className="text-[#adc6ff]">Sphere</span></span>
-                </div>
-                <button
-                  onClick={() => { onLogout(); setIsOpen(false); }}
-                  className="flex items-center gap-2 text-red-400 font-bold uppercase text-[10px] tracking-widest"
+            </div>
+            
+            <div className="flex-1 py-4 px-3 space-y-1 overflow-y-auto">
+              {navLinks.map((link) => (
+                <div
+                  key={link.path}
+                  onClick={() => handleNavigate(link.path)}
+                  className={`flex items-center gap-3 px-4 py-3 rounded-md transition-colors ${
+                    isActive(link.path) ? 'bg-primary/10 text-primary' : 'text-text-muted hover:bg-surface hover:text-text-primary'
+                  }`}
                 >
-                  Terminate Session <LogOut size={14} />
-                </button>
-              </motion.div>
+                  <link.icon size={20} />
+                  <span className="font-semibold">{link.name}</span>
+                </div>
+              ))}
+            </div>
+            
+            <div className="p-4 border-t border-outline-var/30">
+              <button onClick={() => { onLogout(); setIsOpen(false); }} className="w-full flex justify-center items-center gap-2 py-2.5 rounded border border-error-container bg-error-container/10 text-error font-syne text-xs uppercase tracking-widest font-bold">
+                <LogOut size={14} /> Logout
+              </button>
             </div>
           </motion.div>
         )}
       </AnimatePresence>
 
       <DashboardChat isOpen={isChatOpen} onClose={() => setIsChatOpen(false)} />
-    </nav>
+    </>
   );
 };
 
