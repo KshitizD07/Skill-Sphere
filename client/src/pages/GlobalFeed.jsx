@@ -21,7 +21,7 @@ function Avatar({ src, size = 10 }) {
   const sizeMap = { 6:'w-6 h-6', 7:'w-7 h-7', 8:'w-8 h-8', 10:'w-10 h-10', 12:'w-12 h-12' };
   const iconSizeMap = { 6:12, 7:14, 8:16, 10:20, 12:24 };
   return (
-    <div className={`${sizeMap[size]||'w-10 h-10'} rounded-full overflow-hidden border border-[#434655]/40 bg-[#222a3d] shrink-0 flex items-center justify-center`}>
+    <div className={`${sizeMap[size]||'w-10 h-10'} rounded-full overflow-hidden border border-outline-var/40 bg-surface-mid shrink-0 flex items-center justify-center`}>
       {src ? <img src={src} loading="lazy" className="w-full h-full object-cover" alt="" /> : <User size={iconSizeMap[size]||20} className="text-[#656d84]" />}
     </div>
   );
@@ -45,24 +45,24 @@ function CommentItem({ comment, postId, postOwnerId, currentUser, onDelete, onLi
       <div className="flex gap-2 group">
         <Avatar src={comment.author?.avatar} size={7} />
         <div className="flex-1 min-w-0">
-          <div className="bg-[#222a3d] rounded-xs px-3 py-2">
-            <span className="text-[#adc6ff] font-semibold text-xs mr-2">{comment.author?.name}</span>
-            <span className="text-[#c3c6d7] text-xs">{comment.content}</span>
+          <div className="bg-surface-mid rounded-xs px-3 py-2">
+            <span className="text-primary font-semibold text-xs mr-2">{comment.author?.name}</span>
+            <span className="text-text-muted text-xs">{comment.content}</span>
           </div>
           <div className="flex items-center gap-3 mt-1 px-1">
-            <span className="text-[#8d90a0] text-[10px] font-['Space_Grotesk']">{timeAgo(comment.createdAt)}</span>
+            <span className="text-outline text-[10px] font-syne">{timeAgo(comment.createdAt)}</span>
             <button onClick={() => onLike(postId, comment.id)}
-              className={`flex items-center gap-1 text-[10px] transition ${liked ? 'text-[#ffb4ab]' : 'text-[#8d90a0] hover:text-[#ffb4ab]'}`}>
+              className={`flex items-center gap-1 text-[10px] transition ${liked ? 'text-error' : 'text-outline hover:text-error'}`}>
               <Heart size={10} fill={liked ? 'currentColor' : 'none'} />
               {comment.likes?.length > 0 && comment.likes.length}
             </button>
             <button onClick={() => setShowReply(!showReply)}
-              className="text-[10px] text-[#8d90a0] hover:text-[#6bd8cb] transition flex items-center gap-1 font-['Space_Grotesk']">
+              className="text-[10px] text-outline hover:text-secondary transition flex items-center gap-1 font-syne">
               <CornerDownRight size={10} /> Reply
             </button>
             {(isAuthor || isPostOwner) && (
               <button onClick={() => onDelete(postId, comment.id)}
-                className="text-[10px] text-[#434655] hover:text-[#ffb4ab] transition opacity-0 group-hover:opacity-100">
+                className="text-[10px] text-outline-var hover:text-error transition opacity-0 group-hover:opacity-100">
                 <Trash2 size={10} />
               </button>
             )}
@@ -72,33 +72,33 @@ function CommentItem({ comment, postId, postOwnerId, currentUser, onDelete, onLi
               <input value={replyText} onChange={e => setReplyText(e.target.value)}
                 onKeyDown={e => e.key === 'Enter' && submitReply()}
                 placeholder={`Reply to ${comment.author?.name}...`}
-                className="flex-1 bg-[#131b2e] border border-[#434655]/40 text-[#c3c6d7] px-3 py-1.5 text-xs focus:border-[#adc6ff]/50 outline-none rounded-xs" />
-              <button onClick={submitReply} className="text-[#adc6ff] hover:text-[#89f5e7] px-2 transition-colors"><Send size={14} /></button>
-              <button onClick={() => setShowReply(false)} className="text-[#8d90a0] hover:text-[#dae2fd] px-1 transition-colors"><X size={14} /></button>
+                className="flex-1 bg-surface-mid border border-outline-var/40 text-text-muted px-3 py-1.5 text-xs focus:border-primary/50 outline-none rounded-xs" />
+              <button onClick={submitReply} className="text-primary hover:text-secondary-bright px-2 transition-colors"><Send size={14} /></button>
+              <button onClick={() => setShowReply(false)} className="text-outline hover:text-text-primary px-1 transition-colors"><X size={14} /></button>
             </div>
           )}
         </div>
       </div>
       {comment.replies?.length > 0 && (
-        <div className="ml-9 space-y-1.5 border-l border-[#434655]/30 pl-3">
+        <div className="ml-9 space-y-1.5 border-l border-outline-var/30 pl-3">
           {comment.replies.map(reply => (
             <div key={reply.id} className="flex gap-2 group">
               <Avatar src={reply.author?.avatar} size={6} />
               <div className="flex-1 min-w-0">
                 <div className="bg-[#1a2236] rounded-xs px-3 py-1.5">
-                  <span className="text-[#adc6ff] font-semibold text-xs mr-2">{reply.author?.name}</span>
-                  <span className="text-[#c3c6d7] text-xs">{reply.content}</span>
+                  <span className="text-primary font-semibold text-xs mr-2">{reply.author?.name}</span>
+                  <span className="text-text-muted text-xs">{reply.content}</span>
                 </div>
                 <div className="flex items-center gap-3 mt-0.5 px-1">
-                  <span className="text-[#8d90a0] text-[10px] font-['Space_Grotesk']">{timeAgo(reply.createdAt)}</span>
+                  <span className="text-outline text-[10px] font-syne">{timeAgo(reply.createdAt)}</span>
                   <button onClick={() => onLike(postId, reply.id)}
-                    className={`flex items-center gap-1 text-[10px] transition ${reply.likes?.some(l => l.userId === currentUser.id) ? 'text-[#ffb4ab]' : 'text-[#8d90a0] hover:text-[#ffb4ab]'}`}>
+                    className={`flex items-center gap-1 text-[10px] transition ${reply.likes?.some(l => l.userId === currentUser.id) ? 'text-error' : 'text-outline hover:text-error'}`}>
                     <Heart size={10} fill={reply.likes?.some(l => l.userId === currentUser.id) ? 'currentColor' : 'none'} />
                     {reply.likes?.length > 0 && reply.likes.length}
                   </button>
                   {(reply.author?.id === currentUser.id || isPostOwner) && (
                     <button onClick={() => onDelete(postId, reply.id)}
-                      className="text-[10px] text-[#434655] hover:text-[#ffb4ab] opacity-0 group-hover:opacity-100 transition">
+                      className="text-[10px] text-outline-var hover:text-error opacity-0 group-hover:opacity-100 transition">
                       <Trash2 size={10} />
                     </button>
                   )}
@@ -127,13 +127,13 @@ function PostCard({ post, currentUser, onDelete, onEdit, onLike, onComment, onLi
   };
 
   return (
-    <div className="bg-[#171f33] border border-[#434655]/20 rounded-md hover:border-[#6bd8cb]/15 transition-colors group relative">
+    <div className="bg-surface border border-outline-var/20 rounded-md hover:border-secondary/15 transition-colors group relative">
       <div className="flex items-center justify-between p-4 pb-3">
         <div className="flex items-center gap-3 cursor-pointer" onClick={() => navigate(`/profile/${post.author?.id}`)}>
           <Avatar src={post.author?.avatar} size={10} />
           <div>
-            <div className="text-[#dae2fd] font-semibold hover:text-[#adc6ff] transition-colors text-sm">{post.author?.name}</div>
-            <div className="flex items-center gap-2 text-[10px] font-['Space_Grotesk'] text-[#8d90a0]">
+            <div className="text-text-primary font-semibold hover:text-primary transition-colors text-sm">{post.author?.name}</div>
+            <div className="flex items-center gap-2 text-[10px] font-syne text-outline">
               {post.author?.college && <span>{post.author.college}</span>}
               <span>{timeAgo(post.createdAt)}</span>
             </div>
@@ -142,9 +142,9 @@ function PostCard({ post, currentUser, onDelete, onEdit, onLike, onComment, onLi
         {isOwner && (
           <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
             <button onClick={() => { setEditing(!editing); setEditContent(post.content); }}
-              className="p-1.5 text-[#8d90a0] hover:text-[#adc6ff] transition-colors rounded-xs"><Pencil size={14} /></button>
+              className="p-1.5 text-outline hover:text-primary transition-colors rounded-xs"><Pencil size={14} /></button>
             <button onClick={() => onDelete(post.id)}
-              className="p-1.5 text-[#8d90a0] hover:text-[#ffb4ab] transition-colors rounded-xs"><Trash2 size={14} /></button>
+              className="p-1.5 text-outline hover:text-error transition-colors rounded-xs"><Trash2 size={14} /></button>
           </div>
         )}
       </div>
@@ -153,40 +153,40 @@ function PostCard({ post, currentUser, onDelete, onEdit, onLike, onComment, onLi
         {editing ? (
           <div className="space-y-2">
             <textarea value={editContent} onChange={e => setEditContent(e.target.value)}
-              className="w-full bg-[#131b2e] border border-[#434655]/40 text-[#dae2fd] p-3 text-sm font-['Manrope'] resize-none focus:border-[#adc6ff]/50 outline-none rounded-xs"
+              className="w-full bg-surface-mid border border-outline-var/40 text-text-primary p-3 text-sm font-outfit resize-none focus:border-primary/50 outline-none rounded-xs"
               rows={3} maxLength={500} />
             <div className="flex gap-2 justify-end">
-              <button onClick={() => setEditing(false)} className="px-3 py-1 text-xs text-[#8d90a0] hover:text-[#dae2fd] transition-colors">Cancel</button>
+              <button onClick={() => setEditing(false)} className="px-3 py-1 text-xs text-outline hover:text-text-primary transition-colors">Cancel</button>
               <button onClick={() => { onEdit(post.id, editContent); setEditing(false); }}
-                className="px-3 py-1 text-xs bg-[#0f69dc] text-[#dae2fd] hover:bg-[#adc6ff] hover:text-[#002e6a] rounded-xs transition-all font-['Space_Grotesk'] font-bold uppercase tracking-wide">Save</button>
+                className="px-3 py-1 text-xs bg-primary-container text-text-primary hover:bg-primary hover:text-on-primary rounded-xs transition-all font-syne font-bold uppercase tracking-wide">Save</button>
             </div>
           </div>
         ) : (
-          <p className="text-[#c3c6d7] text-sm leading-relaxed whitespace-pre-wrap">{post.content}</p>
+          <p className="text-text-muted text-sm leading-relaxed whitespace-pre-wrap">{post.content}</p>
         )}
         {post.imageUrl && (
-          <img src={post.imageUrl} loading="lazy" alt="" className="w-full rounded-xs border border-[#434655]/20 mt-3 max-h-96 object-cover" />
+          <img src={post.imageUrl} loading="lazy" alt="" className="w-full rounded-xs border border-outline-var/20 mt-3 max-h-96 object-cover" />
         )}
 
       </div>
 
-      <div className="flex items-center gap-4 px-4 py-2.5 border-t border-[#434655]/15">
+      <div className="flex items-center gap-4 px-4 py-2.5 border-t border-outline-var/15">
         <button onClick={() => onLike(post.id)}
-          className={`flex items-center gap-1.5 text-sm transition-colors ${liked ? 'text-[#ffb4ab]' : 'text-[#8d90a0] hover:text-[#ffb4ab]'}`}>
+          className={`flex items-center gap-1.5 text-sm transition-colors ${liked ? 'text-error' : 'text-outline hover:text-error'}`}>
           <Heart size={15} fill={liked ? 'currentColor' : 'none'} />
-          <span className="font-['Space_Grotesk'] text-[10px]">{post.likes?.length || 0}</span>
+          <span className="font-syne text-[10px]">{post.likes?.length || 0}</span>
         </button>
         <button onClick={() => setShowComments(!showComments)}
-          className="flex items-center gap-1.5 text-sm text-[#8d90a0] hover:text-[#adc6ff] transition-colors">
+          className="flex items-center gap-1.5 text-sm text-outline hover:text-primary transition-colors">
           <MessageCircle size={15} />
-          <span className="font-['Space_Grotesk'] text-[10px]">{post.comments?.length || 0}</span>
+          <span className="font-syne text-[10px]">{post.comments?.length || 0}</span>
         </button>
       </div>
 
       {showComments && (
-        <div className="px-4 pb-4 pt-3 border-t border-[#434655]/15 space-y-3">
+        <div className="px-4 pb-4 pt-3 border-t border-outline-var/15 space-y-3">
           {post.comments?.length === 0 && (
-            <p className="text-[#8d90a0] text-xs italic text-center py-1">No comments yet.</p>
+            <p className="text-outline text-xs italic text-center py-1">No comments yet.</p>
           )}
           {post.comments?.map(c => (
             <CommentItem key={c.id} comment={c} postId={post.id} postOwnerId={post.author?.id}
@@ -198,8 +198,8 @@ function PostCard({ post, currentUser, onDelete, onEdit, onLike, onComment, onLi
               <input value={commentText} onChange={e => setCommentText(e.target.value)}
                 onKeyDown={e => e.key === 'Enter' && !e.shiftKey && submitComment()}
                 placeholder="Write a comment..."
-                className="flex-1 bg-[#131b2e] border border-[#434655]/40 text-[#c3c6d7] px-3 py-2 text-xs focus:border-[#adc6ff]/50 outline-none rounded-xs placeholder-[#434655]" />
-              <button onClick={submitComment} className="text-[#adc6ff] hover:text-[#89f5e7] px-2 transition-colors"><Send size={15} /></button>
+                className="flex-1 bg-surface-mid border border-outline-var/40 text-text-muted px-3 py-2 text-xs focus:border-primary/50 outline-none rounded-xs placeholder-outline-var" />
+              <button onClick={submitComment} className="text-primary hover:text-secondary-bright px-2 transition-colors"><Send size={15} /></button>
             </div>
           </div>
         </div>
@@ -295,28 +295,28 @@ export default function GlobalFeed() {
   };
 
   return (
-    <div className="min-h-screen bg-[#0b1326] text-[#dae2fd] font-['Manrope'] p-4 md:p-8">
+    <div className="min-h-screen bg-bg-base text-text-primary font-outfit flex flex-col md:flex-row">
 
       <Navbar user={currentUser} onLogout={handleLogout} />
 
-      <div className="max-w-3xl mx-auto">
+      <div className="flex-1 md:ml-64 pt-20 md:pt-0 min-h-screen overflow-y-auto overflow-x-hidden p-6 md:p-10 w-full max-w-[1200px] mx-auto">
         {/* Search */}
         <div className="mb-6 relative">
           <div className="relative group">
-            <Search className="absolute left-4 top-3.5 text-[#656d84] group-focus-within:text-[#adc6ff] transition-colors" size={16} />
+            <Search className="absolute left-4 top-3.5 text-[#656d84] group-focus-within:text-primary transition-colors" size={16} />
             <input value={searchQuery} onChange={handleSearch}
               placeholder="Search members or institutions..."
-              className="w-full bg-[#171f33] border border-[#434655]/30 rounded-xs p-3 pl-11 text-[#dae2fd] outline-none focus:border-[#adc6ff]/50 font-['Manrope'] text-sm transition-colors placeholder-[#434655]" />
+              className="w-full bg-surface border border-outline-var/30 rounded-xs p-3 pl-11 text-text-primary outline-none focus:border-primary/50 font-outfit text-sm transition-colors placeholder-outline-var" />
           </div>
           {searchResults.length > 0 && (
-            <div className="absolute top-full left-0 w-full bg-[#171f33] border border-[#434655]/40 rounded-xs z-50 mt-1 shadow-2xl">
+            <div className="absolute top-full left-0 w-full bg-surface border border-outline-var/40 rounded-xs z-50 mt-1 shadow-2xl">
               {searchResults.map(u => (
                 <div key={u.id} onClick={() => { navigate(`/profile/${u.id}`); setSearchResults([]); setSearchQuery(''); }}
-                  className="p-3 border-b border-[#434655]/20 hover:bg-[#222a3d] cursor-pointer flex items-center gap-3 transition-colors">
+                  className="p-3 border-b border-outline-var/20 hover:bg-surface-mid cursor-pointer flex items-center gap-3 transition-colors">
                   <Avatar src={u.avatar} size={8} />
                   <div>
-                    <div className="text-[#dae2fd] font-semibold text-sm">{u.name}</div>
-                    {u.college && <div className="text-[10px] text-[#6bd8cb] font-['Space_Grotesk'] flex items-center gap-1"><Building2 size={10} /> {u.college}</div>}
+                    <div className="text-text-primary font-semibold text-sm">{u.name}</div>
+                    {u.college && <div className="text-[10px] text-secondary font-syne flex items-center gap-1"><Building2 size={10} /> {u.college}</div>}
                   </div>
                 </div>
               ))}
@@ -326,31 +326,31 @@ export default function GlobalFeed() {
 
         {/* Composer */}
         {currentUser.id && (
-          <div className="bg-[#171f33] border border-[#434655]/20 rounded-md p-4 mb-6">
+          <div className="bg-surface border border-outline-var/20 rounded-md p-4 mb-6">
             <textarea value={newPostContent}
               onChange={e => { setNewPostContent(e.target.value); setCharCount(e.target.value.length); }}
               placeholder="Share an update..."
               maxLength={500}
-              className="w-full bg-[#131b2e] border border-[#434655]/30 text-[#dae2fd] p-3 focus:border-[#adc6ff]/50 outline-none resize-none h-24 font-['Manrope'] text-sm rounded-xs placeholder-[#434655] transition-colors" />
+              className="w-full bg-surface-mid border border-outline-var/30 text-text-primary p-3 focus:border-primary/50 outline-none resize-none h-24 font-outfit text-sm rounded-xs placeholder-outline-var transition-colors" />
             <div className="flex items-center justify-between mt-2 mb-2.5">
-              <span className={`font-['Space_Grotesk'] text-[10px] ${charCount > 450 ? 'text-[#ffb4ab]' : 'text-[#434655]'}`}>{charCount}/500</span>
+              <span className={`font-syne text-[10px] ${charCount > 450 ? 'text-error' : 'text-outline-var'}`}>{charCount}/500</span>
             </div>
             {newPostImage && (
               <div className="relative mb-3 inline-block">
-                <img src={newPostImage} alt="" className="max-h-40 rounded-xs border border-[#434655]/30 object-cover" />
+                <img src={newPostImage} alt="" className="max-h-40 rounded-xs border border-outline-var/30 object-cover" />
                 <button onClick={() => { setNewPostImage(''); if (postImageRef.current) postImageRef.current.value = ''; }}
-                  className="absolute -top-2 -right-2 p-1 bg-[#93000a] hover:bg-[#ffb4ab] text-white hover:text-[#002e6a] rounded-full transition-colors"><X size={12} /></button>
+                  className="absolute -top-2 -right-2 p-1 bg-error-container hover:bg-error text-white hover:text-on-primary rounded-full transition-colors"><X size={12} /></button>
               </div>
             )}
             <div className="flex gap-2">
               <input ref={postImageRef} type="file" accept="image/*" onChange={handleImageChange} className="hidden" />
               <button onClick={() => postImageRef.current.click()}
-                className="flex items-center gap-2 px-3 py-2 bg-[#131b2e] border border-[#434655]/30 hover:border-[#adc6ff]/40 text-[#8d90a0] hover:text-[#adc6ff] transition-all text-xs font-['Space_Grotesk'] font-medium rounded-xs uppercase tracking-wide">
+                className="flex items-center gap-2 px-3 py-2 bg-surface-mid border border-outline-var/30 hover:border-primary/40 text-outline hover:text-primary transition-all text-xs font-syne font-medium rounded-xs uppercase tracking-wide">
                 <ImageIcon size={13} /> Attach Image
               </button>
               <div className="flex-1" />
               <button onClick={handleCreatePost} disabled={!newPostContent.trim()}
-                className="bg-[#0f69dc] hover:bg-[#adc6ff] hover:text-[#002e6a] text-[#dae2fd] font-['Space_Grotesk'] font-bold px-6 py-2 rounded-xs text-xs uppercase tracking-[0.1em] disabled:opacity-40 transition-all">
+                className="bg-primary-container hover:bg-primary hover:text-on-primary text-text-primary font-syne font-bold px-6 py-2 rounded-xs text-xs uppercase tracking-[0.1em] disabled:opacity-40 transition-all">
                 Post
               </button>
             </div>
@@ -360,8 +360,8 @@ export default function GlobalFeed() {
         {/* Feed */}
         <div className="space-y-4">
           {posts.length === 0 ? (
-            <div className="text-center py-20 border border-dashed border-[#434655]/30 rounded-md">
-              <p className="text-[#8d90a0] font-['Space_Grotesk'] text-[10px] uppercase tracking-[0.12em]">No posts yet. Be the first to share.</p>
+            <div className="text-center py-20 border border-dashed border-outline-var/30 rounded-md">
+              <p className="text-outline font-syne text-[10px] uppercase tracking-[0.12em]">No posts yet. Be the first to share.</p>
             </div>
           ) : posts.map(post => (
             <PostCard key={post.id} post={post} currentUser={currentUser} navigate={navigate}
