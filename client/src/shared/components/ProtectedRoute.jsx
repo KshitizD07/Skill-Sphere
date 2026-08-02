@@ -6,8 +6,8 @@ export default function ProtectedRoute({ children, user, authChecked }) {
   // Still verifying session with server — show nothing to prevent flash
   if (!authChecked) {
     return (
-      <div className="min-h-screen bg-[#0b1326] flex items-center justify-center">
-        <div className="w-6 h-6 border-2 border-[#adc6ff]/30 border-t-[#adc6ff] rounded-full animate-spin" />
+      <div className="min-h-screen bg-bg-base flex items-center justify-center">
+        <div className="w-6 h-6 border-2 border-primary/30 border-t-[#adc6ff] rounded-full animate-spin" />
       </div>
     );
   }

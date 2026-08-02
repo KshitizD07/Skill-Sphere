@@ -8,43 +8,43 @@ export default {
     extend: {
       colors: {
         // Backgrounds
-        'bg-base':      '#0b1326',
-        'bg-sidebar':   '#131b2e',
-        'surface':      '#171f33',
-        'surface-mid':  '#222a3d',
-        'surface-high': '#2d3449',
+        'bg-base':      '#121110', // Dark Earth Carbon
+        'bg-sidebar':   '#161513',
+        'surface':      '#1a1918', // Textured Charcoal Clay
+        'surface-mid':  '#23211f',
+        'surface-high': '#2c2a27',
 
-        // Primary — electric blue
-        'primary':          '#adc6ff',
-        'primary-dim':      '#adc6ff',
-        'primary-container':'#0f69dc',
-        'on-primary':       '#002e6a',
-        'primary-inverse':  '#005ac2',
+        // Primary — Glowing Bronze Amber
+        'primary':          '#f59e0b',
+        'primary-dim':      '#d97706',
+        'primary-container':'#b45309',
+        'on-primary':       '#fffbeb',
+        'primary-inverse':  '#fbbf24',
 
-        // Secondary — teal/cyan
-        'secondary':          '#6bd8cb',
-        'secondary-bright':   '#89f5e7',
-        'secondary-container':'#29a195',
-        'on-secondary':       '#003732',
+        // Secondary — Muted Copper
+        'secondary':          '#ca8a04',
+        'secondary-bright':   '#eab308',
+        'secondary-container':'#854d0e',
+        'on-secondary':       '#fefce8',
 
-        // Tertiary — muted slate
-        'tertiary':          '#bec6e0',
-        'tertiary-container':'#656d84',
-        'on-tertiary':       '#283044',
+        // Tertiary — Muted Bone/Slate
+        'tertiary':          '#d6d3d1',
+        'tertiary-container':'#78716c',
+        'on-tertiary':       '#292524',
 
         // Text
-        'text-primary':   '#dae2fd',
-        'text-muted':     '#c3c6d7',
-        'outline':        '#8d90a0',
-        'outline-var':    '#434655',
+        'text-primary':   '#f5f5f4', // Warm bone
+        'text-muted':     '#a8a29e',
+        'outline':        '#57534e',
+        'outline-var':    '#44403c',
 
         // Semantic
-        'error':          '#ffb4ab',
-        'error-container':'#93000a',
+        'error':          '#f87171',
+        'error-container':'#7f1d1d',
       },
       fontFamily: {
-        'manrope':      ['Manrope', 'sans-serif'],
-        'space-grotesk':['Space Grotesk', 'sans-serif'],
+        'outfit': ['Outfit', 'sans-serif'],
+        'syne':   ['Syne', 'sans-serif'],
       },
       borderRadius: {
         'xs':  '2px',

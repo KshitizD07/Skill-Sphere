@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Manrope:wght@400;600;700;800&family=Space+Grotesk:wght@300;500;700&display=swap');
+/* Fonts are imported in index.html */
 
 @tailwind base;
 @tailwind components;
@@ -8,30 +8,30 @@
 *, *::before, *::after { box-sizing: border-box; }
 
 html, body {
-  background-color: #0b1326;
-  color: #dae2fd;
-  font-family: 'Manrope', sans-serif;
+  background-color: #121110;
+  color: #f5f5f4;
+  font-family: 'Outfit', sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
 
-::selection { background-color: rgba(173, 198, 255, 0.25); color: #dae2fd; }
+::selection { background-color: rgba(245, 158, 11, 0.25); color: #f5f5f4; }
 
 /* ── Global slim scrollbar ── */
-* { scrollbar-width: thin; scrollbar-color: rgba(173, 198, 255, 0.2) transparent; }
+* { scrollbar-width: thin; scrollbar-color: rgba(245, 158, 11, 0.2) transparent; }
 *::-webkit-scrollbar { width: 4px; height: 4px; }
 *::-webkit-scrollbar-track { background: transparent; }
-*::-webkit-scrollbar-thumb { background: rgba(173, 198, 255, 0.2); border-radius: 2px; }
-*::-webkit-scrollbar-thumb:hover { background: rgba(173, 198, 255, 0.4); }
+*::-webkit-scrollbar-thumb { background: rgba(245, 158, 11, 0.2); border-radius: 2px; }
+*::-webkit-scrollbar-thumb:hover { background: rgba(245, 158, 11, 0.4); }
 
 /* ── UI Label utility ── */
 .label-ui {
-  font-family: 'Space Grotesk', sans-serif;
+  font-family: 'Syne', sans-serif;
   font-size: 10px;
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.12em;
-  color: #8d90a0;
+  color: #a8a29e;
 }
 
 /* ── Animations ── */
@@ -46,47 +46,47 @@ html, body {
   100% { background-position: 200% 0; }
 }
 .animate-shimmer {
-  background: linear-gradient(90deg, #171f33 25%, #222a3d 50%, #171f33 75%);
+  background: linear-gradient(90deg, #1a1918 25%, #23211f 50%, #1a1918 75%);
   background-size: 200% 100%;
   animation: shimmer 1.5s infinite;
 }
 
 /* ── Glass panel ── */
 .glass {
-  background: rgba(45, 52, 73, 0.6);
+  background: rgba(26, 25, 24, 0.6);
   backdrop-filter: blur(20px);
   -webkit-backdrop-filter: blur(20px);
 }
 
 /* ── Progress bar ── */
-.progress-track { background: #2d3449; border-radius: 9999px; height: 4px; }
-.progress-fill  { background: #adc6ff; border-radius: 9999px; height: 4px; transition: width 0.4s ease; }
+.progress-track { background: #2c2a27; border-radius: 9999px; height: 4px; }
+.progress-fill  { background: #f59e0b; border-radius: 9999px; height: 4px; transition: width 0.4s ease; }
 
 /* ── Prose override for roadmap markdown ── */
-.prose h1 { color: #adc6ff; font-family: 'Manrope', sans-serif; font-weight: 800; letter-spacing: -0.03em; }
-.prose h2 { color: #89f5e7; font-family: 'Space Grotesk', sans-serif; }
-.prose h3 { color: #bec6e0; }
-.prose p  { color: #c3c6d7; line-height: 1.7; }
-.prose ul > li::marker { color: rgba(173, 198, 255, 0.4); }
-.prose a  { color: #adc6ff; text-decoration: underline; }
-.prose strong { color: #dae2fd; font-weight: 700; }
+.prose h1 { color: #f59e0b; font-family: 'Outfit', sans-serif; font-weight: 800; letter-spacing: -0.03em; }
+.prose h2 { color: #ca8a04; font-family: 'Syne', sans-serif; }
+.prose h3 { color: #d6d3d1; }
+.prose p  { color: #a8a29e; line-height: 1.7; }
+.prose ul > li::marker { color: rgba(245, 158, 11, 0.4); }
+.prose a  { color: #f59e0b; text-decoration: underline; }
+.prose strong { color: #f5f5f4; font-weight: 700; }
 .prose code {
-  color: #89f5e7;
-  background: rgba(35, 45, 65, 0.8);
+  color: #f59e0b;
+  background: rgba(35, 33, 31, 0.8);
   padding: 2px 6px;
   border-radius: 3px;
   font-size: 0.875em;
 }
 .prose pre code { background: transparent; padding: 0; }
 .prose pre {
-  background: #131b2e;
-  border: 1px solid #434655;
+  background: #161513;
+  border: 1px solid #44403c;
   border-radius: 6px;
   padding: 1rem 1.25rem;
 }
 .prose blockquote {
-  border-left: 3px solid #adc6ff;
+  border-left: 3px solid #f59e0b;
   padding-left: 1rem;
-  color: #bec6e0;
+  color: #d6d3d1;
   font-style: italic;
 }

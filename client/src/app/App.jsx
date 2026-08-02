@@ -29,8 +29,8 @@ import ProtectedRoute from '../shared/components/ProtectedRoute';
 
 // Loading fallback
 const PageLoader = () => (
-  <div className="min-h-screen bg-[#0b1326] flex items-center justify-center">
-    <div className="w-12 h-12 border-4 border-[#adc6ff]/20 border-t-[#adc6ff] rounded-full animate-spin" />
+  <div className="min-h-screen bg-bg-base flex items-center justify-center">
+    <div className="w-12 h-12 border-4 border-primary/20 border-t-[#adc6ff] rounded-full animate-spin" />
   </div>
 );
 
