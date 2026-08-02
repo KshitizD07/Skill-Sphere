@@ -85,22 +85,66 @@ export async function verifySkill({ userId, skillName, repoUrl, showLevel }) {
     score        = 0;
     breakdownMsg = 'Repository is completely empty. Scored as absolute beginner baseline (0/10).';
   } else {
-    const validExtensions = ['.js', '.jsx', '.ts', '.tsx', '.py', '.java', '.go', '.rs', '.cpp', '.c', '.rb', '.swift', '.kt'];
-    const candidates      = treeData.tree
-      .filter((item) => item.type === 'blob')
-      .filter((item) => validExtensions.some((ext) => item.path.endsWith(ext)))
-      .filter((item) => !item.path.includes('node_modules') && !item.path.includes('dist') && !item.path.includes('build') && !item.path.toLowerCase().includes('test'));
+    const isTestingSkill = normalized.toLowerCase().includes('test');
+    const isGitCiCdSkill = normalized.toLowerCase().includes('git') || normalized.toLowerCase().includes('ci/cd');
+    
+    let candidates;
+    if (isTestingSkill) {
+      candidates = treeData.tree
+        .filter((item) => item.type === 'blob')
+        .filter((item) => {
+          const p = item.path.toLowerCase();
+          return p.includes('test') || p.includes('spec') || p.includes('__tests__');
+        })
+        .filter((item) => !item.path.includes('node_modules') && !item.path.includes('dist') && !item.path.includes('build'));
+    } else if (isGitCiCdSkill) {
+      candidates = treeData.tree
+        .filter((item) => item.type === 'blob')
+        .filter((item) => {
+          const p = item.path.toLowerCase();
+          return p.includes('.github/workflows') || p.includes('.gitlab-ci.yml') || p.includes('dockerfile') || p.includes('docker-compose');
+        });
+    } else {
+      const validExtensions = ['.js', '.jsx', '.ts', '.tsx', '.py', '.java', '.go', '.rs', '.cpp', '.c', '.rb', '.swift', '.kt', '.cs', '.php'];
+      candidates = treeData.tree
+        .filter((item) => item.type === 'blob')
+        .filter((item) => validExtensions.some((ext) => item.path.endsWith(ext)))
+        .filter((item) => !item.path.includes('node_modules') && !item.path.includes('dist') && !item.path.includes('build') && !item.path.toLowerCase().includes('test'));
+    }
 
     if (candidates.length === 0) {
       score        = 0;
       breakdownMsg = `Could not find valid source files to analyze for ${normalized}. Scored as baseline.`;
     } else {
-      topFiles = candidates.slice(0, 3);
+      if (isTestingSkill) {
+        // Just take the first few test files
+        topFiles = candidates.slice(0, 3);
+      } else if (isGitCiCdSkill) {
+        // Take CI/CD files
+        topFiles = candidates.slice(0, 3);
+      } else {
+        topFiles = candidates.slice(0, 3);
+      }
+      
       let aggregatedCode = '';
 
       for (const file of topFiles) {
         const content = await fetchFileContent(parsed.owner, parsed.repo, repo.default_branch, file.path);
         if (content) aggregatedCode += `\n\n--- File: ${file.path} ---\n${content.slice(0, 3000)}`;
+      }
+
+      if (isGitCiCdSkill) {
+        // Also fetch recent commits for Git practice evaluation
+        try {
+          const commitsRes = await fetch(`https://api.github.com/repos/${parsed.owner}/${parsed.repo}/commits?per_page=10`, { headers });
+          if (commitsRes.ok) {
+            const commits = await commitsRes.json();
+            const commitMsgs = commits.map(c => `- ${c.commit.message.split('\n')[0]}`).join('\n');
+            aggregatedCode += `\n\n--- Recent Commits ---\n${commitMsgs}`;
+          }
+        } catch (_e) {
+          // Ignore commit fetch errors
+        }
       }
 
       if (aggregatedCode) {
@@ -109,7 +153,7 @@ export async function verifySkill({ userId, skillName, repoUrl, showLevel }) {
         const genAI   = new GoogleGenerativeAI(process.env.GOOGLE_API_KEY);
         const aiModel = genAI.getGenerativeModel({ model: 'gemini-2.5-flash' });
 
-        const aiPrompt = `Analyze this code for architecture, paradigm adherence, efficiency, and complexity.
+        let aiPrompt = `Analyze this code for architecture, paradigm adherence, efficiency, and complexity.
 Score the user's proficiency from 1 to 10 as an integer.
 
 Code Snippets:
@@ -117,6 +161,26 @@ ${aggregatedCode}
 
 Respond ONLY with a valid JSON in exactly this format, no markdown wrapping, no extra text:
 {"score": 7, "reasoning": "A brief 2-sentence explanation of the score based on code patterns."}`;
+
+        if (isTestingSkill) {
+          aiPrompt = `Analyze these test files for test coverage, edge cases, assertions quality, and mocking usage.
+Score the user's Testing proficiency from 1 to 10 as an integer.
+
+Code Snippets:
+${aggregatedCode}
+
+Respond ONLY with a valid JSON in exactly this format, no markdown wrapping, no extra text:
+{"score": 7, "reasoning": "A brief 2-sentence explanation of the testing proficiency."}`;
+        } else if (isGitCiCdSkill) {
+          aiPrompt = `Analyze these CI/CD workflow files (if any) and recent commit messages for DevOps and Git best practices (e.g., conventional commits, automated tests, deployment pipelines).
+Score the user's Git & CI/CD proficiency from 1 to 10 as an integer.
+
+Data:
+${aggregatedCode}
+
+Respond ONLY with a valid JSON in exactly this format, no markdown wrapping, no extra text:
+{"score": 7, "reasoning": "A brief 2-sentence explanation of the DevOps/Git proficiency."}`;
+        }
 
         try {
           const result  = await aiModel.generateContent(aiPrompt);
