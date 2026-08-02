@@ -36,10 +36,8 @@ app.use(helmet({
 
 // ── CORS ─────────────────────────────────────────────────────────────────────
 const allowedOrigins = [
-  'https://skill-sphere-sooty-seven.vercel.app',
-  'https://skill-sphere-beta.netlify.app',
-  'http://localhost:5173',
-  'http://localhost:3000'
+  'https://skill-sphere-v1.vercel.app',
+  'http://localhost:5173'
 ];
 
 const rawOrigins = process.env.ALLOWED_ORIGINS;
