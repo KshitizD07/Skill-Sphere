@@ -39,7 +39,7 @@ export default function MyApplications() {
     <div className="min-h-screen bg-[#050505] text-gray-300 font-['Rajdhani'] p-4 md:p-8 relative selection:bg-cyan-500 selection:text-black">
       <div className="absolute inset-0 bg-[linear-gradient(rgba(0,240,255,0.02)_1px,transparent_1px),linear-gradient(90deg,rgba(0,240,255,0.02)_1px,transparent_1px)] bg-[size:40px_40px] pointer-events-none" />
 
-      <div className="max-w-5xl mx-auto relative z-10">
+      <div className="w-full max-w-[1400px] mx-auto relative z-10">
 
         {/* Header */}
         <div className="flex items-center justify-between gap-4 mb-8 border-b border-gray-800 pb-6">

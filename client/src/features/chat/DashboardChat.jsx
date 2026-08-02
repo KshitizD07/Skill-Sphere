@@ -88,37 +88,37 @@ export default function DashboardChat({ isOpen, onClose }) {
       {/* Backdrop */}
       {isOpen && (
         <div
-          className="fixed inset-0 bg-[#0b1326]/60 backdrop-blur-sm z-40 transition-opacity"
+          className="fixed inset-0 bg-bg-base/60 backdrop-blur-sm z-40 transition-opacity"
           onClick={onClose}
         />
       )}
 
       {/* Drawer */}
       <div
-        className={`fixed top-0 right-0 h-full w-full max-w-sm bg-[#0f1829] border-l border-[#434655]/30 shadow-2xl z-50 transform transition-transform duration-300 ease-in-out flex flex-col font-['Manrope'] ${
+        className={`fixed top-0 right-0 h-full w-full max-w-sm bg-[#0f1829] border-l border-outline-var/30 shadow-2xl z-50 transform transition-transform duration-300 ease-in-out flex flex-col font-outfit ${
           isOpen ? 'translate-x-0' : 'translate-x-full'
         }`}
       >
         {/* Header */}
-        <div className="bg-[#131b2e] border-b border-[#434655]/30 p-4 flex items-center justify-between shrink-0">
+        <div className="bg-surface-mid border-b border-outline-var/30 p-4 flex items-center justify-between shrink-0">
           <div className="flex items-center gap-3">
             {activeChat && (
               <button
                 onClick={() => { setActiveChat(null); setHistory([]); }}
-                className="text-[#8d90a0] hover:text-[#adc6ff] transition-colors p-1"
+                className="text-outline hover:text-primary transition-colors p-1"
                 title="Back to Comms"
               >
                 <ArrowLeft size={18} />
               </button>
             )}
-            <h2 className="text-[#dae2fd] font-extrabold tracking-tight flex items-center gap-2">
-              <MessageSquare size={16} className="text-[#adc6ff]" />
+            <h2 className="text-text-primary font-extrabold tracking-tight flex items-center gap-2">
+              <MessageSquare size={16} className="text-primary" />
               {activeChat ? activeChat.name : 'N.E.X.U.S Comms'}
             </h2>
           </div>
           <button
             onClick={onClose}
-            className="text-[#8d90a0] hover:text-[#ffb4ab] transition-colors p-1 rounded-full hover:bg-[#171f33]"
+            className="text-outline hover:text-error transition-colors p-1 rounded-full hover:bg-surface"
           >
             <X size={18} />
           </button>
@@ -130,7 +130,7 @@ export default function DashboardChat({ isOpen, onClose }) {
             // CONVERSATIONS LIST
             <div className="p-4 space-y-2 h-full overflow-y-auto">
               {conversations.length === 0 ? (
-                <div className="text-center text-[#8d90a0] italic text-sm mt-10">No active comms.</div>
+                <div className="text-center text-outline italic text-sm mt-10">No active comms.</div>
               ) : (
                 conversations.map(conv => {
                   const otherUser = conv.participants?.find(p => p.id !== currentUser.id);
@@ -141,20 +141,20 @@ export default function DashboardChat({ isOpen, onClose }) {
                     <div
                       key={conv.id}
                       onClick={() => openChat(otherUser)}
-                      className="flex items-center gap-3 p-3 bg-[#131b2e] hover:bg-[#171f33] border border-[#434655]/20 hover:border-[#adc6ff]/30 rounded-md cursor-pointer transition-all"
+                      className="flex items-center gap-3 p-3 bg-surface-mid hover:bg-surface border border-outline-var/20 hover:border-primary/30 rounded-md cursor-pointer transition-all"
                     >
-                      <div className="w-10 h-10 rounded-full border border-[#434655]/40 overflow-hidden bg-[#222a3d] shrink-0 flex items-center justify-center">
+                      <div className="w-10 h-10 rounded-full border border-outline-var/40 overflow-hidden bg-surface-mid shrink-0 flex items-center justify-center">
                         {otherUser.avatar
                           ? <img src={otherUser.avatar} className="w-full h-full object-cover" alt="" />
                           : <User size={16} className="text-[#656d84]" />}
                       </div>
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center justify-between">
-                          <p className="text-sm font-bold text-[#dae2fd] truncate">{otherUser.name}</p>
-                          {lastMsg && <span className="text-[10px] text-[#656d84] font-['Space_Grotesk'] tracking-widest">{new Date(lastMsg.createdAt).toLocaleDateString()}</span>}
+                          <p className="text-sm font-bold text-text-primary truncate">{otherUser.name}</p>
+                          {lastMsg && <span className="text-[10px] text-[#656d84] font-syne tracking-widest">{new Date(lastMsg.createdAt).toLocaleDateString()}</span>}
                         </div>
                         {lastMsg && (
-                          <p className="text-[11px] text-[#8d90a0] truncate mt-0.5">
+                          <p className="text-[11px] text-outline truncate mt-0.5">
                             {lastMsg.senderId === currentUser.id ? 'You: ' : ''}{lastMsg.content}
                           </p>
                         )}
@@ -172,10 +172,10 @@ export default function DashboardChat({ isOpen, onClose }) {
                   <div key={i} className={`flex ${h.sender === 'me' ? 'justify-end' : 'justify-start'}`}>
                     <div className={`max-w-[85%] px-3 py-2 rounded-md text-[13px] leading-relaxed ${
                       h.sender === 'system'
-                        ? 'w-full text-center text-[#434655] text-xs italic py-1 px-0'
+                        ? 'w-full text-center text-outline-var text-xs italic py-1 px-0'
                         : h.sender === 'me'
-                          ? 'bg-[#0f69dc]/20 border border-[#adc6ff]/20 text-[#dae2fd]'
-                          : 'bg-[#171f33] border border-[#434655]/25 text-[#c3c6d7]'
+                          ? 'bg-primary-container/20 border border-primary/20 text-text-primary'
+                          : 'bg-surface border border-outline-var/25 text-text-muted'
                     }`}>
                       {h.text}
                     </div>
@@ -185,17 +185,17 @@ export default function DashboardChat({ isOpen, onClose }) {
               </div>
 
               {/* Input */}
-              <form onSubmit={send} className="p-3 bg-[#131b2e] border-t border-[#434655]/30 flex gap-2 shrink-0">
+              <form onSubmit={send} className="p-3 bg-surface-mid border-t border-outline-var/30 flex gap-2 shrink-0">
                 <input
                   value={msg}
                   onChange={e => setMsg(e.target.value)}
-                  className="flex-1 bg-[#0b1326] border border-[#434655]/40 text-[#dae2fd] p-2.5 rounded-sm focus:outline-none focus:border-[#adc6ff]/60 font-['Manrope'] text-sm placeholder-[#434655] transition-colors"
+                  className="flex-1 bg-bg-base border border-outline-var/40 text-text-primary p-2.5 rounded-sm focus:outline-none focus:border-primary/60 font-outfit text-sm placeholder-outline-var transition-colors"
                   placeholder="Type message..."
                   autoFocus
                 />
                 <button
                   type="submit"
-                  className="bg-[#0f69dc] hover:bg-[#adc6ff] hover:text-[#002e6a] text-[#dae2fd] p-2.5 rounded-sm transition-all flex items-center justify-center font-['Space_Grotesk'] font-bold text-[10px] uppercase tracking-wide active:scale-95"
+                  className="bg-primary-container hover:bg-primary hover:text-on-primary text-text-primary p-2.5 rounded-sm transition-all flex items-center justify-center font-syne font-bold text-[10px] uppercase tracking-wide active:scale-95"
                   title="Send"
                 >
                   <Send size={15} />

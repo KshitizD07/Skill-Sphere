@@ -70,7 +70,7 @@ export default function AuthPage({ onLogin }) {
   const passwordChecks = PASSWORD_RULES.map(r => ({ ...r, passed: r.test(formData.password) }));
   const passwordStrong = passwordChecks.every(r => r.passed);
   const strengthScore  = passwordChecks.filter(r => r.passed).length;
-  const strengthColor  = strengthScore <= 2 ? 'bg-[#ffb4ab]' : strengthScore <= 3 ? 'bg-yellow-400' : strengthScore === 4 ? 'bg-[#adc6ff]' : 'bg-[#89f5e7]';
+  const strengthColor  = strengthScore <= 2 ? 'bg-error' : strengthScore <= 3 ? 'bg-yellow-400' : strengthScore === 4 ? 'bg-primary' : 'bg-secondary-bright';
   const strengthLabel  = ['','Weak','Fair','Fair','Good','Strong'][strengthScore];
 
   const handleFormSubmit = async (e) => {
@@ -192,32 +192,32 @@ export default function AuthPage({ onLogin }) {
 
   const newPwChecks = PASSWORD_RULES.map(r => ({ ...r, passed: r.test(newPassword) }));
 
-  const cardBase = "min-h-screen bg-[#0b1326] flex items-center justify-center p-4 font-['Manrope']";
-  const panelBase = "bg-[#171f33] border border-[#434655]/30 rounded-md p-8 w-full max-w-md shadow-2xl shadow-[#0b1326]/80";
-  const inputBase = "w-full bg-[#131b2e] border border-[#434655]/40 text-[#dae2fd] pl-10 p-3 rounded-xs focus:border-[#adc6ff]/60 outline-none font-['Manrope'] text-sm transition-colors placeholder-[#434655]";
-  const labelBase = "font-['Space_Grotesk'] text-[10px] font-bold tracking-[0.12em] uppercase text-[#8d90a0] block mb-1.5";
+  const cardBase = "min-h-screen bg-bg-base flex items-center justify-center p-4 font-outfit";
+  const panelBase = "bg-surface border border-outline-var/30 rounded-md p-8 w-full max-w-md shadow-2xl shadow-bg-base/80";
+  const inputBase = "w-full bg-surface-mid border border-outline-var/40 text-text-primary pl-10 p-3 rounded-xs focus:border-primary/60 outline-none font-outfit text-sm transition-colors placeholder-outline-var";
+  const labelBase = "font-syne text-[10px] font-bold tracking-[0.12em] uppercase text-outline block mb-1.5";
 
   // ── Forgot: Enter Email ──
   if (step === 'forgot-email') return (
     <div className={cardBase}><div className={panelBase}>
       <div className="text-center mb-8">
-        <div className="w-12 h-12 bg-[#adc6ff]/10 border border-[#adc6ff]/20 rounded-md flex items-center justify-center mx-auto mb-4"><KeyRound size={22} className="text-[#adc6ff]" /></div>
-        <h1 className="text-xl font-extrabold text-[#dae2fd] tracking-tight mb-1">Reset Password</h1>
-        <p className="text-[#8d90a0] text-sm">Enter your email to receive a verification code.</p>
+        <div className="w-12 h-12 bg-primary/10 border border-primary/20 rounded-md flex items-center justify-center mx-auto mb-4"><KeyRound size={22} className="text-primary" /></div>
+        <h1 className="text-xl font-extrabold text-text-primary tracking-tight mb-1">Reset Password</h1>
+        <p className="text-outline text-sm">Enter your email to receive a verification code.</p>
       </div>
-      {error && <div className="mb-4 p-3 bg-[#93000a]/15 border border-[#93000a]/40 text-[#ffb4ab] text-xs flex items-start gap-2 rounded-xs"><X size={13} className="shrink-0 mt-0.5" /> {error}</div>}
+      {error && <div className="mb-4 p-3 bg-error-container/15 border border-error-container/40 text-error text-xs flex items-start gap-2 rounded-xs"><X size={13} className="shrink-0 mt-0.5" /> {error}</div>}
       <form onSubmit={handleForgotSubmitEmail} className="space-y-4" autoComplete="off">
         <div className="relative group">
-          <Mail className="absolute left-3 top-3.5 text-[#656d84] group-focus-within:text-[#adc6ff] transition-colors" size={16} />
+          <Mail className="absolute left-3 top-3.5 text-[#656d84] group-focus-within:text-primary transition-colors" size={16} />
           <input type="email" placeholder="you@example.com" required value={forgotEmail} autoComplete="off"
             className={inputBase} onChange={e => setForgotEmail(e.target.value)} />
         </div>
-        <button type="submit" disabled={loading} className="w-full font-['Space_Grotesk'] font-bold py-3 text-sm bg-gradient-to-r from-[#adc6ff] to-[#0f69dc] text-[#002e6a] hover:opacity-90 transition-all flex justify-center items-center gap-2 rounded-xs disabled:opacity-50 uppercase tracking-[0.1em] active:scale-[0.98]">
+        <button type="submit" disabled={loading} className="w-full font-syne font-bold py-3 text-sm bg-gradient-to-r from-primary to-primary-container text-on-primary hover:opacity-90 transition-all flex justify-center items-center gap-2 rounded-xs disabled:opacity-50 uppercase tracking-[0.1em] active:scale-[0.98]">
           {loading ? 'Sending...' : 'Send Code'} {!loading && <ArrowRight size={16} />}
         </button>
       </form>
       <div className="mt-5 text-center">
-        <p className="text-[#8d90a0] cursor-pointer hover:text-[#adc6ff] font-['Space_Grotesk'] text-xs transition-colors"
+        <p className="text-outline cursor-pointer hover:text-primary font-syne text-xs transition-colors"
           onClick={() => { setStep('form'); setError(''); }}>← Back to Sign In</p>
       </div>
     </div></div>
@@ -227,26 +227,26 @@ export default function AuthPage({ onLogin }) {
   if (step === 'forgot-otp') return (
     <div className={cardBase}><div className={panelBase}>
       <div className="text-center mb-8">
-        <div className="w-12 h-12 bg-[#adc6ff]/10 border border-[#adc6ff]/20 rounded-md flex items-center justify-center mx-auto mb-4"><Mail size={22} className="text-[#adc6ff]" /></div>
-        <h1 className="text-xl font-extrabold text-[#dae2fd] tracking-tight mb-1">Verify Identity</h1>
-        <p className="text-[#8d90a0] text-sm mt-2">Code sent to <span className="text-[#adc6ff] font-medium">{forgotEmail}</span></p>
+        <div className="w-12 h-12 bg-primary/10 border border-primary/20 rounded-md flex items-center justify-center mx-auto mb-4"><Mail size={22} className="text-primary" /></div>
+        <h1 className="text-xl font-extrabold text-text-primary tracking-tight mb-1">Verify Identity</h1>
+        <p className="text-outline text-sm mt-2">Code sent to <span className="text-primary font-medium">{forgotEmail}</span></p>
       </div>
-      {error && <div className="mb-4 p-3 bg-[#93000a]/15 border border-[#93000a]/40 text-[#ffb4ab] text-xs flex items-start gap-2 rounded-xs"><X size={13} className="shrink-0 mt-0.5" /> {error}</div>}
+      {error && <div className="mb-4 p-3 bg-error-container/15 border border-error-container/40 text-error text-xs flex items-start gap-2 rounded-xs"><X size={13} className="shrink-0 mt-0.5" /> {error}</div>}
       <form onSubmit={handleForgotVerifyOtp} className="space-y-6" autoComplete="off">
         <div className="flex gap-2.5 justify-center" onPaste={handleForgotOtpPaste}>
           {forgotOtp.map((d,i)=>(
             <input key={i} ref={el=>forgotOtpRefs.current[i]=el} type="text" inputMode="numeric" maxLength={1} value={d}
               onChange={e=>handleForgotOtpChange(i,e.target.value)} onKeyDown={e=>handleForgotOtpKeyDown(i,e)} autoComplete="off"
-              className="w-11 h-13 text-center text-xl font-extrabold text-[#adc6ff] bg-[#131b2e] border-2 border-[#434655]/40 rounded-xs focus:border-[#adc6ff] outline-none transition-colors" />
+              className="w-11 h-13 text-center text-xl font-extrabold text-primary bg-surface-mid border-2 border-outline-var/40 rounded-xs focus:border-primary outline-none transition-colors" />
           ))}
         </div>
-        <button type="submit" disabled={forgotOtp.join('').length<6} className="w-full font-['Space_Grotesk'] font-bold py-3 text-sm bg-gradient-to-r from-[#adc6ff] to-[#0f69dc] text-[#002e6a] hover:opacity-90 transition-all flex justify-center items-center gap-2 rounded-xs disabled:opacity-50 uppercase tracking-[0.1em] active:scale-[0.98]">
+        <button type="submit" disabled={forgotOtp.join('').length<6} className="w-full font-syne font-bold py-3 text-sm bg-gradient-to-r from-primary to-primary-container text-on-primary hover:opacity-90 transition-all flex justify-center items-center gap-2 rounded-xs disabled:opacity-50 uppercase tracking-[0.1em] active:scale-[0.98]">
           Verify <ArrowRight size={16} />
         </button>
       </form>
       <div className="mt-5 flex items-center justify-between">
-        <button onClick={()=>{setStep('forgot-email');setError('');}} className="text-[#8d90a0] hover:text-[#dae2fd] font-['Space_Grotesk'] text-xs transition-colors">← Back</button>
-        <button onClick={handleForgotResend} disabled={resendCooldown>0} className="flex items-center gap-1 text-xs font-['Space_Grotesk'] transition-colors disabled:text-[#434655] text-[#8d90a0] hover:text-[#adc6ff]">
+        <button onClick={()=>{setStep('forgot-email');setError('');}} className="text-outline hover:text-text-primary font-syne text-xs transition-colors">← Back</button>
+        <button onClick={handleForgotResend} disabled={resendCooldown>0} className="flex items-center gap-1 text-xs font-syne transition-colors disabled:text-outline-var text-outline hover:text-primary">
           <RefreshCw size={11} /> {resendCooldown>0?`Resend in ${resendCooldown}s`:'Resend code'}
         </button>
       </div>
@@ -257,19 +257,19 @@ export default function AuthPage({ onLogin }) {
   if (step === 'forgot-newpw') return (
     <div className={cardBase}><div className={panelBase}>
       <div className="text-center mb-8">
-        <div className="w-12 h-12 bg-[#89f5e7]/10 border border-[#89f5e7]/20 rounded-md flex items-center justify-center mx-auto mb-4"><Lock size={22} className="text-[#89f5e7]" /></div>
-        <h1 className="text-xl font-extrabold text-[#dae2fd] tracking-tight mb-1">Set New Password</h1>
-        <p className="text-[#8d90a0] text-sm">Choose a strong new password for your account.</p>
+        <div className="w-12 h-12 bg-secondary-bright/10 border border-secondary-bright/20 rounded-md flex items-center justify-center mx-auto mb-4"><Lock size={22} className="text-secondary-bright" /></div>
+        <h1 className="text-xl font-extrabold text-text-primary tracking-tight mb-1">Set New Password</h1>
+        <p className="text-outline text-sm">Choose a strong new password for your account.</p>
       </div>
-      {error && <div className="mb-4 p-3 bg-[#93000a]/15 border border-[#93000a]/40 text-[#ffb4ab] text-xs flex items-start gap-2 rounded-xs"><X size={13} className="shrink-0 mt-0.5" /> {error}</div>}
+      {error && <div className="mb-4 p-3 bg-error-container/15 border border-error-container/40 text-error text-xs flex items-start gap-2 rounded-xs"><X size={13} className="shrink-0 mt-0.5" /> {error}</div>}
       <form onSubmit={handleResetPassword} className="space-y-4" autoComplete="off">
         <div>
           <label className={labelBase}>New Password</label>
           <div className="relative group">
-            <Lock className="absolute left-3 top-3.5 text-[#656d84] group-focus-within:text-[#89f5e7] transition-colors" size={16} />
+            <Lock className="absolute left-3 top-3.5 text-[#656d84] group-focus-within:text-secondary-bright transition-colors" size={16} />
             <input type={showNewPw?'text':'password'} placeholder="New password" required value={newPassword}
               autoComplete="new-password" className={`${inputBase} pr-10`} onChange={e=>setNewPassword(e.target.value)} />
-            <button type="button" tabIndex={-1} onClick={()=>setShowNewPw(v=>!v)} className="absolute right-3 top-3.5 text-[#656d84] hover:text-[#adc6ff] transition-colors">
+            <button type="button" tabIndex={-1} onClick={()=>setShowNewPw(v=>!v)} className="absolute right-3 top-3.5 text-[#656d84] hover:text-primary transition-colors">
               {showNewPw?<EyeOff size={16}/>:<Eye size={16}/>}
             </button>
           </div>
@@ -277,19 +277,19 @@ export default function AuthPage({ onLogin }) {
         <div>
           <label className={labelBase}>Confirm New Password</label>
           <div className="relative group">
-            <Lock className="absolute left-3 top-3.5 text-[#656d84] group-focus-within:text-[#89f5e7] transition-colors" size={16} />
+            <Lock className="absolute left-3 top-3.5 text-[#656d84] group-focus-within:text-secondary-bright transition-colors" size={16} />
             <input type={showNewPwConfirm?'text':'password'} placeholder="Re-type new password" required value={newPasswordConfirm}
               autoComplete="new-password" className={`${inputBase} pr-10`} onChange={e=>setNewPasswordConfirm(e.target.value)} />
-            <button type="button" tabIndex={-1} onClick={()=>setShowNewPwConfirm(v=>!v)} className="absolute right-3 top-3.5 text-[#656d84] hover:text-[#adc6ff] transition-colors">
+            <button type="button" tabIndex={-1} onClick={()=>setShowNewPwConfirm(v=>!v)} className="absolute right-3 top-3.5 text-[#656d84] hover:text-primary transition-colors">
               {showNewPwConfirm?<EyeOff size={16}/>:<Eye size={16}/>}
             </button>
           </div>
-          {newPasswordConfirm && newPassword!==newPasswordConfirm && <p className="text-[#ffb4ab] text-[10px] mt-1 font-['Space_Grotesk'] tracking-wide">Passwords do not match</p>}
+          {newPasswordConfirm && newPassword!==newPasswordConfirm && <p className="text-error text-[10px] mt-1 font-syne tracking-wide">Passwords do not match</p>}
         </div>
-        {newPassword && <div className="bg-[#131b2e] border border-[#434655]/30 p-3 space-y-1.5 rounded-xs">
-          {newPwChecks.map(r=>(<div key={r.id} className="flex items-center gap-2 text-xs">{r.passed?<Check size={11} className="text-[#89f5e7] shrink-0"/>:<X size={11} className="text-[#434655] shrink-0"/>}<span className={r.passed?'text-[#89f5e7]':'text-[#656d84]'}>{r.label}</span></div>))}
+        {newPassword && <div className="bg-surface-mid border border-outline-var/30 p-3 space-y-1.5 rounded-xs">
+          {newPwChecks.map(r=>(<div key={r.id} className="flex items-center gap-2 text-xs">{r.passed?<Check size={11} className="text-secondary-bright shrink-0"/>:<X size={11} className="text-outline-var shrink-0"/>}<span className={r.passed?'text-secondary-bright':'text-[#656d84]'}>{r.label}</span></div>))}
         </div>}
-        <button type="submit" disabled={loading} className="w-full font-['Space_Grotesk'] font-bold py-3 text-sm bg-gradient-to-r from-[#89f5e7] to-[#0f69dc] text-[#002e6a] hover:opacity-90 transition-all flex justify-center items-center gap-2 rounded-xs disabled:opacity-50 uppercase tracking-[0.1em] active:scale-[0.98]">
+        <button type="submit" disabled={loading} className="w-full font-syne font-bold py-3 text-sm bg-gradient-to-r from-secondary-bright to-primary-container text-on-primary hover:opacity-90 transition-all flex justify-center items-center gap-2 rounded-xs disabled:opacity-50 uppercase tracking-[0.1em] active:scale-[0.98]">
           {loading?'Resetting...':'Reset Password'} {!loading&&<ArrowRight size={16}/>}
         </button>
       </form>
@@ -301,15 +301,15 @@ export default function AuthPage({ onLogin }) {
     <div className={cardBase}>
       <div className={panelBase}>
         <div className="text-center mb-8">
-          <div className="w-12 h-12 bg-[#adc6ff]/10 border border-[#adc6ff]/20 rounded-md flex items-center justify-center mx-auto mb-4">
-            <Mail size={22} className="text-[#adc6ff]" />
+          <div className="w-12 h-12 bg-primary/10 border border-primary/20 rounded-md flex items-center justify-center mx-auto mb-4">
+            <Mail size={22} className="text-primary" />
           </div>
-          <h1 className="text-xl font-extrabold text-[#dae2fd] tracking-tight mb-1">Verify your email</h1>
-          <p className="text-[#8d90a0] text-sm mt-2">
-            A 6-digit code was sent to <span className="text-[#adc6ff] font-medium">{formData.email}</span>
+          <h1 className="text-xl font-extrabold text-text-primary tracking-tight mb-1">Verify your email</h1>
+          <p className="text-outline text-sm mt-2">
+            A 6-digit code was sent to <span className="text-primary font-medium">{formData.email}</span>
           </p>
           {formData.role === 'GUEST' && (
-            <p className="text-[#fbbf24] text-[11px] mt-2 font-['Space_Grotesk'] font-bold tracking-tight bg-[#fbbf24]/5 border border-[#fbbf24]/20 py-1.5 px-3 inline-block rounded-xs">
+            <p className="text-[#fbbf24] text-[11px] mt-2 font-syne font-bold tracking-tight bg-[#fbbf24]/5 border border-[#fbbf24]/20 py-1.5 px-3 inline-block rounded-xs">
               GUEST MODE: Use code 123456
             </p>
           )}
@@ -317,7 +317,7 @@ export default function AuthPage({ onLogin }) {
         </div>
 
         {error && (
-          <div className="mb-4 p-3 bg-[#93000a]/15 border border-[#93000a]/40 text-[#ffb4ab] text-xs flex items-start gap-2 rounded-xs">
+          <div className="mb-4 p-3 bg-error-container/15 border border-error-container/40 text-error text-xs flex items-start gap-2 rounded-xs">
             <X size={13} className="shrink-0 mt-0.5" /> {error}
           </div>
         )}
@@ -330,24 +330,24 @@ export default function AuthPage({ onLogin }) {
                 onChange={e => handleOtpChange(i, e.target.value)}
                 onKeyDown={e => handleOtpKeyDown(i, e)}
                 autoComplete="off"
-                className="w-11 h-13 text-center text-xl font-extrabold text-[#adc6ff] bg-[#131b2e] border-2 border-[#434655]/40 rounded-xs focus:border-[#adc6ff] outline-none transition-colors"
+                className="w-11 h-13 text-center text-xl font-extrabold text-primary bg-surface-mid border-2 border-outline-var/40 rounded-xs focus:border-primary outline-none transition-colors"
               />
             ))}
           </div>
 
           <button type="submit" disabled={loading || otp.join('').length < 6}
-            className="w-full font-['Space_Grotesk'] font-bold py-3 text-sm bg-gradient-to-r from-[#adc6ff] to-[#0f69dc] text-[#002e6a] hover:opacity-90 transition-all flex justify-center items-center gap-2 rounded-xs disabled:opacity-50 uppercase tracking-[0.1em] active:scale-[0.98]">
+            className="w-full font-syne font-bold py-3 text-sm bg-gradient-to-r from-primary to-primary-container text-on-primary hover:opacity-90 transition-all flex justify-center items-center gap-2 rounded-xs disabled:opacity-50 uppercase tracking-[0.1em] active:scale-[0.98]">
             {loading ? 'Verifying...' : 'Confirm'} {!loading && <ArrowRight size={16} />}
           </button>
         </form>
 
         <div className="mt-5 flex items-center justify-between">
           <button onClick={() => { setStep('form'); setError(''); }}
-            className="text-[#8d90a0] hover:text-[#dae2fd] font-['Space_Grotesk'] text-xs transition-colors">
+            className="text-outline hover:text-text-primary font-syne text-xs transition-colors">
             ← Back
           </button>
           <button onClick={handleResend} disabled={resendCooldown > 0}
-            className="flex items-center gap-1 text-xs font-['Space_Grotesk'] transition-colors disabled:text-[#434655] text-[#8d90a0] hover:text-[#adc6ff]">
+            className="flex items-center gap-1 text-xs font-syne transition-colors disabled:text-outline-var text-outline hover:text-primary">
             <RefreshCw size={11} />
             {resendCooldown > 0 ? `Resend in ${resendCooldown}s` : 'Resend code'}
           </button>
@@ -361,19 +361,19 @@ export default function AuthPage({ onLogin }) {
     <div className={cardBase}>
       <div className={panelBase}>
         <div className="text-center mb-7">
-          <div className="w-12 h-12 bg-[#adc6ff]/10 border border-[#adc6ff]/20 rounded-md flex items-center justify-center mx-auto mb-4">
-            <Shield size={22} className="text-[#adc6ff]" />
+          <div className="w-12 h-12 bg-primary/10 border border-primary/20 rounded-md flex items-center justify-center mx-auto mb-4">
+            <Shield size={22} className="text-primary" />
           </div>
-          <h1 className="text-xl font-extrabold text-[#dae2fd] tracking-tight mb-1">
+          <h1 className="text-xl font-extrabold text-text-primary tracking-tight mb-1">
             {isLogin ? 'Sign In' : 'Create Account'}
           </h1>
-          <p className="text-[#8d90a0] text-sm">
+          <p className="text-outline text-sm">
             {isLogin ? 'Welcome back to SkillSphere.' : 'Your professional profile starts here.'}
           </p>
         </div>
 
         {error && (
-          <div className="mb-5 p-3 bg-[#93000a]/15 border border-[#93000a]/40 text-[#ffb4ab] text-xs flex items-start gap-2 rounded-xs">
+          <div className="mb-5 p-3 bg-error-container/15 border border-error-container/40 text-error text-xs flex items-start gap-2 rounded-xs">
             <X size={13} className="shrink-0 mt-0.5" /> {error}
           </div>
         )}
@@ -385,12 +385,12 @@ export default function AuthPage({ onLogin }) {
               <div>
                 <label className={labelBase}>Account Type</label>
                 {formData.role === 'GUEST' && (
-                  <div className="mb-3 p-3 bg-[#adc6ff]/5 border border-[#adc6ff]/20 rounded-xs">
-                    <p className="text-[#adc6ff] text-[10px] font-['Space_Grotesk'] font-bold uppercase tracking-wider flex items-center gap-1.5">
-                      <Zap size={10} className="fill-[#adc6ff]" /> Portfolio Guest Mode
+                  <div className="mb-3 p-3 bg-primary/5 border border-primary/20 rounded-xs">
+                    <p className="text-primary text-[10px] font-syne font-bold uppercase tracking-wider flex items-center gap-1.5">
+                      <Zap size={10} className="fill-primary" /> Portfolio Guest Mode
                     </p>
-                    <p className="text-[#8d90a0] text-[11px] mt-1 leading-relaxed">
-                      Use any email. In the next step, use verification code <strong className="text-[#dae2fd]">123456</strong>.
+                    <p className="text-outline text-[11px] mt-1 leading-relaxed">
+                      Use any email. In the next step, use verification code <strong className="text-text-primary">123456</strong>.
                     </p>
                   </div>
                 )}
@@ -403,11 +403,11 @@ export default function AuthPage({ onLogin }) {
                     <div key={value} onClick={() => setFormData({...formData, role: value})}
                       className={`cursor-pointer p-3 border rounded-xs flex flex-col items-center justify-center gap-2 transition-all ${
                         formData.role === value
-                          ? 'bg-[#adc6ff]/10 border-[#adc6ff]/50'
-                          : 'bg-[#131b2e] border-[#434655]/40 hover:border-[#434655]/70'
+                          ? 'bg-primary/10 border-primary/50'
+                          : 'bg-surface-mid border-outline-var/40 hover:border-outline-var/70'
                       }`}>
-                      <Icon size={18} className={formData.role === value ? 'text-[#adc6ff]' : 'text-[#656d84]'} />
-                      <span className={`font-['Space_Grotesk'] text-xs font-bold uppercase tracking-wide ${formData.role === value ? 'text-[#dae2fd]' : 'text-[#656d84]'}`}>{label}</span>
+                      <Icon size={18} className={formData.role === value ? 'text-primary' : 'text-[#656d84]'} />
+                      <span className={`font-syne text-xs font-bold uppercase tracking-wide ${formData.role === value ? 'text-text-primary' : 'text-[#656d84]'}`}>{label}</span>
                     </div>
                   ))}
                 </div>
@@ -424,10 +424,10 @@ export default function AuthPage({ onLogin }) {
                       <div key={value} onClick={() => setFormData({...formData, guestPersona: value})}
                         className={`cursor-pointer py-2 px-3 border rounded-xs text-center transition-all ${
                           formData.guestPersona === value
-                            ? 'bg-[#89f5e7]/10 border-[#89f5e7]/50 text-[#89f5e7]'
-                            : 'bg-[#131b2e] border-[#434655]/40 text-[#656d84] hover:border-[#434655]/70'
+                            ? 'bg-secondary-bright/10 border-secondary-bright/50 text-secondary-bright'
+                            : 'bg-surface-mid border-outline-var/40 text-[#656d84] hover:border-outline-var/70'
                         }`}>
-                        <span className="font-['Space_Grotesk'] text-[10px] font-bold uppercase tracking-widest">{label}</span>
+                        <span className="font-syne text-[10px] font-bold uppercase tracking-widest">{label}</span>
                       </div>
                     ))}
                   </div>
@@ -437,7 +437,7 @@ export default function AuthPage({ onLogin }) {
               <div>
                 <label className={labelBase}>Full Name</label>
                 <div className="relative group">
-                  <User className="absolute left-3 top-3.5 text-[#656d84] group-focus-within:text-[#adc6ff] transition-colors" size={16} />
+                  <User className="absolute left-3 top-3.5 text-[#656d84] group-focus-within:text-primary transition-colors" size={16} />
                   <input type="text" placeholder="Your full name" required value={formData.name}
                     autoComplete="off" name="name" className={inputBase}
                     onChange={e => setFormData({...formData, name: e.target.value})} />
@@ -447,7 +447,7 @@ export default function AuthPage({ onLogin }) {
               <div>
                 <label className={labelBase}>Institution</label>
                 <div className="relative group">
-                  <Building2 className="absolute left-3 top-3.5 text-[#656d84] group-focus-within:text-[#adc6ff] transition-colors" size={16} />
+                  <Building2 className="absolute left-3 top-3.5 text-[#656d84] group-focus-within:text-primary transition-colors" size={16} />
                   <select required value={formData.college} autoComplete="off" name="college"
                     onChange={e => setFormData({...formData, college: e.target.value})}
                     className={`${inputBase} appearance-none cursor-pointer`}>
@@ -462,7 +462,7 @@ export default function AuthPage({ onLogin }) {
           <div>
             <label className={labelBase}>Email Address</label>
             <div className="relative group">
-              <Mail className="absolute left-3 top-3.5 text-[#656d84] group-focus-within:text-[#adc6ff] transition-colors" size={16} />
+              <Mail className="absolute left-3 top-3.5 text-[#656d84] group-focus-within:text-primary transition-colors" size={16} />
               <input type="email" placeholder="you@example.com" required value={formData.email}
                 autoComplete="off" name="email" className={inputBase}
                 onChange={e => setFormData({...formData, email: e.target.value})} />
@@ -472,12 +472,12 @@ export default function AuthPage({ onLogin }) {
           <div>
             <label className={labelBase}>Password</label>
             <div className="relative group">
-              <Lock className="absolute left-3 top-3.5 text-[#656d84] group-focus-within:text-[#adc6ff] transition-colors" size={16} />
+              <Lock className="absolute left-3 top-3.5 text-[#656d84] group-focus-within:text-primary transition-colors" size={16} />
               <input type={showPassword ? 'text' : 'password'} placeholder="Your password" required value={formData.password}
                 autoComplete="new-password" name="ss-password" className={`${inputBase} pr-10`}
                 onChange={e => setFormData({...formData, password: e.target.value})} />
               <button type="button" tabIndex={-1} onClick={() => setShowPassword(v => !v)}
-                className="absolute right-3 top-3.5 text-[#656d84] hover:text-[#adc6ff] transition-colors">
+                className="absolute right-3 top-3.5 text-[#656d84] hover:text-primary transition-colors">
                 {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
               </button>
             </div>
@@ -487,17 +487,17 @@ export default function AuthPage({ onLogin }) {
             <div>
               <label className={labelBase}>Confirm Password</label>
               <div className="relative group">
-                <Lock className="absolute left-3 top-3.5 text-[#656d84] group-focus-within:text-[#adc6ff] transition-colors" size={16} />
+                <Lock className="absolute left-3 top-3.5 text-[#656d84] group-focus-within:text-primary transition-colors" size={16} />
                 <input type={showConfirm ? 'text' : 'password'} placeholder="Re-type your password" required value={formData.confirmPassword}
                   autoComplete="new-password" name="ss-confirm" className={`${inputBase} pr-10`}
                   onChange={e => setFormData({...formData, confirmPassword: e.target.value})} />
                 <button type="button" tabIndex={-1} onClick={() => setShowConfirm(v => !v)}
-                  className="absolute right-3 top-3.5 text-[#656d84] hover:text-[#adc6ff] transition-colors">
+                  className="absolute right-3 top-3.5 text-[#656d84] hover:text-primary transition-colors">
                   {showConfirm ? <EyeOff size={16} /> : <Eye size={16} />}
                 </button>
               </div>
               {formData.confirmPassword && formData.password !== formData.confirmPassword && (
-                <p className="text-[#ffb4ab] text-[10px] mt-1 font-['Space_Grotesk'] tracking-wide">Passwords do not match</p>
+                <p className="text-error text-[10px] mt-1 font-syne tracking-wide">Passwords do not match</p>
               )}
             </div>
           )}
@@ -505,20 +505,20 @@ export default function AuthPage({ onLogin }) {
           {!isLogin && formData.password && (
             <div className="space-y-2.5">
               <div className="flex items-center gap-3">
-                <div className="flex-1 h-1 bg-[#2d3449] rounded-full">
+                <div className="flex-1 h-1 bg-surface-high rounded-full">
                   <div className={`h-1 rounded-full transition-all duration-300 ${strengthColor}`} style={{ width: `${(strengthScore/5)*100}%` }} />
                 </div>
-                <span className={`font-['Space_Grotesk'] text-[10px] font-bold uppercase tracking-wide ${
-                  strengthScore <= 2 ? 'text-[#ffb4ab]' : strengthScore <= 3 ? 'text-yellow-400' : strengthScore === 4 ? 'text-[#adc6ff]' : 'text-[#89f5e7]'
+                <span className={`font-syne text-[10px] font-bold uppercase tracking-wide ${
+                  strengthScore <= 2 ? 'text-error' : strengthScore <= 3 ? 'text-yellow-400' : strengthScore === 4 ? 'text-primary' : 'text-secondary-bright'
                 }`}>{strengthLabel}</span>
               </div>
-              <div className="bg-[#131b2e] border border-[#434655]/30 p-3 space-y-1.5 rounded-xs">
+              <div className="bg-surface-mid border border-outline-var/30 p-3 space-y-1.5 rounded-xs">
                 {passwordChecks.map(rule => (
                   <div key={rule.id} className="flex items-center gap-2 text-xs">
                     {rule.passed
-                      ? <Check size={11} className="text-[#89f5e7] shrink-0" />
-                      : <X size={11} className="text-[#434655] shrink-0" />}
-                    <span className={rule.passed ? 'text-[#89f5e7]' : 'text-[#656d84]'}>{rule.label}</span>
+                      ? <Check size={11} className="text-secondary-bright shrink-0" />
+                      : <X size={11} className="text-outline-var shrink-0" />}
+                    <span className={rule.passed ? 'text-secondary-bright' : 'text-[#656d84]'}>{rule.label}</span>
                   </div>
                 ))}
               </div>
@@ -526,7 +526,7 @@ export default function AuthPage({ onLogin }) {
           )}
 
           <button type="submit" disabled={loading || (!isLogin && !passwordStrong && formData.password.length > 0)}
-            className="w-full font-['Space_Grotesk'] font-bold py-3 text-sm bg-gradient-to-r from-[#adc6ff] to-[#0f69dc] text-[#002e6a] hover:opacity-90 transition-all flex justify-center items-center gap-2 rounded-xs disabled:opacity-50 uppercase tracking-[0.1em] active:scale-[0.98] mt-2">
+            className="w-full font-syne font-bold py-3 text-sm bg-gradient-to-r from-primary to-primary-container text-on-primary hover:opacity-90 transition-all flex justify-center items-center gap-2 rounded-xs disabled:opacity-50 uppercase tracking-[0.1em] active:scale-[0.98] mt-2">
             {loading
               ? (isLogin ? 'Signing in...' : 'Sending code...')
               : (isLogin ? 'Sign In' : 'Send Verification Code')}
@@ -536,7 +536,7 @@ export default function AuthPage({ onLogin }) {
 
         {isLogin && (
           <div className="mt-3 text-center">
-            <p className="text-[#656d84] cursor-pointer hover:text-[#adc6ff] transition-colors font-['Space_Grotesk'] text-[10px] tracking-wide"
+            <p className="text-[#656d84] cursor-pointer hover:text-primary transition-colors font-syne text-[10px] tracking-wide"
               onClick={() => { setStep('forgot-email'); setError(''); setForgotEmail(formData.email); }}>
               Forgot your password?
             </p>
@@ -544,7 +544,7 @@ export default function AuthPage({ onLogin }) {
         )}
 
         <div className="mt-3 text-center">
-          <p className="text-[#8d90a0] cursor-pointer hover:text-[#adc6ff] transition-colors font-['Space_Grotesk'] text-xs tracking-wide"
+          <p className="text-outline cursor-pointer hover:text-primary transition-colors font-syne text-xs tracking-wide"
             onClick={() => { setIsLogin(!isLogin); setError(''); setShowPassword(false); setShowConfirm(false); }}>
             {isLogin ? "Don't have an account? Register" : 'Already registered? Sign In'}
           </p>

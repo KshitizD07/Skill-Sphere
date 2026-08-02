@@ -35,20 +35,20 @@ export default function SkillVerifier({ userId, skillName, onVerifyComplete }) {
   };
 
   return (
-    <div className="p-6 bg-[#171f33] border border-[#434655]/30 rounded-md max-w-md w-full shadow-2xl relative overflow-hidden font-['Manrope']">
+    <div className="p-6 bg-surface border border-outline-var/30 rounded-md max-w-md w-full shadow-2xl relative overflow-hidden font-outfit">
       {/* Top accent bar */}
-      <div className="absolute top-0 left-0 w-full h-0.5 bg-gradient-to-r from-[#0f69dc] via-[#adc6ff] to-[#29a195]" />
+      <div className="absolute top-0 left-0 w-full h-0.5 bg-gradient-to-r from-primary-container via-primary to-[#29a195]" />
 
       {/* Header */}
       <div className="flex items-center gap-3 mb-6">
-        <div className="p-2.5 bg-[#adc6ff]/8 rounded-xs border border-[#adc6ff]/15">
-          <Shield className="w-5 h-5 text-[#adc6ff]" />
+        <div className="p-2.5 bg-primary/8 rounded-xs border border-primary/15">
+          <Shield className="w-5 h-5 text-primary" />
         </div>
         <div>
-          <h3 className="text-base font-extrabold text-[#dae2fd] tracking-tight">
-            Verify: <span className="text-[#adc6ff]">{skillName}</span>
+          <h3 className="text-base font-extrabold text-text-primary tracking-tight">
+            Verify: <span className="text-primary">{skillName}</span>
           </h3>
-          <p className="font-['Space_Grotesk'] text-[9px] font-bold tracking-[0.12em] uppercase text-[#8d90a0]">GitHub Repository Verification</p>
+          <p className="font-syne text-[9px] font-bold tracking-[0.12em] uppercase text-outline">GitHub Repository Verification</p>
         </div>
       </div>
 
@@ -56,15 +56,15 @@ export default function SkillVerifier({ userId, skillName, onVerifyComplete }) {
       {status !== 'success' && (
         <div className="space-y-4">
           <div>
-            <label className="block font-['Space_Grotesk'] text-[10px] font-bold tracking-[0.12em] uppercase text-[#8d90a0] mb-1.5">Repository URL</label>
-            <div className="flex items-center bg-[#131b2e] rounded-xs border border-[#434655]/40 focus-within:border-[#adc6ff]/50 transition-colors">
+            <label className="block font-syne text-[10px] font-bold tracking-[0.12em] uppercase text-outline mb-1.5">Repository URL</label>
+            <div className="flex items-center bg-surface-mid rounded-xs border border-outline-var/40 focus-within:border-primary/50 transition-colors">
               <Github className="w-4 h-4 text-[#656d84] ml-3 shrink-0" />
               <input
                 type="text"
                 value={repoUrl}
                 onChange={e => setRepoUrl(e.target.value)}
                 placeholder="https://github.com/username/project"
-                className="w-full bg-transparent p-3 text-sm text-[#dae2fd] outline-none placeholder-[#434655] font-['Manrope']"
+                className="w-full bg-transparent p-3 text-sm text-text-primary outline-none placeholder-outline-var font-outfit"
               />
             </div>
           </div>
@@ -72,25 +72,25 @@ export default function SkillVerifier({ userId, skillName, onVerifyComplete }) {
           {/* Stealth toggle */}
           <div
             onClick={() => setIsStealth(!isStealth)}
-            className="flex items-center justify-between p-3 bg-[#131b2e]/60 rounded-xs cursor-pointer hover:bg-[#222a3d] border border-[#434655]/20 hover:border-[#434655]/40 transition-all"
+            className="flex items-center justify-between p-3 bg-surface-mid/60 rounded-xs cursor-pointer hover:bg-surface-mid border border-outline-var/20 hover:border-outline-var/40 transition-all"
           >
             <div className="flex items-center gap-2">
               {isStealth
                 ? <Lock className="w-4 h-4 text-[#bec6e0]" />
-                : <Eye className="w-4 h-4 text-[#89f5e7]" />}
-              <span className="text-sm font-medium text-[#c3c6d7]">
+                : <Eye className="w-4 h-4 text-secondary-bright" />}
+              <span className="text-sm font-medium text-text-muted">
                 {isStealth ? 'Private — Score hidden' : 'Public — Score visible'}
               </span>
             </div>
             <div className={`w-9 h-5 rounded-full relative transition-colors ${isStealth ? 'bg-[#656d84]/30' : 'bg-[#29a195]/30'}`}>
-              <div className={`absolute top-1 w-3 h-3 rounded-full transition-all ${isStealth ? 'left-5 bg-[#bec6e0]' : 'left-1 bg-[#89f5e7]'}`} />
+              <div className={`absolute top-1 w-3 h-3 rounded-full transition-all ${isStealth ? 'left-5 bg-[#bec6e0]' : 'left-1 bg-secondary-bright'}`} />
             </div>
           </div>
 
           <button
             onClick={handleVerify}
             disabled={loading || !repoUrl}
-            className="w-full py-3 rounded-xs font-['Space_Grotesk'] font-bold text-xs tracking-[0.1em] uppercase flex items-center justify-center gap-2 transition-all active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed bg-gradient-to-r from-[#adc6ff] to-[#0f69dc] text-[#002e6a] hover:opacity-90 shadow-lg shadow-[#0f69dc]/20"
+            className="w-full py-3 rounded-xs font-syne font-bold text-xs tracking-[0.1em] uppercase flex items-center justify-center gap-2 transition-all active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed bg-gradient-to-r from-primary to-primary-container text-on-primary hover:opacity-90 shadow-lg shadow-primary-container/20"
           >
             {loading ? 'Scanning...' : 'Verify Skill'}
           </button>
@@ -100,16 +100,16 @@ export default function SkillVerifier({ userId, skillName, onVerifyComplete }) {
       {/* Success state */}
       {status === 'success' && (
         <div className="text-center py-5">
-          <div className="w-14 h-14 bg-[#89f5e7]/8 rounded-full flex items-center justify-center mx-auto mb-4 border border-[#89f5e7]/25">
-            <Check className="w-7 h-7 text-[#89f5e7]" />
+          <div className="w-14 h-14 bg-secondary-bright/8 rounded-full flex items-center justify-center mx-auto mb-4 border border-secondary-bright/25">
+            <Check className="w-7 h-7 text-secondary-bright" />
           </div>
-          <h4 className="text-base font-extrabold text-[#dae2fd] mb-1 tracking-tight">Verified</h4>
-          <p className="text-sm text-[#8d90a0] mb-5">
-            Verification badge awarded for <span className="text-[#dae2fd] font-semibold">{skillName}</span>
+          <h4 className="text-base font-extrabold text-text-primary mb-1 tracking-tight">Verified</h4>
+          <p className="text-sm text-outline mb-5">
+            Verification badge awarded for <span className="text-text-primary font-semibold">{skillName}</span>
           </p>
-          <div className="bg-[#131b2e] p-4 rounded-xs inline-block border border-[#434655]/30">
-            <p className="font-['Space_Grotesk'] text-[9px] font-bold tracking-[0.12em] uppercase text-[#8d90a0] mb-1">Verification Score</p>
-            <p className="text-3xl font-extrabold text-[#dae2fd] tracking-tight">
+          <div className="bg-surface-mid p-4 rounded-xs inline-block border border-outline-var/30">
+            <p className="font-syne text-[9px] font-bold tracking-[0.12em] uppercase text-outline mb-1">Verification Score</p>
+            <p className="text-3xl font-extrabold text-text-primary tracking-tight">
               {isStealth ? <span className="text-[#656d84] text-xl">Private</span> : <>{score}<span className="text-base text-[#656d84]">/10</span></>}
             </p>
           </div>
@@ -118,9 +118,9 @@ export default function SkillVerifier({ userId, skillName, onVerifyComplete }) {
 
       {/* Error state */}
       {status === 'error' && (
-        <div className="mt-4 p-3 bg-[#93000a]/10 border border-[#93000a]/30 rounded-xs flex items-center gap-3">
-          <X className="w-4 h-4 text-[#ffb4ab] shrink-0" />
-          <p className="text-sm text-[#ffb4ab]">{errorMsg}</p>
+        <div className="mt-4 p-3 bg-error-container/10 border border-error-container/30 rounded-xs flex items-center gap-3">
+          <X className="w-4 h-4 text-error shrink-0" />
+          <p className="text-sm text-error">{errorMsg}</p>
         </div>
       )}
     </div>

@@ -84,16 +84,16 @@ export default function FeatureSphere({ scrollToSection }) {
       style={{ perspective: '1000px' }}
     >
       {/* Central orbit rings */}
-      <div className="absolute w-40 h-40 border border-[#adc6ff]/10 rounded-full animate-[spin_12s_linear_infinite]" />
-      <div className="absolute w-28 h-28 border border-[#6bd8cb]/10 rounded-full animate-[spin_7s_linear_infinite_reverse]" />
-      <div className="absolute w-20 h-20 border border-[#adc6ff]/5 rounded-full animate-[spin_9s_linear_infinite]" />
+      <div className="absolute w-40 h-40 border border-primary/10 rounded-full animate-[spin_12s_linear_infinite]" />
+      <div className="absolute w-28 h-28 border border-secondary/10 rounded-full animate-[spin_7s_linear_infinite_reverse]" />
+      <div className="absolute w-20 h-20 border border-primary/5 rounded-full animate-[spin_9s_linear_infinite]" />
 
       {/* Central logo */}
       <div className="absolute z-0 select-none pointer-events-none text-center">
-        <div className="text-5xl font-extrabold font-['Manrope'] tracking-tighter" style={{ color: '#adc6ff', opacity: 0.9 }}>
+        <div className="text-5xl font-extrabold font-outfit tracking-tighter" style={{ color: '#adc6ff', opacity: 0.9 }}>
           SS
         </div>
-        <div className="font-['Space_Grotesk'] text-[8px] font-bold tracking-[0.2em] uppercase text-[#8d90a0] mt-1">
+        <div className="font-syne text-[8px] font-bold tracking-[0.2em] uppercase text-outline mt-1">
           SkillSphere
         </div>
       </div>
@@ -114,7 +114,7 @@ export default function FeatureSphere({ scrollToSection }) {
           }}
         >
           <span className="text-xl mb-1 leading-none">{feature.icon}</span>
-          <span className="text-[8px] font-bold font-['Space_Grotesk'] tracking-[0.1em] uppercase" style={{ color: feature.color }}>
+          <span className="text-[8px] font-bold font-syne tracking-[0.1em] uppercase" style={{ color: feature.color }}>
             {feature.label}
           </span>
         </button>

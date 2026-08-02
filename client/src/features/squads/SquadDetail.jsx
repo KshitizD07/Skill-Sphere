@@ -73,7 +73,7 @@ export default function SquadDetail() {
     <div className="min-h-screen bg-[#050505] text-gray-300 font-['Rajdhani'] p-4 md:p-8 relative">
       <div className="absolute inset-0 bg-[linear-gradient(rgba(0,240,255,0.02)_1px,transparent_1px),linear-gradient(90deg,rgba(0,240,255,0.02)_1px,transparent_1px)] bg-[size:40px_40px] pointer-events-none" />
 
-      <div className="max-w-4xl mx-auto relative z-10">
+      <div className="w-full max-w-[1200px] mx-auto relative z-10">
 
         {/* Header */}
         <div className="flex items-center gap-4 mb-8">
