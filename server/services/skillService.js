@@ -29,30 +29,51 @@ export async function getAllRoles() {
 }
 
 // ── Dynamic Role Resolution ───────────────────────────────────────────────────
-export async function getOrCreateRole(roleIdentifier) {
+export async function getOrCreateRole(roleIdentifier, forceRegenerate = false) {
   let role = await prisma.jobRole.findFirst({
     where: { OR: [{ id: roleIdentifier }, { title: { equals: roleIdentifier, mode: 'insensitive' } }] },
     include: { skills: { select: { skillName: true, importance: true } } },
   });
 
-  if (!role) {
+  if (!role || forceRegenerate) {
     const existingSkillsList = await getAllSkills();
     const existingSkillNames = existingSkillsList.map(s => s.name);
 
-    const generatedRole = await aiService.generateRoleRequirements(roleIdentifier, existingSkillNames);
-    role = await prisma.jobRole.create({
-      data: {
-        title: generatedRole.title,
-        description: generatedRole.description,
-        skills: {
-          create: generatedRole.skills.map(s => ({
-            skillName: s.name,
-            importance: s.importance
-          }))
-        }
-      },
-      include: { skills: { select: { skillName: true, importance: true } } },
-    });
+    const generatedRole = await aiService.generateRoleRequirements(role ? role.title : roleIdentifier, existingSkillNames);
+    
+    if (role) {
+      // Update existing role
+      await prisma.jobRoleSkill.deleteMany({ where: { jobRoleId: role.id } });
+      role = await prisma.jobRole.update({
+        where: { id: role.id },
+        data: {
+          description: generatedRole.description,
+          skills: {
+            create: generatedRole.skills.map(s => ({
+              skillName: s.name,
+              importance: s.importance
+            }))
+          }
+        },
+        include: { skills: { select: { skillName: true, importance: true } } },
+      });
+    } else {
+      // Create new role
+      role = await prisma.jobRole.create({
+        data: {
+          title: generatedRole.title,
+          description: generatedRole.description,
+          skills: {
+            create: generatedRole.skills.map(s => ({
+              skillName: s.name,
+              importance: s.importance
+            }))
+          }
+        },
+        include: { skills: { select: { skillName: true, importance: true } } },
+      });
+    }
+    
     await cache.del('catalogue:roles');
     await cache.del('catalogue:skills');
   }
@@ -61,14 +82,14 @@ export async function getOrCreateRole(roleIdentifier) {
 }
 
 // ── Skill gap analysis ────────────────────────────────────────────────────────
-export async function analyzeSkillGap(userId, roleIdOrName) {
+export async function analyzeSkillGap(userId, roleIdOrName, forceRegenerate = false) {
   const user = await prisma.user.findUnique({
     where:   { id: userId },
     include: { skills: { select: { name: true, isVerified: true, calculatedScore: true } } },
   });
 
   if (!user) throw ApiError.notFound('User');
-  const role = await getOrCreateRole(roleIdOrName);
+  const role = await getOrCreateRole(roleIdOrName, forceRegenerate);
 
   const userSkillsMap = new Map(user.skills.map((s) => [s.name.toLowerCase(), s]));
 
