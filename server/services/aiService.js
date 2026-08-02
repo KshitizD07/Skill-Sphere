@@ -98,11 +98,15 @@ Keep it practical, specific, and encouraging. No filler — every bullet should 
   }
 }
 
-export async function generateRoleRequirements(roleTitle) {
+export async function generateRoleRequirements(roleTitle, existingSkills = []) {
   if (!roleTitle?.trim()) throw ApiError.badRequest('Role title is required');
   
   const model = getClient().getGenerativeModel({ model: 'gemini-2.5-flash' });
   
+  const existingSkillsContext = existingSkills.length > 0
+    ? `\nHere is a list of standard skills currently defined in our database catalogue: [${existingSkills.join(', ')}]. If any of these standard skills match the role requirements, use their exact names. `
+    : '';
+
   const prompt = `You are an expert technical recruiter and engineering manager.
 Define the standard industry requirements for the role of "${roleTitle}".
 
@@ -119,7 +123,12 @@ Do not use markdown code blocks like \`\`\`json. Just output the raw JSON object
   ]
 }
 
-Provide 5-8 highly relevant skills. Ensure 'importance' is exactly "Required" or "Nice to have".`;
+Provide 5-8 highly relevant skills. Ensure 'importance' is exactly "Required" or "Nice to have".
+
+CRITICAL INSTRUCTIONS FOR SKILL NAMES:
+- The skill names must be atomic, standardized industry-standard terms (e.g. "JavaScript", "Python", "React", "Docker", "System Design").
+- NEVER output generic grouping descriptions like "modern programming language like Python, Java, JS" or "frontend tools".
+- Each skill name must represent a single technical skill, language, framework, tool, or engineering concept. ${existingSkillsContext}However, do not be biased towards only using this list — if the role requires other standard industry skills not present in this list, output them using their standard industry names.`;
 
   try {
     const result = await model.generateContent(prompt);

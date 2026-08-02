@@ -36,7 +36,10 @@ export async function getOrCreateRole(roleIdentifier) {
   });
 
   if (!role) {
-    const generatedRole = await aiService.generateRoleRequirements(roleIdentifier);
+    const existingSkillsList = await getAllSkills();
+    const existingSkillNames = existingSkillsList.map(s => s.name);
+
+    const generatedRole = await aiService.generateRoleRequirements(roleIdentifier, existingSkillNames);
     role = await prisma.jobRole.create({
       data: {
         title: generatedRole.title,
