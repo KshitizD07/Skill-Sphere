@@ -4,6 +4,14 @@ import logger from '../utils/logger.js';
 import { sendNotification } from '../utils/notify.js';
 
 const prisma = new PrismaClient();
+const LEETCODE_GRAPHQL_URL = 'https://leetcode.com/graphql';
+const LEETCODE_HEADERS = {
+  'Content-Type': 'application/json',
+  Accept: 'application/json',
+  Origin: 'https://leetcode.com',
+  Referer: 'https://leetcode.com',
+  'User-Agent': 'SkillSphere-LeetCodeVerifier/1.0',
+};
 
 // Normalization for languages in LeetCode GraphQL response
 const LANGUAGE_MAP = {
@@ -69,15 +77,17 @@ const calculateLanguageScore = (solved) => {
 };
 
 const getLevel = (score) => score >= 8 ? 'Advanced' : score >= 5 ? 'Intermediate' : score > 0 ? 'Beginner' : 'Absolute Beginner';
+const isDSASkill = (skillName) => {
+  const normalized = skillName.toLowerCase();
+  return normalized === 'dsa' || normalized.includes('data structure') || normalized.includes('algorithm');
+};
 
 async function fetchLeetCodeGraphQL(query, variables) {
-  const targetUrl = 'https://leetcode.com/graphql';
-  
   // Try direct fetch first
   try {
-    const res = await fetch(targetUrl, {
+    const res = await fetch(LEETCODE_GRAPHQL_URL, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: LEETCODE_HEADERS,
       body: JSON.stringify({ query, variables }),
     });
     if (res.ok) {
@@ -95,10 +105,10 @@ async function fetchLeetCodeGraphQL(query, variables) {
 
   // Fallback to proxy
   try {
-    const proxyUrl = `https://corsproxy.io/?${encodeURIComponent(targetUrl)}`;
+    const proxyUrl = `https://corsproxy.io/?${encodeURIComponent(LEETCODE_GRAPHQL_URL)}`;
     const res = await fetch(proxyUrl, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: LEETCODE_HEADERS,
       body: JSON.stringify({ query, variables }),
     });
     if (!res.ok) throw new Error(`Proxy returned status ${res.status}`);
@@ -113,10 +123,36 @@ async function fetchLeetCodeGraphQL(query, variables) {
   }
 }
 
+function aggregateLanguages(languagesData = []) {
+  const byName = new Map();
+
+  for (const language of languagesData) {
+    const rawName = language.languageName || '';
+    const name = LANGUAGE_MAP[rawName.toLowerCase()] || rawName;
+    const problemsSolved = Number(language.problemsSolved) || 0;
+    const existing = byName.get(name);
+
+    byName.set(name, {
+      name,
+      problemsSolved: (existing?.problemsSolved || 0) + problemsSolved,
+    });
+  }
+
+  return [...byName.values()]
+    .map((language) => {
+      const score = calculateLanguageScore(language.problemsSolved);
+      return { ...language, score, level: getLevel(score) };
+    })
+    .sort((a, b) => b.problemsSolved - a.problemsSolved || a.name.localeCompare(b.name));
+}
+
 export async function scanLeetCodeProfile({ username }) {
+  const normalizedUsername = username?.trim();
+  if (!normalizedUsername) throw ApiError.badRequest('LeetCode username is required');
+
   let data;
   try {
-    const responseData = await fetchLeetCodeGraphQL(LEETCODE_GRAPHQL_QUERY, { username });
+    const responseData = await fetchLeetCodeGraphQL(LEETCODE_GRAPHQL_QUERY, { username: normalizedUsername });
     data = responseData.data;
   } catch (error) {
     logger.error('LeetCode API Error', { err: error.message });
@@ -124,7 +160,7 @@ export async function scanLeetCodeProfile({ username }) {
     throw ApiError.internal(error.message || 'Failed to communicate with LeetCode');
   }
 
-  if (!data || !data.matchedUser) throw ApiError.notFound('LeetCode user not found');
+  if (!data || !data.matchedUser) throw ApiError.notFound('LeetCode user');
 
   const stats = data.matchedUser.submitStats.acSubmissionNum;
   const easy = stats.find(s => s.difficulty === 'Easy')?.count || 0;
@@ -140,18 +176,12 @@ export async function scanLeetCodeProfile({ username }) {
     level: getLevel(dsaStats.score)
   };
 
-  const languagesData = data.matchedUser.languageProblemCount;
-  const languages = languagesData.map(l => {
-    const name = LANGUAGE_MAP[l.languageName.toLowerCase()] || l.languageName;
-    const problemsSolved = l.problemsSolved;
-    const score = calculateLanguageScore(problemsSolved);
-    return { name, problemsSolved, score, level: getLevel(score) };
-  });
+  const languages = aggregateLanguages(data.matchedUser.languageProblemCount);
 
   return {
     success: true,
-    username,
-    profileUrl: `https://leetcode.com/u/${username}/`,
+    username: normalizedUsername,
+    profileUrl: `https://leetcode.com/u/${normalizedUsername}/`,
     languages,
     dsa
   };
@@ -165,7 +195,7 @@ export async function verifyLeetCodeSkill({ userId, skillName, username, showLev
   let score;
   let breakdownMsg;
   
-  if (normalizedSkill.toLowerCase().includes('data structure') || normalizedSkill.toLowerCase().includes('algorithm')) {
+  if (isDSASkill(normalizedSkill)) {
     score = scanResult.dsa.score;
     breakdownMsg = `Based on LeetCode submissions: ${scanResult.dsa.easy} Easy, ${scanResult.dsa.medium} Medium, ${scanResult.dsa.hard} Hard (Score: ${score}/10).`;
   } else {
