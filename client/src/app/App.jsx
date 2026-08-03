@@ -65,9 +65,12 @@ function App() {
 
   const handleLogout = async () => {
     try { await API.post('/auth/logout'); } catch { /* ignore */ }
+    // Clear persisted auth data
     localStorage.removeItem('user_data');
     localStorage.removeItem('ss_token');
     setUser(null);
+    // Replace the current entry with the landing page to prevent back‑navigation to a protected view
+    window.location.replace('/');
   };
 
   // ── Quality Control Nuke ──────────────────────────────────────────────────
