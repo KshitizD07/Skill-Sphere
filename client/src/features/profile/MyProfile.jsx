@@ -248,7 +248,7 @@ export default function MyProfile({ user, onUserUpdate }) {
               ) : (
                 <div className="space-y-2">
                   {mySkillNames.map(skillName => {
-                    const skill = mySkillsRaw.find(s => (s.name || s.skill?.name) === skillName);
+                    const skill = mySkillsRaw.find(s => (s.name || s.skill?.name) === skillName) || { name: skillName };
                     const verified = skill?.isVerified;
 
                     return (

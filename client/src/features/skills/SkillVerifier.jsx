@@ -259,13 +259,14 @@ export default function SkillVerifier({ userId, skillName, skillId, onVerifyComp
     }
 
     // Step 2: results
-    const isDSAMatch = skillName.toLowerCase() === 'data structures and algorithms' || skillName.toLowerCase() === 'dsa';
+    const normalizedSkillName = skillName || '';
+    const isDSAMatch = normalizedSkillName && (normalizedSkillName.toLowerCase() === 'data structures and algorithms' || normalizedSkillName.toLowerCase() === 'dsa');
     
     // Attempt to match skillName with languages
     const languages = lcScanData?.languages || [];
-    const matchedLanguage = languages.find(l => l.languageName.toLowerCase() === skillName.toLowerCase());
+    const matchedLanguage = languages.find(l => l.name && l.name.toLowerCase() === normalizedSkillName.toLowerCase());
     
-    const dsaData = lcScanData?.dsaData;
+    const dsaData = lcScanData?.dsa;
 
     let primaryResult = null;
     let matchFound = false;
@@ -277,21 +278,21 @@ export default function SkillVerifier({ userId, skillName, skillId, onVerifyComp
           <h4 className="text-sm font-bold text-text-primary mb-2">DSA Progress Detected</h4>
           <div className="grid grid-cols-3 gap-2 mb-3 text-center">
             <div className="p-2 bg-surface rounded-xs">
-              <div className="text-[#00b8a3] font-bold">{dsaData.easySolved}</div>
+              <div className="text-[#00b8a3] font-bold">{dsaData.easy}</div>
               <div className="text-[10px] text-outline uppercase tracking-wider">Easy</div>
             </div>
             <div className="p-2 bg-surface rounded-xs">
-              <div className="text-[#ffc01e] font-bold">{dsaData.mediumSolved}</div>
+              <div className="text-[#ffc01e] font-bold">{dsaData.medium}</div>
               <div className="text-[10px] text-outline uppercase tracking-wider">Medium</div>
             </div>
             <div className="p-2 bg-surface rounded-xs">
-              <div className="text-[#ff375f] font-bold">{dsaData.hardSolved}</div>
+              <div className="text-[#ff375f] font-bold">{dsaData.hard}</div>
               <div className="text-[10px] text-outline uppercase tracking-wider">Hard</div>
             </div>
           </div>
           <div className="flex justify-between items-center text-sm">
             <span className="text-outline">Score</span>
-            <span className="text-text-primary font-bold">{dsaData.estimatedScore}/10</span>
+            <span className="text-text-primary font-bold">{dsaData.score}/10</span>
           </div>
         </div>
       );
@@ -303,7 +304,7 @@ export default function SkillVerifier({ userId, skillName, skillId, onVerifyComp
             <Check className="w-5 h-5 text-[#ffa116]" />
           </div>
           <div className="flex-1">
-            <div className="text-sm font-bold text-text-primary">✓ {matchedLanguage.languageName}</div>
+            <div className="text-sm font-bold text-text-primary">✓ {matchedLanguage.name}</div>
             <div className="text-xs text-outline">{matchedLanguage.problemsSolved} problems solved</div>
           </div>
           <div className="text-right">
@@ -316,12 +317,12 @@ export default function SkillVerifier({ userId, skillName, skillId, onVerifyComp
       primaryResult = (
         <div className="mb-4 p-3 bg-error-container/10 border border-error-container/30 rounded-xs flex items-center gap-3">
           <X className="w-4 h-4 text-error shrink-0" />
-          <p className="text-sm text-error">No matching data found for {skillName}.</p>
+          <p className="text-sm text-error">No matching data found for {skillName || 'this skill'}.</p>
         </div>
       );
     }
 
-    const otherLanguages = languages.filter(l => l.languageName.toLowerCase() !== skillName.toLowerCase());
+    const otherLanguages = languages.filter(l => l.name && l.name.toLowerCase() !== normalizedSkillName.toLowerCase());
 
     return (
       <div className="space-y-4">
@@ -332,8 +333,8 @@ export default function SkillVerifier({ userId, skillName, skillId, onVerifyComp
             <h5 className="text-[10px] font-syne font-bold tracking-[0.12em] uppercase text-outline mb-2">Other Detected Languages</h5>
             <div className="flex flex-wrap gap-2">
               {otherLanguages.map(l => (
-                <div key={l.languageName} className="px-2 py-1 bg-surface-mid/50 border border-outline-var/20 rounded-xs flex items-center gap-2 text-xs">
-                  <span className="text-text-muted">{l.languageName}</span>
+                <div key={l.name} className="px-2 py-1 bg-surface-mid/50 border border-outline-var/20 rounded-xs flex items-center gap-2 text-xs">
+                  <span className="text-text-muted">{l.name}</span>
                   <span className="text-text-primary font-bold">{l.score}/10</span>
                 </div>
               ))}
