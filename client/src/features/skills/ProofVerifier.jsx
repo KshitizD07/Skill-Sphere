@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Shield, Link, Check, X, Award } from 'lucide-react';
+import { Link, Check, X, Award } from 'lucide-react';
 import SkillAPI from './skillAPI';
 
 export default function ProofVerifier({ skillId, skillName, onVerifyComplete }) {
@@ -27,7 +27,7 @@ export default function ProofVerifier({ skillId, skillName, onVerifyComplete }) 
         setStatus('success');
         onVerifyComplete?.(data);
       }
-    } catch (err) {
+    } catch {
       setStatus('error');
       setErrorMsg('Failed to connect to verification server.');
     }

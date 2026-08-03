@@ -18,6 +18,7 @@ export default function RoadmapPage() {
     if (fetchedRef.current) return;
     fetchedRef.current = true;
     fetchRoadmap();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const fetchRoadmap = async () => {

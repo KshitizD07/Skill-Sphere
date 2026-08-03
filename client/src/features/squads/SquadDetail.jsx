@@ -2,8 +2,8 @@ import { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import SquadAPI from './squadAPI';
 import {
-  ArrowLeft, Users, Shield, Lock, CheckCircle,
-  AlertCircle, Target, User, ChevronDown
+  ArrowLeft, Users, Lock, CheckCircle,
+  AlertCircle, Target, User
 } from 'lucide-react';
 
 export default function SquadDetail() {
@@ -21,8 +21,8 @@ export default function SquadDetail() {
   const [applyMessage, setApplyMessage] = useState('');
 
   useEffect(() => {
-    // eslint-disable-next-line
     loadSquad();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [id]);
 
   const loadSquad = async () => {

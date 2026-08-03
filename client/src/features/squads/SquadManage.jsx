@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import SquadAPI from './squadAPI';
 import {
-  ArrowLeft, Users, CheckCircle, X, Shield,
+  ArrowLeft, CheckCircle, X,
   User, AlertCircle, RefreshCw
 } from 'lucide-react';
 

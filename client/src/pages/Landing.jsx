@@ -1,6 +1,6 @@
 import { useNavigate } from 'react-router-dom';
 import FeatureSphere from '../shared/components/FeatureSphere';
-import { Brain, Users, ArrowRight, Shield, Zap } from 'lucide-react';
+import { Brain, Users, ArrowRight, Shield } from 'lucide-react';
 
 export default function Landing() {
   const navigate = useNavigate();
@@ -119,7 +119,7 @@ export default function Landing() {
         <div className="w-full max-w-[1400px] mx-auto px-6 grid md:grid-cols-2 gap-16 items-center">
           <div className="order-2 md:order-1 pl-0 md:pl-12">
             <span className="font-syne text-[10px] font-bold tracking-widest uppercase text-secondary">Peer Learning</span>
-            <h2 className="text-5xl font-extrabold mt-4 mb-6 tracking-tight text-text-primary">Learn from those<br />who've been there.</h2>
+            <h2 className="text-5xl font-extrabold mt-4 mb-6 tracking-tight text-text-primary">Learn from those<br />who&apos;ve been there.</h2>
             <p className="text-text-muted text-lg leading-relaxed max-w-lg">
               Connect directly with peers and alumni. Request mentoring sessions, share knowledge, and grow your professional network — all within one platform.
             </p>

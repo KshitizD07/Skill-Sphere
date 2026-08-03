@@ -61,7 +61,7 @@ export default function ChatInterface() {
             <Terminal size={16} /> UPLINK: {mentor.name.toUpperCase()}
           </div>
           <div className="text-xs text-green-500/50">
-            ID: {mentor.id.split('-')[0]} /// SECURE
+            ID: {mentor.id.split('-')[0]} {"///"} SECURE
           </div>
         </div>
         <div className="ml-auto text-xs text-green-500/40 font-mono">

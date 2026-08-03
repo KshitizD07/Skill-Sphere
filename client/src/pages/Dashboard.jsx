@@ -61,7 +61,7 @@ const RadarChart = ({ score }) => {
 // ─── Dashboard ────────────────────────────────────────────────────────────────
 export default function Dashboard({ user, onLogout }) {
   const navigate = useNavigate();
-  const location = useLocation();
+  const _location = useLocation();
   const currentUser = user || JSON.parse(localStorage.getItem('user_data') || '{}');
 
   const [roles, setRoles] = useState([]);

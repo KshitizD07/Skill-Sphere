@@ -3,10 +3,9 @@ import { useNavigate } from 'react-router-dom';
 import API from '../api';
 import Navbar from '../shared/components/Navbar';
 import {
-  Search, ArrowLeft, Heart, User, Building2,
-  Users, Image as ImageIcon, X, MessageCircle,
-  Send, CornerDownRight, Trash2, Pencil, Layers,
-  LogOut, BarChart2
+  Search, Heart, User, Building2,
+  Image as ImageIcon, X, MessageCircle,
+  Send, CornerDownRight, Trash2, Pencil
 } from 'lucide-react';
 
 function timeAgo(date) {

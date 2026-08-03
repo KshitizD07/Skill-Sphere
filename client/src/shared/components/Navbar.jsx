@@ -2,8 +2,8 @@ import { useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
-  Menu, X, BarChart2, Users, Layers, ShieldCheck, 
-  User, LogOut, LayoutDashboard, Bell, MessageSquare
+  Menu, X, BarChart2, Users, Layers, 
+  User, LogOut, LayoutDashboard, MessageSquare
 } from 'lucide-react';
 import NotificationBell from './NotificationBell';
 import DashboardChat from '../../features/chat/DashboardChat';

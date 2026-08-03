@@ -14,7 +14,7 @@ const STATUS_CONFIG = {
 
 export default function MyApplications() {
   const navigate = useNavigate();
-  const currentUser = JSON.parse(localStorage.getItem('user_data') || '{}');
+  const _currentUser = JSON.parse(localStorage.getItem('user_data') || '{}');
 
   const [data, setData] = useState({ led: [], applications: [] });
   const [loading, setLoading] = useState(true);

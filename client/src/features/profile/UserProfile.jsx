@@ -220,7 +220,7 @@ function CommentItem({ comment, postId, postOwnerId, currentUser, onDelete, onLi
 }
 
 // ── Post card ─────────────────────────────────────────────────────────────────
-function PostCard({ post, currentUser, isOwner, onDelete, onLike, onComment, onLikeComment, onDeleteComment, onReplyComment, onEdit }) {
+function PostCard({ post, currentUser, _isOwner, onDelete, onLike, onComment, onLikeComment, onDeleteComment, onReplyComment, onEdit }) {
   const [showComments, setShowComments] = useState(false);
   const [commentText, setCommentText]   = useState('');
   const [editing, setEditing]           = useState(false);
