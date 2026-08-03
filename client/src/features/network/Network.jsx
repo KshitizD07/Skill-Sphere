@@ -47,7 +47,7 @@ export default function Network() {
   return (
     <div className="min-h-screen bg-bg-base text-text-primary font-outfit flex flex-col md:flex-row">
       
-      <Navbar user={currentUser} onLogout={() => { API.post('/auth/logout').catch(()=>{}); localStorage.removeItem('user_data'); navigate('/'); }} />
+      <Navbar user={currentUser} onLogout={() => { API.post('/auth/logout').catch(()=>{}); localStorage.removeItem('user_data'); localStorage.removeItem('ss_token'); window.location.replace('/'); }} />
 
       <div className="flex-1 md:ml-64 pt-20 md:pt-0 min-h-screen overflow-y-auto overflow-x-hidden p-6 md:p-10 w-full max-w-[1400px] mx-auto">
 
