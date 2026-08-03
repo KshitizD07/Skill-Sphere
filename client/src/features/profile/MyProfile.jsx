@@ -139,6 +139,20 @@ export default function MyProfile({ user, onUserUpdate }) {
           </div>
         )}
 
+        {initialLoadDone && !formData.college && (
+          <div className="mb-8 p-5 bg-primary/5 border-2 border-primary/30 rounded-md flex items-start gap-4">
+            <div className="p-2 bg-primary/10 rounded-sm">
+              <Building2 size={24} className="text-primary" />
+            </div>
+            <div>
+              <h3 className="text-primary font-syne font-bold uppercase tracking-widest text-sm mb-1">Action Required</h3>
+              <p className="text-text-muted text-xs leading-relaxed max-w-2xl">
+                Please select your <strong className="text-text-primary">Institutional Affiliation</strong> to complete your profile setup. This helps us tailor your experience and connect you with peers.
+              </p>
+            </div>
+          </div>
+        )}
+
         <div className="flex items-center justify-between mb-8">
           <div className="flex items-center gap-4">
             <button onClick={() => navigate(-1)} className="p-2 border border-outline-var/40 rounded-xs hover:border-primary/40 text-outline hover:text-primary transition-all">
@@ -284,7 +298,7 @@ export default function MyProfile({ user, onUserUpdate }) {
                   <input value={formData.name} onChange={e => setFormData({...formData,name:e.target.value})} className={`${inputBase} text-base font-semibold`} placeholder="Your full name" />
                 </div>
                 <div>
-                  <label className={labelBase}>Institutional Affiliation</label>
+                  <label className={labelBase}>Institutional Affiliation <span className="text-error">*</span></label>
                   <div className="relative group">
                     <Building2 className="absolute left-3 top-3.5 text-[#656d84] group-focus-within:text-primary transition-colors" size={15} />
                     <select value={formData.college} onChange={e => setFormData({...formData,college:e.target.value})}
@@ -311,9 +325,9 @@ export default function MyProfile({ user, onUserUpdate }) {
                 <h3 className="font-syne text-[10px] font-bold tracking-[0.12em] uppercase text-outline mb-4">Social Connections</h3>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
                   <div>
-                    <label className={`${labelBase} flex items-center gap-1.5`}><Github size={12} /> GitHub Profile</label>
+                    <label className={`${labelBase} flex items-center gap-1.5`}><Github size={12} /> GitHub Profile <span className="text-error">*</span></label>
                     <input value={formData.github} onChange={e => setFormData({...formData,github:e.target.value})}
-                      placeholder="github.com/username" className={inputBase} />
+                      placeholder="github.com/username" className={`${inputBase} ${!formData.github ? 'border-error/40 focus:border-error/80' : ''}`} />
                   </div>
                   <div>
                     <label className={`${labelBase} flex items-center gap-1.5`}><Linkedin size={12} /> LinkedIn Profile</label>

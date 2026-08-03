@@ -219,5 +219,153 @@ router.post('/reset-password', asyncHandler(async (req, res) => {
 
   res.json({ success: true, message: 'Password has been reset. Please sign in with your new password.' });
 }));
+// ── GET /api/auth/google ──────────────────────────────────────────────────────
+router.get('/google', (req, res) => {
+  const backendUrl = req.protocol + '://' + req.get('host');
+  const cb = `${backendUrl}/api/auth/google/callback`;
+  const url = `https://accounts.google.com/o/oauth2/v2/auth?client_id=${process.env.GOOGLE_CLIENT_ID}&redirect_uri=${cb}&response_type=code&scope=email profile`;
+  res.redirect(url);
+});
+
+// ── GET /api/auth/google/callback ─────────────────────────────────────────────
+router.get('/google/callback', asyncHandler(async (req, res) => {
+  const code = req.query.code;
+  if (!code) return res.redirect(`${process.env.FRONTEND_URL || 'http://localhost:5173'}/auth?error=OAuthCodeMissing`);
+
+  const backendUrl = req.protocol + '://' + req.get('host');
+  const cb = `${backendUrl}/api/auth/google/callback`;
+
+  // Exchange code for token
+  const tokenRes = await fetch('https://oauth2.googleapis.com/token', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+    body: new URLSearchParams({
+      client_id: process.env.GOOGLE_CLIENT_ID,
+      client_secret: process.env.GOOGLE_CLIENT_SECRET,
+      code,
+      grant_type: 'authorization_code',
+      redirect_uri: cb,
+    })
+  });
+  const tokenData = await tokenRes.json();
+  if (tokenData.error) return res.redirect(`${process.env.FRONTEND_URL || 'http://localhost:5173'}/auth?error=GoogleOAuthFailed`);
+
+  // Get user info
+  const userRes = await fetch('https://www.googleapis.com/oauth2/v2/userinfo', {
+    headers: { Authorization: `Bearer ${tokenData.access_token}` }
+  });
+  const userData = await userRes.json();
+  if (!userData.email) return res.redirect(`${process.env.FRONTEND_URL || 'http://localhost:5173'}/auth?error=EmailMissing`);
+
+  // Find or create user
+  await handleOAuthLogin(userData.email, userData.name, res);
+}));
+
+// ── GET /api/auth/github ──────────────────────────────────────────────────────
+router.get('/github', (req, res) => {
+  const backendUrl = req.protocol + '://' + req.get('host');
+  const cb = `${backendUrl}/api/auth/github/callback`;
+  const url = `https://github.com/login/oauth/authorize?client_id=${process.env.GITHUB_CLIENT_ID}&redirect_uri=${cb}&scope=user:email`;
+  res.redirect(url);
+});
+
+// ── GET /api/auth/github/callback ─────────────────────────────────────────────
+router.get('/github/callback', asyncHandler(async (req, res) => {
+  const code = req.query.code;
+  if (!code) return res.redirect(`${process.env.FRONTEND_URL || 'http://localhost:5173'}/auth?error=OAuthCodeMissing`);
+
+  const backendUrl = req.protocol + '://' + req.get('host');
+  const cb = `${backendUrl}/api/auth/github/callback`;
+
+  // Exchange code for token
+  const tokenRes = await fetch('https://github.com/login/oauth/access_token', {
+    method: 'POST',
+    headers: { 
+      'Content-Type': 'application/json',
+      'Accept': 'application/json'
+    },
+    body: JSON.stringify({
+      client_id: process.env.GITHUB_CLIENT_ID,
+      client_secret: process.env.GITHUB_CLIENT_SECRET,
+      code,
+      redirect_uri: cb,
+    })
+  });
+  const tokenData = await tokenRes.json();
+  if (tokenData.error) return res.redirect(`${process.env.FRONTEND_URL || 'http://localhost:5173'}/auth?error=GithubOAuthFailed`);
+
+  // Get user info
+  const userRes = await fetch('https://api.github.com/user', {
+    headers: {
+      'Authorization': `Bearer ${tokenData.access_token}`,
+      'Accept': 'application/json',
+      'User-Agent': 'SkillSphere-App'
+    }
+  });
+  const userData = await userRes.json();
+  
+  let email = userData.email;
+  if (!email) {
+    // Fetch emails
+    const emailsRes = await fetch('https://api.github.com/user/emails', {
+      headers: {
+        'Authorization': `Bearer ${tokenData.access_token}`,
+        'Accept': 'application/json',
+        'User-Agent': 'SkillSphere-App'
+      }
+    });
+    const emails = await emailsRes.json();
+    if (Array.isArray(emails)) {
+      const primaryEmail = emails.find(e => e.primary) || emails[0];
+      if (primaryEmail) email = primaryEmail.email;
+    }
+  }
+  
+  if (!email) return res.redirect(`${process.env.FRONTEND_URL || 'http://localhost:5173'}/auth?error=EmailMissing`);
+
+  await handleOAuthLogin(email, userData.name || userData.login, res, userData.login);
+}));
+
+async function handleOAuthLogin(email, name, res, githubUsername = null) {
+  const normalised = email.toLowerCase().trim();
+  let user = await prisma.user.findUnique({ where: { email: normalised } });
+
+  if (!user) {
+    const randomPassword = Math.random().toString(36).slice(-8) + Math.random().toString(36).slice(-8).toUpperCase() + '!1aA';
+    const hashed = await bcrypt.hash(randomPassword, 12);
+    user = await prisma.user.create({
+      data: {
+        email: normalised,
+        password: hashed,
+        name: name || 'OAuth User',
+        role: 'STUDENT', // Default
+        github: githubUsername || null,
+      },
+    });
+    await prisma.activityLog.create({
+      data: { userId: user.id, action: 'ACCOUNT_CREATED', details: 'Joined via OAuth' },
+    });
+  } else {
+    if (githubUsername && !user.github) {
+      user = await prisma.user.update({
+        where: { id: user.id },
+        data: { github: githubUsername },
+      });
+    }
+    await prisma.activityLog.create({
+      data: { userId: user.id, action: 'USER_LOGIN', details: 'Logged in via OAuth' },
+    }).catch(() => {});
+  }
+
+  const token = signToken(user);
+  setTokenCookie(res, token);
+
+  const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:5173';
+  if (!user.github || !user.college) {
+    res.redirect(`${frontendUrl}/my-profile?token=${token}`);
+  } else {
+    res.redirect(`${frontendUrl}/dashboard?token=${token}`);
+  }
+}
 
 export default router;

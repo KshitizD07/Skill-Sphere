@@ -41,6 +41,13 @@ function App() {
 
   // Rehydrate user from httpOnly cookie session on mount
   useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const urlToken = params.get('token');
+    if (urlToken) {
+      localStorage.setItem('ss_token', urlToken);
+      window.history.replaceState({}, document.title, window.location.pathname);
+    }
+
     // We wait for the server to verify the session so we don't flash the UI
     // with incomplete cached data (which lacks the 'github' field).
     API.get('/auth/verify')
