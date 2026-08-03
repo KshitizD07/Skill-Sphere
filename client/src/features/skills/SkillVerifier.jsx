@@ -79,7 +79,7 @@ export default function SkillVerifier({ userId, skillName, skillId, onVerifyComp
         setStatus('error');
         setErrorMsg(data.message || 'Scan failed.');
       } else if (data.success) {
-        setLcScanData(data.data);
+        setLcScanData(data);
         setStatus('idle');
         setLcStep(2);
       } else {
@@ -260,11 +260,12 @@ export default function SkillVerifier({ userId, skillName, skillId, onVerifyComp
 
     // Step 2: results
     const normalizedSkillName = skillName || '';
-    const isDSAMatch = normalizedSkillName && (normalizedSkillName.toLowerCase() === 'data structures and algorithms' || normalizedSkillName.toLowerCase() === 'dsa');
+    const lowerSkillName = normalizedSkillName.toLowerCase();
+    const isDSAMatch = lowerSkillName === 'dsa' || lowerSkillName.includes('data structure') || lowerSkillName.includes('algorithm');
     
     // Attempt to match skillName with languages
     const languages = lcScanData?.languages || [];
-    const matchedLanguage = languages.find(l => l.name && l.name.toLowerCase() === normalizedSkillName.toLowerCase());
+    const matchedLanguage = languages.find(l => l.name && l.name.toLowerCase() === lowerSkillName);
     
     const dsaData = lcScanData?.dsa;
 
