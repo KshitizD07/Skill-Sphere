@@ -70,23 +70,58 @@ const calculateLanguageScore = (solved) => {
 
 const getLevel = (score) => score >= 8 ? 'Advanced' : score >= 5 ? 'Intermediate' : score > 0 ? 'Beginner' : 'Absolute Beginner';
 
+async function fetchLeetCodeGraphQL(query, variables) {
+  const targetUrl = 'https://leetcode.com/graphql';
+  
+  // Try direct fetch first
+  try {
+    const res = await fetch(targetUrl, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ query, variables }),
+    });
+    if (res.ok) {
+      const responseData = await res.json();
+      if (!responseData.errors) return responseData;
+      throw new Error(responseData.errors[0].message || 'LeetCode GraphQL error');
+    }
+    logger.warn(`LeetCode direct fetch returned status ${res.status}, retrying via proxy...`);
+  } catch (err) {
+    if (err.message && (err.message.includes('not found') || err.message.includes('GraphQL error'))) {
+      throw ApiError.badRequest(err.message);
+    }
+    logger.warn('LeetCode direct fetch failed, retrying via proxy...', { error: err.message });
+  }
+
+  // Fallback to proxy
+  try {
+    const proxyUrl = `https://corsproxy.io/?${encodeURIComponent(targetUrl)}`;
+    const res = await fetch(proxyUrl, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ query, variables }),
+    });
+    if (!res.ok) throw new Error(`Proxy returned status ${res.status}`);
+    const responseData = await res.json();
+    if (responseData.errors) {
+      throw ApiError.badRequest(responseData.errors[0].message || 'LeetCode user not found');
+    }
+    return responseData;
+  } catch (error) {
+    logger.error('LeetCode Proxy Error', { err: error.message });
+    throw ApiError.internal('Failed to communicate with LeetCode via proxy');
+  }
+}
+
 export async function scanLeetCodeProfile({ username }) {
   let data;
   try {
-    const res = await fetch('https://leetcode.com/graphql', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ query: LEETCODE_GRAPHQL_QUERY, variables: { username } }),
-    });
-
-    if (!res.ok) throw ApiError.internal('Failed to fetch data from LeetCode');
-    const responseData = await res.json();
-    if (responseData.errors) throw ApiError.badRequest(responseData.errors[0].message || 'LeetCode user not found');
+    const responseData = await fetchLeetCodeGraphQL(LEETCODE_GRAPHQL_QUERY, { username });
     data = responseData.data;
   } catch (error) {
     logger.error('LeetCode API Error', { err: error.message });
     if (error instanceof ApiError) throw error;
-    throw ApiError.internal('Failed to communicate with LeetCode');
+    throw ApiError.internal(error.message || 'Failed to communicate with LeetCode');
   }
 
   if (!data || !data.matchedUser) throw ApiError.notFound('LeetCode user not found');
