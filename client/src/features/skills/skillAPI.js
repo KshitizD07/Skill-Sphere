@@ -14,6 +14,10 @@ const SkillAPI = {
     BaseAPI.post('/verify/leetcode', { userId, skillName, username, showLevel }),
   verifySkillManual: (skillId, verificationUrl, source) =>
     BaseAPI.patch(`/users/me/skills/${skillId}`, { verificationUrl, source }),
+  scanLeetCode: (username) =>
+    BaseAPI.post('/verify/leetcode-scan', { username }),
+  bulkVerifyLeetCode: (userId, username, skills, showLevel) =>
+    BaseAPI.post('/verify/leetcode-bulk', { userId, username, skills, showLevel }),
 };
 
 export default SkillAPI;

@@ -9,7 +9,6 @@ import ProfileAPI from './profileAPI';
 import API from '../../api';
 import { COLLEGES } from '../../data/colleges';
 import SkillVerifier from '../skills/SkillVerifier';
-import ProofVerifier from '../skills/ProofVerifier';
 import Navbar from '../../shared/components/Navbar';
 
 export default function MyProfile({ user, onUserUpdate }) {
@@ -25,7 +24,6 @@ export default function MyProfile({ user, onUserUpdate }) {
   const [mySkillsRaw, setMySkillsRaw] = useState([]);
   const [showSkillSelector, setShowSkillSelector] = useState(false);
   const [showVerifier, setShowVerifier] = useState(false);
-  const [showProofVerifier, setShowProofVerifier] = useState(false);
   const [selectedSkill, setSelectedSkill] = useState(null); 
   const avatarInputRef = useRef(null);
 
@@ -265,16 +263,10 @@ export default function MyProfile({ user, onUserUpdate }) {
                         </div>
 
                         {!verified && (
-                          <div className="flex gap-2 mt-1">
-                            <button onClick={() => { setSelectedSkill(skill); setShowVerifier(true); }}
-                              className="flex-1 py-1.5 bg-primary/10 hover:bg-primary/20 text-primary border border-primary/20 text-[9px] uppercase font-bold tracking-wider rounded-xs flex items-center justify-center gap-1">
-                              <Github size={10} /> GitHub
-                            </button>
-                            <button onClick={() => { setSelectedSkill(skill); setShowProofVerifier(true); }}
-                              className="flex-1 py-1.5 bg-secondary-bright/10 hover:bg-secondary-bright/20 text-secondary-bright border border-secondary-bright/20 text-[9px] uppercase font-bold tracking-wider rounded-xs flex items-center justify-center gap-1">
-                              <Award size={10} /> Certificate
-                            </button>
-                          </div>
+                          <button onClick={() => { setSelectedSkill(skill); setShowVerifier(true); }}
+                            className="w-full mt-1 py-1.5 bg-primary/10 hover:bg-primary/20 text-primary border border-primary/20 text-[9px] uppercase font-bold tracking-wider rounded-xs flex items-center justify-center gap-1.5 font-syne transition-colors">
+                            <Shield size={10} /> Verify
+                          </button>
                         )}
                       </div>
                     );
@@ -347,21 +339,8 @@ export default function MyProfile({ user, onUserUpdate }) {
               className="absolute -top-3 -right-3 z-10 p-1.5 bg-error-container hover:bg-error hover:text-on-primary text-white rounded-full transition-all border border-error/30 flex items-center justify-center">
               <X size={16} />
             </button>
-            <SkillVerifier userId={activeUser.id} skillName={selectedSkill.name || selectedSkill.skill?.name}
+            <SkillVerifier userId={activeUser.id} skillName={selectedSkill.name || selectedSkill.skill?.name} skillId={selectedSkill.id}
               onVerifyComplete={() => { setShowVerifier(false); loadUserData(); }} />
-          </div>
-        </div>
-      )}
-
-      {showProofVerifier && selectedSkill && (
-        <div className="fixed inset-0 bg-bg-base/85 backdrop-blur-sm z-[300] flex items-center justify-center p-4">
-          <div className="relative w-full max-w-lg">
-            <button onClick={() => setShowProofVerifier(false)}
-              className="absolute -top-3 -right-3 z-10 p-1.5 bg-error-container hover:bg-error hover:text-on-primary text-white rounded-full transition-all border border-error/30 flex items-center justify-center">
-              <X size={16} />
-            </button>
-            <ProofVerifier skillId={selectedSkill.id} skillName={selectedSkill.name || selectedSkill.skill?.name}
-              onVerifyComplete={() => { setShowProofVerifier(false); loadUserData(); }} />
           </div>
         </div>
       )}
