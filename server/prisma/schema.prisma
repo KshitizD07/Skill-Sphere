@@ -85,6 +85,7 @@ enum VerificationSource {
   GITHUB
   CREDENTIAL
   MANUAL
+  LEETCODE
 }
 
 // ─────────────────────────────────────────────────────────────────────────────

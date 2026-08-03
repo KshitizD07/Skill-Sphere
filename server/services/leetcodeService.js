@@ -21,43 +21,67 @@ const LANGUAGE_MAP = {
   csharp: 'C#', 'c#': 'C#',
 };
 
-export async function verifyLeetCodeSkill({ userId, skillName, username, showLevel }) {
-  const normalizedSkill = LANGUAGE_MAP[skillName.toLowerCase()] || skillName;
-
-  const query = `
-    query userProfile($username: String!) {
-      matchedUser(username: $username) {
-        languageProblemCount {
-          languageName
-          problemsSolved
-        }
-        submitStats {
-          acSubmissionNum {
-            difficulty
-            count
-          }
+const LEETCODE_GRAPHQL_QUERY = `
+  query userProfile($username: String!) {
+    matchedUser(username: $username) {
+      languageProblemCount {
+        languageName
+        problemsSolved
+      }
+      submitStats {
+        acSubmissionNum {
+          difficulty
+          count
         }
       }
     }
-  `;
+  }
+`;
 
+const calculateDSAScore = (easy, medium, hard) => {
+  const totalPoints = (easy * 1) + (medium * 3) + (hard * 5);
+  let score;
+  if (totalPoints >= 1000) score = 10;
+  else if (totalPoints >= 700) score = 9;
+  else if (totalPoints >= 500) score = 8;
+  else if (totalPoints >= 300) score = 7;
+  else if (totalPoints >= 150) score = 6;
+  else if (totalPoints >= 75) score = 5;
+  else if (totalPoints >= 30) score = 4;
+  else if (totalPoints >= 10) score = 3;
+  else if (totalPoints >= 1) score = 2;
+  else score = 1;
+  return { score, totalPoints };
+};
+
+const calculateLanguageScore = (solved) => {
+  let score;
+  if (solved >= 300) score = 10;
+  else if (solved >= 200) score = 9;
+  else if (solved >= 100) score = 8;
+  else if (solved >= 50) score = 7;
+  else if (solved >= 25) score = 6;
+  else if (solved >= 10) score = 5;
+  else if (solved >= 5) score = 4;
+  else if (solved >= 1) score = 3;
+  else score = 1;
+  return score;
+};
+
+const getLevel = (score) => score >= 8 ? 'Advanced' : score >= 5 ? 'Intermediate' : score > 0 ? 'Beginner' : 'Absolute Beginner';
+
+export async function scanLeetCodeProfile({ username }) {
   let data;
   try {
     const res = await fetch('https://leetcode.com/graphql', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ query, variables: { username } }),
+      body: JSON.stringify({ query: LEETCODE_GRAPHQL_QUERY, variables: { username } }),
     });
 
-    if (!res.ok) {
-      throw ApiError.internal('Failed to fetch data from LeetCode');
-    }
-    
+    if (!res.ok) throw ApiError.internal('Failed to fetch data from LeetCode');
     const responseData = await res.json();
-    if (responseData.errors) {
-      throw ApiError.badRequest(responseData.errors[0].message || 'LeetCode user not found');
-    }
-    
+    if (responseData.errors) throw ApiError.badRequest(responseData.errors[0].message || 'LeetCode user not found');
     data = responseData.data;
   } catch (error) {
     logger.error('LeetCode API Error', { err: error.message });
@@ -65,93 +89,122 @@ export async function verifyLeetCodeSkill({ userId, skillName, username, showLev
     throw ApiError.internal('Failed to communicate with LeetCode');
   }
 
-  if (!data || !data.matchedUser) {
-    throw ApiError.notFound('LeetCode user not found');
-  }
+  if (!data || !data.matchedUser) throw ApiError.notFound('LeetCode user not found');
 
-  // Guard against re-verifying the same LeetCode profile for the same skill
-  const existing = await prisma.skill.findFirst({ 
-    where: { userId, name: normalizedSkill, verificationSource: 'LEETCODE' } 
+  const stats = data.matchedUser.submitStats.acSubmissionNum;
+  const easy = stats.find(s => s.difficulty === 'Easy')?.count || 0;
+  const medium = stats.find(s => s.difficulty === 'Medium')?.count || 0;
+  const hard = stats.find(s => s.difficulty === 'Hard')?.count || 0;
+
+  const dsaStats = calculateDSAScore(easy, medium, hard);
+  
+  const dsa = {
+    easy, medium, hard,
+    totalPoints: dsaStats.totalPoints,
+    score: dsaStats.score,
+    level: getLevel(dsaStats.score)
+  };
+
+  const languagesData = data.matchedUser.languageProblemCount;
+  const languages = languagesData.map(l => {
+    const name = LANGUAGE_MAP[l.languageName.toLowerCase()] || l.languageName;
+    const problemsSolved = l.problemsSolved;
+    const score = calculateLanguageScore(problemsSolved);
+    return { name, problemsSolved, score, level: getLevel(score) };
   });
-  if (existing) throw ApiError.conflict('This LeetCode profile is already verified for this skill');
 
+  return {
+    success: true,
+    username,
+    profileUrl: `https://leetcode.com/u/${username}/`,
+    languages,
+    dsa
+  };
+}
+
+export async function verifyLeetCodeSkill({ userId, skillName, username, showLevel, addNewSkill = false }) {
+  const normalizedSkill = LANGUAGE_MAP[skillName.toLowerCase()] || skillName;
+
+  const scanResult = await scanLeetCodeProfile({ username });
+  
   let score;
   let breakdownMsg;
   
-  // Check if we are verifying "Data Structures & Algorithms" or a specific Language
   if (normalizedSkill.toLowerCase().includes('data structure') || normalizedSkill.toLowerCase().includes('algorithm')) {
-    const stats = data.matchedUser.submitStats.acSubmissionNum;
-    const easy = stats.find(s => s.difficulty === 'Easy')?.count || 0;
-    const medium = stats.find(s => s.difficulty === 'Medium')?.count || 0;
-    const hard = stats.find(s => s.difficulty === 'Hard')?.count || 0;
-    
-    const totalPoints = (easy * 1) + (medium * 3) + (hard * 5);
-    
-    if (totalPoints >= 1000) score = 10;
-    else if (totalPoints >= 700) score = 9;
-    else if (totalPoints >= 500) score = 8;
-    else if (totalPoints >= 300) score = 7;
-    else if (totalPoints >= 150) score = 6;
-    else if (totalPoints >= 75) score = 5;
-    else if (totalPoints >= 30) score = 4;
-    else if (totalPoints >= 10) score = 3;
-    else if (totalPoints >= 1) score = 2;
-    else score = 1;
-
-    breakdownMsg = `Based on LeetCode submissions: ${easy} Easy, ${medium} Medium, ${hard} Hard (Score: ${score}/10).`;
+    score = scanResult.dsa.score;
+    breakdownMsg = `Based on LeetCode submissions: ${scanResult.dsa.easy} Easy, ${scanResult.dsa.medium} Medium, ${scanResult.dsa.hard} Hard (Score: ${score}/10).`;
   } else {
-    // Verifying specific language
-    const languages = data.matchedUser.languageProblemCount;
-    const targetLang = languages.find(l => {
-      const leetLang = LANGUAGE_MAP[l.languageName.toLowerCase()] || l.languageName;
-      return leetLang.toLowerCase() === normalizedSkill.toLowerCase();
-    });
-
+    const targetLang = scanResult.languages.find(l => l.name.toLowerCase() === normalizedSkill.toLowerCase());
+    
     if (!targetLang) {
       score = 0;
       breakdownMsg = `No LeetCode problems solved using ${normalizedSkill}.`;
     } else {
-      const solved = targetLang.problemsSolved;
-      if (solved >= 300) score = 10;
-      else if (solved >= 200) score = 9;
-      else if (solved >= 100) score = 8;
-      else if (solved >= 50) score = 7;
-      else if (solved >= 25) score = 6;
-      else if (solved >= 10) score = 5;
-      else if (solved >= 5) score = 4;
-      else if (solved >= 1) score = 3;
-      else score = 1;
-      
-      breakdownMsg = `Solved ${solved} LeetCode problems using ${normalizedSkill} (Score: ${score}/10).`;
+      score = targetLang.score;
+      breakdownMsg = `Solved ${targetLang.problemsSolved} LeetCode problems using ${normalizedSkill} (Score: ${score}/10).`;
     }
   }
 
-  const level = score >= 8 ? 'Advanced' : score >= 5 ? 'Intermediate' : score > 0 ? 'Beginner' : 'Absolute Beginner';
-  const verificationUrl = `https://leetcode.com/u/${username}/`;
+  // If addNewSkill is true, we only proceed if score > 0.
+  // Otherwise we keep current logic.
+  if (addNewSkill && score === 0) {
+    throw ApiError.badRequest(`Cannot add skill ${normalizedSkill} with a score of 0.`);
+  }
 
-  const skill = await prisma.skill.upsert({
-    where:  { userId_name: { userId, name: normalizedSkill } },
-    update: { 
-      isVerified: true, 
-      verificationUrl, 
-      verificationSource: 'LEETCODE',
-      verifiedAt: new Date(), 
-      calculatedScore: score, 
-      showLevel: !!showLevel, 
-      level 
-    },
-    create: { 
-      userId, 
-      name: normalizedSkill, 
-      level, 
-      isVerified: true, 
-      verificationUrl, 
-      verificationSource: 'LEETCODE',
-      verifiedAt: new Date(), 
-      calculatedScore: score, 
-      showLevel: !!showLevel 
-    },
-  });
+  const level = getLevel(score);
+  const verificationUrl = scanResult.profileUrl;
+
+  let skill;
+  if (addNewSkill) {
+    skill = await prisma.skill.upsert({
+      where:  { userId_name: { userId, name: normalizedSkill } },
+      update: { 
+        isVerified: true, 
+        verificationUrl, 
+        verificationSource: 'LEETCODE',
+        verifiedAt: new Date(), 
+        calculatedScore: score, 
+        showLevel: !!showLevel, 
+        level 
+      },
+      create: { 
+        userId, 
+        name: normalizedSkill, 
+        level, 
+        isVerified: true, 
+        verificationUrl, 
+        verificationSource: 'LEETCODE',
+        verifiedAt: new Date(), 
+        calculatedScore: score, 
+        showLevel: !!showLevel 
+      },
+    });
+  } else {
+    // Keep current upsert logic if false
+    skill = await prisma.skill.upsert({
+      where:  { userId_name: { userId, name: normalizedSkill } },
+      update: { 
+        isVerified: true, 
+        verificationUrl, 
+        verificationSource: 'LEETCODE',
+        verifiedAt: new Date(), 
+        calculatedScore: score, 
+        showLevel: !!showLevel, 
+        level 
+      },
+      create: { 
+        userId, 
+        name: normalizedSkill, 
+        level, 
+        isVerified: true, 
+        verificationUrl, 
+        verificationSource: 'LEETCODE',
+        verifiedAt: new Date(), 
+        calculatedScore: score, 
+        showLevel: !!showLevel 
+      },
+    });
+  }
 
   await prisma.activityLog.create({
     data: { userId, action: 'VERIFIED_SKILL', details: `LeetCode verified: ${normalizedSkill} (${score}/10)` },
