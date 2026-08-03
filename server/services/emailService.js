@@ -31,15 +31,38 @@ function getTransporter() {
           user: process.env.SMTP_USER,
           pass: process.env.SMTP_PASS,
         },
+        connectionTimeout: 10000, // 10 seconds
+        socketTimeout: 10000,
+        greetingTimeout: 10000,
       });
     } else {
-      transporter = nodemailer.createTransport({
-        service,
-        auth: {
-          user: process.env.SMTP_USER,
-          pass: process.env.SMTP_PASS,
-        },
-      });
+      if (service === 'gmail') {
+        // Default to Gmail on port 587 (STARTTLS) instead of port 465 (SSL)
+        // because hosting providers like Render block port 465 by default.
+        transporter = nodemailer.createTransport({
+          host: 'smtp.gmail.com',
+          port: 587,
+          secure: false,
+          auth: {
+            user: process.env.SMTP_USER,
+            pass: process.env.SMTP_PASS,
+          },
+          connectionTimeout: 10000, // 10 seconds
+          socketTimeout: 10000,
+          greetingTimeout: 10000,
+        });
+      } else {
+        transporter = nodemailer.createTransport({
+          service,
+          auth: {
+            user: process.env.SMTP_USER,
+            pass: process.env.SMTP_PASS,
+          },
+          connectionTimeout: 10000, // 10 seconds
+          socketTimeout: 10000,
+          greetingTimeout: 10000,
+        });
+      }
     }
   }
   return transporter;
