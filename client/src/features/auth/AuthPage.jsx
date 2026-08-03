@@ -1,28 +1,25 @@
-import { useState, useEffect } from 'react';
 import { useLocation } from 'react-router-dom';
 import { Shield, X, Github } from 'lucide-react';
 import { API_BASE_URL } from '../../config/constants';
 
 export default function AuthPage() {
-  const [error, setError] = useState('');
   const location = useLocation();
 
-  useEffect(() => {
-    // Check for reason or error in URL
-    const params = new URLSearchParams(location.search);
-    if (params.get('reason') === 'github_required') {
-      setError('Account deleted: Linking GitHub is mandatory to ensure quality profiles. Please register again and link your GitHub.');
-    } else if (params.get('error')) {
-      const err = params.get('error');
-      if (err === 'OAuthCodeMissing') setError('OAuth login failed: Missing authorization code.');
-      else if (err === 'GoogleOAuthFailed') setError('Google login failed. Please try again.');
-      else if (err === 'GithubOAuthFailed') setError('GitHub login failed. Please try again.');
-      else if (err === 'EmailMissing') setError('Failed to retrieve email from your account.');
-      else setError('OAuth authentication failed. Please try again.');
-    } else {
-      setError('');
-    }
-  }, [location]);
+  // Derive error message directly from URL search params during render
+  const params = new URLSearchParams(location.search);
+  const reasonParam = params.get('reason');
+  const errorParam = params.get('error');
+
+  let error = '';
+  if (reasonParam === 'github_required') {
+    error = 'Account deleted: Linking GitHub is mandatory to ensure quality profiles. Please register again and link your GitHub.';
+  } else if (errorParam) {
+    if (errorParam === 'OAuthCodeMissing') error = 'OAuth login failed: Missing authorization code.';
+    else if (errorParam === 'GoogleOAuthFailed') error = 'Google login failed. Please try again.';
+    else if (errorParam === 'GithubOAuthFailed') error = 'GitHub login failed. Please try again.';
+    else if (errorParam === 'EmailMissing') error = 'Failed to retrieve email from your account.';
+    else error = 'OAuth authentication failed. Please try again.';
+  }
 
   const cardBase = "min-h-screen bg-bg-base flex items-center justify-center p-4 font-outfit";
   const panelBase = "bg-surface border border-outline-var/30 rounded-md p-8 w-full max-w-md shadow-2xl shadow-bg-base/80";

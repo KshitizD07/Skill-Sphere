@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import {
   ArrowLeft, Camera, User, Plus, CheckCircle,
   X, Shield, Github, Linkedin, Save, Building2,
-  LogOut, BarChart2, Zap, Award, Users
+  Zap, Award
 } from 'lucide-react';
 import ProfileAPI from './profileAPI';
 import API from '../../api';
@@ -23,7 +23,6 @@ export default function MyProfile({ user, onUserUpdate }) {
   const [allSkills, setAllSkills] = useState([]);
   const [mySkillNames, setMySkillNames] = useState([]);
   const [mySkillsRaw, setMySkillsRaw] = useState([]);
-  const [verifiedSkillNames, setVerifiedSkillNames] = useState([]);
   const [showSkillSelector, setShowSkillSelector] = useState(false);
   const [showVerifier, setShowVerifier] = useState(false);
   const [showProofVerifier, setShowProofVerifier] = useState(false);
@@ -55,7 +54,6 @@ export default function MyProfile({ user, onUserUpdate }) {
       if (userData.skills) {
         setMySkillsRaw(userData.skills);
         setMySkillNames(userData.skills.map(us => us.name || us.skill?.name).filter(Boolean));
-        setVerifiedSkillNames(userData.skills.filter(us => us.isVerified).map(us => us.name || us.skill?.name).filter(Boolean));
       }
     } catch (err) {
       console.error('Failed to load user data:', err);
