@@ -291,7 +291,8 @@ export default function GlobalFeed() {
   const handleLogout = async () => {
     try { await API.post('/auth/logout'); } catch (err) { console.error('Logout error', err); }
     localStorage.removeItem('user_data');
-    window.location.href = '/'; 
+    localStorage.removeItem('ss_token');
+    window.location.replace('/'); 
   };
 
   return (
