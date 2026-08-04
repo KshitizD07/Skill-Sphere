@@ -4,7 +4,7 @@ import API from '../../api';
 import SquadAPI from './squadAPI';
 import {
   ArrowLeft, CheckCircle, X,
-  User, AlertCircle, RefreshCw, Shield, Users
+  User, AlertCircle, RefreshCw
 } from 'lucide-react';
 import Navbar from '../../shared/components/Navbar';
 
@@ -210,7 +210,7 @@ function ApplicationCard({ application, onAccept, onReject, loading, accepted, r
 
           {application.message && (
             <p className="text-xs text-text-muted mt-2 border-l-2 border-outline/50 pl-2 italic">
-              "{application.message}"
+              &quot;{application.message}&quot;
             </p>
           )}
 
