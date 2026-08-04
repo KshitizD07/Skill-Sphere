@@ -1,20 +1,22 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import API from '../../api';
 import SquadAPI from './squadAPI';
 import {
   ArrowLeft, Users, Shield, CheckCircle, XCircle,
   Clock, Target, ChevronRight, RefreshCw
 } from 'lucide-react';
+import Navbar from '../../shared/components/Navbar';
 
 const STATUS_CONFIG = {
-  PENDING:  { label: 'PENDING',  color: 'yellow', icon: Clock,       bg: 'bg-yellow-900/20', border: 'border-yellow-500/30', text: 'text-yellow-400' },
-  ACCEPTED: { label: 'ACCEPTED', color: 'green',  icon: CheckCircle, bg: 'bg-green-900/20',  border: 'border-green-500/30',  text: 'text-green-400'  },
-  REJECTED: { label: 'REJECTED', color: 'red',    icon: XCircle,     bg: 'bg-red-900/20',    border: 'border-red-500/30',    text: 'text-red-400'    },
+  PENDING:  { label: 'PENDING',  icon: Clock,       bg: 'bg-primary/10', border: 'border-primary/20', text: 'text-primary' },
+  ACCEPTED: { label: 'ACCEPTED', icon: CheckCircle, bg: 'bg-emerald-500/10', border: 'border-emerald-500/20', text: 'text-emerald-400' },
+  REJECTED: { label: 'REJECTED', icon: XCircle,     bg: 'bg-error/10', border: 'border-error/20', text: 'text-error' },
 };
 
 export default function MyApplications() {
   const navigate = useNavigate();
-  const _currentUser = JSON.parse(localStorage.getItem('user_data') || '{}');
+  const currentUser = JSON.parse(localStorage.getItem('user_data') || '{}');
 
   const [data, setData] = useState({ led: [], applications: [] });
   const [loading, setLoading] = useState(true);
@@ -30,49 +32,57 @@ export default function MyApplications() {
     setLoading(false);
   };
 
+  const handleLogout = () => {
+    API.post('/auth/logout').catch(() => {});
+    localStorage.removeItem('user_data');
+    localStorage.removeItem('ss_token');
+    window.location.replace('/');
+  };
+
   const tabs = [
-    { id: 'applications', label: 'MY_APPLICATIONS', count: data.applications?.length || 0 },
-    { id: 'led', label: 'SQUADS_I_LEAD', count: data.led?.length || 0 },
+    { id: 'applications', label: 'My Applications', count: data.applications?.length || 0 },
+    { id: 'led', label: 'Teams I Lead', count: data.led?.length || 0 },
   ];
 
   return (
-    <div className="min-h-screen bg-[#050505] text-gray-300 font-['Rajdhani'] p-4 md:p-8 relative selection:bg-cyan-500 selection:text-black">
-      <div className="absolute inset-0 bg-[linear-gradient(rgba(0,240,255,0.02)_1px,transparent_1px),linear-gradient(90deg,rgba(0,240,255,0.02)_1px,transparent_1px)] bg-[size:40px_40px] pointer-events-none" />
+    <div className="min-h-screen bg-bg-base text-text-primary font-outfit flex flex-col md:flex-row">
+      <Navbar user={currentUser} onLogout={handleLogout} />
 
-      <div className="w-full max-w-[1400px] mx-auto relative z-10">
-
+      <div className="flex-grow md:ml-64 pt-20 md:pt-0 min-h-screen overflow-y-auto p-6 md:p-10 w-full max-w-[1400px] mx-auto">
+        
         {/* Header */}
-        <div className="flex items-center justify-between gap-4 mb-8 border-b border-gray-800 pb-6">
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-5 mb-8 border-b border-outline-var/25 pb-6">
           <div className="flex items-center gap-4">
-            <button onClick={() => navigate('/nexus')} className="p-2 border border-gray-700 hover:border-cyan-500 text-gray-500 hover:text-cyan-400 transition">
-              <ArrowLeft size={20} />
+            <button onClick={() => navigate('/nexus')} className="p-2 border border-outline-var/40 rounded-xs hover:border-primary/45 text-text-muted hover:text-primary transition-all">
+              <ArrowLeft size={18} />
             </button>
             <div>
-              <h1 className="text-2xl md:text-3xl font-black text-white font-['Orbitron'] tracking-widest flex items-center gap-3">
-                <Shield className="text-purple-400" size={28} /> MISSION_LOG
+              <h1 className="text-2xl font-extrabold text-text-primary tracking-tight leading-tight flex items-center gap-2">
+                <Shield className="text-primary" size={24} /> Mission Log
               </h1>
-              <p className="text-xs font-mono text-gray-500 mt-1">YOUR SQUADS & APPLICATIONS</p>
+              <p className="font-syne text-[10px] font-bold tracking-[0.12em] uppercase text-text-muted mt-1">Your Squads & Applications</p>
             </div>
           </div>
-          <button onClick={loadData} className="p-2 border border-gray-700 hover:border-cyan-500 text-gray-500 hover:text-cyan-400 transition">
-            <RefreshCw size={16} />
+          <button onClick={loadData} className="self-end md:self-auto p-2.5 border border-outline-var/40 rounded-xs hover:border-primary/45 text-text-muted hover:text-primary transition-all flex items-center gap-2">
+            <RefreshCw size={14} className={loading ? 'animate-spin' : ''} />
+            <span className="font-syne text-[10px] font-bold uppercase tracking-widest">Refresh</span>
           </button>
         </div>
 
         {/* Tabs */}
-        <div className="flex gap-1 mb-8">
+        <div className="flex gap-2 mb-8 border-b border-outline-var/20">
           {tabs.map(tab => (
             <button
               key={tab.id}
               onClick={() => setActiveTab(tab.id)}
-              className={`px-5 py-3 font-bold font-['Orbitron'] text-sm transition flex items-center gap-2 ${
+              className={`px-5 py-3 font-bold font-syne text-xs uppercase tracking-wider transition-all border-b-2 -mb-[2px] ${
                 activeTab === tab.id
-                  ? 'bg-cyan-900/30 border border-cyan-500/50 text-cyan-400'
-                  : 'bg-gray-900/30 border border-gray-800 text-gray-500 hover:text-gray-300 hover:border-gray-600'
+                  ? 'border-primary text-primary bg-primary/5'
+                  : 'border-transparent text-text-muted hover:text-text-primary hover:border-outline-var/50'
               }`}
             >
-              {tab.label}
-              <span className={`text-xs px-1.5 py-0.5 font-mono ${activeTab === tab.id ? 'bg-cyan-500/20 text-cyan-400' : 'bg-gray-800 text-gray-500'}`}>
+              <span className="mr-2">{tab.label}</span>
+              <span className={`text-[10px] font-mono px-1.5 py-0.5 rounded-xs ${activeTab === tab.id ? 'bg-primary/20 text-primary' : 'bg-surface-mid text-text-muted'}`}>
                 {tab.count}
               </span>
             </button>
@@ -82,8 +92,8 @@ export default function MyApplications() {
         {/* Content */}
         {loading ? (
           <div className="text-center py-20">
-            <div className="inline-block animate-spin text-cyan-400 mb-4"><Shield size={48} /></div>
-            <p className="text-cyan-500 font-mono animate-pulse">LOADING_DATA...</p>
+            <div className="inline-block animate-spin text-primary mb-4"><Shield size={36} /></div>
+            <p className="text-text-muted font-syne text-[10px] uppercase tracking-[0.12em] animate-pulse">Loading logs...</p>
           </div>
         ) : activeTab === 'applications' ? (
           <ApplicationsList applications={data.applications || []} navigate={navigate} />
@@ -98,19 +108,19 @@ export default function MyApplications() {
 function ApplicationsList({ applications, navigate }) {
   if (applications.length === 0) {
     return (
-      <div className="text-center py-16 border border-dashed border-gray-800">
-        <Target size={48} className="mx-auto text-gray-700 mb-4" />
-        <h3 className="text-xl text-gray-500 font-bold font-['Orbitron']">NO_APPLICATIONS</h3>
-        <p className="text-gray-600 font-mono text-sm mt-2">Browse the N.E.X.U.S. feed to find squads</p>
-        <button onClick={() => navigate('/nexus')} className="mt-4 px-6 py-2 bg-cyan-900/30 border border-cyan-500/50 text-cyan-400 hover:bg-cyan-500 hover:text-black transition font-bold font-['Orbitron'] text-sm">
-          BROWSE_MISSIONS
+      <div className="text-center py-16 border border-dashed border-outline-var/30 rounded-md">
+        <Target size={40} className="mx-auto text-outline mb-4" />
+        <h3 className="text-base text-text-primary font-bold tracking-tight">No applications found</h3>
+        <p className="text-text-muted text-xs mt-1">Browse the N.E.X.U.S. feed to find squads matching your skills.</p>
+        <button onClick={() => navigate('/nexus')} className="mt-6 px-6 py-2.5 bg-primary text-on-primary font-syne font-bold text-xs uppercase tracking-[0.1em] rounded-xs hover:opacity-90 transition-all">
+          Browse Missions
         </button>
       </div>
     );
   }
 
   return (
-    <div className="space-y-3">
+    <div className="space-y-4">
       {applications.map(app => {
         const cfg = STATUS_CONFIG[app.status] || STATUS_CONFIG.PENDING;
         const Icon = cfg.icon;
@@ -118,37 +128,40 @@ function ApplicationsList({ applications, navigate }) {
           <div
             key={app.id}
             onClick={() => navigate(`/squad/${app.squadId}`)}
-            className={`bg-black border ${cfg.border} p-5 cursor-pointer hover:bg-gray-900/50 transition group`}
+            className="bg-surface border border-outline-var/30 p-5 rounded-xs cursor-pointer hover:border-primary/30 hover:bg-surface-mid transition-all group"
           >
-            <div className="flex items-center justify-between">
-              <div className="flex-1 min-w-0">
-                <div className="flex items-center gap-3 mb-2">
-                  <h3 className="text-lg font-bold text-white font-['Orbitron'] group-hover:text-cyan-400 transition truncate">
+            <div className="flex items-center justify-between gap-4">
+              <div className="min-w-0 flex-1">
+                <div className="flex flex-wrap items-center gap-3 mb-2">
+                  <h3 className="text-base font-bold text-text-primary group-hover:text-primary transition-colors truncate">
                     {app.squad?.title}
                   </h3>
-                  <span className={`px-2 py-0.5 text-[10px] font-bold font-['Orbitron'] ${cfg.bg} ${cfg.border} border ${cfg.text}`}>
-                    <Icon size={10} className="inline mr-1" />{cfg.label}
+                  <span className={`px-2 py-0.5 text-[9px] font-syne font-bold uppercase tracking-wider rounded-xs border flex items-center gap-1 ${cfg.bg} ${cfg.border} ${cfg.text}`}>
+                    <Icon size={10} />
+                    <span>{cfg.label}</span>
                   </span>
                 </div>
 
-                <div className="flex items-center gap-4 text-xs font-mono text-gray-500">
+                <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-text-muted">
                   {app.slot && (
-                    <span className="text-purple-400">
-                      <Shield size={10} className="inline mr-1" />{app.slot.roleTitle}
+                    <span className="text-primary-dim font-medium">
+                      Role: {app.slot.roleTitle}
                     </span>
                   )}
                   {app.matchScore != null && (
-                    <span className="text-yellow-400 font-bold">MATCH: {app.matchScore}/10</span>
+                    <span className="text-secondary font-semibold">Match Score: {app.matchScore}%</span>
                   )}
                   {app.squad?.event && (
-                    <span className="text-gray-600">{app.squad.event}</span>
+                    <span className="bg-surface-mid border border-outline-var/40 px-1.5 py-0.5 text-[10px] font-syne font-bold uppercase tracking-wider text-text-muted rounded-xs">
+                      {app.squad.event}
+                    </span>
                   )}
-                  <span className="text-gray-600">
+                  <span className="text-[#888]">
                     Applied {new Date(app.appliedAt).toLocaleDateString()}
                   </span>
                 </div>
               </div>
-              <ChevronRight size={20} className="text-gray-700 group-hover:text-cyan-400 transition shrink-0" />
+              <ChevronRight size={18} className="text-outline group-hover:text-primary transition-colors shrink-0" />
             </div>
           </div>
         );
@@ -160,53 +173,60 @@ function ApplicationsList({ applications, navigate }) {
 function LedSquadsList({ squads, navigate }) {
   if (squads.length === 0) {
     return (
-      <div className="text-center py-16 border border-dashed border-gray-800">
-        <Users size={48} className="mx-auto text-gray-700 mb-4" />
-        <h3 className="text-xl text-gray-500 font-bold font-['Orbitron']">NO_SQUADS_CREATED</h3>
-        <p className="text-gray-600 font-mono text-sm mt-2">Create your first squad on the mission board</p>
-        <button onClick={() => navigate('/nexus')} className="mt-4 px-6 py-2 bg-yellow-400 text-black hover:bg-yellow-300 transition font-bold font-['Orbitron'] text-sm">
-          CREATE_SQUAD
+      <div className="text-center py-16 border border-dashed border-outline-var/30 rounded-md">
+        <Users size={40} className="mx-auto text-outline mb-4" />
+        <h3 className="text-base text-text-primary font-bold tracking-tight">No squads created</h3>
+        <p className="text-text-muted text-xs mt-1">Be the catalyst. Create your team and match with optimal candidates.</p>
+        <button onClick={() => navigate('/nexus')} className="mt-6 px-6 py-2.5 bg-primary text-on-primary font-syne font-bold text-xs uppercase tracking-[0.1em] rounded-xs hover:opacity-90 transition-all">
+          Create a Squad
         </button>
       </div>
     );
   }
 
   return (
-    <div className="space-y-3">
+    <div className="space-y-4">
       {squads.map(squad => {
         const pendingCount = squad._count?.applications || 0;
         return (
           <div
             key={squad.id}
             onClick={() => navigate(`/squad/${squad.id}/manage`)}
-            className="bg-black border border-purple-500/20 hover:border-purple-500/50 p-5 cursor-pointer transition group"
+            className="bg-surface border border-outline-var/30 hover:border-primary/30 p-5 rounded-xs cursor-pointer hover:bg-surface-mid transition-all group"
           >
-            <div className="flex items-center justify-between">
-              <div className="flex-1 min-w-0">
-                <div className="flex items-center gap-3 mb-2">
-                  <h3 className="text-lg font-bold text-white font-['Orbitron'] group-hover:text-purple-400 transition truncate">
+            <div className="flex items-center justify-between gap-4">
+              <div className="min-w-0 flex-1">
+                <div className="flex flex-wrap items-center gap-3 mb-2">
+                  <h3 className="text-base font-bold text-text-primary group-hover:text-primary transition-colors truncate">
                     {squad.title}
                   </h3>
-                  <span className={`px-2 py-0.5 text-[10px] font-bold font-['Orbitron'] ${
-                    squad.status === 'OPEN' ? 'bg-green-900/20 border border-green-500/30 text-green-400'
-                    : squad.status === 'FULL' ? 'bg-red-900/20 border border-red-500/30 text-red-400'
-                    : 'bg-gray-900/20 border border-gray-500/30 text-gray-400'
+                  <span className={`px-2.5 py-0.5 text-[9px] font-syne font-bold uppercase tracking-wider rounded-xs border ${
+                    squad.status === 'OPEN' ? 'bg-emerald-500/10 border-emerald-500/20 text-emerald-400'
+                    : squad.status === 'FULL' ? 'bg-primary/10 border-primary/20 text-primary'
+                    : 'bg-surface-mid border-outline-var/30 text-text-muted'
                   }`}>
                     {squad.status}
                   </span>
                 </div>
 
-                <div className="flex items-center gap-4 text-xs font-mono text-gray-500">
-                  <span><Users size={10} className="inline mr-1" />{squad.currentMembers}/{squad.maxMembers} members</span>
+                <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-text-muted">
+                  <span className="flex items-center gap-1">
+                    <Users size={12} className="text-outline" />
+                    <span>{squad.currentMembers}/{squad.maxMembers} members</span>
+                  </span>
                   {pendingCount > 0 && (
-                    <span className="text-yellow-400 font-bold animate-pulse">
-                      {pendingCount} PENDING
+                    <span className="text-primary font-bold animate-pulse bg-primary/10 px-1.5 py-0.5 rounded-xs border border-primary/25 text-[10px] font-syne uppercase tracking-wider">
+                      {pendingCount} Pending Review
                     </span>
                   )}
-                  {squad.event && <span className="text-purple-400">{squad.event}</span>}
+                  {squad.event && (
+                    <span className="bg-surface-mid border border-outline-var/40 px-1.5 py-0.5 text-[10px] font-syne font-bold uppercase tracking-wider text-text-muted rounded-xs">
+                      {squad.event}
+                    </span>
+                  )}
                 </div>
               </div>
-              <ChevronRight size={20} className="text-gray-700 group-hover:text-purple-400 transition shrink-0" />
+              <ChevronRight size={18} className="text-outline group-hover:text-primary transition-colors shrink-0" />
             </div>
           </div>
         );
