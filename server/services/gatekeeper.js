@@ -29,9 +29,11 @@ class GatekeeperService {
     if (squad.status !== 'OPEN')   return this.reject(`Squad is ${squad.status.toLowerCase()}`);
     if (squad.leaderId === userId)  return this.reject('You are the squad leader');
 
-    const existingApp = await prisma.squadApplication.findUnique({ where: { squadId_userId: { squadId, userId } } });
-    if (existingApp?.status === 'PENDING')  return this.reject('Application already pending');
-    if (existingApp?.status === 'ACCEPTED') return this.reject('Already a member');
+    const userApps = await prisma.squadApplication.findMany({ where: { squadId, userId } });
+    if (userApps.some((a) => a.status === 'ACCEPTED')) return this.reject('Already a member of this squad');
+    if (userApps.some((a) => a.status === 'PENDING'))  return this.reject('You already have a pending application in this squad');
+
+    const rejectedSlotIds = userApps.filter((a) => a.status === 'REJECTED').map((a) => a.slotId).filter(Boolean);
 
     // Phase 2: Visibility & access control
     const user = await prisma.user.findUnique({
@@ -74,11 +76,14 @@ class GatekeeperService {
     // Phase 4: Slot matching
     let targetSlot = slotId
       ? squad.slots.find((s) => s.id === slotId)
-      : this.findBestSlotMatch(squad.slots, user.skills);
+      : this.findBestSlotMatch(squad.slots, user.skills, rejectedSlotIds);
 
-    if (slotId && !targetSlot)            return this.reject('Slot not found');
+    if (slotId && !targetSlot) return this.reject('Slot not found');
+    if (targetSlot && rejectedSlotIds.includes(targetSlot.id)) {
+      return this.reject('You have been rejected for this role and cannot re-apply for it');
+    }
     if (slotId && targetSlot?.status === 'FILLED') return this.reject('Slot already filled');
-    if (!targetSlot)                       return this.reject('No available slots match your skills');
+    if (!targetSlot) return this.reject('No available slots match your skills');
 
     // Phase 5: Skill gate (open roles bypass this)
     if (!targetSlot.requiredSkill) {
@@ -120,8 +125,8 @@ class GatekeeperService {
   }
 
   /** Finds the best open slot for the user's skills. Prefers open roles, then highest-scoring match. */
-  findBestSlotMatch(slots, userSkills) {
-    const open = slots.filter((s) => s.status === 'OPEN');
+  findBestSlotMatch(slots, userSkills, rejectedSlotIds = []) {
+    const open = slots.filter((s) => s.status === 'OPEN' && !rejectedSlotIds.includes(s.id));
 
     // Prefer slots without skill requirements (e.g. PM / Designer)
     const openRoles = open.filter((s) => !s.requiredSkill);
