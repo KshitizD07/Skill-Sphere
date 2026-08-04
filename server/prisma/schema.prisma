@@ -24,8 +24,9 @@ model User {
   headline String?
   bio      String?
   avatar   String?
-  github   String?
-  linkedin String?
+  github            String?
+  githubAccessToken String?
+  linkedin          String?
 
   createdAt DateTime @default(now())
 
