@@ -99,9 +99,10 @@ export async function getSquad(squadId) {
 
 // ── Gatekeeper: check if user qualifies for a squad ──────────────────────────
 export async function checkQualification(squadId, userId) {
-  const [squad, user] = await Promise.all([
+  const [squad, user, userApps] = await Promise.all([
     prisma.squad.findUnique({ where: { id: squadId }, include: { slots: { where: { status: 'OPEN' } } } }),
     prisma.user.findUnique({ where: { id: userId }, include: { skills: true } }),
+    prisma.squadApplication.findMany({ where: { squadId, userId } }),
   ]);
 
   if (!squad) throw ApiError.notFound('Squad');
@@ -109,8 +110,12 @@ export async function checkQualification(squadId, userId) {
   if (squad.status !== 'OPEN')           return { qualifies: false, reason: 'Squad is not open' };
   if (squad.currentMembers >= squad.maxMembers) return { qualifies: false, reason: 'Squad is full' };
 
-  // User qualifies if they can fill at least one open slot
+  const rejectedSlotIds = userApps.filter((a) => a.status === 'REJECTED').map((a) => a.slotId).filter(Boolean);
+
+  // User qualifies if they can fill at least one open non-rejected slot
   for (const slot of squad.slots) {
+    if (rejectedSlotIds.includes(slot.id)) continue;
+
     if (!slot.requiredSkill || slot.minScore === 0) {
       return { qualifies: true, matchScore: 5, slotId: slot.id };
     }
@@ -123,7 +128,7 @@ export async function checkQualification(squadId, userId) {
     if (score >= slot.minScore) return { qualifies: true, matchScore: score, slotId: slot.id };
   }
 
-  return { qualifies: false, reason: 'Score too low or missing required skill' };
+  return { qualifies: false, reason: 'Score too low or missing required skill for open roles' };
 }
 
 // ── Apply to squad (with Gatekeeper + Antifragile AI) ─────────────────────────
@@ -132,15 +137,17 @@ export async function applyToSquad(squadId, userId, message, slotId = null) {
   const gate = await gatekeeper.checkEligibility(userId, squadId, slotId);
   if (!gate.allowed) throw ApiError.forbidden(gate.reason || 'You do not qualify for this squad');
 
-  // Step 2: Duplicate check
-  const existing = await prisma.squadApplication.findUnique({
-    where: { squadId_userId: { squadId, userId } },
+  // Step 2: Duplicate check for target slot
+  const existingForSlot = await prisma.squadApplication.findFirst({
+    where: { squadId, userId, slotId: gate.slot.id },
   });
-  if (existing) {
-    if (existing.status === 'PENDING') throw ApiError.conflict('Application already pending');
-    if (existing.status === 'ACCEPTED') throw ApiError.conflict('Already a member of this squad');
-    // If rejected or withdrawn, delete the old application to allow re-application
-    await prisma.squadApplication.delete({ where: { id: existing.id } });
+  if (existingForSlot) {
+    if (existingForSlot.status === 'PENDING') throw ApiError.conflict('Application for this role is already pending');
+    if (existingForSlot.status === 'ACCEPTED') throw ApiError.conflict('Already a member of this squad');
+    if (existingForSlot.status === 'REJECTED') throw ApiError.forbidden('You have been rejected for this role');
+    if (existingForSlot.status === 'WITHDRAWN') {
+      await prisma.squadApplication.delete({ where: { id: existingForSlot.id } });
+    }
   }
 
   // Step 3: Antifragile matching (graceful fallback if engine fails)
