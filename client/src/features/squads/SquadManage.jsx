@@ -1,10 +1,12 @@
 import { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
+import API from '../../api';
 import SquadAPI from './squadAPI';
 import {
   ArrowLeft, CheckCircle, X,
-  User, AlertCircle, RefreshCw
+  User, AlertCircle, RefreshCw, Shield, Users
 } from 'lucide-react';
+import Navbar from '../../shared/components/Navbar';
 
 export default function SquadManage() {
   const { id } = useParams();
@@ -27,20 +29,43 @@ export default function SquadManage() {
 
   const handleAction = async (applicationId, status) => {
     setActionLoading(applicationId);
-    await SquadAPI.updateApplicationStatus(id, applicationId, status);
-    await loadSquad(); // Refresh
+    try {
+      const res = await SquadAPI.updateApplicationStatus(id, applicationId, status);
+      if (res.error) {
+        alert(res.message || 'Failed to update application status.');
+      } else {
+        await loadSquad(); // Refresh
+      }
+    } catch (err) {
+      console.error(err);
+      alert('An error occurred while updating application status.');
+    }
     setActionLoading(null);
   };
 
+  const handleLogout = () => {
+    API.post('/auth/logout').catch(() => {});
+    localStorage.removeItem('user_data');
+    localStorage.removeItem('ss_token');
+    window.location.replace('/');
+  };
+
   if (loading) return (
-    <div className="min-h-screen bg-[#050505] flex items-center justify-center">
-      <div className="text-cyan-500 font-mono animate-pulse">LOADING_SQUAD_DATA...</div>
+    <div className="min-h-screen bg-bg-base flex items-center justify-center">
+      <div className="w-12 h-12 border-4 border-primary/20 border-t-primary rounded-full animate-spin" />
     </div>
   );
 
   if (!squad || squad.leader?.id !== currentUser.id) return (
-    <div className="min-h-screen bg-[#050505] flex items-center justify-center">
-      <div className="text-red-500 font-mono">ACCESS_DENIED</div>
+    <div className="min-h-screen bg-bg-base flex items-center justify-center font-syne">
+      <div className="text-center">
+        <AlertCircle size={48} className="mx-auto text-error mb-4" />
+        <h3 className="text-xl font-extrabold text-text-primary uppercase tracking-wider">Access Denied</h3>
+        <p className="text-text-muted mt-2">Only the squad leader can manage this command center.</p>
+        <button onClick={() => navigate('/nexus')} className="mt-6 px-5 py-2.5 bg-primary text-on-primary font-bold text-xs uppercase tracking-widest rounded-xs hover:opacity-90 transition-all">
+          Back to Nexus
+        </button>
+      </div>
     </div>
   );
 
@@ -49,98 +74,106 @@ export default function SquadManage() {
   const rejected = squad.applications?.filter(a => a.status === 'REJECTED') || [];
 
   return (
-    <div className="min-h-screen bg-[#050505] text-gray-300 font-['Rajdhani'] p-4 md:p-8 relative">
-      <div className="absolute inset-0 bg-[linear-gradient(rgba(0,240,255,0.02)_1px,transparent_1px),linear-gradient(90deg,rgba(0,240,255,0.02)_1px,transparent_1px)] bg-[size:40px_40px] pointer-events-none" />
+    <div className="min-h-screen bg-bg-base text-text-primary font-outfit flex flex-col md:flex-row">
+      <Navbar user={currentUser} onLogout={handleLogout} />
 
-      <div className="w-full max-w-[1200px] mx-auto relative z-10">
-
+      <div className="flex-grow md:ml-64 pt-20 md:pt-0 min-h-screen overflow-y-auto p-6 md:p-10 w-full max-w-[1400px] mx-auto">
+        
         {/* Header */}
-        <div className="flex items-center gap-4 mb-8 border-b border-gray-800 pb-6">
-          <button onClick={() => navigate(`/squad/${id}`)} className="p-2 border border-gray-700 hover:border-cyan-500 text-gray-500 hover:text-cyan-400 transition">
-            <ArrowLeft size={20} />
-          </button>
-          <div className="flex-1">
-            <h1 className="text-2xl font-black text-white font-['Orbitron']">{squad.title}</h1>
-            <p className="text-xs font-mono text-gray-500 mt-1">SQUAD_COMMAND_CENTER</p>
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-5 mb-8 border-b border-outline-var/25 pb-6">
+          <div className="flex items-center gap-4">
+            <button onClick={() => navigate(`/squad/${id}`)} className="p-2 border border-outline-var/40 rounded-xs hover:border-primary/45 text-text-muted hover:text-primary transition-all">
+              <ArrowLeft size={18} />
+            </button>
+            <div>
+              <h1 className="text-2xl font-extrabold text-text-primary tracking-tight leading-tight">{squad.title}</h1>
+              <p className="font-syne text-[10px] font-bold tracking-[0.12em] uppercase text-primary mt-1">SQUAD_COMMAND_CENTER</p>
+            </div>
           </div>
-          <button onClick={loadSquad} className="p-2 border border-gray-700 hover:border-cyan-500 text-gray-500 hover:text-cyan-400 transition">
-            <RefreshCw size={16} />
+          <button onClick={loadSquad} className="self-end md:self-auto p-2.5 border border-outline-var/40 rounded-xs hover:border-primary/45 text-text-muted hover:text-primary transition-all flex items-center gap-2">
+            <RefreshCw size={14} className={loading ? 'animate-spin' : ''} />
+            <span className="font-syne text-[10px] font-bold uppercase tracking-widest">Refresh</span>
           </button>
         </div>
 
-        {/* Stats */}
-        <div className="grid grid-cols-3 gap-4 mb-8">
+        {/* Stats Grid */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
           {[
-            { label: 'PENDING', count: pending.length, color: 'yellow' },
-            { label: 'ACCEPTED', count: accepted.length, color: 'green' },
-            { label: 'CAPACITY', count: `${squad.currentMembers}/${squad.maxMembers}`, color: 'cyan' },
+            { label: 'PENDING REVIEW', count: pending.length, color: 'text-primary border-primary/25 bg-primary/5' },
+            { label: 'ACCEPTED MEMBERS', count: accepted.length, color: 'text-emerald-400 border-emerald-500/25 bg-emerald-500/5' },
+            { label: 'CAPACITY', count: `${squad.currentMembers}/${squad.maxMembers}`, color: 'text-secondary-bright border-secondary-bright/25 bg-secondary-bright/5' },
           ].map(stat => (
-            <div key={stat.label} className={`bg-black border border-${stat.color}-500/20 p-4 text-center`}>
-              <div className={`text-3xl font-black font-['Orbitron'] text-${stat.color}-400`}>
+            <div key={stat.label} className={`border p-5 rounded-xs flex flex-col justify-between ${stat.color}`}>
+              <div className="text-4xl font-extrabold font-syne tracking-tight">
                 {stat.count}
               </div>
-              <div className="text-xs font-mono text-gray-500 mt-1">{stat.label}</div>
+              <div className="text-[10px] font-syne font-bold uppercase tracking-[0.12em] text-text-muted mt-2">{stat.label}</div>
             </div>
           ))}
         </div>
 
-        {/* Pending applications */}
-        <div className="mb-8">
-          <h2 className="text-xl font-black font-['Orbitron'] text-yellow-400 mb-4 flex items-center gap-2">
-            <AlertCircle size={20} /> PENDING_REVIEW ({pending.length})
-          </h2>
-          {pending.length === 0 ? (
-            <div className="text-center py-8 border border-dashed border-gray-800 text-gray-600 font-mono text-sm">
-              NO_PENDING_APPLICATIONS
-            </div>
-          ) : (
-            <div className="space-y-3">
-              {pending.map(app => (
-                <ApplicationCard
-                  key={app.id}
-                  application={app}
-                  onAccept={() => handleAction(app.id, 'ACCEPTED')}
-                  onReject={() => handleAction(app.id, 'REJECTED')}
-                  loading={actionLoading === app.id}
-                  navigate={navigate}
-                />
-              ))}
+        {/* Main Content Area */}
+        <div className="space-y-8">
+          
+          {/* Pending Applications */}
+          <div>
+            <h2 className="text-sm font-extrabold font-syne text-primary uppercase tracking-[0.12em] mb-4 flex items-center gap-2">
+              <AlertCircle size={15} /> Pending Applications ({pending.length})
+            </h2>
+            {pending.length === 0 ? (
+              <div className="text-center py-12 border border-dashed border-outline-var/30 rounded-xs text-text-muted font-syne text-xs uppercase tracking-wider">
+                No pending applications
+              </div>
+            ) : (
+              <div className="space-y-4">
+                {pending.map(app => (
+                  <ApplicationCard
+                    key={app.id}
+                    application={app}
+                    onAccept={() => handleAction(app.id, 'ACCEPTED')}
+                    onReject={() => handleAction(app.id, 'REJECTED')}
+                    loading={actionLoading === app.id}
+                    navigate={navigate}
+                  />
+                ))}
+              </div>
+            )}
+          </div>
+
+          {/* Accepted Members */}
+          {accepted.length > 0 && (
+            <div>
+              <h2 className="text-sm font-extrabold font-syne text-emerald-400 uppercase tracking-[0.12em] mb-4 flex items-center gap-2">
+                <CheckCircle size={15} /> Accepted Members ({accepted.length})
+              </h2>
+              <div className="space-y-4">
+                {accepted.map(app => (
+                  <ApplicationCard
+                    key={app.id}
+                    application={app}
+                    accepted
+                    navigate={navigate}
+                  />
+                ))}
+              </div>
             </div>
           )}
+
+          {/* Rejected Applications */}
+          {rejected.length > 0 && (
+            <div>
+              <h2 className="text-sm font-extrabold font-syne text-text-muted uppercase tracking-[0.12em] mb-4">
+                Rejected ({rejected.length})
+              </h2>
+              <div className="space-y-3 opacity-60">
+                {rejected.map(app => (
+                  <ApplicationCard key={app.id} application={app} rejected navigate={navigate} />
+                ))}
+              </div>
+            </div>
+          )}
+
         </div>
-
-        {/* Accepted */}
-        {accepted.length > 0 && (
-          <div className="mb-8">
-            <h2 className="text-xl font-black font-['Orbitron'] text-green-400 mb-4 flex items-center gap-2">
-              <CheckCircle size={20} /> ACCEPTED ({accepted.length})
-            </h2>
-            <div className="space-y-3">
-              {accepted.map(app => (
-                <ApplicationCard
-                  key={app.id}
-                  application={app}
-                  accepted
-                  navigate={navigate}
-                />
-              ))}
-            </div>
-          </div>
-        )}
-
-        {/* Rejected */}
-        {rejected.length > 0 && (
-          <div>
-            <h2 className="text-xl font-black font-['Orbitron'] text-gray-500 mb-4">
-              REJECTED ({rejected.length})
-            </h2>
-            <div className="space-y-2 opacity-60">
-              {rejected.map(app => (
-                <ApplicationCard key={app.id} application={app} rejected navigate={navigate} />
-              ))}
-            </div>
-          </div>
-        )}
       </div>
     </div>
   );
@@ -151,63 +184,84 @@ function ApplicationCard({ application, onAccept, onReject, loading, accepted, r
   const verifiedSkills = user?.skills?.filter(s => s.isVerified) || [];
 
   return (
-    <div className={`bg-black border p-4 flex items-center gap-4 ${
-      accepted ? 'border-green-500/30' : rejected ? 'border-gray-800' : 'border-gray-700 hover:border-gray-500'
+    <div className={`bg-surface border p-5 rounded-xs flex flex-col md:flex-row md:items-center justify-between gap-4 transition-colors ${
+      accepted ? 'border-emerald-500/20' : rejected ? 'border-outline-var/20' : 'border-outline-var/40 hover:border-primary/30'
     }`}>
-      <div
-        className="w-10 h-10 rounded-full bg-gray-800 overflow-hidden shrink-0 cursor-pointer"
-        onClick={() => navigate(`/profile/${user?.id}`)}
-      >
-        {user?.avatar
-          ? <img src={user.avatar} className="w-full h-full object-cover" />
-          : <div className="w-full h-full flex items-center justify-center"><User size={16} className="text-gray-500" /></div>}
-      </div>
-
-      <div className="flex-1 min-w-0">
+      <div className="flex items-start gap-4">
         <div
-          className="text-white font-bold text-sm cursor-pointer hover:text-cyan-400 transition"
+          className="w-12 h-12 rounded-full bg-surface-mid border border-outline-var/40 overflow-hidden shrink-0 cursor-pointer flex items-center justify-center"
           onClick={() => navigate(`/profile/${user?.id}`)}
         >
-          {user?.name}
-        </div>
-        <div className="text-xs font-mono text-gray-500">{user?.college || user?.role}</div>
-
-        {/* Verified skills + match score */}
-        <div className="flex items-center gap-3 mt-1">
-          {verifiedSkills.slice(0, 3).map(s => (
-            <span key={s.id} className="text-[10px] bg-green-900/20 border border-green-500/30 text-green-400 px-1.5 py-0.5 font-mono flex items-center gap-1">
-              <CheckCircle size={8} /> {s.skill.name} {s.calculatedScore && `(${s.calculatedScore})`}
-            </span>
-          ))}
-          {application.matchScore != null && (
-            <span className="text-[10px] font-mono text-yellow-400 font-bold">
-              MATCH: {application.matchScore}/10
-            </span>
+          {user?.avatar ? (
+            <img src={user.avatar} className="w-full h-full object-cover" alt="" />
+          ) : (
+            <User size={20} className="text-text-muted" />
           )}
+        </div>
+
+        <div className="min-w-0">
+          <div
+            className="text-text-primary font-bold hover:text-primary transition-colors cursor-pointer text-base tracking-tight"
+            onClick={() => navigate(`/profile/${user?.id}`)}
+          >
+            {user?.name}
+          </div>
+          <div className="text-xs text-text-muted font-medium mt-0.5">{user?.college || user?.role}</div>
+
+          {application.message && (
+            <p className="text-xs text-text-muted mt-2 border-l-2 border-outline/50 pl-2 italic">
+              "{application.message}"
+            </p>
+          )}
+
+          {/* Verified skills + match score */}
+          <div className="flex flex-wrap items-center gap-2 mt-3">
+            {verifiedSkills.slice(0, 3).map(s => (
+              <span key={s.id} className="text-[10px] font-syne font-bold uppercase tracking-wider bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 px-2 py-0.5 rounded-xs flex items-center gap-1">
+                <CheckCircle size={8} /> {s.name} {s.calculatedScore && `(${s.calculatedScore})`}
+              </span>
+            ))}
+            {application.matchScore != null && (
+              <span className="text-[10px] font-syne font-bold uppercase tracking-wider bg-primary/10 border border-primary/20 text-primary px-2 py-0.5 rounded-xs">
+                Match Score: {application.matchScore}/100
+              </span>
+            )}
+          </div>
         </div>
       </div>
 
-      {/* Actions */}
+      {/* Action buttons */}
       {!accepted && !rejected && (
-        <div className="flex gap-2 shrink-0">
-          <button
-            onClick={onAccept}
-            disabled={loading}
-            className="px-3 py-2 bg-green-900/30 border border-green-500/50 text-green-400 hover:bg-green-500 hover:text-black transition font-bold font-['Orbitron'] text-xs disabled:opacity-50"
-          >
-            {loading ? '...' : <CheckCircle size={14} />}
-          </button>
+        <div className="flex items-center gap-2 self-end md:self-auto shrink-0">
           <button
             onClick={onReject}
             disabled={loading}
-            className="px-3 py-2 bg-red-900/30 border border-red-500/50 text-red-400 hover:bg-red-500 hover:text-white transition font-bold font-['Orbitron'] text-xs disabled:opacity-50"
+            className="p-2.5 border border-error/30 text-error bg-error/5 hover:bg-error hover:text-on-primary transition-all rounded-xs disabled:opacity-50"
+            title="Reject Candidate"
           >
-            {loading ? '...' : <X size={14} />}
+            {loading ? <div className="w-4 h-4 border-2 border-error border-t-transparent rounded-full animate-spin" /> : <X size={16} />}
+          </button>
+          <button
+            onClick={onAccept}
+            disabled={loading}
+            className="px-5 py-2.5 bg-primary text-on-primary font-syne font-bold text-[10px] uppercase tracking-[0.1em] hover:opacity-90 transition-all rounded-xs disabled:opacity-50 shadow-md shadow-primary/10 flex items-center gap-1.5"
+          >
+            {loading ? <div className="w-4 h-4 border-2 border-on-primary border-t-transparent rounded-full animate-spin" /> : <CheckCircle size={12} />}
+            <span>Accept Candidate</span>
           </button>
         </div>
       )}
-      {accepted && <span className="text-green-400 text-xs font-mono shrink-0">ACCEPTED</span>}
-      {rejected && <span className="text-gray-600 text-xs font-mono shrink-0">REJECTED</span>}
+
+      {accepted && (
+        <span className="text-emerald-400 font-syne text-[10px] font-bold uppercase tracking-[0.12em] bg-emerald-500/10 border border-emerald-500/20 px-3 py-1 rounded-xs shrink-0 self-start md:self-auto">
+          Accepted
+        </span>
+      )}
+      {rejected && (
+        <span className="text-text-muted font-syne text-[10px] font-bold uppercase tracking-[0.12em] bg-surface-mid border border-outline-var/30 px-3 py-1 rounded-xs shrink-0 self-start md:self-auto">
+          Rejected
+        </span>
+      )}
     </div>
   );
 }

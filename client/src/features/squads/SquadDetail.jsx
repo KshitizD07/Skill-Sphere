@@ -1,10 +1,12 @@
 import { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
+import API from '../../api';
 import SquadAPI from './squadAPI';
 import {
   ArrowLeft, Users, Lock, CheckCircle,
-  AlertCircle, Target, User
+  AlertCircle, Target, User, Shield
 } from 'lucide-react';
+import Navbar from '../../shared/components/Navbar';
 
 export default function SquadDetail() {
   const { id } = useParams();
@@ -48,19 +50,34 @@ export default function SquadDetail() {
       setApplyError(res.message);
     } else {
       setApplied(true);
+      await loadSquad(); // Refresh status
     }
     setApplying(false);
   };
 
+  const handleLogout = () => {
+    API.post('/auth/logout').catch(() => {});
+    localStorage.removeItem('user_data');
+    localStorage.removeItem('ss_token');
+    window.location.replace('/');
+  };
+
   if (loading) return (
-    <div className="min-h-screen bg-[#050505] flex items-center justify-center">
-      <div className="text-cyan-500 font-mono animate-pulse">LOADING_MISSION_DATA...</div>
+    <div className="min-h-screen bg-bg-base flex items-center justify-center">
+      <div className="w-12 h-12 border-4 border-primary/20 border-t-primary rounded-full animate-spin" />
     </div>
   );
 
   if (!squad) return (
-    <div className="min-h-screen bg-[#050505] flex items-center justify-center">
-      <div className="text-red-500 font-mono">MISSION_NOT_FOUND</div>
+    <div className="min-h-screen bg-bg-base flex items-center justify-center font-syne">
+      <div className="text-center">
+        <AlertCircle size={48} className="mx-auto text-error mb-4" />
+        <h3 className="text-xl font-extrabold text-text-primary uppercase tracking-wider">Mission Not Found</h3>
+        <p className="text-text-muted mt-2">The squad you are looking for does not exist or has been deleted.</p>
+        <button onClick={() => navigate('/nexus')} className="mt-6 px-5 py-2.5 bg-primary text-on-primary font-bold text-xs uppercase tracking-widest rounded-xs hover:opacity-90 transition-all">
+          Back to Nexus
+        </button>
+      </div>
     </div>
   );
 
@@ -70,37 +87,42 @@ export default function SquadDetail() {
   const canApply = !isLeader && !isFull && !applied && qualification?.qualifies;
 
   return (
-    <div className="min-h-screen bg-[#050505] text-gray-300 font-['Rajdhani'] p-4 md:p-8 relative">
-      <div className="absolute inset-0 bg-[linear-gradient(rgba(0,240,255,0.02)_1px,transparent_1px),linear-gradient(90deg,rgba(0,240,255,0.02)_1px,transparent_1px)] bg-[size:40px_40px] pointer-events-none" />
+    <div className="min-h-screen bg-bg-base text-text-primary font-outfit flex flex-col md:flex-row">
+      <Navbar user={currentUser} onLogout={handleLogout} />
 
-      <div className="w-full max-w-[1200px] mx-auto relative z-10">
-
+      <div className="flex-grow md:ml-64 pt-20 md:pt-0 min-h-screen overflow-y-auto p-6 md:p-10 w-full max-w-[1400px] mx-auto">
+        
         {/* Header */}
-        <div className="flex items-center gap-4 mb-8">
-          <button onClick={() => navigate('/nexus')} className="p-2 border border-gray-700 hover:border-cyan-500 text-gray-500 hover:text-cyan-400 transition">
-            <ArrowLeft size={20} />
+        <div className="flex items-center gap-4 mb-8 border-b border-outline-var/25 pb-6">
+          <button onClick={() => navigate('/nexus')} className="p-2 border border-outline-var/40 rounded-xs hover:border-primary/45 text-text-muted hover:text-primary transition-all">
+            <ArrowLeft size={18} />
           </button>
-          <div className="text-xs font-mono text-gray-600">N.E.X.U.S. / MISSION_DETAIL</div>
+          <div>
+            <span className="font-syne text-[9px] font-bold tracking-[0.12em] uppercase text-text-muted">N.E.X.U.S. / SQUAD_PROFILE</span>
+            <h1 className="text-xl font-extrabold tracking-tight mt-0.5">Squad Details</h1>
+          </div>
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-
-          {/* Main info */}
+          
+          {/* Main Info */}
           <div className="lg:col-span-2 space-y-6">
-            {squad.event && (
-              <div className="inline-block px-3 py-1 bg-purple-900/30 border border-purple-500/50 text-purple-400 text-xs font-mono">
-                {squad.event}
-              </div>
-            )}
-            <h1 className="text-4xl font-black text-white font-['Orbitron']">{squad.title}</h1>
-            <p className="text-gray-300 text-lg leading-relaxed border-l-2 border-cyan-500/30 pl-4">
-              {squad.description}
-            </p>
+            <div className="bg-surface border border-outline-var/30 p-6 md:p-8 rounded-xs space-y-4">
+              {squad.event && (
+                <div className="inline-block px-2.5 py-0.5 bg-primary/10 border border-primary/20 text-primary text-[9px] font-syne font-bold uppercase tracking-wider rounded-xs">
+                  {squad.event}
+                </div>
+              )}
+              <h2 className="text-2xl md:text-3xl font-extrabold text-text-primary tracking-tight leading-tight">{squad.title}</h2>
+              <p className="text-text-muted text-sm leading-relaxed border-l-2 border-primary/40 pl-4 whitespace-pre-wrap">
+                {squad.description}
+              </p>
+            </div>
 
-            {/* Slots */}
-            <div className="bg-gray-900/50 border border-gray-800 p-6">
-              <h3 className="text-yellow-400 font-bold font-['Orbitron'] text-sm mb-4 flex items-center gap-2">
-                <Target size={16} /> ROLE_SLOTS ({openSlots.length} open)
+            {/* Slots Card */}
+            <div className="bg-surface border border-outline-var/30 p-6 rounded-xs">
+              <h3 className="text-xs font-bold font-syne text-primary uppercase tracking-[0.12em] mb-4 flex items-center gap-2">
+                <Target size={14} /> Open Roles ({openSlots.length} available)
               </h3>
               <div className="space-y-3">
                 {squad.slots?.map((slot) => {
@@ -110,42 +132,48 @@ export default function SquadDetail() {
                     <div
                       key={slot.id}
                       onClick={() => isOpen && !isLeader && !applied && setSelectedSlot(isSelected ? null : slot.id)}
-                      className={`flex items-center justify-between p-3 bg-black border transition ${
-                        isSelected ? 'border-cyan-500 bg-cyan-900/10' :
-                        isOpen && canApply ? 'border-gray-800 hover:border-gray-600 cursor-pointer' :
-                        'border-gray-800'
+                      className={`flex items-center justify-between p-4 rounded-xs border transition-all ${
+                        isSelected 
+                          ? 'border-primary bg-primary/5 shadow-md shadow-primary/5' 
+                          : isOpen && canApply 
+                            ? 'border-outline-var/40 hover:border-primary/40 cursor-pointer bg-surface-mid/30' 
+                            : 'border-outline-var/30 bg-surface-mid/10'
                       }`}
                     >
                       <div className="flex items-center gap-3">
                         {isOpen && canApply && (
-                          <div className={`w-4 h-4 border-2 flex items-center justify-center transition ${
-                            isSelected ? 'border-cyan-500 bg-cyan-500' : 'border-gray-600'
+                          <div className={`w-4 h-4 border flex items-center justify-center rounded-xs transition-colors shrink-0 ${
+                            isSelected ? 'border-primary bg-primary' : 'border-outline-var hover:border-primary'
                           }`}>
-                            {isSelected && <CheckCircle size={10} className="text-black" />}
+                            {isSelected && <CheckCircle size={10} className="text-on-primary" />}
                           </div>
                         )}
                         <div>
-                          <div className="text-white font-bold text-sm">{slot.roleTitle}</div>
-                          <div className="text-xs font-mono text-gray-500 mt-1">
+                          <div className="text-text-primary font-bold text-sm">{slot.roleTitle}</div>
+                          <div className="text-xs text-text-muted mt-1 font-medium">
                             {slot.requiredSkill ? (
-                              <>Requires: <span className="text-cyan-400">{slot.requiredSkill}</span></>
+                              <>Required Skill: <span className="text-primary font-semibold">{slot.requiredSkill}</span></>
                             ) : (
-                              <span className="text-gray-600">No skill requirement</span>
+                              <span>Open Skill Role</span>
                             )}
                           </div>
                         </div>
                       </div>
-                      <div className="text-right">
+                      <div className="text-right shrink-0">
                         {slot.requiredSkill && (
-                          <div className="flex items-center gap-1 text-yellow-400 font-mono text-sm font-bold">
-                            <Lock size={12} />
-                            ≥{slot.minScore}/10
+                          <div className="flex items-center gap-1 text-[10px] font-syne font-bold uppercase tracking-wider text-secondary-bright">
+                            <Lock size={10} />
+                            Score ≥ {slot.minScore}
                           </div>
                         )}
                         {slot.filledBy ? (
-                          <div className="text-xs text-green-400 font-mono mt-1">FILLED</div>
+                          <span className="text-[9px] font-syne font-bold uppercase tracking-wider bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 px-2 py-0.5 rounded-xs mt-1 inline-block">
+                            FILLED
+                          </span>
                         ) : (
-                          <div className="text-xs text-gray-600 font-mono mt-1">OPEN</div>
+                          <span className="text-[9px] font-syne font-bold uppercase tracking-wider bg-primary/10 border border-primary/20 text-primary px-2 py-0.5 rounded-xs mt-1 inline-block">
+                            OPEN
+                          </span>
                         )}
                       </div>
                     </div>
@@ -154,23 +182,25 @@ export default function SquadDetail() {
               </div>
             </div>
 
-            {/* Accepted Members */}
+            {/* Squad Members */}
             {squad.applications?.filter(a => a.status === 'ACCEPTED').length > 0 && (
-              <div className="bg-gray-900/50 border border-gray-800 p-6">
-                <h3 className="text-cyan-400 font-bold font-['Orbitron'] text-sm mb-4 flex items-center gap-2">
-                  <Users size={16} /> SQUAD_MEMBERS ({squad.currentMembers}/{squad.maxMembers})
+              <div className="bg-surface border border-outline-var/30 p-6 rounded-xs">
+                <h3 className="text-xs font-bold font-syne text-primary uppercase tracking-[0.12em] mb-4 flex items-center gap-2">
+                  <Users size={14} className="text-outline" /> Squad Members ({squad.currentMembers}/{squad.maxMembers})
                 </h3>
-                <div className="space-y-2">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   {squad.applications.filter(a => a.status === 'ACCEPTED').map(app => (
-                    <div key={app.id} className="flex items-center gap-3 p-2">
-                      <div className="w-8 h-8 rounded-full bg-gray-800 overflow-hidden">
-                        {app.user?.avatar
-                          ? <img src={app.user.avatar} className="w-full h-full object-cover" />
-                          : <div className="w-full h-full flex items-center justify-center"><User size={14} className="text-gray-500" /></div>}
+                    <div key={app.id} className="flex items-center gap-3 p-3 bg-surface-mid/30 border border-outline-var/20 rounded-xs">
+                      <div className="w-9 h-9 rounded-full bg-surface-mid border border-outline-var/30 overflow-hidden shrink-0 flex items-center justify-center">
+                        {app.user?.avatar ? (
+                          <img src={app.user.avatar} className="w-full h-full object-cover" alt="" />
+                        ) : (
+                          <User size={16} className="text-text-muted" />
+                        )}
                       </div>
-                      <div>
-                        <div className="text-white text-sm font-bold">{app.user?.name}</div>
-                        <div className="text-xs font-mono text-gray-500">{app.slot?.roleTitle || 'Member'}</div>
+                      <div className="min-w-0">
+                        <div className="text-text-primary text-sm font-bold truncate">{app.user?.name}</div>
+                        <div className="text-xs text-text-muted mt-0.5 truncate">{app.slot?.roleTitle || 'Member'}</div>
                       </div>
                     </div>
                   ))}
@@ -179,113 +209,140 @@ export default function SquadDetail() {
             )}
           </div>
 
-          {/* Sidebar: Apply */}
+          {/* Right Sidebar - Application Box */}
           <div className="space-y-4">
-            <div className="bg-gray-900/50 border border-gray-800 p-6 sticky top-8">
-              <div className="flex items-center justify-between mb-4">
-                <div className="text-xs font-mono text-gray-500">SQUAD_STATUS</div>
-                <div className={`text-xs font-bold font-['Orbitron'] px-2 py-1 ${isFull ? 'bg-red-900/30 text-red-400 border border-red-500/30' : 'bg-green-900/30 text-green-400 border border-green-500/30'}`}>
+            <div className="bg-surface border border-outline-var/30 p-6 rounded-xs sticky top-8">
+              
+              <div className="flex items-center justify-between mb-4 border-b border-outline-var/20 pb-4">
+                <div className="text-[10px] font-syne font-bold uppercase tracking-[0.12em] text-text-muted">Squad Status</div>
+                <div className={`text-[9px] font-syne font-bold uppercase tracking-wider px-2 py-0.5 rounded-xs border ${
+                  isFull 
+                    ? 'bg-error/10 text-error border-error/20' 
+                    : 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20'
+                }`}>
                   {isFull ? 'FULL' : 'RECRUITING'}
                 </div>
               </div>
 
-              <div className="flex items-center gap-2 mb-4 text-sm font-mono">
-                <Users size={14} className="text-gray-500" />
-                <span className="text-gray-400">{squad.currentMembers}/{squad.maxMembers} members</span>
+              <div className="space-y-3 mb-6">
+                <div className="flex items-center gap-2 text-sm">
+                  <Users size={15} className="text-text-muted" />
+                  <span className="text-text-muted">
+                    Capacity: <span className="text-text-primary font-bold">{squad.currentMembers} / {squad.maxMembers}</span>
+                  </span>
+                </div>
               </div>
 
-              {/* Qualification result */}
+              {/* Qualification Feedback */}
               {qualification && !isLeader && (
-                <div className={`p-3 mb-4 border text-xs font-mono ${
+                <div className={`p-4 mb-4 border text-xs leading-relaxed rounded-xs ${
                   qualification.qualifies
-                    ? 'bg-green-900/20 border-green-500/30 text-green-400'
-                    : 'bg-red-900/20 border-red-500/30 text-red-400'
+                    ? 'bg-emerald-500/5 border-emerald-500/25 text-emerald-400'
+                    : 'bg-error/5 border-error/25 text-error'
                 }`}>
                   {qualification.qualifies ? (
-                    <div className="flex items-center gap-2">
-                      <CheckCircle size={14} /> YOU_QUALIFY — Match score: {qualification.matchScore}/10
+                    <div className="flex items-start gap-2">
+                      <CheckCircle size={15} className="shrink-0 mt-0.5" />
+                      <div>
+                        <span className="font-bold uppercase tracking-wide block mb-1">Qualifies for Squad</span>
+                        Compatible slot found! Estimated match score: <span className="font-semibold text-text-primary">{qualification.matchScore}%</span>.
+                      </div>
                     </div>
                   ) : (
-                    <div className="flex items-center gap-2">
-                      <AlertCircle size={14} /> {qualification.reason || 'SCORE_TOO_LOW'}
+                    <div className="flex items-start gap-2">
+                      <AlertCircle size={15} className="shrink-0 mt-0.5" />
+                      <div>
+                        <span className="font-bold uppercase tracking-wide block mb-1">Ineligible</span>
+                        {qualification.reason || 'You do not meet the minimum skill score threshold for open roles.'}
+                      </div>
                     </div>
                   )}
                 </div>
               )}
 
-              {/* Apply message */}
+              {/* Application Form */}
               {canApply && !applied && (
-                <div className="mb-4">
-                  <label className="block text-[10px] font-mono text-gray-500 mb-1">MESSAGE (optional)</label>
-                  <textarea
-                    value={applyMessage}
-                    onChange={e => setApplyMessage(e.target.value)}
-                    maxLength={200}
-                    rows={2}
-                    placeholder="Why do you want to join?"
-                    className="w-full bg-black border border-gray-700 text-white p-2 focus:border-cyan-500 outline-none font-mono text-xs resize-none"
-                  />
-                  <div className="text-right text-[10px] text-gray-600 font-mono">{applyMessage.length}/200</div>
+                <div className="space-y-3 mb-5">
+                  <div>
+                    <label className="block text-[10px] font-syne font-bold uppercase tracking-[0.12em] text-text-muted mb-1.5">
+                      Pitch Message (Optional)
+                    </label>
+                    <textarea
+                      value={applyMessage}
+                      onChange={e => setApplyMessage(e.target.value)}
+                      maxLength={200}
+                      rows={3}
+                      placeholder="Highlight relevant experience, interest, or value you bring to this squad..."
+                      className="w-full bg-surface-mid border border-outline-var/40 text-text-primary p-3 rounded-xs focus:border-primary/60 outline-none font-outfit text-xs resize-none placeholder-outline-var transition-colors"
+                    />
+                    <div className="text-right text-[9px] text-text-muted mt-1">{applyMessage.length}/200 characters</div>
+                  </div>
                 </div>
               )}
 
-              {/* Apply error */}
+              {/* Application Error Banner */}
               {applyError && (
-                <div className="p-3 mb-4 bg-red-900/20 border border-red-500/30 text-red-400 text-xs font-mono">
+                <div className="p-3 mb-4 bg-error/10 border border-error/20 text-error text-xs rounded-xs font-medium">
                   {applyError}
                 </div>
               )}
 
-              {/* CTA */}
+              {/* Action Button */}
               {isLeader ? (
                 <button
                   onClick={() => navigate(`/squad/${id}/manage`)}
-                  className="w-full py-3 bg-purple-900/30 border border-purple-500/50 text-purple-400 hover:bg-purple-500 hover:text-white transition font-bold font-['Orbitron'] text-sm"
+                  className="w-full py-3 bg-primary text-on-primary font-syne font-bold text-xs uppercase tracking-widest rounded-xs hover:opacity-90 transition-all flex items-center justify-center gap-2"
                 >
-                  MANAGE_SQUAD
+                  <Shield size={14} />
+                  Manage Squad
                 </button>
               ) : applied ? (
-                <div className="w-full py-3 bg-green-900/20 border border-green-500/30 text-green-400 font-bold font-['Orbitron'] text-sm text-center">
-                  APPLICATION_SENT ✓
+                <div className="w-full py-3 bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 font-syne font-bold text-xs uppercase tracking-wider text-center rounded-xs">
+                  Application Submitted ✓
                 </div>
               ) : isFull ? (
-                <button disabled className="w-full py-3 bg-gray-900 border border-gray-800 text-gray-600 font-bold font-['Orbitron'] text-sm cursor-not-allowed">
-                  SQUAD_FULL
+                <button disabled className="w-full py-3 bg-surface-mid border border-outline-var/20 text-text-muted/40 font-syne font-bold text-xs uppercase tracking-widest rounded-xs cursor-not-allowed">
+                  Squad Full
                 </button>
               ) : !qualification?.qualifies ? (
-                <button disabled className="w-full py-3 bg-gray-900 border border-red-500/20 text-red-500/50 font-bold font-['Orbitron'] text-sm cursor-not-allowed flex items-center justify-center gap-2">
-                  <Lock size={14} /> SCORE_REQUIRED
+                <button disabled className="w-full py-3 bg-surface-mid border border-error/25 text-error/45 font-syne font-bold text-xs uppercase tracking-widest rounded-xs cursor-not-allowed flex items-center justify-center gap-2">
+                  <Lock size={12} />
+                  Skill Gate Locked
                 </button>
               ) : (
                 <button
                   onClick={handleApply}
                   disabled={applying}
-                  className="w-full py-3 bg-cyan-600 text-black hover:bg-cyan-400 transition font-bold font-['Orbitron'] text-sm disabled:opacity-50"
+                  className="w-full py-3 bg-primary text-on-primary font-syne font-bold text-xs uppercase tracking-widest rounded-xs hover:opacity-90 hover:shadow-lg hover:shadow-primary/10 transition-all disabled:opacity-50"
                 >
-                  {applying ? 'SUBMITTING...' : selectedSlot ? 'APPLY_FOR_SLOT' : 'APPLY_NOW'}
+                  {applying ? 'Submitting...' : selectedSlot ? 'Apply For Role' : 'Submit Pitch'}
                 </button>
               )}
 
-              {/* Leader info */}
-              <div className="mt-6 pt-4 border-t border-gray-800">
-                <div className="text-xs font-mono text-gray-500 mb-2">SQUAD_LEADER</div>
+              {/* Leader Bio Block */}
+              <div className="mt-6 pt-5 border-t border-outline-var/30">
+                <div className="text-[10px] font-syne font-bold uppercase tracking-[0.12em] text-text-muted mb-2.5">Squad Leader</div>
                 <div
-                  className="flex items-center gap-3 cursor-pointer hover:bg-white/5 p-2 -mx-2 transition"
+                  className="flex items-center gap-3 cursor-pointer hover:bg-surface-mid/30 p-2 -mx-2 rounded-xs transition-colors"
                   onClick={() => navigate(`/profile/${squad.leader?.id}`)}
                 >
-                  <div className="w-8 h-8 rounded-full bg-gray-800 overflow-hidden">
-                    {squad.leader?.avatar
-                      ? <img src={squad.leader.avatar} className="w-full h-full object-cover" />
-                      : <div className="w-full h-full bg-cyan-900" />}
+                  <div className="w-9 h-9 rounded-full bg-surface-mid border border-outline-var/30 overflow-hidden shrink-0 flex items-center justify-center">
+                    {squad.leader?.avatar ? (
+                      <img src={squad.leader.avatar} className="w-full h-full object-cover" alt="" />
+                    ) : (
+                      <User size={16} className="text-text-muted" />
+                    )}
                   </div>
-                  <div>
-                    <div className="text-white text-sm font-bold">{squad.leader?.name}</div>
-                    <div className="text-xs font-mono text-gray-500 hover:text-cyan-400 transition">VIEW_PROFILE →</div>
+                  <div className="min-w-0">
+                    <div className="text-text-primary text-sm font-bold truncate">{squad.leader?.name}</div>
+                    <div className="text-xs text-primary font-medium hover:text-primary-dim transition-colors mt-0.5">View Profile →</div>
                   </div>
                 </div>
               </div>
+
             </div>
           </div>
+
         </div>
       </div>
     </div>
