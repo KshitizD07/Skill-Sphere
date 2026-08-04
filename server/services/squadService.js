@@ -136,7 +136,12 @@ export async function applyToSquad(squadId, userId, message, slotId = null) {
   const existing = await prisma.squadApplication.findUnique({
     where: { squadId_userId: { squadId, userId } },
   });
-  if (existing) throw ApiError.conflict('You have already applied to this squad');
+  if (existing) {
+    if (existing.status === 'PENDING') throw ApiError.conflict('Application already pending');
+    if (existing.status === 'ACCEPTED') throw ApiError.conflict('Already a member of this squad');
+    // If rejected or withdrawn, delete the old application to allow re-application
+    await prisma.squadApplication.delete({ where: { id: existing.id } });
+  }
 
   // Step 3: Antifragile matching (graceful fallback if engine fails)
   let matchResult = null;
@@ -204,6 +209,12 @@ export async function updateApplicationStatus(squadId, applicationId, status, le
   const squad = await prisma.squad.findUnique({ where: { id: squadId } });
   if (!squad)                      throw ApiError.notFound('Squad');
   if (squad.leaderId !== leaderId) throw ApiError.forbidden('Only the squad leader can manage applications');
+
+  const existingApp = await prisma.squadApplication.findUnique({ where: { id: applicationId } });
+  if (!existingApp) throw ApiError.notFound('Application');
+  if (existingApp.status !== 'PENDING') {
+    throw ApiError.badRequest(`Application is already ${existingApp.status.toLowerCase()}`);
+  }
 
   const application = await prisma.squadApplication.update({
     where:   { id: applicationId },
