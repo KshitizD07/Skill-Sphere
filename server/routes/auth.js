@@ -323,10 +323,10 @@ router.get('/github/callback', asyncHandler(async (req, res) => {
   
   if (!email) return res.redirect(`${process.env.FRONTEND_URL || 'http://localhost:5173'}/auth?error=EmailMissing`);
 
-  await handleOAuthLogin(email, userData.name || userData.login, res, userData.login);
+  await handleOAuthLogin(email, userData.name || userData.login, res, userData.login, tokenData.access_token);
 }));
 
-async function handleOAuthLogin(email, name, res, githubUsername = null) {
+async function handleOAuthLogin(email, name, res, githubUsername = null, githubAccessToken = null) {
   const normalised = email.toLowerCase().trim();
   let user = await prisma.user.findUnique({ where: { email: normalised } });
 
@@ -340,16 +340,21 @@ async function handleOAuthLogin(email, name, res, githubUsername = null) {
         name: name || 'OAuth User',
         role: 'STUDENT', // Default
         github: githubUsername || null,
+        githubAccessToken: githubAccessToken || null,
       },
     });
     await prisma.activityLog.create({
       data: { userId: user.id, action: 'ACCOUNT_CREATED', details: 'Joined via OAuth' },
     });
   } else {
-    if (githubUsername && !user.github) {
+    const updateData = {};
+    if (githubUsername && !user.github) updateData.github = githubUsername;
+    if (githubAccessToken) updateData.githubAccessToken = githubAccessToken;
+
+    if (Object.keys(updateData).length > 0) {
       user = await prisma.user.update({
         where: { id: user.id },
-        data: { github: githubUsername },
+        data: updateData,
       });
     }
     await prisma.activityLog.create({
