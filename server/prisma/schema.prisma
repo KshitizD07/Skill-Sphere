@@ -262,7 +262,7 @@ model SquadApplication {
   appliedAt  DateTime          @default(now())
   decidedAt  DateTime?
 
-  @@unique([squadId, userId])
+  @@unique([squadId, userId, slotId])
   @@index([userId, status])
   @@index([squadId, status])
   @@index([slotId])
