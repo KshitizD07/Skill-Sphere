@@ -45,18 +45,31 @@ export async function verifySkill({ userId, skillName, repoUrl, showLevel }) {
 
   const normalized = LANGUAGE_MAP[skillName.toLowerCase()] || skillName;
 
+  const user = await prisma.user.findUnique({
+    where: { id: userId },
+    select: { githubAccessToken: true },
+  });
+
+  const authToken = user?.githubAccessToken || process.env.GITHUB_TOKEN;
+
   const headers = {
     Accept:       'application/vnd.github+json',
     'User-Agent': 'SkillSphere-Verifier',
-    ...(process.env.GITHUB_TOKEN && { Authorization: `Bearer ${process.env.GITHUB_TOKEN}` }),
+    ...(authToken && { Authorization: `Bearer ${authToken}` }),
   };
 
   // ── Fetch repo metadata ───────────────────────────────────────────────────
-  const repoRes = await fetch(`https://api.github.com/repos/${parsed.owner}/${parsed.repo}`, { headers });
+  let repoRes = await fetch(`https://api.github.com/repos/${parsed.owner}/${parsed.repo}`, { headers });
+
+  // Fallback to unauthenticated fetch if token was invalid/expired (for public repos)
+  if (repoRes.status === 401 && headers.Authorization) {
+    delete headers.Authorization;
+    repoRes = await fetch(`https://api.github.com/repos/${parsed.owner}/${parsed.repo}`, { headers });
+  }
 
   if (repoRes.status === 404) throw ApiError.notFound('Repository not found — check the URL or make it public');
-  if (repoRes.status === 401) throw ApiError.badRequest('GitHub authentication failed — add a valid GITHUB_TOKEN to your .env');
-  if (repoRes.status === 403) throw new ApiError(429, 'GITHUB_RATE_LIMIT', 'GitHub rate limit exceeded — try again later or add GITHUB_TOKEN');
+  if (repoRes.status === 401) throw ApiError.badRequest('GitHub authentication failed — please reconnect your GitHub account');
+  if (repoRes.status === 403) throw new ApiError(429, 'GITHUB_RATE_LIMIT', 'GitHub rate limit exceeded — try again later');
   if (!repoRes.ok) {
     logger.error('GitHub API non-200', { status: repoRes.status, ...parsed });
     throw ApiError.internal(`GitHub API error (HTTP ${repoRes.status})`);
