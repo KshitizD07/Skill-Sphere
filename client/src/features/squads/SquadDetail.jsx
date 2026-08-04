@@ -32,9 +32,6 @@ export default function SquadDetail() {
     const data = await SquadAPI.getSquad(id);
     if (!data.error) {
       setSquad(data);
-      // Check if user already applied
-      const existingApp = data.applications?.find(a => a.userId === currentUser.id);
-      if (existingApp) setApplied(true);
       // Check qualification
       const qual = await SquadAPI.checkQualification(id, currentUser.id);
       if (!qual.error) setQualification(qual);
@@ -49,7 +46,6 @@ export default function SquadDetail() {
     if (res.error) {
       setApplyError(res.message);
     } else {
-      setApplied(true);
       await loadSquad(); // Refresh status
     }
     setApplying(false);
@@ -81,10 +77,15 @@ export default function SquadDetail() {
     </div>
   );
 
+  const userApps = squad.applications?.filter(a => a.userId === currentUser.id) || [];
+  const userPendingApp = userApps.find(a => a.status === 'PENDING');
+  const userAcceptedApp = userApps.find(a => a.status === 'ACCEPTED');
+  const rejectedSlotIds = userApps.filter(a => a.status === 'REJECTED').map(a => a.slotId).filter(Boolean);
+
   const isLeader = squad.leader?.id === currentUser.id;
   const isFull = squad.currentMembers >= squad.maxMembers;
   const openSlots = squad.slots?.filter(s => s.status === 'OPEN') || [];
-  const canApply = !isLeader && !isFull && !applied && qualification?.qualifies;
+  const canApply = !isLeader && !isFull && !userPendingApp && !userAcceptedApp && qualification?.qualifies;
 
   return (
     <div className="min-h-screen bg-bg-base text-text-primary font-outfit flex flex-col md:flex-row">
@@ -127,21 +128,26 @@ export default function SquadDetail() {
               <div className="space-y-3">
                 {squad.slots?.map((slot) => {
                   const isOpen = slot.status === 'OPEN';
+                  const isRejectedForSlot = rejectedSlotIds.includes(slot.id);
+                  const isPendingForSlot = userPendingApp?.slotId === slot.id;
+                  const isAcceptedForSlot = userAcceptedApp?.slotId === slot.id;
                   const isSelected = selectedSlot === slot.id;
+                  const isSelectable = isOpen && canApply && !isRejectedForSlot;
+
                   return (
                     <div
                       key={slot.id}
-                      onClick={() => isOpen && !isLeader && !applied && setSelectedSlot(isSelected ? null : slot.id)}
+                      onClick={() => isSelectable && setSelectedSlot(isSelected ? null : slot.id)}
                       className={`flex items-center justify-between p-4 rounded-xs border transition-all ${
                         isSelected 
                           ? 'border-primary bg-primary/5 shadow-md shadow-primary/5' 
-                          : isOpen && canApply 
+                          : isSelectable 
                             ? 'border-outline-var/40 hover:border-primary/40 cursor-pointer bg-surface-mid/30' 
                             : 'border-outline-var/30 bg-surface-mid/10'
                       }`}
                     >
                       <div className="flex items-center gap-3">
-                        {isOpen && canApply && (
+                        {isSelectable && (
                           <div className={`w-4 h-4 border flex items-center justify-center rounded-xs transition-colors shrink-0 ${
                             isSelected ? 'border-primary bg-primary' : 'border-outline-var hover:border-primary'
                           }`}>
@@ -166,7 +172,19 @@ export default function SquadDetail() {
                             Score ≥ {slot.minScore}
                           </div>
                         )}
-                        {slot.filledBy ? (
+                        {isAcceptedForSlot ? (
+                          <span className="text-[9px] font-syne font-bold uppercase tracking-wider bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 px-2 py-0.5 rounded-xs mt-1 inline-block">
+                            ACCEPTED
+                          </span>
+                        ) : isPendingForSlot ? (
+                          <span className="text-[9px] font-syne font-bold uppercase tracking-wider bg-amber-500/10 border border-amber-500/20 text-amber-400 px-2 py-0.5 rounded-xs mt-1 inline-block">
+                            PENDING
+                          </span>
+                        ) : isRejectedForSlot ? (
+                          <span className="text-[9px] font-syne font-bold uppercase tracking-wider bg-error/10 border border-error/20 text-error px-2 py-0.5 rounded-xs mt-1 inline-block">
+                            REJECTED FOR THIS ROLE
+                          </span>
+                        ) : slot.filledBy ? (
                           <span className="text-[9px] font-syne font-bold uppercase tracking-wider bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 px-2 py-0.5 rounded-xs mt-1 inline-block">
                             FILLED
                           </span>
@@ -261,7 +279,7 @@ export default function SquadDetail() {
               )}
 
               {/* Application Form */}
-              {canApply && !applied && (
+              {canApply && (
                 <div className="space-y-3 mb-5">
                   <div>
                     <label className="block text-[10px] font-syne font-bold uppercase tracking-[0.12em] text-text-muted mb-1.5">
@@ -296,9 +314,13 @@ export default function SquadDetail() {
                   <Shield size={14} />
                   Manage Squad
                 </button>
-              ) : applied ? (
+              ) : userAcceptedApp ? (
                 <div className="w-full py-3 bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 font-syne font-bold text-xs uppercase tracking-wider text-center rounded-xs">
-                  Application Submitted ✓
+                  Member of Squad ✓
+                </div>
+              ) : userPendingApp ? (
+                <div className="w-full py-3 bg-amber-500/10 border border-amber-500/20 text-amber-400 font-syne font-bold text-xs uppercase tracking-wider text-center rounded-xs">
+                  Application Pending
                 </div>
               ) : isFull ? (
                 <button disabled className="w-full py-3 bg-surface-mid border border-outline-var/20 text-text-muted/40 font-syne font-bold text-xs uppercase tracking-widest rounded-xs cursor-not-allowed">
