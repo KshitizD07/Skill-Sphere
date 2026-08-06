@@ -12,6 +12,9 @@ const prisma = new PrismaClient();
 const PROFILE_SELECT = {
   id: true, name: true, email: true, role: true, college: true,
   headline: true, bio: true, avatar: true, github: true, linkedin: true, createdAt: true,
+  leetcodeUsername: true, leetcodeDSAScore: true, leetcodeDSALevel: true,
+  leetcodeEasy: true, leetcodeMedium: true, leetcodeHard: true,
+  leetcodeTotalPoints: true, leetcodeLanguages: true, leetcodeSyncedAt: true,
   skills: {
     orderBy: [{ isVerified: 'desc' }, { calculatedScore: 'desc' }],
     select: {
