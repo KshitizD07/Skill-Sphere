@@ -400,8 +400,11 @@ export default function MyProfile({ user, onUserUpdate }) {
                     </div>
                   </div>
                 )}
+<<<<<<< HEAD
               <div className="pt-6 mt-6 border-t border-outline-var/20">
                 <RepoSelector />
+=======
+>>>>>>> 26c9bb11760676684079f650d706605ce2d89fb7
               </div>
 
             </div>
