@@ -28,6 +28,17 @@ model User {
   githubAccessToken String?
   linkedin          String?
 
+  // LeetCode profile (synced from existing scraper)
+  leetcodeUsername    String?
+  leetcodeDSAScore   Int?
+  leetcodeDSALevel   String?
+  leetcodeEasy       Int?
+  leetcodeMedium     Int?
+  leetcodeHard       Int?
+  leetcodeTotalPoints Int?
+  leetcodeLanguages  Json?       // [{ name, problemsSolved, score, level }]
+  leetcodeSyncedAt   DateTime?
+
   createdAt DateTime @default(now())
 
   // Relations
