@@ -12,6 +12,8 @@ const SquadAPI = {
     BaseAPI.patch(`/squads/${squadId}/applications/${applicationId}`, { status }),
   checkQualification: (squadId, userId) =>
     BaseAPI.get(`/squads/${squadId}/qualify?userId=${userId}`),
+  getSlotRecommendations: (squadId, slotId) =>
+    BaseAPI.get(`/squads/${squadId}/slots/${slotId}/recommendations`),
 };
 
 export default SquadAPI;
