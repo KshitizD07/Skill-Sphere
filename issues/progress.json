@@ -147,35 +147,35 @@
       "title": "Role Rename ALUMNI→PROFESSIONAL & Signup Selection",
       "sourceFile": "issues/4-undefined_ones.md",
       "priority": 4,
-      "status": "not_started",
-      "startedAt": null,
-      "completedAt": null,
+      "status": "done",
+      "startedAt": "2026-08-06T15:05:00+05:30",
+      "completedAt": "2026-08-06T15:08:00+05:30",
       "phases": {
         "A": {
           "title": "Backend — Rename ALUMNI to PROFESSIONAL",
-          "status": "not_started",
+          "status": "done",
           "tasks": {
-            "A1": { "title": "Update Prisma UserRole enum + migration", "status": "not_started", "files": ["server/prisma/schema.prisma"] },
-            "A2": { "title": "Update all server ALUMNI references", "status": "not_started", "files": ["server/routes/auth.js", "server/routes/users.js", "server/routes/squads.js"] },
-            "A3": { "title": "Handle Recruiter role with coming-soon rejection", "status": "not_started", "files": ["server/routes/auth.js"] }
+            "A1": { "title": "Update Prisma UserRole enum + migration", "status": "done", "files": ["server/prisma/schema.prisma"] },
+            "A2": { "title": "Update all server ALUMNI references", "status": "done", "files": ["server/routes/auth.js", "server/routes/users.js", "server/routes/squads.js"] },
+            "A3": { "title": "Handle Recruiter role with coming-soon rejection", "status": "done", "files": ["server/routes/auth.js"] }
           }
         },
         "B": {
           "title": "Frontend — Role Selection at Signup",
-          "status": "not_started",
+          "status": "done",
           "tasks": {
-            "B1": { "title": "Update auth constants", "status": "not_started", "files": ["client/src/app/constants.js"] },
-            "B2": { "title": "Add role selection step to AuthPage", "status": "not_started", "files": ["client/src/features/auth/AuthPage.jsx"] },
-            "B3": { "title": "Update Network directory filters", "status": "not_started", "files": ["client/src/features/network/Network.jsx"] },
-            "B4": { "title": "Update profile display badges", "status": "not_started", "files": ["client/src/features/profile/MyProfile.jsx", "client/src/features/profile/UserProfile.jsx"] },
-            "B5": { "title": "Global find & replace ALUMNI→PROFESSIONAL in client", "status": "not_started", "files": [] }
+            "B1": { "title": "Update auth constants", "status": "done", "files": ["client/src/config/constants.js"] },
+            "B2": { "title": "Add role selection step to AuthPage", "status": "done", "files": ["client/src/features/auth/AuthPage.jsx"] },
+            "B3": { "title": "Update Network directory filters", "status": "done", "files": ["client/src/features/network/Network.jsx"] },
+            "B4": { "title": "Update profile display badges", "status": "done", "files": ["client/src/features/profile/MyProfile.jsx", "client/src/features/profile/UserProfile.jsx"] },
+            "B5": { "title": "Global find & replace ALUMNI→PROFESSIONAL in client", "status": "done", "files": [] }
           }
         },
         "C": {
           "title": "Testing & Verification",
-          "status": "not_started",
+          "status": "done",
           "tasks": {
-            "C1": { "title": "Verify DB migration, signup flows, network filter, profile badges", "status": "not_started", "files": [] }
+            "C1": { "title": "Verify DB migration, signup flows, network filter, profile badges", "status": "done", "files": [] }
           }
         }
       }
