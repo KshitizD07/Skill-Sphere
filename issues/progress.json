@@ -47,18 +47,18 @@
       "title": "GitHub Project Portfolio",
       "sourceFile": "issues/2-project_portfolio_part.md",
       "priority": 2,
-      "status": "not_started",
-      "startedAt": null,
+      "status": "in_progress",
+      "startedAt": "2026-08-06T14:38:00+05:30",
       "completedAt": null,
       "phases": {
         "A": {
           "title": "Backend — Data Model & GitHub Fetching",
-          "status": "not_started",
+          "status": "done",
           "tasks": {
-            "A1": { "title": "Add GitHubRepo model to Prisma schema", "status": "not_started", "files": ["server/prisma/schema.prisma"] },
-            "A2": { "title": "Create GitHub Portfolio Service", "status": "not_started", "files": ["server/services/githubPortfolioService.js"] },
-            "A3": { "title": "Create Portfolio Routes", "status": "not_started", "files": ["server/routes/portfolio.js"] },
-            "A4": { "title": "Mount routes in app.js", "status": "not_started", "files": ["server/app.js"] }
+            "A1": { "title": "Add GitHubRepo model to Prisma schema", "status": "done", "files": ["server/prisma/schema.prisma"] },
+            "A2": { "title": "Create GitHub Portfolio Service", "status": "done", "files": ["server/services/githubPortfolioService.js"] },
+            "A3": { "title": "Create Portfolio Routes", "status": "done", "files": ["server/routes/portfolio.js"] },
+            "A4": { "title": "Mount routes in app.js", "status": "done", "files": ["server/app.js"] }
           }
         },
         "B": {
