@@ -156,11 +156,22 @@ export default function SquadDetail() {
                         )}
                         <div>
                           <div className="text-text-primary font-bold text-sm">{slot.roleTitle}</div>
-                          <div className="text-xs text-text-muted mt-1 font-medium">
-                            {slot.requiredSkill ? (
-                              <>Required Skill: <span className="text-primary font-semibold">{slot.requiredSkill}</span></>
-                            ) : (
-                              <span>Open Skill Role</span>
+                          {slot.roleDescription && (
+                            <div className="text-xs text-text-muted mt-1 leading-relaxed">{slot.roleDescription}</div>
+                          )}
+                          <div className="text-xs text-text-muted mt-1.5 font-medium flex items-center gap-2 flex-wrap">
+                            {slot.requiredSkill && (
+                              <span>Gatekeeper: <span className="text-primary font-semibold">{slot.requiredSkill}</span></span>
+                            )}
+                            {slot.preferredSkills && slot.preferredSkills.length > 0 && (
+                              <div className="flex items-center gap-1 flex-wrap">
+                                <span className="text-[10px] uppercase font-syne text-outline font-bold">Preferred:</span>
+                                {slot.preferredSkills.map((ps, idx) => (
+                                  <span key={idx} className="px-1.5 py-0.5 bg-secondary-bright/10 text-secondary-bright border border-secondary-bright/20 text-[9px] font-syne uppercase font-bold rounded-xs">
+                                    {ps}
+                                  </span>
+                                ))}
+                              </div>
                             )}
                           </div>
                         </div>
