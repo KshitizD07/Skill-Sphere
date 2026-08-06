@@ -400,6 +400,8 @@ export default function MyProfile({ user, onUserUpdate }) {
                     </div>
                   </div>
                 )}
+              </div>
+
               <div className="pt-6 mt-6 border-t border-outline-var/20">
                 <RepoSelector />
               </div>
