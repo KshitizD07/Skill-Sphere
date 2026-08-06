@@ -4,6 +4,8 @@ import logger from '../utils/logger.js';
 import gatekeeper from './gatekeeper.js';
 import matchOrchestrator from './matchOrchestrator.js';
 import decisionLogger from './decisionLogger.js';
+import { getVerifiedSkillProfile } from './verifiedSkillProfile.js';
+import { calculateCompatibility } from './skillCompatibility.js';
 
 const prisma = new PrismaClient();
 
@@ -13,7 +15,7 @@ const SQUAD_SELECT = {
   visibility: true, maxMembers: true, currentMembers: true, status: true,
   createdAt: true, expiresAt: true,
   leader: { select: { id: true, name: true, avatar: true, college: true } },
-  slots:  { select: { id: true, roleTitle: true, requiredSkill: true, minScore: true, requireVerified: true, status: true, filledBy: true, position: true }, orderBy: { position: 'asc' } },
+  slots:  { select: { id: true, roleTitle: true, roleDescription: true, preferredSkills: true, requiredSkill: true, minScore: true, requireVerified: true, status: true, filledBy: true, position: true }, orderBy: { position: 'asc' } },
   _count: { select: { applications: true } },
 };
 
@@ -36,11 +38,13 @@ export async function createSquad({ title, description, event, maxMembers = 4, v
       expiresAt: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000), // 30 days
       slots: {
         create: slots.map((s, i) => ({
-          roleTitle:      s.roleTitle || 'Member',
-          requiredSkill:  s.requiredSkill || null,
-          minScore:       Math.min(10, Math.max(0, s.minScore || 0)),
+          roleTitle:       s.roleTitle || 'Member',
+          roleDescription: s.roleDescription || null,
+          preferredSkills: Array.isArray(s.preferredSkills) ? s.preferredSkills.slice(0, 10) : [],
+          requiredSkill:   s.requiredSkill || null,
+          minScore:        Math.min(10, Math.max(0, s.minScore || 0)),
           requireVerified: s.requireVerified || false,
-          position:       i,
+          position:        i,
         })),
       },
     },
@@ -319,4 +323,60 @@ export async function getMyApplications(userId) {
     },
     orderBy: { appliedAt: 'desc' },
   });
+}
+
+// ── Slot Recommendations (N.E.X.U.S. Skill Compatibility) ─────────────────────
+export async function getSlotRecommendations(squadId, slotId, leaderId) {
+  const squad = await prisma.squad.findUnique({
+    where: { id: squadId },
+    select: { leaderId: true },
+  });
+
+  if (!squad) throw ApiError.notFound('Squad');
+  if (squad.leaderId !== leaderId) throw ApiError.forbidden('Only squad leader can view recommendations');
+
+  const slot = await prisma.squadSlot.findUnique({
+    where: { id: slotId },
+  });
+
+  if (!slot || slot.squadId !== squadId) throw ApiError.notFound('Slot');
+
+  const applications = await prisma.squadApplication.findMany({
+    where: { squadId, slotId, status: 'PENDING' },
+    include: {
+      user: {
+        select: {
+          id: true,
+          name: true,
+          avatar: true,
+          college: true,
+          headline: true,
+        },
+      },
+    },
+  });
+
+  const recommendations = await Promise.all(
+    applications.map(async (app) => {
+      const profile = await getVerifiedSkillProfile(app.userId);
+      const compatibility = calculateCompatibility(
+        profile,
+        slot.preferredSkills || [],
+        slot.requiredSkill
+      );
+
+      return {
+        applicationId: app.id,
+        appliedAt: app.appliedAt,
+        message: app.message,
+        applicant: app.user,
+        compatibilityScore: compatibility.compatibilityScore,
+        matchedSkills: compatibility.matchedSkills,
+        missingSkills: compatibility.missingSkills,
+      };
+    })
+  );
+
+  recommendations.sort((a, b) => b.compatibilityScore - a.compatibilityScore);
+  return recommendations;
 }

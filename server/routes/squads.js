@@ -65,4 +65,12 @@ router.patch('/:id/applications/:appId', authenticateToken, asyncHandler(async (
   res.json(result);
 }));
 
+// GET /api/squads/:id/slots/:slotId/recommendations (Leader only)
+router.get('/:id/slots/:slotId/recommendations', authenticateToken, asyncHandler(async (req, res) => {
+  const recommendations = await squadService.getSlotRecommendations(
+    req.params.id, req.params.slotId, req.user.userId
+  );
+  res.json(recommendations);
+}));
+
 export default router;
