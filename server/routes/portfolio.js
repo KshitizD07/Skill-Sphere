@@ -5,16 +5,18 @@ import { asyncHandler, ApiError } from '../utils/errorHandler.js';
 import { authenticateToken } from '../middleware/auth.js';
 import * as githubPortfolioService from '../services/githubPortfolioService.js';
 import cache from '../utils/cache.js';
-import rateLimit from 'express-rate-limit';
+import { makeLimiter } from '../middleware/rateLimiter.js';
 
 const router = express.Router();
 const prisma = new PrismaClient();
 
 // Rate limiting for sync (expensive GitHub API calls)
-const syncLimiter = rateLimit({
-  windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 5, // 5 syncs per 15 mins per IP
-  message: { error: 'TOO_MANY_REQUESTS', message: 'Too many sync attempts. Please try again later.' },
+const syncLimiter = makeLimiter({
+  maxAttempts:   5,
+  windowSeconds: 900,
+  prefix:        'portfolio-sync',
+  keyFn:         (req) => req.user?.userId || req.ip || 'anon',
+  message:       'Too many sync attempts. Please try again later.',
 });
 
 // POST /api/portfolio/sync
