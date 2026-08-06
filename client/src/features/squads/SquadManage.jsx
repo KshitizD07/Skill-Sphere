@@ -16,6 +16,7 @@ export default function SquadManage() {
   const [squad, setSquad] = useState(null);
   const [loading, setLoading] = useState(true);
   const [actionLoading, setActionLoading] = useState(null);
+  const [recommendationsMap, setRecommendationsMap] = useState({});
 
   // eslint-disable-next-line
   useEffect(() => { loadSquad(); }, [id]);
@@ -23,7 +24,28 @@ export default function SquadManage() {
   const loadSquad = async () => {
     setLoading(true);
     const data = await SquadAPI.getSquad(id);
-    if (!data.error) setSquad(data);
+    if (!data.error) {
+      setSquad(data);
+      // Fetch recommendations for each slot
+      const recMap = {};
+      if (data.slots && data.slots.length > 0) {
+        await Promise.all(
+          data.slots.map(async (slot) => {
+            try {
+              const recs = await SquadAPI.getSlotRecommendations(id, slot.id);
+              if (Array.isArray(recs)) {
+                for (const r of recs) {
+                  recMap[r.applicationId] = r;
+                }
+              }
+            } catch (err) {
+              console.error(`Failed to fetch recommendations for slot ${slot.id}:`, err);
+            }
+          })
+        );
+      }
+      setRecommendationsMap(recMap);
+    }
     setLoading(false);
   };
 
@@ -73,6 +95,13 @@ export default function SquadManage() {
   const accepted = squad.applications?.filter(a => a.status === 'ACCEPTED') || [];
   const rejected = squad.applications?.filter(a => a.status === 'REJECTED') || [];
 
+  // Sort pending applications by compatibility score
+  const sortedPending = [...pending].sort((a, b) => {
+    const scoreA = recommendationsMap[a.id]?.compatibilityScore ?? 0;
+    const scoreB = recommendationsMap[b.id]?.compatibilityScore ?? 0;
+    return scoreB - scoreA;
+  });
+
   return (
     <div className="min-h-screen bg-bg-base text-text-primary font-outfit flex flex-col md:flex-row">
       <Navbar user={currentUser} onLogout={handleLogout} />
@@ -87,7 +116,7 @@ export default function SquadManage() {
             </button>
             <div>
               <h1 className="text-2xl font-extrabold text-text-primary tracking-tight leading-tight">{squad.title}</h1>
-              <p className="font-syne text-[10px] font-bold tracking-[0.12em] uppercase text-primary mt-1">SQUAD_COMMAND_CENTER</p>
+              <p className="font-syne text-[10px] font-bold tracking-[0.12em] uppercase text-primary mt-1">N.E.X.U.S._COMMAND_CENTER</p>
             </div>
           </div>
           <button onClick={loadSquad} className="self-end md:self-auto p-2.5 border border-outline-var/40 rounded-xs hover:border-primary/45 text-text-muted hover:text-primary transition-all flex items-center gap-2">
@@ -120,16 +149,17 @@ export default function SquadManage() {
             <h2 className="text-sm font-extrabold font-syne text-primary uppercase tracking-[0.12em] mb-4 flex items-center gap-2">
               <AlertCircle size={15} /> Pending Applications ({pending.length})
             </h2>
-            {pending.length === 0 ? (
+            {sortedPending.length === 0 ? (
               <div className="text-center py-12 border border-dashed border-outline-var/30 rounded-xs text-text-muted font-syne text-xs uppercase tracking-wider">
                 No pending applications
               </div>
             ) : (
               <div className="space-y-4">
-                {pending.map(app => (
+                {sortedPending.map(app => (
                   <ApplicationCard
                     key={app.id}
                     application={app}
+                    recommendation={recommendationsMap[app.id]}
                     onAccept={() => handleAction(app.id, 'ACCEPTED')}
                     onReject={() => handleAction(app.id, 'REJECTED')}
                     loading={actionLoading === app.id}
@@ -151,6 +181,7 @@ export default function SquadManage() {
                   <ApplicationCard
                     key={app.id}
                     application={app}
+                    recommendation={recommendationsMap[app.id]}
                     accepted
                     navigate={navigate}
                   />
@@ -167,7 +198,7 @@ export default function SquadManage() {
               </h2>
               <div className="space-y-3 opacity-60">
                 {rejected.map(app => (
-                  <ApplicationCard key={app.id} application={app} rejected navigate={navigate} />
+                  <ApplicationCard key={app.id} application={app} recommendation={recommendationsMap[app.id]} rejected navigate={navigate} />
                 ))}
               </div>
             </div>
@@ -179,15 +210,17 @@ export default function SquadManage() {
   );
 }
 
-function ApplicationCard({ application, onAccept, onReject, loading, accepted, rejected, navigate }) {
+function ApplicationCard({ application, recommendation, onAccept, onReject, loading, accepted, rejected, navigate }) {
   const user = application.user;
-  const verifiedSkills = user?.skills?.filter(s => s.isVerified) || [];
+  const compatibilityScore = recommendation?.compatibilityScore ?? null;
+  const matchedSkills = recommendation?.matchedSkills || [];
+  const missingSkills = recommendation?.missingSkills || [];
 
   return (
     <div className={`bg-surface border p-5 rounded-xs flex flex-col md:flex-row md:items-center justify-between gap-4 transition-colors ${
       accepted ? 'border-emerald-500/20' : rejected ? 'border-outline-var/20' : 'border-outline-var/40 hover:border-primary/30'
     }`}>
-      <div className="flex items-start gap-4">
+      <div className="flex items-start gap-4 flex-1">
         <div
           className="w-12 h-12 rounded-full bg-surface-mid border border-outline-var/40 overflow-hidden shrink-0 cursor-pointer flex items-center justify-center"
           onClick={() => navigate(`/profile/${user?.id}`)}
@@ -199,14 +232,22 @@ function ApplicationCard({ application, onAccept, onReject, loading, accepted, r
           )}
         </div>
 
-        <div className="min-w-0">
-          <div
-            className="text-text-primary font-bold hover:text-primary transition-colors cursor-pointer text-base tracking-tight"
-            onClick={() => navigate(`/profile/${user?.id}`)}
-          >
-            {user?.name}
+        <div className="min-w-0 flex-1">
+          <div className="flex items-center gap-3 flex-wrap">
+            <div
+              className="text-text-primary font-bold hover:text-primary transition-colors cursor-pointer text-base tracking-tight"
+              onClick={() => navigate(`/profile/${user?.id}`)}
+            >
+              {user?.name}
+            </div>
+            {application.slot?.roleTitle && (
+              <span className="px-2 py-0.5 bg-surface-mid border border-outline-var/30 text-text-muted font-syne text-[10px] font-bold uppercase tracking-wider rounded-xs">
+                {application.slot.roleTitle}
+              </span>
+            )}
           </div>
-          <div className="text-xs text-text-muted font-medium mt-0.5">{user?.college || user?.role}</div>
+
+          <div className="text-xs text-text-muted font-medium mt-0.5">{user?.headline || user?.college || user?.role}</div>
 
           {application.message && (
             <p className="text-xs text-text-muted mt-2 border-l-2 border-outline/50 pl-2 italic">
@@ -214,19 +255,37 @@ function ApplicationCard({ application, onAccept, onReject, loading, accepted, r
             </p>
           )}
 
-          {/* Verified skills + match score */}
-          <div className="flex flex-wrap items-center gap-2 mt-3">
-            {verifiedSkills.slice(0, 3).map(s => (
-              <span key={s.id} className="text-[10px] font-syne font-bold uppercase tracking-wider bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 px-2 py-0.5 rounded-xs flex items-center gap-1">
-                <CheckCircle size={8} /> {s.name} {s.calculatedScore && `(${s.calculatedScore})`}
-              </span>
-            ))}
-            {application.matchScore != null && (
-              <span className="text-[10px] font-syne font-bold uppercase tracking-wider bg-primary/10 border border-primary/20 text-primary px-2 py-0.5 rounded-xs">
-                Match Score: {application.matchScore}/100
-              </span>
-            )}
-          </div>
+          {/* N.E.X.U.S. Compatibility Breakdown */}
+          {compatibilityScore != null && (
+            <div className="mt-3 space-y-2 pt-2 border-t border-outline-var/15">
+              <div className="flex items-center gap-3">
+                <div className="flex items-center gap-1.5">
+                  <span className="text-[10px] font-syne font-bold uppercase tracking-wider text-outline">
+                    N.E.X.U.S. Skill Match:
+                  </span>
+                  <span className={`text-xs font-syne font-extrabold ${
+                    compatibilityScore >= 70 ? 'text-secondary-bright' :
+                    compatibilityScore >= 40 ? 'text-primary' : 'text-text-muted'
+                  }`}>
+                    {compatibilityScore}%
+                  </span>
+                </div>
+              </div>
+
+              <div className="flex flex-wrap items-center gap-1.5">
+                {matchedSkills.map((s, idx) => (
+                  <span key={idx} className="text-[9px] font-syne font-bold uppercase tracking-wider bg-secondary-bright/10 border border-secondary-bright/20 text-secondary-bright px-2 py-0.5 rounded-xs flex items-center gap-1">
+                    <CheckCircle size={9} /> {s.name}
+                  </span>
+                ))}
+                {missingSkills.map((s, idx) => (
+                  <span key={idx} className="text-[9px] font-syne font-bold uppercase tracking-wider bg-surface-mid/60 border border-outline-var/30 text-outline opacity-60 px-2 py-0.5 rounded-xs">
+                    {s} (Missing)
+                  </span>
+                ))}
+              </div>
+            </div>
+          )}
         </div>
       </div>
 
