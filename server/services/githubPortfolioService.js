@@ -34,7 +34,7 @@ export const fetchOwnedRepos = async (githubUsername, accessToken) => {
       .filter((repo) => !repo.private)
       .map((repo) => ({
         githubId: repo.id,
-        name: repo.name,
+        repoName: repo.name,
         fullName: repo.full_name,
         description: repo.description,
         primaryLanguage: repo.language,
@@ -102,7 +102,7 @@ export const fetchContributedRepos = async (githubUsername, accessToken) => {
     
     return repos.map((repo) => ({
       githubId: repo.databaseId,
-      name: repo.name,
+      repoName: repo.name,
       fullName: repo.nameWithOwner,
       description: repo.description,
       primaryLanguage: repo.primaryLanguage?.name || null,
@@ -198,7 +198,7 @@ export const syncUserRepos = async (userId) => {
       where: {
         userId_repoName_repoType: {
           userId: userId,
-          repoName: repoFields.name,
+          repoName: repoFields.repoName,
           repoType: repoFields.repoType,
         },
       },
