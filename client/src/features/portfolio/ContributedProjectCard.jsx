@@ -1,12 +1,22 @@
+import { useState } from 'react';
 import { ExternalLink, Star, Code, GitPullRequest } from 'lucide-react';
+import ReadmeModal from './ReadmeModal';
 
 export default function ContributedProjectCard({ repo }) {
+  const [readmeOpen, setReadmeOpen] = useState(false);
+
   return (
     <div className="p-4 bg-surface-mid border border-outline-var/30 hover:border-secondary-bright/40 rounded-xs transition-colors space-y-3">
       <div className="flex items-start justify-between gap-3">
         <div>
           <div className="flex items-center gap-2 flex-wrap">
-            <h4 className="font-bold text-text-primary text-sm tracking-tight">{repo.fullName || repo.repoName}</h4>
+            <button
+              onClick={() => setReadmeOpen(true)}
+              className="font-bold text-text-primary text-sm tracking-tight hover:text-[#d97706] transition-colors text-left"
+              title="View README"
+            >
+              {repo.fullName || repo.repoName}
+            </button>
             <span className="px-2 py-0.5 bg-secondary-bright/10 border border-secondary-bright/20 text-secondary-bright text-[9px] font-syne uppercase font-bold tracking-wider rounded-xs flex items-center gap-1">
               <GitPullRequest size={10} /> Contributor
             </span>
@@ -25,6 +35,20 @@ export default function ContributedProjectCard({ repo }) {
           <ExternalLink size={14} />
         </a>
       </div>
+
+      {/* Tech Stack Badges */}
+      {repo.techStack && repo.techStack.length > 0 && (
+        <div className="flex flex-wrap gap-1.5 pt-1">
+          {repo.techStack.map((tech, idx) => (
+            <span
+              key={idx}
+              className="px-2 py-0.5 bg-surface border border-[#d97706]/25 text-[#d97706] text-[9px] font-syne font-bold uppercase tracking-wider rounded-xs"
+            >
+              {tech}
+            </span>
+          ))}
+        </div>
+      )}
 
       {/* Meta Bar */}
       <div className="flex items-center gap-4 text-[10px] text-outline font-syne uppercase tracking-wider pt-2 border-t border-outline-var/15">
@@ -45,6 +69,10 @@ export default function ContributedProjectCard({ repo }) {
           </span>
         )}
       </div>
+
+      {readmeOpen && (
+        <ReadmeModal repo={repo} onClose={() => setReadmeOpen(false)} />
+      )}
     </div>
   );
 }

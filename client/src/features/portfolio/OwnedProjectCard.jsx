@@ -1,7 +1,11 @@
+import { useState } from 'react';
 import { ExternalLink, Star, GitFork, Calendar, Code, ShieldCheck } from 'lucide-react';
+import ReadmeModal from './ReadmeModal';
 
 export default function OwnedProjectCard({ repo }) {
-  const formattedDate = repo.repoUpdatedAt 
+  const [readmeOpen, setReadmeOpen] = useState(false);
+
+  const formattedDate = repo.repoUpdatedAt
     ? new Date(repo.repoUpdatedAt).toLocaleDateString('en-US', { month: 'short', year: 'numeric' })
     : null;
 
@@ -10,8 +14,14 @@ export default function OwnedProjectCard({ repo }) {
       <div className="flex items-start justify-between gap-3">
         <div>
           <div className="flex items-center gap-2 flex-wrap">
-            <h4 className="font-bold text-text-primary text-sm tracking-tight">{repo.repoName}</h4>
-            <span className="px-2 py-0.5 bg-primary/10 border border-primary/20 text-primary text-[9px] font-syne uppercase font-bold tracking-wider rounded-xs flex items-center gap-1">
+            <button
+              onClick={() => setReadmeOpen(true)}
+              className="font-bold text-text-primary text-sm tracking-tight hover:text-[#d97706] transition-colors text-left"
+              title="View README"
+            >
+              {repo.repoName}
+            </button>
+            <span className="px-2 py-0.5 bg-[#d97706]/10 border border-[#d97706]/20 text-[#d97706] text-[9px] font-syne uppercase font-bold tracking-wider rounded-xs flex items-center gap-1">
               <ShieldCheck size={10} /> Verified Repo
             </span>
           </div>
@@ -36,7 +46,7 @@ export default function OwnedProjectCard({ repo }) {
           {repo.techStack.map((tech, idx) => (
             <span
               key={idx}
-              className="px-2 py-0.5 bg-surface border border-outline-var/40 text-secondary-bright text-[9px] font-syne font-bold uppercase tracking-wider rounded-xs"
+              className="px-2 py-0.5 bg-surface border border-[#d97706]/25 text-[#d97706] text-[9px] font-syne font-bold uppercase tracking-wider rounded-xs"
             >
               {tech}
             </span>
@@ -67,6 +77,9 @@ export default function OwnedProjectCard({ repo }) {
           </span>
         )}
       </div>
+      {readmeOpen && (
+        <ReadmeModal repo={repo} onClose={() => setReadmeOpen(false)} />
+      )}
     </div>
   );
 }
