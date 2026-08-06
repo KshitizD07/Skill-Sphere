@@ -1,41 +1,41 @@
 import logger from '../../utils/logger.js';
+import { getVerifiedSkillProfile } from '../verifiedSkillProfile.js';
+import { calculateCompatibility } from '../skillCompatibility.js';
 
 /**
  * Strategy: Verified Skills Matcher V1
  *
- * Prioritises candidates with verified GitHub skills matching the required role.
- * Exact match > partial match. The score directly correlates with the
- * GitHub verification strength (calculatedScore).
- *
- * This effectively mirrors the core Gatekeeper rules, but runs as a competing strategy.
+ * Prioritises candidates with verified skills matching the required and preferred role skills.
+ * Uses N.E.X.U.S. source-agnostic verified skill profiles and role-specific compatibility scoring.
  */
 export default class VerifiedSkillsMatcherV1 {
   constructor(config = {}) {
     this.config = {
-      verifiedBonus:     config.verifiedBonus     || 0.3, // +30% for verified skills
+      verifiedBonus:     config.verifiedBonus     || 0.3,
       minScoreThreshold: config.minScoreThreshold || 0,
-      exactMatchBonus:   config.exactMatchBonus   || 0.2, // +20% for exact skill match
+      exactMatchBonus:   config.exactMatchBonus   || 0.2,
       ...config,
     };
   }
 
   /**
-   * Scores a single candidate for a specific slot.
-   * Logic: Base score (0-10) + verified bonus + exact match bonus.
+   * Scores a single candidate for a specific slot using N.E.X.U.S. skill compatibility.
    */
   async score(candidate, slot) {
-    if (!slot.requiredSkill) return 5.0; // Neutral score for open roles
+    const preferredSkills = slot.preferredSkills || [];
+    const requiredSkill = slot.requiredSkill || null;
 
-    const reqSkill = slot.requiredSkill.toLowerCase();
-    const match    = candidate.skills.find((s) => s.name.toLowerCase() === reqSkill);
+    if (preferredSkills.length === 0 && !requiredSkill) {
+      return 5.0; // Neutral score for open roles
+    }
 
-    if (!match) return 0.0;
+    // Get source-agnostic verified skill profile for candidate
+    const profile = await getVerifiedSkillProfile(candidate.id || candidate.userId);
+    const { compatibilityScore } = calculateCompatibility(profile, preferredSkills, requiredSkill);
 
-    let score = match.calculatedScore || 0;
-    if (match.isVerified)                                score += score * this.config.verifiedBonus;
-    if (match.name.toLowerCase() === reqSkill) score += score * this.config.exactMatchBonus;
-
-    return Math.min(score, 15); // Cap at 15
+    // Scale 0-100 compatibility score to 0-15 strategy scale
+    const rawScore = (compatibilityScore / 100) * 15;
+    return Math.min(rawScore, 15);
   }
 
   /** Min-max normalisation → [0, 1]. */
