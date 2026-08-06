@@ -18,6 +18,14 @@ const SkillAPI = {
     BaseAPI.post('/verify/leetcode-scan', { username }),
   bulkVerifyLeetCode: (userId, username, skills, showLevel) =>
     BaseAPI.post('/verify/leetcode-bulk', { userId, username, skills, showLevel }),
+
+  // LeetCode Profile Card
+  syncLeetCodeProfile: (username) =>
+    BaseAPI.post('/verify/leetcode-profile-sync', { username }),
+  getLeetCodeProfile: (userId) =>
+    BaseAPI.get(`/verify/leetcode-profile/${userId}`),
+  unlinkLeetCode: () =>
+    BaseAPI.delete('/verify/leetcode-profile'),
 };
 
 export default SkillAPI;
