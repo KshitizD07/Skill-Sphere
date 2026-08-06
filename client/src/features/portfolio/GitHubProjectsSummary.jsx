@@ -14,8 +14,8 @@ export default function GitHubProjectsSummary({ userId, userName, isOwner }) {
     if (!userId) return;
     setLoading(true);
     try {
-      const res = await PortfolioAPI.getShowcase(userId);
-      setRepos(res.data || []);
+      const data = await PortfolioAPI.getShowcase(userId);
+      setRepos(Array.isArray(data) ? data : []);
     } catch (err) {
       console.error('Failed to load showcase repos:', err);
     } finally {

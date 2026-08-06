@@ -17,8 +17,8 @@ export default function RepoSelector({ onSelectionChange }) {
     setLoading(true);
     setError(null);
     try {
-      const res = await PortfolioAPI.getRepos();
-      setRepos(res.data || []);
+      const data = await PortfolioAPI.getRepos();
+      setRepos(Array.isArray(data) ? data : []);
     } catch (err) {
       console.error('Failed to load GitHub repos:', err);
       setError('Could not load repositories. Please sync or link GitHub account.');
@@ -36,14 +36,14 @@ export default function RepoSelector({ onSelectionChange }) {
     setError(null);
     setSuccessMsg('');
     try {
-      const res = await PortfolioAPI.syncRepos();
-      if (res.data?.repos) {
-        setRepos(res.data.repos);
+      const data = await PortfolioAPI.syncRepos();
+      if (data?.repos) {
+        setRepos(data.repos);
         setSuccessMsg('GitHub repositories synced successfully.');
       }
     } catch (err) {
       console.error('Sync error:', err);
-      setError(err.response?.data?.message || 'Failed to sync repositories from GitHub.');
+      setError(err.response?.data?.message || err.message || 'Failed to sync repositories from GitHub.');
     } finally {
       setSyncing(false);
     }
