@@ -7,6 +7,7 @@ import {
   Image as ImageIcon, Eye, EyeOff, CheckCircle, Clock,
   ExternalLink, X, Trash2, Pencil, CornerDownRight, Award
 } from 'lucide-react';
+import LeetCodeCard from './LeetCodeCard';
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 function timeAgo(date) {
@@ -492,6 +493,13 @@ export default function UserProfile() {
                   </a>
                 )}
               </div>
+
+              {/* LeetCode Profile Card */}
+              <LeetCodeCard
+                leetcode={user}
+                isOwner={isOwner}
+                onConnect={() => navigate('/my-profile')}
+              />
             </div>
 
             {/* Right content - posts feed - z-10 to render above profile */}
