@@ -47,9 +47,9 @@
       "title": "GitHub Project Portfolio",
       "sourceFile": "issues/2-project_portfolio_part.md",
       "priority": 2,
-      "status": "in_progress",
+      "status": "done",
       "startedAt": "2026-08-06T14:38:00+05:30",
-      "completedAt": null,
+      "completedAt": "2026-08-06T14:55:00+05:30",
       "phases": {
         "A": {
           "title": "Backend — Data Model & GitHub Fetching",
@@ -63,28 +63,28 @@
         },
         "B": {
           "title": "Frontend — Selection UI in Profile Settings",
-          "status": "not_started",
+          "status": "done",
           "tasks": {
-            "B1": { "title": "Create Portfolio API module", "status": "not_started", "files": ["client/src/features/portfolio/portfolioAPI.js"] },
-            "B2": { "title": "Create RepoSelector component", "status": "not_started", "files": ["client/src/features/portfolio/RepoSelector.jsx"] },
-            "B3": { "title": "Integrate into MyProfile", "status": "not_started", "files": ["client/src/features/profile/MyProfile.jsx"] }
+            "B1": { "title": "Create Portfolio API module", "status": "done", "files": ["client/src/features/portfolio/portfolioAPI.js"] },
+            "B2": { "title": "Create RepoSelector component", "status": "done", "files": ["client/src/features/portfolio/RepoSelector.jsx"] },
+            "B3": { "title": "Integrate into MyProfile", "status": "done", "files": ["client/src/features/profile/MyProfile.jsx"] }
           }
         },
         "C": {
           "title": "Frontend — Showcase Modal on Public Profile",
-          "status": "not_started",
+          "status": "done",
           "tasks": {
-            "C1": { "title": "Create OwnedProjectCard & ContributedProjectCard", "status": "not_started", "files": ["client/src/features/portfolio/OwnedProjectCard.jsx", "client/src/features/portfolio/ContributedProjectCard.jsx"] },
-            "C2": { "title": "Create ProjectShowcaseModal", "status": "not_started", "files": ["client/src/features/portfolio/ProjectShowcaseModal.jsx"] },
-            "C3": { "title": "Create GitHubProjectsSummary", "status": "not_started", "files": ["client/src/features/portfolio/GitHubProjectsSummary.jsx"] },
-            "C4": { "title": "Integrate into UserProfile", "status": "not_started", "files": ["client/src/features/profile/UserProfile.jsx"] }
+            "C1": { "title": "Create OwnedProjectCard & ContributedProjectCard", "status": "done", "files": ["client/src/features/portfolio/OwnedProjectCard.jsx", "client/src/features/portfolio/ContributedProjectCard.jsx"] },
+            "C2": { "title": "Create ProjectShowcaseModal", "status": "done", "files": ["client/src/features/portfolio/ProjectShowcaseModal.jsx"] },
+            "C3": { "title": "Create GitHubProjectsSummary", "status": "done", "files": ["client/src/features/portfolio/GitHubProjectsSummary.jsx"] },
+            "C4": { "title": "Integrate into UserProfile", "status": "done", "files": ["client/src/features/profile/UserProfile.jsx"] }
           }
         },
         "D": {
           "title": "Performance & Caching",
-          "status": "not_started",
+          "status": "done",
           "tasks": {
-            "D1": { "title": "DB caching, sync-only refresh, frontend state caching", "status": "not_started", "files": [] }
+            "D1": { "title": "DB caching, sync-only refresh, frontend state caching", "status": "done", "files": [] }
           }
         }
       }
