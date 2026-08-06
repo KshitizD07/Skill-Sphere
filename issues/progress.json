@@ -94,50 +94,50 @@
       "title": "N.E.X.U.S. Team Matching Engine",
       "sourceFile": "issues/3-NEXUS.md",
       "priority": 3,
-      "status": "not_started",
-      "startedAt": null,
-      "completedAt": null,
+      "status": "done",
+      "startedAt": "2026-08-06T14:55:00+05:30",
+      "completedAt": "2026-08-06T15:04:00+05:30",
       "phases": {
         "A": {
           "title": "Backend — Schema & Data Model Changes",
-          "status": "not_started",
+          "status": "done",
           "tasks": {
-            "A1": { "title": "Extend SquadSlot with preferredSkills and roleDescription", "status": "not_started", "files": ["server/prisma/schema.prisma"] },
-            "A2": { "title": "Create Verified Skill Profile abstraction", "status": "not_started", "files": ["server/services/verifiedSkillProfile.js"] }
+            "A1": { "title": "Extend SquadSlot with preferredSkills and roleDescription", "status": "done", "files": ["server/prisma/schema.prisma"] },
+            "A2": { "title": "Create Verified Skill Profile abstraction", "status": "done", "files": ["server/services/verifiedSkillProfile.js"] }
           }
         },
         "B": {
           "title": "Backend — Skill Compatibility Scoring",
-          "status": "not_started",
+          "status": "done",
           "tasks": {
-            "B1": { "title": "Create Skill Compatibility Calculator", "status": "not_started", "files": ["server/services/skillCompatibility.js"] },
-            "B2": { "title": "Integrate into verified_skills_v1 strategy", "status": "not_started", "files": ["server/services/strategies/verified_skills_v1.js"] },
-            "B3": { "title": "Add recommendation endpoint", "status": "not_started", "files": ["server/routes/squads.js"] }
+            "B1": { "title": "Create Skill Compatibility Calculator", "status": "done", "files": ["server/services/skillCompatibility.js"] },
+            "B2": { "title": "Integrate into verified_skills_v1 strategy", "status": "done", "files": ["server/services/strategies/verified_skills_v1.js"] },
+            "B3": { "title": "Add recommendation endpoint", "status": "done", "files": ["server/routes/squads.js"] }
           }
         },
         "C": {
           "title": "Backend — Mission Creation Updates",
-          "status": "not_started",
+          "status": "done",
           "tasks": {
-            "C1": { "title": "Update squad creation validation", "status": "not_started", "files": ["server/services/squadService.js"] },
-            "C2": { "title": "Update squad routes Zod schema", "status": "not_started", "files": ["server/routes/squads.js"] }
+            "C1": { "title": "Update squad creation validation", "status": "done", "files": ["server/services/squadService.js"] },
+            "C2": { "title": "Update squad routes Zod schema", "status": "done", "files": ["server/routes/squads.js"] }
           }
         },
         "D": {
           "title": "Frontend — Mission Creation UI Updates",
-          "status": "not_started",
+          "status": "done",
           "tasks": {
-            "D1": { "title": "Update Create Squad Modal with skill picker & role description", "status": "not_started", "files": ["client/src/features/squads/MissionBoard.jsx"] },
-            "D2": { "title": "Update Squad Detail role cards", "status": "not_started", "files": ["client/src/features/squads/SquadDetail.jsx"] },
-            "D3": { "title": "Update Squad Manage applicant cards with compatibility", "status": "not_started", "files": ["client/src/features/squads/SquadManage.jsx"] },
-            "D4": { "title": "Update Squad API module", "status": "not_started", "files": ["client/src/features/squads/squadAPI.js"] }
+            "D1": { "title": "Update Create Squad Modal with skill picker & role description", "status": "done", "files": ["client/src/features/squads/MissionBoard.jsx"] },
+            "D2": { "title": "Update Squad Detail role cards", "status": "done", "files": ["client/src/features/squads/SquadDetail.jsx"] },
+            "D3": { "title": "Update Squad Manage applicant cards with compatibility", "status": "done", "files": ["client/src/features/squads/SquadManage.jsx"] },
+            "D4": { "title": "Update Squad API module", "status": "done", "files": ["client/src/features/squads/squadAPI.js"] }
           }
         },
         "E": {
           "title": "Architecture Guardrails",
-          "status": "not_started",
+          "status": "done",
           "tasks": {
-            "E1": { "title": "Verify separation: verification never ranks, NEXUS uses generic profiles, strategies are independent", "status": "not_started", "files": [] }
+            "E1": { "title": "Verify separation: verification never ranks, NEXUS uses generic profiles, strategies are independent", "status": "done", "files": [] }
           }
         }
       }
