@@ -267,6 +267,8 @@ model SquadSlot {
   squadId         String
   squad           Squad      @relation(fields: [squadId], references: [id], onDelete: Cascade)
   roleTitle       String     @db.VarChar(80)
+  roleDescription String?
+  preferredSkills String[]   @default([])
   requiredSkill   String?    @db.VarChar(60)
   minScore        Int        @default(0)
   requireVerified Boolean    @default(false)
