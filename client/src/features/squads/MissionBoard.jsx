@@ -18,7 +18,7 @@ function CreateSquadModal({ onClose, onCreated }) {
     description: '',
     event: '',
     maxMembers: 4,
-    slots: [{ roleTitle: '', requiredSkill: '', minScore: 5 }],
+    slots: [{ roleTitle: '', roleDescription: '', preferredSkills: [], requiredSkill: '', minScore: 5 }],
   });
 
   useEffect(() => {
@@ -27,7 +27,7 @@ function CreateSquadModal({ onClose, onCreated }) {
 
   const addSlot = () => {
     if (form.slots.length >= 6) return;
-    setForm(f => ({ ...f, slots: [...f.slots, { roleTitle: '', requiredSkill: '', minScore: 5 }] }));
+    setForm(f => ({ ...f, slots: [...f.slots, { roleTitle: '', roleDescription: '', preferredSkills: [], requiredSkill: '', minScore: 5 }] }));
   };
 
   const removeSlot = (i) => {
@@ -39,6 +39,14 @@ function CreateSquadModal({ onClose, onCreated }) {
       ...f,
       slots: f.slots.map((s, idx) => idx === i ? { ...s, [field]: value } : s),
     }));
+  };
+
+  const togglePreferredSkill = (slotIndex, skillName) => {
+    const current = form.slots[slotIndex].preferredSkills || [];
+    const updated = current.includes(skillName)
+      ? current.filter(s => s !== skillName)
+      : [...current, skillName];
+    updateSlot(slotIndex, 'preferredSkills', updated);
   };
 
   const handleSubmit = async () => {
@@ -112,15 +120,16 @@ function CreateSquadModal({ onClose, onCreated }) {
 
         {step === 2 && (
           <div className="space-y-4">
-            <p className="text-outline text-sm">Define the roles you need. Each role filters applicants by their verified skill score.</p>
+            <p className="text-outline text-sm">Define the roles you need and preferred skills for N.E.X.U.S. compatibility matching.</p>
 
             {form.slots.map((slot, i) => (
-              <div key={i} className="bg-surface-mid border border-outline-var/30 rounded-xs p-4 relative group">
+              <div key={i} className="bg-surface-mid border border-outline-var/30 rounded-xs p-4 relative group space-y-3">
                 <button onClick={() => removeSlot(i)}
                   className="absolute top-3 right-3 text-outline-var hover:text-error opacity-0 group-hover:opacity-100 transition-all">
                   <X size={13} />
                 </button>
-                <p className="font-syne text-[9px] font-bold tracking-[0.12em] uppercase text-secondary mb-3">Role {i + 1}</p>
+                <p className="font-syne text-[9px] font-bold tracking-[0.12em] uppercase text-secondary">Role {i + 1}</p>
+
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
                   <div>
                     <label className={labelBase}>Role Title</label>
@@ -128,7 +137,7 @@ function CreateSquadModal({ onClose, onCreated }) {
                       placeholder="e.g. Backend Engineer" className={inputBase} />
                   </div>
                   <div>
-                    <label className={labelBase}>Required Skill</label>
+                    <label className={labelBase}>Gatekeeper Skill</label>
                     <select value={slot.requiredSkill} onChange={e => updateSlot(i, 'requiredSkill', e.target.value)}
                       className={`${inputBase} cursor-pointer`}>
                       <option value="">Select skill</option>
@@ -136,10 +145,39 @@ function CreateSquadModal({ onClose, onCreated }) {
                     </select>
                   </div>
                   <div>
-                    <label className={labelBase}>Min Score (1–10)</label>
+                    <label className={labelBase}>Min Gate Score (1–10)</label>
                     <input type="number" min={1} max={10} value={slot.minScore}
                       onChange={e => updateSlot(i, 'minScore', Number(e.target.value))}
                       className={inputBase} />
+                  </div>
+                </div>
+
+                <div>
+                  <label className={labelBase}>Short Role Description</label>
+                  <input value={slot.roleDescription || ''} onChange={e => updateSlot(i, 'roleDescription', e.target.value)}
+                    placeholder="Brief explanation of what member will work on..." className={inputBase} />
+                </div>
+
+                <div>
+                  <label className={labelBase}>Preferred Skills for Matching</label>
+                  <div className="flex flex-wrap gap-1.5 p-2 bg-surface border border-outline-var/30 rounded-xs max-h-28 overflow-y-auto">
+                    {allSkills.map(s => {
+                      const selected = (slot.preferredSkills || []).includes(s.name);
+                      return (
+                        <button
+                          key={s.id}
+                          type="button"
+                          onClick={() => togglePreferredSkill(i, s.name)}
+                          className={`px-2 py-0.5 text-[10px] font-syne font-bold uppercase rounded-xs transition ${
+                            selected 
+                              ? 'bg-secondary-bright text-on-primary' 
+                              : 'bg-surface-mid text-text-muted hover:text-text-primary border border-outline-var/30'
+                          }`}
+                        >
+                          {s.name} {selected && '✓'}
+                        </button>
+                      );
+                    })}
                   </div>
                 </div>
               </div>
