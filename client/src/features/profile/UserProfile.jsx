@@ -8,6 +8,7 @@ import {
   ExternalLink, X, Trash2, Pencil, CornerDownRight, Award
 } from 'lucide-react';
 import LeetCodeCard from './LeetCodeCard';
+import GitHubProjectsSummary from '../portfolio/GitHubProjectsSummary';
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 function timeAgo(date) {
@@ -499,6 +500,12 @@ export default function UserProfile() {
                 leetcode={user}
                 isOwner={isOwner}
                 onConnect={() => navigate('/my-profile')}
+              />
+
+              {/* GitHub Projects Showcase Summary */}
+              <GitHubProjectsSummary
+                userId={id}
+                userName={user?.name}
               />
             </div>
 
