@@ -225,15 +225,17 @@ router.post('/reset-password', asyncHandler(async (req, res) => {
 }));
 // ── GET /api/auth/google ──────────────────────────────────────────────────────
 router.get('/google', (req, res) => {
+  const role = req.query.role || 'STUDENT';
   const backendUrl = req.protocol + '://' + req.get('host');
   const cb = `${backendUrl}/api/auth/google/callback`;
-  const url = `https://accounts.google.com/o/oauth2/v2/auth?client_id=${process.env.GOOGLE_CLIENT_ID}&redirect_uri=${cb}&response_type=code&scope=email profile`;
+  const url = `https://accounts.google.com/o/oauth2/v2/auth?client_id=${process.env.GOOGLE_CLIENT_ID}&redirect_uri=${cb}&response_type=code&scope=email profile&state=${role}`;
   res.redirect(url);
 });
 
 // ── GET /api/auth/google/callback ─────────────────────────────────────────────
 router.get('/google/callback', asyncHandler(async (req, res) => {
   const code = req.query.code;
+  const role = req.query.state || 'STUDENT';
   if (!code) return res.redirect(`${process.env.FRONTEND_URL || 'http://localhost:5173'}/auth?error=OAuthCodeMissing`);
 
   const backendUrl = req.protocol + '://' + req.get('host');
@@ -262,20 +264,22 @@ router.get('/google/callback', asyncHandler(async (req, res) => {
   if (!userData.email) return res.redirect(`${process.env.FRONTEND_URL || 'http://localhost:5173'}/auth?error=EmailMissing`);
 
   // Find or create user
-  await handleOAuthLogin(userData.email, userData.name, res);
+  await handleOAuthLogin(userData.email, userData.name, res, null, null, role);
 }));
 
 // ── GET /api/auth/github ──────────────────────────────────────────────────────
 router.get('/github', (req, res) => {
+  const role = req.query.role || 'STUDENT';
   const backendUrl = req.protocol + '://' + req.get('host');
   const cb = `${backendUrl}/api/auth/github/callback`;
-  const url = `https://github.com/login/oauth/authorize?client_id=${process.env.GITHUB_CLIENT_ID}&redirect_uri=${cb}&scope=user:email`;
+  const url = `https://github.com/login/oauth/authorize?client_id=${process.env.GITHUB_CLIENT_ID}&redirect_uri=${cb}&scope=user:email&state=${role}`;
   res.redirect(url);
 });
 
 // ── GET /api/auth/github/callback ─────────────────────────────────────────────
 router.get('/github/callback', asyncHandler(async (req, res) => {
   const code = req.query.code;
+  const role = req.query.state || 'STUDENT';
   if (!code) return res.redirect(`${process.env.FRONTEND_URL || 'http://localhost:5173'}/auth?error=OAuthCodeMissing`);
 
   const backendUrl = req.protocol + '://' + req.get('host');
@@ -327,22 +331,23 @@ router.get('/github/callback', asyncHandler(async (req, res) => {
   
   if (!email) return res.redirect(`${process.env.FRONTEND_URL || 'http://localhost:5173'}/auth?error=EmailMissing`);
 
-  await handleOAuthLogin(email, userData.name || userData.login, res, userData.login, tokenData.access_token);
+  await handleOAuthLogin(email, userData.name || userData.login, res, userData.login, tokenData.access_token, role);
 }));
 
-async function handleOAuthLogin(email, name, res, githubUsername = null, githubAccessToken = null) {
+async function handleOAuthLogin(email, name, res, githubUsername = null, githubAccessToken = null, role = 'STUDENT') {
   const normalised = email.toLowerCase().trim();
   let user = await prisma.user.findUnique({ where: { email: normalised } });
 
   if (!user) {
     const randomPassword = Math.random().toString(36).slice(-8) + Math.random().toString(36).slice(-8).toUpperCase() + '!1aA';
     const hashed = await bcrypt.hash(randomPassword, 12);
+    const finalRole = ['STUDENT', 'PROFESSIONAL', 'GUEST', 'RECRUITER'].includes(role) ? role : 'STUDENT';
     user = await prisma.user.create({
       data: {
         email: normalised,
         password: hashed,
         name: name || 'OAuth User',
-        role: 'STUDENT', // Default
+        role: finalRole,
         github: githubUsername || null,
         githubAccessToken: githubAccessToken || null,
       },

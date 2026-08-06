@@ -5,6 +5,8 @@ import { API_BASE_URL } from '../../config/constants';
 
 export default function AuthPage() {
   const location = useLocation();
+  const initialMode = location.state?.mode === 'register';
+  const [isRegister, setIsRegister] = useState(initialMode);
   const [selectedRole, setSelectedRole] = useState('STUDENT'); // STUDENT, PROFESSIONAL
   const [recruiterNotice, setRecruiterNotice] = useState(false);
 
@@ -37,6 +39,15 @@ export default function AuthPage() {
   const cardBase = "min-h-screen bg-bg-base flex items-center justify-center p-4 font-outfit";
   const panelBase = "bg-surface border border-outline-var/30 rounded-md p-8 w-full max-w-md shadow-2xl shadow-bg-base/80";
 
+  // Build OAuth callback URLs
+  const googleUrl = isRegister
+    ? `${API_BASE_URL}/auth/google?role=${selectedRole}`
+    : `${API_BASE_URL}/auth/google`;
+
+  const githubUrl = isRegister
+    ? `${API_BASE_URL}/auth/github?role=${selectedRole}`
+    : `${API_BASE_URL}/auth/github`;
+
   return (
     <div className={cardBase}>
       <div className={panelBase}>
@@ -45,57 +56,61 @@ export default function AuthPage() {
             <Shield size={22} className="text-primary" />
           </div>
           <h1 className="text-xl font-extrabold text-text-primary tracking-tight mb-1">
-            Sign In to SkillSphere
+            {isRegister ? 'Join SkillSphere' : 'Sign In to SkillSphere'}
           </h1>
           <p className="text-outline text-xs">
-            Access your professional network and portfolio grid.
+            {isRegister
+              ? 'Create your verified skill profile and connect.'
+              : 'Access your professional network and portfolio grid.'}
           </p>
         </div>
 
-        {/* Role Selection */}
-        <div className="mb-6">
-          <label className="block font-syne text-[10px] font-bold tracking-[0.12em] uppercase text-outline mb-2">
-            Select Your Role
-          </label>
-          <div className="grid grid-cols-3 gap-2">
-            <button
-              type="button"
-              onClick={() => handleRoleSelect('STUDENT')}
-              className={`p-2.5 border rounded-xs font-syne text-[10px] font-bold uppercase tracking-wider flex flex-col items-center gap-1.5 transition ${
-                selectedRole === 'STUDENT'
-                  ? 'bg-primary/10 border-primary text-primary'
-                  : 'bg-surface-mid/50 border-outline-var/30 text-text-muted hover:text-text-primary'
-              }`}
-            >
-              <GraduationCap size={16} />
-              Student
-            </button>
+        {/* Role Selection — Show only during registration */}
+        {isRegister && (
+          <div className="mb-6 animate-in fade-in slide-in-from-top-1 duration-200">
+            <label className="block font-syne text-[10px] font-bold tracking-[0.12em] uppercase text-outline mb-2">
+              Select Your Role
+            </label>
+            <div className="grid grid-cols-3 gap-2">
+              <button
+                type="button"
+                onClick={() => handleRoleSelect('STUDENT')}
+                className={`p-2.5 border rounded-xs font-syne text-[10px] font-bold uppercase tracking-wider flex flex-col items-center gap-1.5 transition ${
+                  selectedRole === 'STUDENT'
+                    ? 'bg-[#d97706]/10 border-[#d97706] text-[#d97706]'
+                    : 'bg-surface-mid/50 border-outline-var/30 text-text-muted hover:text-text-primary'
+                }`}
+              >
+                <GraduationCap size={16} />
+                Student
+              </button>
 
-            <button
-              type="button"
-              onClick={() => handleRoleSelect('PROFESSIONAL')}
-              className={`p-2.5 border rounded-xs font-syne text-[10px] font-bold uppercase tracking-wider flex flex-col items-center gap-1.5 transition ${
-                selectedRole === 'PROFESSIONAL'
-                  ? 'bg-secondary-bright/10 border-secondary-bright text-secondary-bright'
-                  : 'bg-surface-mid/50 border-outline-var/30 text-text-muted hover:text-text-primary'
-              }`}
-            >
-              <Briefcase size={16} />
-              Professional
-            </button>
+              <button
+                type="button"
+                onClick={() => handleRoleSelect('PROFESSIONAL')}
+                className={`p-2.5 border rounded-xs font-syne text-[10px] font-bold uppercase tracking-wider flex flex-col items-center gap-1.5 transition ${
+                  selectedRole === 'PROFESSIONAL'
+                    ? 'bg-secondary-bright/10 border-secondary-bright text-secondary-bright'
+                    : 'bg-surface-mid/50 border-outline-var/30 text-text-muted hover:text-text-primary'
+                }`}
+              >
+                <Briefcase size={16} />
+                Professional
+              </button>
 
-            <button
-              type="button"
-              onClick={() => handleRoleSelect('RECRUITER')}
-              className="p-2.5 border border-outline-var/30 bg-surface-mid/30 text-text-muted hover:text-text-primary rounded-xs font-syne text-[10px] font-bold uppercase tracking-wider flex flex-col items-center gap-1.5 transition relative"
-            >
-              <Building size={16} />
-              Recruiter
-            </button>
+              <button
+                type="button"
+                onClick={() => handleRoleSelect('RECRUITER')}
+                className="p-2.5 border border-outline-var/30 bg-surface-mid/30 text-text-muted hover:text-text-primary rounded-xs font-syne text-[10px] font-bold uppercase tracking-wider flex flex-col items-center gap-1.5 transition relative"
+              >
+                <Building size={16} />
+                Recruiter
+              </button>
+            </div>
           </div>
-        </div>
+        )}
 
-        {recruiterNotice && (
+        {recruiterNotice && isRegister && (
           <div className="mb-6 p-3 bg-secondary-bright/10 border border-secondary-bright/30 text-secondary-bright text-xs rounded-xs flex items-center gap-2 font-syne uppercase tracking-wider font-bold">
             <span>Recruiter accounts will be available soon! Stay tuned.</span>
           </div>
@@ -108,8 +123,8 @@ export default function AuthPage() {
         )}
 
         <div className="space-y-3">
-          <a href={`${API_BASE_URL}/auth/google?role=${selectedRole}`}
-            className="flex items-center justify-center gap-3 w-full py-3 px-4 bg-surface-high border border-outline-var/40 hover:border-primary/50 rounded-xs text-sm font-syne font-bold text-text-primary transition-all shadow-sm hover:shadow-primary/10">
+          <a href={googleUrl}
+            className="flex items-center justify-center gap-3 w-full py-3 px-4 bg-surface-high border border-outline-var/40 hover:border-[#d97706]/50 rounded-xs text-sm font-syne font-bold text-text-primary transition-all shadow-sm hover:shadow-[#d97706]/10">
             <svg className="w-5 h-5" viewBox="0 0 24 24">
               <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
               <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
@@ -118,11 +133,23 @@ export default function AuthPage() {
             </svg>
             Continue with Google
           </a>
-          <a href={`${API_BASE_URL}/auth/github?role=${selectedRole}`}
-            className="flex items-center justify-center gap-3 w-full py-3 px-4 bg-surface-high border border-outline-var/40 hover:border-primary/50 rounded-xs text-sm font-syne font-bold text-text-primary transition-all shadow-sm hover:shadow-primary/10">
+          <a href={githubUrl}
+            className="flex items-center justify-center gap-3 w-full py-3 px-4 bg-surface-high border border-outline-var/40 hover:border-[#d97706]/50 rounded-xs text-sm font-syne font-bold text-text-primary transition-all shadow-sm hover:shadow-[#d97706]/10">
             <Github size={18} />
             Continue with GitHub
           </a>
+        </div>
+
+        {/* Mode Toggle Footer */}
+        <div className="mt-6 pt-5 border-t border-outline-var/15 text-center">
+          <button
+            onClick={() => setIsRegister(!isRegister)}
+            className="text-xs text-text-muted hover:text-[#d97706] font-syne transition-colors"
+          >
+            {isRegister
+              ? "Already have an account? Sign In"
+              : "New to SkillSphere? Register / Get Started"}
+          </button>
         </div>
       </div>
     </div>
