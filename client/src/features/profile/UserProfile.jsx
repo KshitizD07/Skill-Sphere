@@ -506,6 +506,7 @@ export default function UserProfile() {
               <GitHubProjectsSummary
                 userId={id}
                 userName={user?.name}
+                isOwner={isOwner}
               />
             </div>
 
