@@ -7,6 +7,7 @@ import {
 } from 'lucide-react';
 import ProfileAPI from './profileAPI';
 import API from '../../api';
+import SkillAPI from '../skills/skillAPI';
 import { COLLEGES } from '../../data/colleges';
 import SkillVerifier from '../skills/SkillVerifier';
 import Navbar from '../../shared/components/Navbar';
@@ -25,6 +26,11 @@ export default function MyProfile({ user, onUserUpdate }) {
   const [showSkillSelector, setShowSkillSelector] = useState(false);
   const [showVerifier, setShowVerifier] = useState(false);
   const [selectedSkill, setSelectedSkill] = useState(null); 
+  
+  const [leetcodeData, setLeetcodeData] = useState(null);
+  const [leetcodeInput, setLeetcodeInput] = useState('');
+  const [isSyncingLeetcode, setIsSyncingLeetcode] = useState(false);
+
   const avatarInputRef = useRef(null);
 
   useEffect(() => { 
@@ -52,6 +58,9 @@ export default function MyProfile({ user, onUserUpdate }) {
       if (userData.skills) {
         setMySkillsRaw(userData.skills);
         setMySkillNames(userData.skills.map(us => us.name || us.skill?.name).filter(Boolean));
+      }
+      if (userData.leetcodeUsername) {
+        setLeetcodeData(userData);
       }
     } catch (err) {
       console.error('Failed to load user data:', err);
@@ -101,6 +110,34 @@ export default function MyProfile({ user, onUserUpdate }) {
     localStorage.removeItem('user_data');
     localStorage.removeItem('ss_token');
     window.location.replace('/'); 
+  };
+
+  const handleConnectLeetcode = async () => {
+    if (!leetcodeInput.trim()) return;
+    setIsSyncingLeetcode(true);
+    try {
+      const res = await SkillAPI.syncLeetCodeProfile(leetcodeInput);
+      if (res.data?.success) {
+        setLeetcodeData(res.data.leetcode);
+        setLeetcodeInput('');
+      } else {
+        alert(res.data?.message || 'Failed to connect LeetCode');
+      }
+    } catch (e) {
+      alert(e.response?.data?.message || 'Failed to connect LeetCode');
+    }
+    setIsSyncingLeetcode(false);
+  };
+
+  const handleUnlinkLeetcode = async () => {
+    if (!confirm('Unlink LeetCode profile?')) return;
+    try {
+      await SkillAPI.unlinkLeetCode();
+      setLeetcodeData(null);
+      setLeetcodeInput('');
+    } catch (e) {
+      alert('Failed to unlink LeetCode');
+    }
   };
 
   const labelBase = "block font-syne text-[10px] font-bold tracking-[0.12em] uppercase text-outline mb-1.5";
@@ -325,6 +362,43 @@ export default function MyProfile({ user, onUserUpdate }) {
                       placeholder="linkedin.com/in/..." className={inputBase} />
                   </div>
                 </div>
+              </div>
+
+              <div className="pt-6 mt-6 border-t border-outline-var/20">
+                <h3 className="font-syne text-[10px] font-bold tracking-[0.12em] uppercase text-outline mb-4">LeetCode Integration</h3>
+                {leetcodeData?.leetcodeUsername ? (
+                  <div className="flex items-center justify-between p-4 border border-[#f59e0b]/30 bg-surface-mid rounded-xs">
+                    <div className="flex items-center gap-3">
+                      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M13.483 0a1.374 1.374 0 0 0-.961.438L7.116 6.226l-3.854 4.126a5.266 5.266 0 0 0-1.209 2.104 5.35 5.35 0 0 0-.125.513 5.527 5.527 0 0 0 .062 2.362 5.83 5.83 0 0 0 .349 1.017 5.938 5.938 0 0 0 1.271 1.818l4.277 4.193.039.038c2.248 2.165 5.852 2.133 8.063-.074l2.396-2.392c.54-.54.54-1.414.003-1.955a1.378 1.378 0 0 0-1.951-.003l-2.396 2.392a3.021 3.021 0 0 1-4.205.038l-.02-.019-4.276-4.193c-.652-.64-.972-1.469-.948-2.263a2.68 2.68 0 0 1 .066-.523 2.545 2.545 0 0 1 .619-1.164L9.13 8.114c1.058-1.134 3.204-1.27 4.43-.278l.257.257c.54.54 1.413.54 1.953 0a1.38 1.38 0 0 0 0-1.955l-.257-.257A4.978 4.978 0 0 0 13.483 0z" fill="#f59e0b"/>
+                        <path d="M15.145 16.318H8.49c-.762 0-1.38.616-1.38 1.378s.618 1.378 1.38 1.378h6.655c.762 0 1.38-.616 1.38-1.378s-.618-1.378-1.38-1.378z" fill="#f59e0b"/>
+                        <path d="M22.36 10.636l-3.77-3.77a1.38 1.38 0 0 0-1.952 0 1.38 1.38 0 0 0 0 1.953l3.77 3.77a1.38 1.38 0 0 0 1.952-1.953z" fill="#FFA116"/>
+                      </svg>
+                      <div>
+                        <div className="text-text-primary text-sm font-bold leading-tight">{leetcodeData.leetcodeUsername}</div>
+                        <div className="text-[10px] text-outline font-syne uppercase tracking-wider mt-0.5">Score: {leetcodeData.leetcodeDSAScore}/10</div>
+                      </div>
+                    </div>
+                    <div className="flex gap-2">
+                      <button onClick={async () => { setLeetcodeInput(leetcodeData.leetcodeUsername); await handleConnectLeetcode(); }} disabled={isSyncingLeetcode} className="px-3 py-1.5 bg-surface border border-outline-var/40 text-[10px] font-syne font-bold uppercase tracking-wider hover:text-primary transition rounded-xs">
+                        {isSyncingLeetcode ? 'Syncing...' : 'Re-sync'}
+                      </button>
+                      <button onClick={handleUnlinkLeetcode} className="px-3 py-1.5 bg-error/10 text-error border border-error/30 text-[10px] font-syne font-bold uppercase tracking-wider hover:bg-error hover:text-on-primary transition rounded-xs">
+                        Unlink
+                      </button>
+                    </div>
+                  </div>
+                ) : (
+                  <div>
+                    <label className={labelBase}>LeetCode Username</label>
+                    <div className="flex gap-2">
+                      <input value={leetcodeInput} onChange={e => setLeetcodeInput(e.target.value)} placeholder="username" className={inputBase} />
+                      <button onClick={handleConnectLeetcode} disabled={isSyncingLeetcode || !leetcodeInput.trim()} className="px-5 py-2 bg-[#f59e0b]/10 border border-[#f59e0b]/30 text-[#f59e0b] text-xs font-syne font-bold uppercase tracking-wider hover:bg-[#f59e0b] hover:text-white disabled:opacity-50 transition rounded-xs">
+                        {isSyncingLeetcode ? 'Connecting...' : 'Connect'}
+                      </button>
+                    </div>
+                  </div>
+                )}
               </div>
 
             </div>
