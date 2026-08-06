@@ -11,6 +11,7 @@ import SkillAPI from '../skills/skillAPI';
 import { COLLEGES } from '../../data/colleges';
 import SkillVerifier from '../skills/SkillVerifier';
 import Navbar from '../../shared/components/Navbar';
+import RepoSelector from '../portfolio/RepoSelector';
 
 export default function MyProfile({ user, onUserUpdate }) {
   const navigate = useNavigate();
@@ -399,6 +400,8 @@ export default function MyProfile({ user, onUserUpdate }) {
                     </div>
                   </div>
                 )}
+              <div className="pt-6 mt-6 border-t border-outline-var/20">
+                <RepoSelector />
               </div>
 
             </div>
