@@ -91,9 +91,10 @@ enum RepoType {
 
 enum UserRole {
   STUDENT
-  ALUMNI
+  PROFESSIONAL
   ADMIN
   GUEST
+  RECRUITER
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
