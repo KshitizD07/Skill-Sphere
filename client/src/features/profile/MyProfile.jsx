@@ -8,7 +8,7 @@ import {
 import ProfileAPI from './profileAPI';
 import API from '../../api';
 import SkillAPI from '../skills/skillAPI';
-import { COLLEGES } from '../../data/colleges';
+import CollegeSelector from './CollegeSelector';
 import SkillVerifier from '../skills/SkillVerifier';
 import Navbar from '../../shared/components/Navbar';
 import RepoSelector from '../portfolio/RepoSelector';
@@ -326,15 +326,12 @@ export default function MyProfile({ user, onUserUpdate }) {
                   <input value={formData.name} onChange={e => setFormData({...formData,name:e.target.value})} className={`${inputBase} text-base font-semibold`} placeholder="Your full name" />
                 </div>
                 <div>
-                  <label className={labelBase}>Institutional Affiliation <span className="text-error">*</span></label>
-                  <div className="relative group">
-                    <Building2 className="absolute left-3 top-3.5 text-[#656d84] group-focus-within:text-primary transition-colors" size={15} />
-                    <select value={formData.college} onChange={e => setFormData({...formData,college:e.target.value})}
-                      className={`${inputBase} pl-10 appearance-none cursor-pointer focus:border-primary/60`}>
-                      <option value="">No affiliation</option>
-                      {COLLEGES && COLLEGES.map((c,i) => <option key={i} value={c}>{c}</option>)}
-                    </select>
-                  </div>
+                  <CollegeSelector
+                    value={formData.college}
+                    onChange={(val) => setFormData({ ...formData, college: val })}
+                    labelBase={labelBase}
+                    inputBase={inputBase}
+                  />
                 </div>
               </div>
               
