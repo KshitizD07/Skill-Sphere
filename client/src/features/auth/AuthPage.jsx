@@ -1,9 +1,12 @@
+import { useState } from 'react';
 import { useLocation } from 'react-router-dom';
-import { Shield, X, Github } from 'lucide-react';
+import { Shield, X, Github, GraduationCap, Briefcase, Building } from 'lucide-react';
 import { API_BASE_URL } from '../../config/constants';
 
 export default function AuthPage() {
   const location = useLocation();
+  const [selectedRole, setSelectedRole] = useState('STUDENT'); // STUDENT, PROFESSIONAL
+  const [recruiterNotice, setRecruiterNotice] = useState(false);
 
   // Derive error message directly from URL search params during render
   const params = new URLSearchParams(location.search);
@@ -21,23 +24,82 @@ export default function AuthPage() {
     else error = 'OAuth authentication failed. Please try again.';
   }
 
+  const handleRoleSelect = (role) => {
+    if (role === 'RECRUITER') {
+      setRecruiterNotice(true);
+      return;
+    }
+    setRecruiterNotice(false);
+    setSelectedRole(role);
+    localStorage.setItem('signup_role', role);
+  };
+
   const cardBase = "min-h-screen bg-bg-base flex items-center justify-center p-4 font-outfit";
   const panelBase = "bg-surface border border-outline-var/30 rounded-md p-8 w-full max-w-md shadow-2xl shadow-bg-base/80";
 
   return (
     <div className={cardBase}>
       <div className={panelBase}>
-        <div className="text-center mb-8">
-          <div className="w-12 h-12 bg-primary/10 border border-primary/20 rounded-md flex items-center justify-center mx-auto mb-4">
+        <div className="text-center mb-6">
+          <div className="w-12 h-12 bg-primary/10 border border-primary/20 rounded-md flex items-center justify-center mx-auto mb-3">
             <Shield size={22} className="text-primary" />
           </div>
           <h1 className="text-xl font-extrabold text-text-primary tracking-tight mb-1">
             Sign In to SkillSphere
           </h1>
-          <p className="text-outline text-sm">
+          <p className="text-outline text-xs">
             Access your professional network and portfolio grid.
           </p>
         </div>
+
+        {/* Role Selection */}
+        <div className="mb-6">
+          <label className="block font-syne text-[10px] font-bold tracking-[0.12em] uppercase text-outline mb-2">
+            Select Your Role
+          </label>
+          <div className="grid grid-cols-3 gap-2">
+            <button
+              type="button"
+              onClick={() => handleRoleSelect('STUDENT')}
+              className={`p-2.5 border rounded-xs font-syne text-[10px] font-bold uppercase tracking-wider flex flex-col items-center gap-1.5 transition ${
+                selectedRole === 'STUDENT'
+                  ? 'bg-primary/10 border-primary text-primary'
+                  : 'bg-surface-mid/50 border-outline-var/30 text-text-muted hover:text-text-primary'
+              }`}
+            >
+              <GraduationCap size={16} />
+              Student
+            </button>
+
+            <button
+              type="button"
+              onClick={() => handleRoleSelect('PROFESSIONAL')}
+              className={`p-2.5 border rounded-xs font-syne text-[10px] font-bold uppercase tracking-wider flex flex-col items-center gap-1.5 transition ${
+                selectedRole === 'PROFESSIONAL'
+                  ? 'bg-secondary-bright/10 border-secondary-bright text-secondary-bright'
+                  : 'bg-surface-mid/50 border-outline-var/30 text-text-muted hover:text-text-primary'
+              }`}
+            >
+              <Briefcase size={16} />
+              Professional
+            </button>
+
+            <button
+              type="button"
+              onClick={() => handleRoleSelect('RECRUITER')}
+              className="p-2.5 border border-outline-var/30 bg-surface-mid/30 text-text-muted hover:text-text-primary rounded-xs font-syne text-[10px] font-bold uppercase tracking-wider flex flex-col items-center gap-1.5 transition relative"
+            >
+              <Building size={16} />
+              Recruiter
+            </button>
+          </div>
+        </div>
+
+        {recruiterNotice && (
+          <div className="mb-6 p-3 bg-secondary-bright/10 border border-secondary-bright/30 text-secondary-bright text-xs rounded-xs flex items-center gap-2 font-syne uppercase tracking-wider font-bold">
+            <span>Recruiter accounts will be available soon! Stay tuned.</span>
+          </div>
+        )}
 
         {error && (
           <div className="mb-6 p-3 bg-error-container/15 border border-error-container/40 text-error text-xs flex items-start gap-2 rounded-xs">
@@ -46,7 +108,7 @@ export default function AuthPage() {
         )}
 
         <div className="space-y-3">
-          <a href={`${API_BASE_URL}/auth/google`}
+          <a href={`${API_BASE_URL}/auth/google?role=${selectedRole}`}
             className="flex items-center justify-center gap-3 w-full py-3 px-4 bg-surface-high border border-outline-var/40 hover:border-primary/50 rounded-xs text-sm font-syne font-bold text-text-primary transition-all shadow-sm hover:shadow-primary/10">
             <svg className="w-5 h-5" viewBox="0 0 24 24">
               <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
@@ -56,7 +118,7 @@ export default function AuthPage() {
             </svg>
             Continue with Google
           </a>
-          <a href={`${API_BASE_URL}/auth/github`}
+          <a href={`${API_BASE_URL}/auth/github?role=${selectedRole}`}
             className="flex items-center justify-center gap-3 w-full py-3 px-4 bg-surface-high border border-outline-var/40 hover:border-primary/50 rounded-xs text-sm font-syne font-bold text-text-primary transition-all shadow-sm hover:shadow-primary/10">
             <Github size={18} />
             Continue with GitHub

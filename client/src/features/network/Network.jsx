@@ -40,8 +40,8 @@ export default function Network() {
   }, [searchQuery, roleFilter, filterMode, fetchUsers]);
 
   const roleColors = {
-    ALUMNI:  { bg: 'bg-secondary/8',  border: 'border-secondary/20',  text: 'text-secondary' },
-    STUDENT: { bg: 'bg-primary/8',  border: 'border-primary/20',  text: 'text-primary' },
+    PROFESSIONAL: { bg: 'bg-secondary/8', border: 'border-secondary/20', text: 'text-secondary' },
+    STUDENT:      { bg: 'bg-primary/8',   border: 'border-primary/20',   text: 'text-primary' },
   };
 
   return (
@@ -64,7 +64,7 @@ export default function Network() {
                 <h1 className="text-2xl font-extrabold text-text-primary tracking-tight">Network</h1>
               </div>
               <p className="font-syne text-[10px] font-bold tracking-[0.12em] uppercase text-outline">
-                Discover and connect with students and alumni
+                Discover and connect with students and working professionals
               </p>
             </div>
           </div>
@@ -83,16 +83,16 @@ export default function Network() {
 
             {/* Role tabs */}
             <div className="flex border border-outline-var/30 rounded-xs overflow-hidden">
-              {['ALL', 'ALUMNI', 'STUDENT'].map(r => (
+              {['ALL', 'PROFESSIONAL', 'STUDENT'].map(r => (
                 <button key={r} onClick={() => setRoleFilter(r)}
                   className={`px-4 py-2 font-syne text-[10px] font-bold uppercase tracking-[0.08em] transition-colors ${
                     roleFilter === r
-                      ? r === 'ALUMNI'  ? 'bg-secondary/10 text-secondary'
-                        : r === 'STUDENT' ? 'bg-primary/10 text-primary'
+                      ? r === 'PROFESSIONAL' ? 'bg-secondary/10 text-secondary'
+                        : r === 'STUDENT'      ? 'bg-primary/10 text-primary'
                         : 'bg-primary/10 text-primary'
                       : 'text-[#656d84] hover:text-text-muted hover:bg-surface-mid'
                   }`}>
-                  {r === 'STUDENT' ? 'Students' : r === 'ALUMNI' ? 'Alumni' : 'All'}
+                  {r === 'STUDENT' ? 'Students' : r === 'PROFESSIONAL' ? 'Professionals' : 'All'}
                 </button>
               ))}
             </div>
@@ -121,7 +121,7 @@ export default function Network() {
                   className="bg-surface border border-outline-var/20 rounded-md p-6 hover:border-secondary/15 transition-colors group relative overflow-hidden">
                   {/* Role badge */}
                   <div className={`absolute top-3 right-3 px-2 py-0.5 rounded-full text-[9px] font-syne font-bold uppercase tracking-wide ${roleStyle.bg} ${roleStyle.border} ${roleStyle.text} border`}>
-                    {user.role === 'STUDENT' ? 'Student' : 'Alumni'}
+                    {user.role === 'STUDENT' ? 'Student' : 'Professional'}
                   </div>
 
                   <div className="flex items-start gap-4 mb-4">

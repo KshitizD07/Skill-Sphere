@@ -18,7 +18,7 @@ model User {
   password String
   name     String
   role         UserRole @default(STUDENT)
-  guestPersona String? // "STUDENT" or "ALUMNI" for guest users
+  guestPersona String? // "STUDENT" or "PROFESSIONAL" for guest users
   college      String?
 
   headline String?

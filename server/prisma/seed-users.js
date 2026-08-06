@@ -24,7 +24,7 @@ const USERS = [
   {
     name: 'Priya Sharma',
     email: 'priya@test.com',
-    role: 'ALUMNI',
+    role: 'PROFESSIONAL',
     college: 'NIT Trichy',
     headline: 'Senior SDE @ Flipkart | AI/ML Architect',
     bio: 'Lead Engineer in the recommendation systems team. Expert in Python, TensorFlow, and large-scale data processing pipelines. Graduated 2021.',
@@ -55,7 +55,7 @@ const USERS = [
   {
     name: 'Ananya Iyer',
     email: 'ananya@test.com',
-    role: 'ALUMNI',
+    role: 'PROFESSIONAL',
     college: 'IIT Madras',
     headline: 'Frontend Architect @ Razorpay | Design Systems Expert',
     bio: 'Focused on building accessible, high-performance web applications. Creator of the OpenScale UI library. Mentor for aspiring frontend engineers.',
@@ -86,7 +86,7 @@ const USERS = [
   {
     name: 'Sneha Reddy',
     email: 'sneha@test.com',
-    role: 'ALUMNI',
+    role: 'PROFESSIONAL',
     college: 'IIIT Hyderabad',
     headline: 'Cybersecurity Analyst @ Microsoft | Security Operations',
     bio: 'Securing global infrastructure. Expert in penetration testing, incident response, and security automation. Certified Ethical Hacker.',
@@ -117,7 +117,7 @@ const USERS = [
   {
     name: 'Meera Nair',
     email: 'meera@test.com',
-    role: 'ALUMNI',
+    role: 'PROFESSIONAL',
     college: 'VIT Vellore',
     headline: 'Product Manager @ Swiggy | Technical PM',
     bio: 'Bridging the gap between engineering and business. Former Full Stack dev turned PM. Expertise in data-driven product roadmap planning.',

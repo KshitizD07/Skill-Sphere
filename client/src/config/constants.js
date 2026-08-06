@@ -12,7 +12,8 @@ export const SKILL_LEVELS={
 
 export const USER_ROLES={
     STUDENT:'Student',
-    ALUMNI:'Alumni',
+    PROFESSIONAL:'Professional',
+    RECRUITER:'Recruiter',
     ADMIN:'Admin',
 };
 
