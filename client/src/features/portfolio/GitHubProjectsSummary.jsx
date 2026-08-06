@@ -67,7 +67,7 @@ export default function GitHubProjectsSummary({ userId, userName, isOwner }) {
 
   return (
     <>
-      <div className="bg-surface border border-outline-var/20 p-5 rounded-md hover:border-primary/20 transition-colors space-y-4">
+      <div className="bg-surface border border-outline-var/20 p-5 rounded-md hover:border-[#d97706]/25 transition-colors space-y-4">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
             <Github size={16} className="text-secondary-bright" />
@@ -83,7 +83,7 @@ export default function GitHubProjectsSummary({ userId, userName, isOwner }) {
         <div className="grid grid-cols-2 gap-2 text-xs">
           <div className="p-2.5 bg-surface-mid/50 border border-outline-var/20 rounded-xs flex items-center justify-between">
             <span className="text-text-muted font-syne text-[10px] uppercase font-bold tracking-wider">Owned</span>
-            <span className="font-bold text-primary font-syne">{ownedCount}</span>
+            <span className="font-bold text-[#d97706] font-syne">{ownedCount}</span>
           </div>
           <div className="p-2.5 bg-surface-mid/50 border border-outline-var/20 rounded-xs flex items-center justify-between">
             <span className="text-text-muted font-syne text-[10px] uppercase font-bold tracking-wider">Contributed</span>
@@ -93,7 +93,7 @@ export default function GitHubProjectsSummary({ userId, userName, isOwner }) {
 
         <button
           onClick={() => setModalOpen(true)}
-          className="w-full py-2 bg-surface-mid hover:bg-primary/10 border border-outline-var/30 hover:border-primary/40 text-text-primary hover:text-primary text-xs font-syne font-bold uppercase tracking-wider flex items-center justify-center gap-2 rounded-xs transition-colors"
+          className="w-full py-2 bg-surface-mid hover:bg-[#d97706]/10 border border-outline-var/30 hover:border-[#d97706]/40 text-text-primary hover:text-[#d97706] text-xs font-syne font-bold uppercase tracking-wider flex items-center justify-center gap-2 rounded-xs transition-colors"
         >
           <FolderGit2 size={14} />
           View Projects

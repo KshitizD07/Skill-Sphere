@@ -19,8 +19,8 @@ export default function ProjectShowcaseModal({ repos = [], onClose, userName }) 
         {/* Header */}
         <div className="p-5 border-b border-outline-var/20 flex items-center justify-between bg-surface-mid/50">
           <div className="flex items-center gap-2.5">
-            <div className="p-2 bg-primary/10 border border-primary/20 rounded-xs">
-              <Github size={18} className="text-primary" />
+            <div className="p-2 bg-[#d97706]/10 border border-[#d97706]/20 rounded-xs">
+              <Github size={18} className="text-[#d97706]" />
             </div>
             <div>
               <h3 className="font-syne text-sm font-bold tracking-wide uppercase text-text-primary">
@@ -45,7 +45,7 @@ export default function ProjectShowcaseModal({ repos = [], onClose, userName }) 
             onClick={() => setActiveTab('owned')}
             className={`flex-1 py-3 px-4 font-syne text-xs font-bold uppercase tracking-wider flex items-center justify-center gap-2 border-b-2 transition ${
               activeTab === 'owned'
-                ? 'border-primary text-primary bg-primary/5'
+                ? 'border-[#d97706] text-[#d97706] bg-[#d97706]/5'
                 : 'border-transparent text-text-muted hover:text-text-primary'
             }`}
           >
