@@ -19,7 +19,7 @@ const registerSchema = z.object({
     .min(8, 'Password must be at least 8 characters')
     .regex(PASSWORD_REGEX, 'Password must contain uppercase, lowercase, number and special character'),
   name:     z.string().min(2, 'Name must be at least 2 characters').max(60),
-  role:     z.enum(['STUDENT', 'ALUMNI', 'GUEST'], { errorMap: () => ({ message: 'Role must be STUDENT, ALUMNI or GUEST' }) }),
+  role:     z.enum(['STUDENT', 'PROFESSIONAL', 'GUEST', 'RECRUITER'], { errorMap: () => ({ message: 'Role must be STUDENT, PROFESSIONAL, GUEST, or RECRUITER' }) }),
   guestPersona: z.string().optional(),
   college:  z.string().min(1).optional(),
   otp:      z.string().length(6, 'OTP must be 6 digits'),
@@ -89,6 +89,10 @@ router.post('/send-otp', asyncHandler(async (req, res) => {
 // Step 2: verify OTP + create account
 router.post('/register', asyncHandler(async (req, res) => {
   const data = registerSchema.parse(req.body);
+
+  if (data.role === 'RECRUITER') {
+    throw ApiError.badRequest('Recruiter accounts will be available soon!');
+  }
 
   const exists = await prisma.user.findUnique({ where: { email: data.email } });
   if (exists) throw ApiError.conflict('Email already registered');

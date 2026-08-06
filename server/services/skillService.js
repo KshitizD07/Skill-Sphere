@@ -158,7 +158,7 @@ export async function getMentors(skillName) {
   return cache.getOrSet(`mentors:${skillName.toLowerCase()}`, 300, () =>
     prisma.user.findMany({
       where: {
-        role:   'ALUMNI',
+        role:   'PROFESSIONAL',
         skills: { some: { name: { equals: skillName, mode: 'insensitive' }, isVerified: true } },
       },
       select: {
