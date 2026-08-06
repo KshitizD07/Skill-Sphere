@@ -23,6 +23,7 @@ import aiRoutes from './routes/ai.js';
 import chatRoutes from './routes/chat.js';
 import notificationRoutes from './routes/notifications.js';
 import antifragileRoutes from './routes/antifragile.js';
+import portfolioRoutes from './routes/portfolio.js';
 
 const app = express();
 app.use(compression());
@@ -120,6 +121,7 @@ app.use('/api/ai',           aiLimiter,     aiRoutes);
 app.use('/api/chat',                        chatRoutes);
 app.use('/api/notifications',               notificationRoutes);
 app.use('/api/antifragile',                 antifragileRoutes);
+app.use('/api/portfolio',                   portfolioRoutes);
 
 // ── 404 ───────────────────────────────────────────────────────────────────────
 app.use((req, res) => {
