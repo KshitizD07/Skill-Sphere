@@ -39,6 +39,7 @@ export const fetchOwnedRepos = async (githubUsername, accessToken) => {
         description: repo.description,
         primaryLanguage: repo.language,
         url: repo.html_url,
+        homepage: repo.homepage || null,
         stars: repo.stargazers_count,
         forks: repo.forks_count,
         repoUpdatedAt: new Date(repo.updated_at),

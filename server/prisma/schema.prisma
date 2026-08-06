@@ -74,6 +74,7 @@ model GitHubRepo {
   stars           Int       @default(0)
   forks           Int       @default(0)
   url             String
+  homepage        String?   // Deployed project URL (from repo settings)
   repoType        RepoType
   isSelected      Boolean   @default(false)
   mergedPrs       Int?      // Only for CONTRIBUTED repos
