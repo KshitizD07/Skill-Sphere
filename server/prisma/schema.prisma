@@ -62,22 +62,25 @@ model User {
 }
 
 model GitHubRepo {
-  id            String    @id @default(uuid())
-  userId        String
-  user          User      @relation(fields: [userId], references: [id], onDelete: Cascade)
-  repoName      String
-  description   String?
+  id              String    @id @default(uuid())
+  userId          String
+  user            User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  githubId        Int?      
+  repoName        String
+  fullName        String?
+  description     String?
   primaryLanguage String?
-  techStack     String[]  // Array of detected tech (e.g. ['Node.js', 'Express', 'React'])
-  stars         Int       @default(0)
-  forks         Int       @default(0)
-  url           String
-  repoType      RepoType
-  mergedPrs     Int?      // Only for CONTRIBUTED repos
-  repoUpdatedAt DateTime? // When the repo was last updated on GitHub
-  createdAt     DateTime  @default(now())
+  techStack       String[]  // Array of detected tech (e.g. ['Node.js', 'Express', 'React'])
+  stars           Int       @default(0)
+  forks           Int       @default(0)
+  url             String
+  repoType        RepoType
+  isSelected      Boolean   @default(false)
+  mergedPrs       Int?      // Only for CONTRIBUTED repos
+  repoUpdatedAt   DateTime? // When the repo was last updated on GitHub
+  createdAt       DateTime  @default(now())
 
-  @@unique([userId, repoName])
+  @@unique([userId, repoName, repoType])
   @@index([userId, repoType])
 }
 
