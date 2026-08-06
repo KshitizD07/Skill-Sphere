@@ -1,10 +1,12 @@
 import express from 'express';
+import { PrismaClient } from '@prisma/client';
 import { asyncHandler } from '../utils/errorHandler.js';
 import { authenticateToken } from '../middleware/auth.js';
 import * as verifyService from '../services/verifyService.js';
 import { verifyLeetCodeSkill, scanLeetCodeProfile } from '../services/leetcodeService.js';
 
 const router = express.Router();
+const prisma = new PrismaClient();
 
 // POST /api/verify/skill
 router.post('/skill', authenticateToken, asyncHandler(async (req, res) => {
@@ -78,4 +80,79 @@ router.get('/rate-limit', asyncHandler(async (_req, res) => {
   });
 }));
 
-export default router;
+// ─────────────────────────────────────────────────────────────────────────────
+// LEETCODE PROFILE CARD ENDPOINTS
+// ─────────────────────────────────────────────────────────────────────────────
+
+// POST /api/verify/leetcode-profile-sync  — Scan LeetCode & persist to User record
+router.post('/leetcode-profile-sync', authenticateToken, asyncHandler(async (req, res) => {
+  const { username } = req.body;
+  if (!username?.trim()) {
+    return res.status(400).json({ error: 'BAD_REQUEST', message: 'LeetCode username is required' });
+  }
+
+  const scanResult = await scanLeetCodeProfile({ username: username.trim() });
+
+  const updated = await prisma.user.update({
+    where: { id: req.user.userId },
+    data: {
+      leetcodeUsername:    scanResult.username,
+      leetcodeDSAScore:   scanResult.dsa.score,
+      leetcodeDSALevel:   scanResult.dsa.level,
+      leetcodeEasy:       scanResult.dsa.easy,
+      leetcodeMedium:     scanResult.dsa.medium,
+      leetcodeHard:       scanResult.dsa.hard,
+      leetcodeTotalPoints: scanResult.dsa.totalPoints,
+      leetcodeLanguages:  scanResult.languages,
+      leetcodeSyncedAt:   new Date(),
+    },
+    select: {
+      leetcodeUsername: true, leetcodeDSAScore: true, leetcodeDSALevel: true,
+      leetcodeEasy: true, leetcodeMedium: true, leetcodeHard: true,
+      leetcodeTotalPoints: true, leetcodeLanguages: true, leetcodeSyncedAt: true,
+    },
+  });
+
+  await prisma.activityLog.create({
+    data: { userId: req.user.userId, action: 'LEETCODE_CONNECTED', details: `LeetCode profile synced: ${scanResult.username}` },
+  });
+
+  res.json({ success: true, leetcode: updated });
+}));
+
+// GET /api/verify/leetcode-profile/:userId  — Read cached LeetCode data (public)
+router.get('/leetcode-profile/:userId', asyncHandler(async (req, res) => {
+  const user = await prisma.user.findUnique({
+    where: { id: req.params.userId },
+    select: {
+      leetcodeUsername: true, leetcodeDSAScore: true, leetcodeDSALevel: true,
+      leetcodeEasy: true, leetcodeMedium: true, leetcodeHard: true,
+      leetcodeTotalPoints: true, leetcodeLanguages: true, leetcodeSyncedAt: true,
+    },
+  });
+
+  if (!user) return res.status(404).json({ error: 'NOT_FOUND', message: 'User not found' });
+  if (!user.leetcodeUsername) return res.json({ success: true, leetcode: null });
+
+  res.json({ success: true, leetcode: user });
+}));
+
+// DELETE /api/verify/leetcode-profile  — Unlink LeetCode from own profile
+router.delete('/leetcode-profile', authenticateToken, asyncHandler(async (req, res) => {
+  await prisma.user.update({
+    where: { id: req.user.userId },
+    data: {
+      leetcodeUsername: null, leetcodeDSAScore: null, leetcodeDSALevel: null,
+      leetcodeEasy: null, leetcodeMedium: null, leetcodeHard: null,
+      leetcodeTotalPoints: null, leetcodeLanguages: null, leetcodeSyncedAt: null,
+    },
+  });
+
+  await prisma.activityLog.create({
+    data: { userId: req.user.userId, action: 'LEETCODE_UNLINKED', details: 'LeetCode profile unlinked' },
+  });
+
+  res.json({ success: true, message: 'LeetCode profile unlinked' });
+}));
+
+export default router;
