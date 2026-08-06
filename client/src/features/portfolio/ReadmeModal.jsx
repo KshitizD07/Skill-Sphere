@@ -7,8 +7,11 @@ import ReactMarkdown from 'react-markdown';
 const readmeCache = {};
 
 export default function ReadmeModal({ repo, onClose }) {
-  const [content, setContent] = useState(null);
-  const [loading, setLoading] = useState(true);
+  const cacheKey = repo?.fullName || '';
+  const cachedContent = cacheKey ? readmeCache[cacheKey] : null;
+
+  const [content, setContent] = useState(cachedContent || null);
+  const [loading, setLoading] = useState(!cachedContent);
   const [error, setError] = useState(null);
 
   useEffect(() => {
@@ -20,30 +23,39 @@ export default function ReadmeModal({ repo, onClose }) {
 
   useEffect(() => {
     if (!repo?.fullName) return;
-    const cacheKey = repo.fullName;
+    const key = repo.fullName;
 
-    if (readmeCache[cacheKey]) {
-      setContent(readmeCache[cacheKey]);
-      setLoading(false);
+    if (readmeCache[key]) {
       return;
     }
 
-    setLoading(true);
-    setError(null);
+    let active = true;
 
-    fetch(`https://api.github.com/repos/${repo.fullName}/readme`, {
-      headers: { Accept: 'application/vnd.github.v3.raw', 'User-Agent': 'SkillSphere' },
-    })
-      .then((res) => {
+    const fetchReadme = async () => {
+      try {
+        const res = await fetch(`https://api.github.com/repos/${repo.fullName}/readme`, {
+          headers: { Accept: 'application/vnd.github.v3.raw', 'User-Agent': 'SkillSphere' },
+        });
         if (!res.ok) throw new Error('README not found');
-        return res.text();
-      })
-      .then((text) => {
-        readmeCache[cacheKey] = text;
-        setContent(text);
-      })
-      .catch((err) => setError(err.message))
-      .finally(() => setLoading(false));
+        const text = await res.text();
+        if (active) {
+          readmeCache[key] = text;
+          setContent(text);
+          setLoading(false);
+        }
+      } catch (err) {
+        if (active) {
+          setError(err.message);
+          setLoading(false);
+        }
+      }
+    };
+
+    fetchReadme();
+
+    return () => {
+      active = false;
+    };
   }, [repo?.fullName]);
 
   if (!repo) return null;
