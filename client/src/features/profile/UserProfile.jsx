@@ -450,21 +450,22 @@ export default function UserProfile() {
         {recruiterMode ? <RecruiterView user={user} /> : (
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
             {/* Left sidebar - profile card - z-0 to stay behind posts */}
-            <div className="lg:col-span-4 space-y-6 relative z-0">
+            <div className="lg:col-span-4 space-y-6">
               <div className="bg-surface border border-primary/20 p-6 flex flex-col items-center text-center relative">
                 <div className="w-40 h-40 rounded-full border-4 border-black outline outline-2 outline-cyan-500 overflow-hidden mb-6 bg-surface-mid flex items-center justify-center shadow-[0_0_30px_rgba(34,211,238,0.2)]">
                   {user.avatar ? <img src={user.avatar} alt="" className="w-full h-full object-cover" /> : <User size={64} className="text-[#656d84]" />}
                 </div>
                 <h2 className="text-2xl font-black text-text-primary font-syne tracking-wide uppercase tracking-wider">{user.name}</h2>
-                <p className="text-primary font-syne tracking-wide text-sm mt-1">{user.headline || 'NO_HEADLINE_TAG'}</p>
+                <p className="text-primary font-syne tracking-wide text-sm mt-1">{user.headline || 'No headline'}</p>
                 <div className="mt-4 px-3 py-1 bg-primary/10 border border-primary/20 rounded text-xs font-bold tracking-widest text-text-primary">
                   {user.role === 'GUEST' 
-                    ? `GUEST ${user.guestPersona || 'STUDENT'}` 
-                    : `${user.role} CLASS`}
+                    ? `Guest · ${user.guestPersona || 'Student'}` 
+                    : user.role === 'PROFESSIONAL' ? 'Working Professional'
+                    : user.role.charAt(0) + user.role.slice(1).toLowerCase()}
                 </div>
                 {!isOwner && (
                   <button type="button" onClick={() => navigate(`/chat/${user.id}`)} className="w-full mt-6 py-3 bg-primary text-on-primary font-bold hover:bg-secondary-bright transition flex items-center justify-center gap-2 font-syne tracking-wide">
-                    <MessageSquare size={16} /> INITIALIZE_UPLINK
+                    <MessageSquare size={16} /> Send Message
                   </button>
                 )}
               </div>
@@ -513,12 +514,12 @@ export default function UserProfile() {
             {/* Right content - posts feed - z-10 to render above profile */}
             <div className="lg:col-span-8 space-y-6 relative z-10">
               <div className="bg-surface border border-outline-var/20 p-6">
-                <h3 className="text-outline font-syne tracking-wide text-xs mb-4 flex items-center gap-2"><Shield size={14} className="text-secondary-bright" /> BIO_DATA_LOG</h3>
-                <p className="text-lg text-text-muted leading-relaxed border-l-2 border-primary/20 pl-4">{user.bio || 'No data.'}</p>
+                <h3 className="text-outline font-syne tracking-wide text-xs mb-4 flex items-center gap-2"><Shield size={14} className="text-secondary-bright" /> About</h3>
+                <p className="text-lg text-text-muted leading-relaxed border-l-2 border-primary/20 pl-4">{user.bio || 'No bio added yet.'}</p>
               </div>
 
               <div className="bg-surface border border-outline-var/20 p-6">
-                <h3 className="text-outline font-syne tracking-wide text-xs mb-4 flex items-center gap-2"><Cpu size={14} className="text-error" /> MODULES</h3>
+                <h3 className="text-outline font-syne tracking-wide text-xs mb-4 flex items-center gap-2"><Cpu size={14} className="text-error" /> Skills</h3>
                 <div className="flex flex-wrap gap-2">
                   {user.skills?.map(record => (
                     <span key={record.id} className={`px-3 py-1 border font-syne tracking-wide text-xs font-bold flex items-center gap-1 ${record.isVerified ? 'bg-secondary-bright/10 border-secondary-bright/30 text-secondary' : 'bg-surface-mid border-primary/20 text-primary'}`}>
@@ -533,15 +534,15 @@ export default function UserProfile() {
                 </div>              </div>
 
               <div className="pt-8 border-t border-outline-var/20">
-                <h3 className="text-2xl font-black text-text-primary font-syne tracking-wide mb-6 flex items-center gap-2">
-                  <div className="w-2 h-8 bg-primary" /> ACTIVITY_STREAM
-                </h3>
+                  <h3 className="text-2xl font-black text-text-primary font-syne tracking-wide mb-6 flex items-center gap-2">
+                    <div className="w-2 h-8 bg-primary" /> Activity
+                  </h3>
 
                 {isOwner && (
                   <div className="bg-surface border border-outline-var/40 p-4 mb-6">
                     <textarea value={newPostContent}
                       onChange={e => { setNewPostContent(e.target.value); setCharCount(e.target.value.length); }}
-                      placeholder="Update status log..."
+                      placeholder="Share an update with your network..."
                       maxLength={500}
                       className="w-full bg-surface-mid border border-outline-var/20 text-text-primary p-3 focus:border-primary outline-none resize-none h-24 font-syne tracking-wide text-sm" />
                     <div className="flex items-center justify-between mt-1 mb-2">
@@ -558,7 +559,7 @@ export default function UserProfile() {
                       <input ref={postImageRef} type="file" accept="image/*" onChange={handleImageChange} className="hidden" />
                       <button type="button" onClick={() => postImageRef.current.click()}
                         className="flex items-center gap-2 px-3 py-2 bg-surface-mid border border-outline-var/40 hover:border-primary text-outline hover:text-primary transition text-xs font-syne tracking-wide">
-                        <ImageIcon size={14} /> ATTACH_IMAGE
+                        <ImageIcon size={14} /> Attach Image
                       </button>
                       <div className="flex-1" />
                       <button type="button" onClick={handleCreatePost}
@@ -573,8 +574,8 @@ export default function UserProfile() {
                 {posts.length === 0 ? (
                   <div className="text-center py-16 border border-dashed border-outline-var/20">
                     <MessageCircle size={40} className="mx-auto text-outline-var mb-3" />
-                    <p className="text-[#656d84] font-syne tracking-wide text-sm">NO_ACTIVITY_YET</p>
-                    {isOwner && <p className="text-outline-var font-syne tracking-wide text-xs mt-2">Share something with the network above</p>}
+                    <p className="text-[#656d84] font-syne tracking-wide text-sm">No posts yet.</p>
+                    {isOwner && <p className="text-outline-var font-syne tracking-wide text-xs mt-2">Share something with your network above.</p>}
                   </div>
                 ) : (
                   <div className="space-y-4">

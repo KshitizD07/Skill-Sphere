@@ -24,9 +24,9 @@ export default function LeetCodeCard({ leetcode, isOwner, onConnect }) {
         <button
           type="button"
           onClick={onConnect}
-          className="w-full py-2 bg-primary/10 border border-primary/30 text-primary text-xs font-syne tracking-wide font-bold hover:bg-primary hover:text-on-primary transition"
+          className="w-full py-2 bg-[#f59e0b]/10 border border-[#f59e0b]/30 text-[#f59e0b] text-xs font-syne tracking-wide font-bold hover:bg-[#f59e0b] hover:text-white transition"
         >
-          CONNECT_LEETCODE
+          Connect LeetCode
         </button>
       </div>
     );
@@ -42,9 +42,9 @@ export default function LeetCodeCard({ leetcode, isOwner, onConnect }) {
   const profileUrl = `https://leetcode.com/u/${leetcodeUsername}/`;
 
   const levelColor = leetcodeDSALevel === 'Advanced'
-    ? 'text-green-400 border-green-400/30 bg-green-400/10'
+    ? 'text-secondary-bright border-secondary-bright/30 bg-secondary-bright/10'
     : leetcodeDSALevel === 'Intermediate'
-      ? 'text-amber-400 border-amber-400/30 bg-amber-400/10'
+      ? 'text-[#f59e0b] border-[#f59e0b]/30 bg-[#f59e0b]/10'
       : 'text-outline border-outline-var/30 bg-surface-mid';
 
   return (
@@ -67,9 +67,9 @@ export default function LeetCodeCard({ leetcode, isOwner, onConnect }) {
 
       {/* DSA Stats — Easy / Medium / Hard */}
       <div className="grid grid-cols-3 gap-2">
-        <StatBlock label="Easy" count={leetcodeEasy ?? 0} color="text-green-400" bgColor="bg-green-400/10 border-green-400/20" />
-        <StatBlock label="Medium" count={leetcodeMedium ?? 0} color="text-amber-400" bgColor="bg-amber-400/10 border-amber-400/20" />
-        <StatBlock label="Hard" count={leetcodeHard ?? 0} color="text-red-400" bgColor="bg-red-400/10 border-red-400/20" />
+        <StatBlock label="Easy" count={leetcodeEasy ?? 0} color="text-secondary-bright" bgColor="bg-secondary-bright/10 border-secondary-bright/20" />
+        <StatBlock label="Medium" count={leetcodeMedium ?? 0} color="text-[#f59e0b]" bgColor="bg-[#f59e0b]/10 border-[#f59e0b]/20" />
+        <StatBlock label="Hard" count={leetcodeHard ?? 0} color="text-error" bgColor="bg-error/10 border-error/20" />
       </div>
 
       {/* DSA Score + Level */}
@@ -88,7 +88,7 @@ export default function LeetCodeCard({ leetcode, isOwner, onConnect }) {
       {/* Total Points */}
       {leetcodeTotalPoints != null && (
         <div className="text-center text-[10px] font-syne tracking-wide text-outline">
-          {leetcodeTotalPoints.toLocaleString()} TOTAL_POINTS
+          {leetcodeTotalPoints.toLocaleString()} total points
         </div>
       )}
 

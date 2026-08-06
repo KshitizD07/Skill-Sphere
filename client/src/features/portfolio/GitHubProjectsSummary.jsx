@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
+import { createPortal } from 'react-dom';
 import { useNavigate } from 'react-router-dom';
 import { Github, FolderGit2, ExternalLink } from 'lucide-react';
 import PortfolioAPI from './portfolioAPI';
@@ -100,12 +101,13 @@ export default function GitHubProjectsSummary({ userId, userName, isOwner }) {
         </button>
       </div>
 
-      {modalOpen && (
+      {modalOpen && createPortal(
         <ProjectShowcaseModal
           repos={repos}
           userName={userName}
           onClose={() => setModalOpen(false)}
-        />
+        />,
+        document.body
       )}
     </>
   );
