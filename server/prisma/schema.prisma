@@ -43,6 +43,7 @@ model User {
 
   // Relations
   skills         Skill[]
+  githubRepos    GitHubRepo[]
   posts          Post[]
   likes          Like[]
   comments       Comment[]
@@ -58,6 +59,31 @@ model User {
   @@index([college])
   @@index([role])
   @@index([createdAt(sort: Desc)])
+}
+
+model GitHubRepo {
+  id            String    @id @default(uuid())
+  userId        String
+  user          User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  repoName      String
+  description   String?
+  primaryLanguage String?
+  techStack     String[]  // Array of detected tech (e.g. ['Node.js', 'Express', 'React'])
+  stars         Int       @default(0)
+  forks         Int       @default(0)
+  url           String
+  repoType      RepoType
+  mergedPrs     Int?      // Only for CONTRIBUTED repos
+  repoUpdatedAt DateTime? // When the repo was last updated on GitHub
+  createdAt     DateTime  @default(now())
+
+  @@unique([userId, repoName])
+  @@index([userId, repoType])
+}
+
+enum RepoType {
+  OWNED
+  CONTRIBUTED
 }
 
 enum UserRole {
