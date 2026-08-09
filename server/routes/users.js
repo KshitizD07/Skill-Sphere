@@ -129,7 +129,7 @@ router.patch('/me/skills/:id', authenticateToken, asyncHandler(async (req, res) 
 }));
 
 // GET /api/users/search?q=
-router.get('/search', optionalAuth, asyncHandler(async (req, res) => {
+router.get('/search', authenticateToken, asyncHandler(async (req, res) => {
   const q = req.query.q?.trim();
   if (!q) return res.json([]);
 
@@ -149,7 +149,7 @@ router.get('/search', optionalAuth, asyncHandler(async (req, res) => {
 }));
 
 // GET /api/users/filter?role=&college=&search=
-router.get('/filter', optionalAuth, asyncHandler(async (req, res) => {
+router.get('/filter', authenticateToken, asyncHandler(async (req, res) => {
   const { role, college, search } = req.query;
 
   const where = {};
@@ -174,8 +174,8 @@ router.get('/filter', optionalAuth, asyncHandler(async (req, res) => {
   res.json(users);
 }));
 
-// GET /api/users/:id  — public profile
-router.get('/:id', optionalAuth, asyncHandler(async (req, res) => {
+// GET /api/users/:id  — profile endpoint requiring authentication
+router.get('/:id', authenticateToken, asyncHandler(async (req, res) => {
   const cacheKey = `user:profile:${req.params.id}`;
   const cached   = await cache.get(cacheKey);
   if (cached) return res.json(cached);

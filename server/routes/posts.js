@@ -47,7 +47,7 @@ function normalisePosts(posts) {
   }));
 }
 
-router.get('/all', optionalAuth, asyncHandler(async (req, res) => {
+router.get('/all', authenticateToken, asyncHandler(async (req, res) => {
   const posts = await prisma.post.findMany({
     include: POST_INCLUDE,
     orderBy: { createdAt: 'desc' },
@@ -56,7 +56,7 @@ router.get('/all', optionalAuth, asyncHandler(async (req, res) => {
   res.json(normalisePosts(posts));
 }));
 
-router.get('/user/:userId', optionalAuth, asyncHandler(async (req, res) => {
+router.get('/user/:userId', authenticateToken, asyncHandler(async (req, res) => {
   const posts = await prisma.post.findMany({
     where: { userId: req.params.userId },
     include: POST_INCLUDE,
