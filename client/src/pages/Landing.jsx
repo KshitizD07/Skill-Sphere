@@ -1,5 +1,6 @@
 import { useNavigate } from 'react-router-dom';
 import FeatureSphere from '../shared/components/FeatureSphere';
+import SEOHead from '../shared/components/SEOHead';
 import { Brain, Users, ArrowRight, Shield } from 'lucide-react';
 
 export default function Landing() {
@@ -13,6 +14,11 @@ export default function Landing() {
 
   return (
     <div className="min-h-screen bg-[#121110] text-[#f5f5f4] font-outfit">
+      <SEOHead 
+        title="Skill Intelligence & Developer Network" 
+        description="Verify developer skills with automated proof, form high-octane engineering squads, and discover data-driven career roadmaps on SkillSphere."
+        keywords="developer network, skill verification, engineering squads, leetcode verification, github developer profile"
+      />
 
       {/* ── Nav ── */}
       <header className="relative min-h-screen flex flex-col overflow-hidden">

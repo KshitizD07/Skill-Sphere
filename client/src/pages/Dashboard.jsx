@@ -7,6 +7,7 @@ import {
   Activity, Users, X, Brain, BarChart2, ShieldAlert
 } from 'lucide-react';
 import Navbar from '../shared/components/Navbar';
+import SEOHead from '../shared/components/SEOHead';
 import ReactMarkdown from 'react-markdown';
 import SkillVerifier from '../features/skills/SkillVerifier';
 
@@ -169,6 +170,10 @@ export default function Dashboard({ user, onLogout }) {
 
   return (
     <div className="min-h-screen bg-bg-base text-text-primary font-outfit flex flex-col md:flex-row">
+      <SEOHead 
+        title="Skill Intelligence Dashboard" 
+        description="Monitor your skill readiness index, AI role fit analytics, and target skill gaps on your SkillSphere dashboard." 
+      />
       
       {/* Fixed Sidebar Layout */}
       <Navbar user={currentUser} onLogout={handleLogout} />
