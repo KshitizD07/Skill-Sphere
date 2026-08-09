@@ -1,0 +1,10 @@
+User-agent: *
+Allow: /
+Allow: /auth
+Disallow: /api/
+Disallow: /dashboard/
+Disallow: /my-profile/
+Disallow: /nexus/
+Disallow: /squad/
+
+Sitemap: https://skillsphere.dev/sitemap.xml
