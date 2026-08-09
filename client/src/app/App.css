@@ -8,30 +8,30 @@
 *, *::before, *::after { box-sizing: border-box; }
 
 html, body {
-  background-color: #121110;
-  color: #f5f5f4;
+  background-color: #F5F2EB;
+  color: #1A1A1A;
   font-family: 'Outfit', sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
 
-::selection { background-color: rgba(245, 158, 11, 0.25); color: #f5f5f4; }
+::selection { background-color: rgba(194, 159, 93, 0.25); color: #1A1A1A; }
 
 /* ── Global slim scrollbar ── */
-* { scrollbar-width: thin; scrollbar-color: rgba(245, 158, 11, 0.2) transparent; }
+* { scrollbar-width: thin; scrollbar-color: rgba(194, 159, 93, 0.3) transparent; }
 *::-webkit-scrollbar { width: 4px; height: 4px; }
 *::-webkit-scrollbar-track { background: transparent; }
-*::-webkit-scrollbar-thumb { background: rgba(245, 158, 11, 0.2); border-radius: 2px; }
-*::-webkit-scrollbar-thumb:hover { background: rgba(245, 158, 11, 0.4); }
+*::-webkit-scrollbar-thumb { background: rgba(194, 159, 93, 0.3); border-radius: 2px; }
+*::-webkit-scrollbar-thumb:hover { background: rgba(194, 159, 93, 0.5); }
 
 /* ── UI Label utility ── */
 .label-ui {
-  font-family: 'Syne', sans-serif;
+  font-family: 'Playfair Display', Georgia, serif;
   font-size: 10px;
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.12em;
-  color: #a8a29e;
+  color: #3A3633;
 }
 
 /* ── Animations ── */
@@ -46,47 +46,47 @@ html, body {
   100% { background-position: 200% 0; }
 }
 .animate-shimmer {
-  background: linear-gradient(90deg, #1a1918 25%, #23211f 50%, #1a1918 75%);
+  background: linear-gradient(90deg, #FAF7F0 25%, #F0EDE4 50%, #FAF7F0 75%);
   background-size: 200% 100%;
   animation: shimmer 1.5s infinite;
 }
 
 /* ── Glass panel ── */
 .glass {
-  background: rgba(26, 25, 24, 0.6);
+  background: rgba(255, 255, 255, 0.8);
   backdrop-filter: blur(20px);
   -webkit-backdrop-filter: blur(20px);
 }
 
 /* ── Progress bar ── */
-.progress-track { background: #2c2a27; border-radius: 9999px; height: 4px; }
-.progress-fill  { background: #f59e0b; border-radius: 9999px; height: 4px; transition: width 0.4s ease; }
+.progress-track { background: #E4E1D9; border-radius: 9999px; height: 4px; }
+.progress-fill  { background: #C29F5D; border-radius: 9999px; height: 4px; transition: width 0.4s ease; }
 
 /* ── Prose override for roadmap markdown ── */
-.prose h1 { color: #f59e0b; font-family: 'Outfit', sans-serif; font-weight: 800; letter-spacing: -0.03em; }
-.prose h2 { color: #ca8a04; font-family: 'Syne', sans-serif; }
-.prose h3 { color: #d6d3d1; }
-.prose p  { color: #a8a29e; line-height: 1.7; }
-.prose ul > li::marker { color: rgba(245, 158, 11, 0.4); }
-.prose a  { color: #f59e0b; text-decoration: underline; }
-.prose strong { color: #f5f5f4; font-weight: 700; }
+.prose h1 { color: #C29F5D; font-family: 'Playfair Display', Georgia, serif; font-weight: 800; letter-spacing: -0.03em; }
+.prose h2 { color: #1A1A1A; font-family: 'Playfair Display', Georgia, serif; }
+.prose h3 { color: #5A5550; }
+.prose p  { color: #66615C; line-height: 1.7; }
+.prose ul > li::marker { color: rgba(194, 159, 93, 0.6); }
+.prose a  { color: #C29F5D; text-decoration: underline; }
+.prose strong { color: #1A1A1A; font-weight: 700; }
 .prose code {
-  color: #f59e0b;
-  background: rgba(35, 33, 31, 0.8);
+  color: #C29F5D;
+  background: rgba(232, 223, 204, 0.6);
   padding: 2px 6px;
   border-radius: 3px;
   font-size: 0.875em;
 }
 .prose pre code { background: transparent; padding: 0; }
 .prose pre {
-  background: #161513;
-  border: 1px solid #44403c;
+  background: #FAF7F0;
+  border: 1px solid #D8D5CD;
   border-radius: 6px;
   padding: 1rem 1.25rem;
 }
 .prose blockquote {
-  border-left: 3px solid #f59e0b;
+  border-left: 3px solid #C29F5D;
   padding-left: 1rem;
-  color: #d6d3d1;
+  color: #5A5550;
   font-style: italic;
 }
