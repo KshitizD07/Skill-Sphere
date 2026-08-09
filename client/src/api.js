@@ -4,6 +4,7 @@ import { API_BASE_URL } from './config/constants';
 const API = axios.create({
   baseURL: API_BASE_URL,
   withCredentials: true, // Send httpOnly cookies on every request
+  timeout: 15000, // 15 second request timeout for mobile latency protection
 });
 
 // Request interceptor to attach JWT token
