@@ -118,14 +118,14 @@ export default function MyProfile({ user, onUserUpdate }) {
     setIsSyncingLeetcode(true);
     try {
       const res = await SkillAPI.syncLeetCodeProfile(leetcodeInput);
-      if (res.data?.success) {
-        setLeetcodeData(res.data.leetcode);
+      if (res.success) {
+        setLeetcodeData(res.leetcode);
         setLeetcodeInput('');
       } else {
-        alert(res.data?.message || 'Failed to connect LeetCode');
+        alert(res.message || 'Failed to connect LeetCode');
       }
     } catch (e) {
-      alert(e.response?.data?.message || 'Failed to connect LeetCode');
+      alert(e.message || 'Failed to connect LeetCode');
     }
     setIsSyncingLeetcode(false);
   };
