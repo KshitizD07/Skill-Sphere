@@ -3,7 +3,7 @@ import { PrismaClient } from '@prisma/client';
 import { z } from 'zod';
 
 import { asyncHandler, ApiError } from '../utils/errorHandler.js';
-import { authenticateToken, optionalAuth } from '../middleware/auth.js';
+import { authenticateToken } from '../middleware/auth.js';
 import cache from '../utils/cache.js';
 
 const router = express.Router();

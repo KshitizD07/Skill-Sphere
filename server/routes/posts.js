@@ -1,7 +1,7 @@
 import express from 'express';
 import { PrismaClient } from '@prisma/client';
 import { asyncHandler, ApiError } from '../utils/errorHandler.js';
-import { authenticateToken, optionalAuth } from '../middleware/auth.js';
+import { authenticateToken } from '../middleware/auth.js';
 import { logActivity } from '../services/activityService.js';
 import { getIO } from '../socket.js';
 

@@ -7,12 +7,12 @@ import * as activityService from '../services/activityService.js';
 const router = express.Router();
 
 // GET /api/skills/list
-router.get('/list', asyncHandler(async (req, res) => {
+router.get('/list', authenticateToken, asyncHandler(async (req, res) => {
   res.json(await skillService.getAllSkills());
 }));
 
 // GET /api/skills/roles
-router.get('/roles', asyncHandler(async (req, res) => {
+router.get('/roles', authenticateToken, asyncHandler(async (req, res) => {
   res.json(await skillService.getAllRoles());
 }));
 

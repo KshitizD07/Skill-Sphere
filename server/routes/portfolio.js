@@ -62,8 +62,8 @@ router.put('/selection', authenticateToken, asyncHandler(async (req, res) => {
 }));
 
 // GET /api/portfolio/showcase/:userId
-// Public endpoint returning selected repos for a user profile
-router.get('/showcase/:userId', asyncHandler(async (req, res) => {
+// Authenticated endpoint returning selected repos for a user profile
+router.get('/showcase/:userId', authenticateToken, asyncHandler(async (req, res) => {
   const { userId } = req.params;
   const cacheKey = `portfolio:showcase:${userId}`;
   

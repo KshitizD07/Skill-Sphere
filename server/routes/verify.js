@@ -64,7 +64,7 @@ router.post('/leetcode-bulk', authenticateToken, asyncHandler(async (req, res) =
 }));
 
 // GET /api/verify/rate-limit  — useful for checking GitHub quota
-router.get('/rate-limit', asyncHandler(async (_req, res) => {
+router.get('/rate-limit', authenticateToken, asyncHandler(async (_req, res) => {
   const headers = {
     Accept: 'application/vnd.github+json',
     'User-Agent': 'SkillSphere-Verifier',
@@ -120,8 +120,8 @@ router.post('/leetcode-profile-sync', authenticateToken, asyncHandler(async (req
   res.json({ success: true, leetcode: updated });
 }));
 
-// GET /api/verify/leetcode-profile/:userId  — Read cached LeetCode data (public)
-router.get('/leetcode-profile/:userId', asyncHandler(async (req, res) => {
+// GET /api/verify/leetcode-profile/:userId  — Read cached LeetCode data (authenticated)
+router.get('/leetcode-profile/:userId', authenticateToken, asyncHandler(async (req, res) => {
   const user = await prisma.user.findUnique({
     where: { id: req.params.userId },
     select: {
