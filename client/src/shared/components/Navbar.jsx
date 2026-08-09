@@ -103,7 +103,7 @@ const Navbar = ({ user, onLogout }) => {
           <div className="flex items-center gap-3 p-2 rounded-md hover:bg-surface cursor-pointer transition-colors" onClick={() => navigate('/my-profile')}>
             <div className="w-10 h-10 rounded-full bg-surface border border-primary/20 overflow-hidden flex items-center justify-center shrink-0">
               {user?.avatar ? (
-                <img src={user.avatar} alt="Avatar" className="w-full h-full object-cover" />
+                <img src={user.avatar} alt={user?.name || "User Avatar"} loading="lazy" decoding="async" className="w-full h-full object-cover" />
               ) : (
                 <User size={20} className="text-primary" />
               )}

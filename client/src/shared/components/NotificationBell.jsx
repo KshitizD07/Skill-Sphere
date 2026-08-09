@@ -83,7 +83,7 @@ export default function NotificationBell() {
                 >
                   <div className="w-8 h-8 rounded-full border border-outline-var/40 overflow-hidden bg-surface-mid shrink-0 flex items-center justify-center">
                     {notif.senderAvatar ? (
-                      <img src={notif.senderAvatar} className="w-full h-full object-cover" alt="" />
+                      <img src={notif.senderAvatar} className="w-full h-full object-cover" alt="Sender avatar" loading="lazy" decoding="async" />
                     ) : (
                       <User size={14} className="text-[#656d84]" />
                     )}

@@ -50,7 +50,7 @@ function Avatar({ src, name, size = 10 }) {
   return (
     <div className={`${sizeMap[size] || 'w-10 h-10'} rounded-full overflow-hidden border border-outline-var/40 bg-surface shrink-0 flex items-center justify-center`}>
       {src ? (
-        <img src={src} className="w-full h-full object-cover" alt={name || ''} />
+        <img src={src} className="w-full h-full object-cover" alt={name || 'User avatar'} loading="lazy" decoding="async" />
       ) : (
         <User size={iconSizeMap[size] || 20} className="text-[#656d84]" />
       )}
@@ -453,7 +453,7 @@ export default function UserProfile() {
             <div className="lg:col-span-4 space-y-6">
               <div className="bg-surface border border-primary/20 p-6 flex flex-col items-center text-center relative">
                 <div className="w-40 h-40 rounded-full border-4 border-black outline outline-2 outline-cyan-500 overflow-hidden mb-6 bg-surface-mid flex items-center justify-center shadow-[0_0_30px_rgba(34,211,238,0.2)]">
-                  {user.avatar ? <img src={user.avatar} alt="" className="w-full h-full object-cover" /> : <User size={64} className="text-[#656d84]" />}
+                  {user.avatar ? <img src={user.avatar} alt={user.name || "Profile avatar"} loading="lazy" decoding="async" className="w-full h-full object-cover" /> : <User size={64} className="text-[#656d84]" />}
                 </div>
                 <h2 className="text-2xl font-black text-text-primary font-syne tracking-wide uppercase tracking-wider">{user.name}</h2>
                 <p className="text-primary font-syne tracking-wide text-sm mt-1">{user.headline || 'No headline'}</p>
