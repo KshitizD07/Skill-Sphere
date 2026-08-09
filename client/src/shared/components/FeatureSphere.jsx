@@ -36,8 +36,9 @@ export default function FeatureSphere({ scrollToSection }) {
           rotationRef.current.y += 0.004;
         }
         const nodes = containerRef.current.querySelectorAll('.feature-node');
-        const isMobile = window.innerWidth < 768;
-        const radius = isMobile ? 140 : 180;
+        const winWidth = window.innerWidth;
+        const isMobile = winWidth < 768;
+        const radius = isMobile ? (winWidth < 380 ? 95 : 120) : 180;
 
         nodes.forEach((node, i) => {
           const baseAngle = (i / features.length) * 2 * Math.PI;
@@ -80,20 +81,20 @@ export default function FeatureSphere({ scrollToSection }) {
       onMouseEnter={() => setIsHovering(true)}
       onMouseLeave={() => setIsHovering(false)}
       onMouseMove={handleMouseMove}
-      className="relative w-[400px] h-[400px] md:w-[480px] md:h-[480px] flex items-center justify-center"
+      className="relative w-[280px] h-[280px] sm:w-[360px] sm:h-[360px] md:w-[480px] md:h-[480px] flex items-center justify-center max-w-full overflow-hidden"
       style={{ perspective: '1000px' }}
     >
       {/* Central orbit rings */}
-      <div className="absolute w-40 h-40 border border-primary/10 rounded-full animate-[spin_12s_linear_infinite]" />
-      <div className="absolute w-28 h-28 border border-secondary/10 rounded-full animate-[spin_7s_linear_infinite_reverse]" />
-      <div className="absolute w-20 h-20 border border-primary/5 rounded-full animate-[spin_9s_linear_infinite]" />
+      <div className="absolute w-28 h-28 sm:w-36 sm:h-36 md:w-40 md:h-40 border border-primary/10 rounded-full animate-[spin_12s_linear_infinite]" />
+      <div className="absolute w-20 h-20 sm:w-24 sm:h-24 md:w-28 md:h-28 border border-secondary/10 rounded-full animate-[spin_7s_linear_infinite_reverse]" />
+      <div className="absolute w-14 h-14 sm:w-16 sm:h-16 md:w-20 md:h-20 border border-primary/5 rounded-full animate-[spin_9s_linear_infinite]" />
 
       {/* Central logo */}
       <div className="absolute z-0 select-none pointer-events-none text-center">
-        <div className="text-5xl font-extrabold font-outfit tracking-tighter" style={{ color: '#adc6ff', opacity: 0.9 }}>
+        <div className="text-3xl sm:text-4xl md:text-5xl font-extrabold font-outfit tracking-tighter" style={{ color: '#adc6ff', opacity: 0.9 }}>
           SS
         </div>
-        <div className="font-syne text-[8px] font-bold tracking-[0.2em] uppercase text-outline mt-1">
+        <div className="font-syne text-[7px] sm:text-[8px] font-bold tracking-[0.2em] uppercase text-outline mt-0.5">
           SkillSphere
         </div>
       </div>
@@ -103,18 +104,18 @@ export default function FeatureSphere({ scrollToSection }) {
         <button
           key={feature.id}
           onClick={() => scrollToSection?.(feature.id)}
-          className="feature-node absolute flex flex-col items-center justify-center w-20 h-20 rounded-md cursor-pointer z-10 transition-all hover:scale-110"
+          className="feature-node absolute flex flex-col items-center justify-center w-14 h-14 sm:w-18 sm:h-18 md:w-20 md:h-20 rounded-md cursor-pointer z-10 transition-all hover:scale-110"
           style={{
             willChange: 'transform, opacity',
             transform: 'translateZ(0)',
             background: 'rgba(23, 31, 51, 0.85)',
             backdropFilter: 'blur(12px)',
             border: `1px solid ${feature.color}30`,
-            boxShadow: `0 0 20px ${feature.glow}, inset 0 0 20px ${feature.glow}06`,
+            boxShadow: `0 0 15px ${feature.glow}, inset 0 0 15px ${feature.glow}06`,
           }}
         >
-          <span className="text-xl mb-1 leading-none">{feature.icon}</span>
-          <span className="text-[8px] font-bold font-syne tracking-[0.1em] uppercase" style={{ color: feature.color }}>
+          <span className="text-base sm:text-lg md:text-xl mb-0.5 leading-none">{feature.icon}</span>
+          <span className="text-[6.5px] sm:text-[8px] font-bold font-syne tracking-[0.08em] uppercase" style={{ color: feature.color }}>
             {feature.label}
           </span>
         </button>
