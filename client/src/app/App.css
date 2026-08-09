@@ -13,6 +13,18 @@ html, body {
   font-family: 'Outfit', sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* ── Mobile Touch & Smooth Scrolling ── */
+body, div, main, nav, section {
+  -webkit-overflow-scrolling: touch;
+}
+
+button, a, input, select, textarea {
+  touch-action: manipulation;
 }
 
 ::selection { background-color: rgba(194, 159, 93, 0.25); color: #1A1A1A; }
