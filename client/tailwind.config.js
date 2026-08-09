@@ -7,44 +7,45 @@ export default {
   theme: {
     extend: {
       colors: {
-        // Backgrounds
-        'bg-base':      '#121110', // Dark Earth Carbon
-        'bg-sidebar':   '#161513',
-        'surface':      '#1a1918', // Textured Charcoal Clay
-        'surface-mid':  '#23211f',
-        'surface-high': '#2c2a27',
+        // Backgrounds — Warm Paper & Ivory ("THE JOURNAL" Editorial Theme)
+        'bg-base':      '#F5F2EB', // Warm Paper Cream
+        'bg-sidebar':   '#EAE6DC', // Soft Paper Sidebar
+        'surface':      '#FFFFFF', // Pure White Card
+        'surface-mid':  '#FAF7F0', // Soft Ivory Surface
+        'surface-high': '#F0EDE4', // Paper Accent Surface
 
-        // Primary — Glowing Bronze Amber
-        'primary':          '#f59e0b',
-        'primary-dim':      '#d97706',
-        'primary-container':'#b45309',
-        'on-primary':       '#fffbeb',
-        'primary-inverse':  '#fbbf24',
+        // Primary — Editorial Ochre Gold & Deep Contrast
+        'primary':          '#C29F5D', // Matte Ochre Gold
+        'primary-dim':      '#A88243',
+        'primary-container':'#E8DFCC',
+        'on-primary':       '#FFFFFF',
+        'primary-inverse':  '#1A1A1A',
 
-        // Secondary — Muted Copper
-        'secondary':          '#ca8a04',
-        'secondary-bright':   '#eab308',
-        'secondary-container':'#854d0e',
-        'on-secondary':       '#fefce8',
+        // Secondary — Deep Charcoal Accent
+        'secondary':          '#1A1A1A',
+        'secondary-bright':   '#2C2C2C',
+        'secondary-container':'#E4E1D9',
+        'on-secondary':       '#FFFFFF',
 
-        // Tertiary — Muted Bone/Slate
-        'tertiary':          '#d6d3d1',
-        'tertiary-container':'#78716c',
-        'on-tertiary':       '#292524',
+        // Tertiary — Warm Neutral Gray
+        'tertiary':          '#5A5550',
+        'tertiary-container':'#D8D5CD',
+        'on-tertiary':       '#1A1A1A',
 
-        // Text
-        'text-primary':   '#f5f5f4', // Warm bone
-        'text-muted':     '#a8a29e',
-        'outline':        '#57534e',
-        'outline-var':    '#44403c',
+        // Text & Grid Lines
+        'text-primary':   '#111111', // Deep Charcoal
+        'text-muted':     '#3A3633', // High-contrast Dark Charcoal for muted text
+        'outline':        '#5C5752', // Legible Medium-Dark Charcoal for outline text
+        'outline-var':    '#D5D1C8', // Hairline Border Subtler
 
         // Semantic
-        'error':          '#f87171',
-        'error-container':'#7f1d1d',
+        'error':          '#D93838',
+        'error-container':'#FDE8E8',
       },
       fontFamily: {
         'outfit': ['Outfit', 'sans-serif'],
-        'syne':   ['Syne', 'sans-serif'],
+        'syne':   ['Playfair Display', 'Georgia', 'serif'],
+        'serif':  ['Playfair Display', 'Georgia', 'serif'],
       },
       borderRadius: {
         'xs':  '2px',
