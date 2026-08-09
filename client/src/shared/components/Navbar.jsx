@@ -127,16 +127,24 @@ const Navbar = ({ user, onLogout }) => {
         </div>
       </nav>
 
-      {/* ── Mobile Sidebar Overlay ── */}
+      {/* ── Mobile Sidebar Overlay & Backdrop ── */}
       <AnimatePresence>
         {isOpen && (
-          <motion.div
-            initial={{ x: '-100%' }}
-            animate={{ x: 0 }}
-            exit={{ x: '-100%' }}
-            transition={{ type: 'spring', damping: 25, stiffness: 200 }}
-            className="fixed inset-0 z-50 md:hidden bg-bg-sidebar border-r border-outline-var/30 flex flex-col w-3/4 max-w-xs shadow-2xl"
-          >
+          <>
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => setIsOpen(false)}
+              className="fixed inset-0 z-40 bg-black/60 backdrop-blur-xs md:hidden"
+            />
+            <motion.div
+              initial={{ x: '-100%' }}
+              animate={{ x: 0 }}
+              exit={{ x: '-100%' }}
+              transition={{ type: 'spring', damping: 25, stiffness: 200 }}
+              className="fixed inset-y-0 left-0 z-50 md:hidden bg-bg-sidebar border-r border-outline-var/30 flex flex-col w-3/4 max-w-xs shadow-2xl"
+            >
             <div className="p-4 border-b border-outline-var/20 flex justify-between items-center">
                <span className="font-syne font-extrabold text-xl text-text-primary tracking-tight">
                 Skill<span className="text-primary">Sphere</span>
@@ -166,7 +174,8 @@ const Navbar = ({ user, onLogout }) => {
                 <LogOut size={14} /> Logout
               </button>
             </div>
-          </motion.div>
+            </motion.div>
+          </>
         )}
       </AnimatePresence>
 
