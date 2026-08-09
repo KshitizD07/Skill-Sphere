@@ -95,7 +95,7 @@ export default function DashboardChat({ isOpen, onClose }) {
 
       {/* Drawer */}
       <div
-        className={`fixed top-0 right-0 h-full w-full max-w-sm bg-[#0f1829] border-l border-outline-var/30 shadow-2xl z-50 transform transition-transform duration-300 ease-in-out flex flex-col font-outfit ${
+        className={`fixed top-0 right-0 h-full w-full max-w-sm bg-surface border-l border-outline-var/30 shadow-2xl z-50 transform transition-transform duration-300 ease-in-out flex flex-col font-outfit ${
           isOpen ? 'translate-x-0' : 'translate-x-full'
         }`}
       >
@@ -125,7 +125,7 @@ export default function DashboardChat({ isOpen, onClose }) {
         </div>
 
         {/* Content area */}
-        <div className="flex-1 overflow-hidden relative bg-[#0f1829]">
+        <div className="flex-1 overflow-hidden relative bg-surface-mid">
           {!activeChat ? (
             // CONVERSATIONS LIST
             <div className="p-4 space-y-2 h-full overflow-y-auto">

@@ -97,7 +97,7 @@ export default function ChatInterface() {
       </div>
 
       {/* Chat area */}
-      <div className="flex-1 overflow-y-auto p-6 space-y-4 bg-[#0f1829]">
+      <div className="flex-1 overflow-y-auto p-6 space-y-4 bg-surface-mid">
         {history.map((h, i) => (
           <div key={i} className={`flex ${h.sender === 'me' ? 'justify-end' : 'justify-start'}`}>
             <div className={`max-w-[75%] px-4 py-2.5 rounded-sm text-sm leading-relaxed ${

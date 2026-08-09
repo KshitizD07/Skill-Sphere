@@ -84,7 +84,7 @@ function CommentItem({ comment, postId, postOwnerId, currentUser, onDelete, onLi
             <div key={reply.id} className="flex gap-2 group">
               <Avatar src={reply.author?.avatar} size={6} />
               <div className="flex-1 min-w-0">
-                <div className="bg-[#1a2236] rounded-xs px-3 py-1.5">
+                <div className="bg-surface-mid rounded-xs px-3 py-1.5 border border-outline-var/30">
                   <span className="text-primary font-semibold text-xs mr-2">{reply.author?.name}</span>
                   <span className="text-text-muted text-xs">{reply.content}</span>
                 </div>
