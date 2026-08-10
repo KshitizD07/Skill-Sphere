@@ -159,6 +159,8 @@ export async function getMentors(skillName) {
     prisma.user.findMany({
       where: {
         role:   'PROFESSIONAL',
+        github: { not: null },
+        NOT:    { github: '' },
         skills: { some: { name: { equals: skillName, mode: 'insensitive' }, isVerified: true } },
       },
       select: {

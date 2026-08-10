@@ -121,6 +121,7 @@ const USERS = [
     college: 'VIT Vellore',
     headline: 'Product Manager @ Swiggy | Technical PM',
     bio: 'Bridging the gap between engineering and business. Former Full Stack dev turned PM. Expertise in data-driven product roadmap planning.',
+    github: 'github.com/meeranair-pm',
     linkedin: 'linkedin.com/in/meeranair-pm',
     skills: [
       { name: 'React', level: 'Advanced', isVerified: true, source: 'CREDENTIAL', url: 'linkedin.com/learning/react-legacy' },
