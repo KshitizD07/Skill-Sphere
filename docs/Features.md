@@ -58,14 +58,13 @@ Rather than offering static learning paths, recommendations are continuously ref
 
 Every user profile represents a dynamic professional portfolio built on measurable technical evidence instead of self-reported expertise. The platform aggregates projects, GitHub activity, technical achievements, certifications, and verified skills to create a trusted representation of each user's capabilities.
 
-This approach increases confidence for mentors, collaborators, and recruiters when evaluating potential candidates.
-
 #### Key Capabilities
-* GitHub integration
-* Verified technical skills
-* Project portfolio
-* Technical achievement tracking
-* Dynamic professional identity
+* GitHub integration & mandatory account linking
+* Gameproof multi-tech AI verification (sub-file sampling across frontend, backend, schemas, and dependencies)
+* Anti-prompt injection & authorship integrity checks
+* Auto-discovery and batch verification of matching profile skills in a single scan
+* Complete self-account deletion with database cascade purging and double-confirmation security
+* Project portfolio & LeetCode synchronization
 
 ---
 
