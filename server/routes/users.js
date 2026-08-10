@@ -135,6 +135,8 @@ router.get('/search', authenticateToken, asyncHandler(async (req, res) => {
 
   const users = await prisma.user.findMany({
     where: {
+      github: { not: null },
+      NOT: { github: '' },
       OR: [
         { name:     { contains: q, mode: 'insensitive' } },
         { college:  { contains: q, mode: 'insensitive' } },
@@ -152,7 +154,10 @@ router.get('/search', authenticateToken, asyncHandler(async (req, res) => {
 router.get('/filter', authenticateToken, asyncHandler(async (req, res) => {
   const { role, college, search } = req.query;
 
-  const where = {};
+  const where = {
+    github: { not: null },
+    NOT: { github: '' },
+  };
   if (role && role !== 'ALL') where.role = role;
   if (college) where.college = college;
   if (search?.trim()) {
@@ -162,8 +167,6 @@ router.get('/filter', authenticateToken, asyncHandler(async (req, res) => {
       { headline: { contains: search, mode: 'insensitive' } },
     ];
   }
-
-  if (!Object.keys(where).length) return res.json([]);
 
   const users = await prisma.user.findMany({
     where,
