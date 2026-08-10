@@ -1,114 +1,155 @@
 # SkillSphere
 
+> **Connect. Learn. Build.**  
+> A next-generation platform bridging students and alumni through verified skill profiles, intelligent squad matching, and AI-powered learning roadmaps.
+
+🌐 **Live Demo:** [https://skill-sphere-v1.vercel.app/](https://skill-sphere-v1.vercel.app/)
+
 *Note: This project was built utilizing an agentic AI workflow.*
 
-SkillSphere is a next-generation platform designed to bridge the gap between students and alumni by fostering skill-based networking, real-time collaboration, and community-driven learning. The platform intelligently matches users, verifies their skills, and provides dynamic learning roadmaps to help individuals achieve their career goals.
+---
+
+## 🌟 Overview
+
+SkillSphere is designed to replace generic resume claims with verified proof-of-work. By integrating GitHub repository analysis, multi-tiered verification, and an Antifragile consensus matching engine, SkillSphere connects motivated learners with mentors, teammates, and real-world project squads.
+
+---
 
 ## 🚀 Key Features
 
-*   **Secure Authentication & User Management:** Robust user authentication using JSON Web Tokens (JWTs) stored in secure, `httpOnly` cookies. Features include One-Time Password (OTP) verification for sign-up and password resets.
-*   **Dynamic User Profiles & Skill Verification:** Users build comprehensive profiles, with a strong emphasis on quality. **A linked GitHub account is required**, and profiles without one are automatically pruned by a daily background job to maintain a high-quality network.
-*   **Antifragile Nexus Engine:** A sophisticated, multi-strategy consensus engine that intelligently matches users. It uses a dynamic, data-driven feedback loop where different matching algorithms compete, and their success is tracked to promote the most effective strategies over time. This system is managed via a dedicated, admin-only API.
-*   **Squads & Missions:** Users can form or join "Squads" to collaborate on specific projects, events, or learning missions. A daily background job handles maintenance of these squads.
-*   **AI-Powered Learning Roadmaps:** Generates customized learning paths based on a user's current skills and desired career roles using the Google Generative AI API.
-*   **Real-Time Communication & Notifications:** Instant messaging and global notifications are powered by a WebSocket server using Socket.io, providing immediate feedback for all user interactions.
-*   **Global Feed & Social Interactions:** A central feed for users to share updates, post content, and engage with the community through likes and nested comments.
+* 🌐 **Live Platform Access:** Test the live deployment at [skill-sphere-v1.vercel.app](https://skill-sphere-v1.vercel.app/).
+* 🔒 **Secure Authentication & Quality Control:**
+  * JWT-based authentication stored in `httpOnly` secure cookies.
+  * One-Time Password (OTP) verification for registration and password resets.
+  * **Mandatory GitHub Verification:** Linking GitHub is required for full access. Includes client-side enforcement and a background pruning job (`userPruning.js`) that automatically deletes unlinked accounts after a 24-hour grace period.
+* 🧠 **Antifragile N.E.X.U.S. Matching Engine:**
+  * Multi-strategy matching algorithms (Verified Skills, Experience Depth, College Proximity).
+  * Dynamic consensus engine that promotes top-performing strategies over time based on feedback loops.
+  * Admin dashboard for strategy management and system health monitoring.
+* 👥 **Squads & Project Missions:**
+  * Create or join specialized project squads with skill-gated roles.
+  * Automated background job (`squadMaintenance.js`) to expire stale squads and close fulfilled teams.
+* 🤖 **AI-Powered Career Roadmaps:**
+  * Dynamically generates personalized learning paths based on current skills and target career roles using Google Gemini AI.
+* 💬 **Real-Time Communication:**
+  * Instant messaging and live notifications powered by Socket.io.
+* 📰 **Global Technical Feed & Network:**
+  * Community feed for technical discourse, posts, likes, nested comments, and peer discovery.
 
-## 🏛️ Architecture
+---
 
-The SkillSphere platform is built on a modern, decoupled, full-stack architecture that emphasizes separation of concerns and scalability.
+## 🔑 Demo Credentials (For Testing)
 
-*   **Backend (Service-Oriented):** The Node.js server is designed with a service-oriented approach. Core business logic is encapsulated into distinct modules (e.g., Auth, Squads, Antifragile Engine). It exposes a comprehensive RESTful API for the client and handles real-time communication via a WebSocket layer. A background job scheduler (`node-cron`) manages routine database maintenance tasks.
-*   **Frontend (Feature-Sliced):** The React client is structured using a **feature-sliced design**. Instead of grouping files by type (e.g., `components`, `hooks`), the codebase is organized by feature (e.g., `profile`, `chat`, `squads`). This makes the application highly modular, scalable, and easier for developers to navigate.
+If you'd like to test the live platform without creating a new account, you can use any of the seeded demo accounts:
+
+* **Email:** `aryan@test.com` (or `priya@test.com`, `rohan@test.com`, `ananya@test.com`)
+* **Password:** `test1234`
+* **OAuth:** You can also sign in directly using Google or GitHub.
+
+---
+
+## 🏛️ Architecture & System Design
+
+SkillSphere is built on a modern, decoupled full-stack architecture:
+
+* **Backend (Service-Oriented):** Node.js & Express.js with Prisma ORM and PostgreSQL. Business logic is modularized into dedicated services (Auth, Squads, Antifragile Engine, AI Roadmaps, GitHub Portfolio). Routine cleanup and maintenance are managed via `node-cron`.
+* **Frontend (Feature-Sliced Design):** Built with React 19 and Vite. Organized by feature domains (`features/profile`, `features/squads`, `features/chat`, `features/auth`, etc.) for maximum modularity and scalability.
+
+---
 
 ## 📚 Documentation
 
-For deep-dives into the platform design, technical details, and APIs, refer to the following guides:
-*   **[System Design Specification](file:///C:/Users/kshit/cs/skillsphere/docs/system_design.md)**: Follows industry standards to details system overview, high-level layouts, components, flows, external services, security, and future plans.
-*   **[System Architecture](file:///C:/Users/kshit/cs/skillsphere/docs/ARCHITECTURE.md)**: Details structural layout, state machines, sequence diagrams, and N.E.X.U.S. Engine architecture.
-*   **[API Reference Manual](file:///C:/Users/kshit/cs/skillsphere/docs/API_REFERENCE.md)**: Lists all public and admin endpoints, query params, schemas, and verification rules.
-*   **[Key Features](file:///C:/Users/kshit/cs/skillsphere/docs/Features.md)**: Detailed breakdown of N.E.X.U.S., Squads, Verification, and AI roadmap generation.
-*   **[Product Requirements](file:///C:/Users/kshit/cs/skillsphere/docs/Product_Requirements.md)**: Product specs, constraints, and target users.
+For in-depth architectural specs and API details, explore our documentation:
 
-## 🛠 Tech Stack
+* 📄 **[System Design Specification](docs/system_design.md)** — Architectural overview, system flows, and security spec.
+* 🏗️ **[System Architecture](docs/ARCHITECTURE.md)** — Structural diagrams, N.E.X.U.S. state machine, and database sequence diagrams.
+* 🔌 **[API Reference Manual](docs/API_REFERENCE.md)** — Complete endpoint listing, schemas, and payload examples.
+* 🎯 **[Key Features Breakdown](docs/Features.md)** — Detailed analysis of N.E.X.U.S., Squads, and AI Roadmaps.
+* 📋 **[Product Requirements](docs/Product_Requirements.md)** — Product specifications and target audience.
 
-**Frontend (Client)**
-*   **Framework:** React 19 (with Hooks) & Vite
-*   **Architecture:** Feature-Sliced Design
-*   **Styling:** Tailwind CSS & Framer Motion
-*   **3D Elements:** React Three Fiber
-*   **API Communication:** Axios
-*   **Real-Time:** Socket.io-client
-*   **Navigation:** React Router DOM
+---
 
-**Backend (Server)**
-*   **Framework:** Node.js (ES Modules) with Express.js
-*   **Architecture:** Service-Oriented
-*   **Database:** PostgreSQL with Prisma ORM
-*   **Authentication:** JWTs in `httpOnly` Cookies, OTPs
-*   **Real-Time:** Socket.io
-*   **Schema Validation:** Zod
-*   **Background Jobs:** Node-cron
-*   **Logging:** Winston
-*   **AI:** `@google/generative-ai`
+## 🛠️ Tech Stack
+
+### Frontend (Client)
+* **Framework:** React 19 & Vite
+* **Architecture:** Feature-Sliced Design (FSD)
+* **Styling:** Tailwind CSS & Framer Motion
+* **API & WebSockets:** Axios & Socket.io-client
+* **Routing:** React Router DOM
+
+### Backend (Server)
+* **Runtime & Framework:** Node.js (ES Modules) & Express.js
+* **Database:** PostgreSQL with Prisma ORM
+* **Authentication:** JWT in `httpOnly` Cookies, OTP Email Verification
+* **Real-Time:** Socket.io
+* **Background Jobs:** Node-cron
+* **AI Integration:** `@google/generative-ai` (Google Gemini)
+* **Validation & Logging:** Zod & Winston
+
+---
 
 ## 📦 Getting Started
 
 ### Prerequisites
-* Node.js (v18 or higher)
-* PostgreSQL database
+* **Node.js:** v18 or higher
+* **Database:** PostgreSQL (local or hosted, e.g. Supabase / Railway)
 
 ### Installation
 
-1. **Clone the repository**
-2. **Install dependencies**
+1. **Clone the repository:**
    ```bash
-   # Install client dependencies
+   git clone https://github.com/KshitizD07/Skill-Sphere.git
+   cd Skill-Sphere
+   ```
+
+2. **Install dependencies:**
+   ```bash
+   # Client dependencies
    cd client
    npm install
 
-   # Install server dependencies
+   # Server dependencies
    cd ../server
    npm install
    ```
-3. **Environment Setup**
-   * Create a `.env` file in the `server` directory and configure the required variables:
-     ```env
-     DATABASE_URL="postgresql://user:password@localhost:5432/skillsphere"
-     JWT_SECRET="your_jwt_secret"
-     GOOGLE_API_KEY="your_ai_api_key"
-     SMTP_HOST="your_smtp_host"
-     # ... other configurations
-     ```
-4. **Database Initialization**
+
+3. **Configure Environment Variables:**
+   Create `.env` in the `server` directory:
+   ```env
+   PORT=5001
+   DATABASE_URL="postgresql://user:password@localhost:5432/skillsphere"
+   JWT_SECRET="your_jwt_secret"
+   GOOGLE_API_KEY="your_google_gemini_api_key"
+   FRONTEND_URL="http://localhost:5173"
+   ```
+
+4. **Initialize Database & Seed Data:**
    ```bash
    cd server
    npx prisma db push
+   npm run db:seed
    ```
-5. **Run the Application**
+
+5. **Run Locally:**
    ```bash
-   # Terminal 1: Start the backend server
+   # Terminal 1: Backend
    cd server
    npm run dev
 
-   # Terminal 2: Start the frontend client
+   # Terminal 2: Frontend
    cd client
    npm run dev
    ```
 
-## 🚧 Current Limitations & Future Work
-
-While the core platform is fully functional, there are a few areas currently lacking that are slated for future updates:
-* **Automated Testing:** Comprehensive unit, integration, and end-to-end test coverage needs to be implemented.
-* **Deployment Infrastructure:** Lacks CI/CD pipelines, Docker containerization, and production-grade caching orchestration.
-* **Mobile Optimization:** Certain complex UI components require further refinement for smaller mobile viewports.
-*   **Advanced Error Recovery:** Redis failovers and deeper rate-limiting strategies are not yet fully hardened for massive scale.
+---
 
 ## 📄 License
 
 Copyright (c) 2026 Kshitiz Dixit. All rights reserved.
 
-This project is **proprietary**. All rights are reserved by the author. See the [LICENSE](LICENSE) file for the full legal text regarding usage, restrictions, and permissions.
+This project is **proprietary**. All rights are reserved by the author. See the [LICENSE](LICENSE) file for legal text regarding usage and restrictions.
 
 ---
+
 *SkillSphere — Connect. Learn. Build.*
