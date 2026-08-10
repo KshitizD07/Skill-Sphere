@@ -73,11 +73,12 @@ app.use(express.urlencoded({ extended: false, limit: '10mb' }));
 // ── HTTP request logging (Morgan → Winston) ──────────────────────────────────
 app.use(morgan('combined', {
   stream: { write: (msg) => logger.http(msg.trim()) },
-  skip: (req) => req.path === '/health' || req.path === '/',
+  skip: (req) => req.path === '/health' || req.path === '/' || req.path === '/ping',
 }));
 
-// ── Root Check ───────────────────────────────────────────────────────────────
+// ── Root Check & Ping ────────────────────────────────────────────────────────
 app.get('/', (req, res) => res.send('SkillSphere API is Live ✓'));
+app.get('/ping', (_req, res) => res.status(200).json({ status: 'pong', ts: new Date().toISOString() }));
 
 // ── Trust proxy (needed for correct IP behind Nginx / load balancer) ─────────
 app.set('trust proxy', 1);
