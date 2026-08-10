@@ -91,6 +91,7 @@ export async function verifySkill({ userId, skillName, repoUrl, showLevel }) {
   let score;
   let breakdownMsg;
   let topFiles    = [];
+  let verifiedSkillResults = [];
 
   const isRepoEmpty = !treeData.tree || treeData.tree.length === 0;
 
@@ -155,12 +156,10 @@ export async function verifySkill({ userId, skillName, repoUrl, showLevel }) {
             const commitMsgs = commits.map(c => `- ${c.commit.message.split('\n')[0]}`).join('\n');
             aggregatedCode += `\n\n--- Recent Commits ---\n${commitMsgs}`;
           }
-        } catch (_e) {
+        } catch {
           // Ignore commit fetch errors
         }
       }
-
-      let verifiedSkillResults = [];
 
       if (aggregatedCode) {
         if (!process.env.GOOGLE_API_KEY) throw ApiError.internal('AI verifier disabled (missing GOOGLE_API_KEY)');
