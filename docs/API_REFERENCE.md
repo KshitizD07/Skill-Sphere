@@ -228,6 +228,17 @@ Common HTTP status codes used:
   }
   ```
 
+#### `DELETE /api/users/me`
+* **Auth Required**: Yes
+* **Description**: Permanently purges the authenticated user's account, skills, applications, squad memberships, and notifications via database cascading. Clears the `ss_token` session cookie.
+* **Success Response (`200 OK`)**:
+  ```json
+  {
+    "success": true,
+    "message": "Account deleted"
+  }
+  ```
+
 ---
 
 ### 🛡️ 2.3 Verification Domain (`/api/verify`)
@@ -249,9 +260,23 @@ Common HTTP status codes used:
   ```json
   {
     "success": true,
-    "score": 7.5,
-    "level": "Intermediate",
-    "reasoning": "Clean component breakdown. Appropriate state lifting. Proper hook separation."
+    "score": 8,
+    "skill": {
+      "name": "React",
+      "calculatedScore": 8,
+      "level": "Advanced"
+    },
+    "verifiedSkills": [
+      { "skillName": "React", "score": 8 },
+      { "skillName": "Node.js", "score": 7 },
+      { "skillName": "Express", "score": 7 }
+    ],
+    "breakdown": {
+      "reasoning": "Substantial Express routes and React component implementations found.",
+      "filesAnalyzed": "package.json, server/app.js, client/src/App.jsx",
+      "lastUpdate": "2026-08-10",
+      "ownership": "Owner"
+    }
   }
   ```
 
