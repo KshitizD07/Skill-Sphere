@@ -1,0 +1,27 @@
+name: Render Keep-Alive Ping
+
+on:
+  schedule:
+    # Runs every 12 minutes to prevent Render 15-min sleep
+    - cron: '*/12 * * * *'
+  workflow_dispatch: # Allows manual trigger from GitHub Actions tab
+
+jobs:
+  ping:
+    name: Ping Render Server
+    runs-on: ubuntu-latest
+    steps:
+      - name: Send HTTP Ping
+        run: |
+          SERVER_URL="${{ secrets.RENDER_SERVER_URL }}"
+          if [ -z "$SERVER_URL" ]; then
+            SERVER_URL="https://skill-sphere-backend-29kn.onrender.com/ping"
+          fi
+          echo "Pinging $SERVER_URL..."
+          HTTP_STATUS=$(curl -s -o /dev/null -w "%{http_code}" "$SERVER_URL")
+          echo "HTTP Status Code: $HTTP_STATUS"
+          if [ "$HTTP_STATUS" -ge 200 ] && [ "$HTTP_STATUS" -lt 400 ]; then
+            echo "Server is active and responded successfully!"
+          else
+            echo "Warning: Server returned status $HTTP_STATUS"
+          fi
