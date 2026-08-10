@@ -3,6 +3,7 @@ import { PrismaClient } from '@prisma/client';
 import logger from '../utils/logger.js';
 
 import { setupUserPruningJob } from './userPruning.js';
+import { setupKeepAliveJob } from './keepAlive.js';
 
 const prisma = new PrismaClient();
 
@@ -54,6 +55,9 @@ function setupJobs() {
 
   // Schedule account pruning job
   setupUserPruningJob();
+
+  // Schedule self-ping keep-alive job
+  setupKeepAliveJob();
 }
 
 export { setupJobs, expireStaleSquads };
