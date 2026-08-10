@@ -22,6 +22,10 @@ SkillSphere is designed to replace generic resume claims with verified proof-of-
   * JWT-based authentication stored in `httpOnly` secure cookies.
   * One-Time Password (OTP) verification for registration and password resets.
   * **Mandatory GitHub Verification:** Linking GitHub is required for full access. Includes client-side enforcement and a background pruning job (`userPruning.js`) that automatically deletes unlinked accounts after a 24-hour grace period.
+  * **User Control & Account Deletion:** Complete self-service account deletion in profile settings with double-confirmation dialogs and database cascade cleanup.
+* 🛡️ **Gameproof Multi-Tech AI Skill Verification:**
+  * Auto-evaluates repositories across multi-stack components (Frontend, Backend, Databases, Dependencies) using Google Gemini AI.
+  * Authorship integrity checks, anti-prompt injection, and evidence-enforced verification that auto-detects and verifies all matching skills on a user's profile in a single scan.
 * 🧠 **Antifragile N.E.X.U.S. Matching Engine:**
   * Multi-strategy matching algorithms (Verified Skills, Experience Depth, College Proximity).
   * Dynamic consensus engine that promotes top-performing strategies over time based on feedback loops.
