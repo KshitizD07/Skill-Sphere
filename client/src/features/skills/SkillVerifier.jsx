@@ -10,6 +10,7 @@ export default function SkillVerifier({ userId, skillName, skillId, onVerifyComp
   const [status, setStatus] = useState('idle'); // idle | scanning | success | error
   const [errorMsg, setErrorMsg] = useState('');
   const [score, setScore] = useState(null);
+  const [verifiedSkillsList, setVerifiedSkillsList] = useState([]);
   
   // LeetCode specific state
   const [lcStep, setLcStep] = useState(1); // 1: scan, 2: results
@@ -21,6 +22,7 @@ export default function SkillVerifier({ userId, skillName, skillId, onVerifyComp
     setErrorMsg('');
     setLoading(false);
     setScore(null);
+    setVerifiedSkillsList([]);
     setLcStep(1);
     setLcScanData(null);
   };
@@ -55,6 +57,7 @@ export default function SkillVerifier({ userId, skillName, skillId, onVerifyComp
       } else if (data.success) {
         setStatus('success');
         setScore(data.score);
+        setVerifiedSkillsList(data.verifiedSkills || []);
         onVerifyComplete?.(data);
       } else {
         setStatus('error');
@@ -440,6 +443,20 @@ export default function SkillVerifier({ userId, skillName, skillId, onVerifyComp
               <p className="text-3xl font-extrabold text-text-primary tracking-tight">
                 {isStealth ? <span className="text-[#656d84] text-xl">Private</span> : <>{score}<span className="text-base text-[#656d84]">/10</span></>}
               </p>
+            </div>
+          )}
+          {verifiedSkillsList.length > 1 && (
+            <div className="mt-4 p-3 bg-secondary-bright/10 border border-secondary-bright/30 rounded-xs text-left">
+              <p className="text-[10px] font-syne font-bold uppercase tracking-wider text-secondary-bright mb-1.5">
+                Auto-Verified Additional Skills ({verifiedSkillsList.length - 1}):
+              </p>
+              <div className="flex flex-wrap gap-1.5">
+                {verifiedSkillsList.filter(s => s.skillName.toLowerCase() !== skillName.toLowerCase()).map(s => (
+                  <span key={s.skillName} className="px-2 py-0.5 bg-surface text-[10px] font-bold text-text-primary rounded border border-outline-var/30">
+                    {s.skillName} ({s.score}/10)
+                  </span>
+                ))}
+              </div>
             </div>
           )}
         </div>
