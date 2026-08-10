@@ -160,39 +160,75 @@ export async function verifySkill({ userId, skillName, repoUrl, showLevel }) {
         }
       }
 
+      let verifiedSkillResults = [];
+
       if (aggregatedCode) {
         if (!process.env.GOOGLE_API_KEY) throw ApiError.internal('AI verifier disabled (missing GOOGLE_API_KEY)');
+
+        // Retrieve other unverified skills belonging to the user
+        const otherUnverifiedSkills = await prisma.skill.findMany({
+          where: {
+            userId,
+            isVerified: false,
+            NOT: { name: normalized }
+          },
+          select: { name: true }
+        });
+        const additionalSkillsList = otherUnverifiedSkills.map((s) => s.name);
 
         const genAI   = new GoogleGenerativeAI(process.env.GOOGLE_API_KEY);
         const aiModel = genAI.getGenerativeModel({ model: 'gemini-2.5-flash' });
 
-        let aiPrompt = `Analyze this code for architecture, paradigm adherence, efficiency, and complexity.
-Score the user's proficiency from 1 to 10 as an integer.
+        let aiPrompt = `Analyze this code repository for developer proficiency.
+Primary skill requested for verification: "${normalized}"
+Additional unverified skills on user's profile: ${additionalSkillsList.length > 0 ? JSON.stringify(additionalSkillsList) : '[]'}
 
-Code Snippets:
+Task:
+1. Score the primary requested skill ("${normalized}") from 1 to 10 as an integer based on code architecture, efficiency, and quality.
+2. For any of the additional unverified skills listed above, if you find clear, substantial code evidence in the repository, also evaluate and score them from 1 to 10 as an integer.
+
+Code Snippets and Data:
 ${aggregatedCode}
 
-Respond ONLY with a valid JSON in exactly this format, no markdown wrapping, no extra text:
-{"score": 7, "reasoning": "A brief 2-sentence explanation of the score based on code patterns."}`;
+Respond ONLY with valid JSON in this exact structure, no markdown codeblock wrapping, no additional commentary:
+{
+  "scores": [
+    { "skillName": "${normalized}", "score": 7, "reasoning": "A brief 2-sentence explanation." }
+  ]
+}`;
 
         if (isTestingSkill) {
           aiPrompt = `Analyze these test files for test coverage, edge cases, assertions quality, and mocking usage.
-Score the user's Testing proficiency from 1 to 10 as an integer.
+Primary skill requested for verification: "${normalized}"
+Additional unverified skills on user's profile: ${additionalSkillsList.length > 0 ? JSON.stringify(additionalSkillsList) : '[]'}
+
+Score Testing proficiency and any relevant additional skills from 1 to 10.
 
 Code Snippets:
 ${aggregatedCode}
 
-Respond ONLY with a valid JSON in exactly this format, no markdown wrapping, no extra text:
-{"score": 7, "reasoning": "A brief 2-sentence explanation of the testing proficiency."}`;
+Respond ONLY with valid JSON in this exact structure:
+{
+  "scores": [
+    { "skillName": "${normalized}", "score": 7, "reasoning": "A brief 2-sentence explanation of testing proficiency." }
+  ]
+}`;
         } else if (isGitCiCdSkill) {
-          aiPrompt = `Analyze these CI/CD workflow files (if any) and recent commit messages for DevOps and Git best practices (e.g., conventional commits, automated tests, deployment pipelines).
-Score the user's Git & CI/CD proficiency from 1 to 10 as an integer.
+          aiPrompt = `Analyze these CI/CD workflow files and commit messages for DevOps and Git best practices.
+Primary skill requested for verification: "${normalized}"
+Additional unverified skills on user's profile: ${additionalSkillsList.length > 0 ? JSON.stringify(additionalSkillsList) : '[]'}
+
+Score Git/DevOps proficiency and any relevant additional skills from 1 to 10.
 
 Data:
 ${aggregatedCode}
 
-Respond ONLY with a valid JSON in exactly this format, no markdown wrapping, no extra text:
-{"score": 7, "reasoning": "A brief 2-sentence explanation of the DevOps/Git proficiency."}`;
+Respond ONLY with valid JSON in this exact structure:
+{
+  "scores": [
+    { "skillName": "${normalized}", "score": 7, "reasoning": "A brief 2-sentence explanation of DevOps/Git proficiency." }
+  ]
+}`;
         }
 
         try {
@@ -201,8 +237,35 @@ Respond ONLY with a valid JSON in exactly this format, no markdown wrapping, no 
           if (aiText.startsWith('```json')) aiText = aiText.slice(7, -3).trim();
           if (aiText.startsWith('```'))     aiText = aiText.slice(3, -3).trim();
           const parsedAI = JSON.parse(aiText);
-          score          = Math.max(1, Math.min(10, Math.floor(parsedAI.score)));
-          breakdownMsg   = parsedAI.reasoning;
+
+          let evalList = [];
+          if (Array.isArray(parsedAI.scores)) {
+            evalList = parsedAI.scores;
+          } else if (parsedAI.score !== undefined) {
+            evalList = [{ skillName: normalized, score: parsedAI.score, reasoning: parsedAI.reasoning }];
+          }
+
+          for (const item of evalList) {
+            if (!item.skillName) continue;
+            const itemScore = Math.max(1, Math.min(10, Math.floor(Number(item.score) || 0)));
+            if (itemScore > 0) {
+              verifiedSkillResults.push({
+                skillName: item.skillName,
+                score: itemScore,
+                reasoning: item.reasoning || 'Verified from repository code analysis.'
+              });
+            }
+          }
+
+          const primaryItem = verifiedSkillResults.find(r => r.skillName.toLowerCase() === normalized.toLowerCase());
+          if (primaryItem) {
+            score = primaryItem.score;
+            breakdownMsg = primaryItem.reasoning;
+          } else {
+            score = 5;
+            breakdownMsg = 'Verified baseline based on repository content.';
+            verifiedSkillResults.unshift({ skillName: normalized, score, reasoning: breakdownMsg });
+          }
         } catch (err) {
           logger.error('Gemini verify error', { err: err.message });
           throw ApiError.internal('AI evaluation failed during code analysis.');
@@ -210,54 +273,68 @@ Respond ONLY with a valid JSON in exactly this format, no markdown wrapping, no 
       } else {
         score        = 0;
         breakdownMsg = 'Could not fetch specific source file content, scored as baseline.';
+        verifiedSkillResults = [{ skillName: normalized, score: 0, reasoning: breakdownMsg }];
       }
     }
   }
 
-  const level = score >= 8 ? 'Advanced' : score >= 5 ? 'Intermediate' : score > 0 ? 'Beginner' : 'Absolute Beginner';
+  // ── Persist results for all verified skills ──────────────────────────────
+  let primarySkillRecord = null;
+  const verifiedList = [];
 
-  // ── Persist result ────────────────────────────────────────────────────────
-  const skill = await prisma.skill.upsert({
-    where:  { userId_name: { userId, name: normalized } },
-    update: { 
-      isVerified: true, 
-      verificationUrl: repoUrl, 
-      verificationSource: 'GITHUB',
-      verifiedAt: new Date(), 
-      calculatedScore: score, 
-      showLevel: !!showLevel, 
-      level 
-    },
-    create: { 
-      userId, 
-      name: normalized, 
-      level, 
-      isVerified: true, 
-      verificationUrl: repoUrl, 
-      verificationSource: 'GITHUB',
-      verifiedAt: new Date(), 
-      calculatedScore: score, 
-      showLevel: !!showLevel 
-    },
-  });
+  for (const item of (verifiedSkillResults.length > 0 ? verifiedSkillResults : [{ skillName: normalized, score, reasoning: breakdownMsg }])) {
+    const skillNorm = LANGUAGE_MAP[item.skillName.toLowerCase()] || item.skillName;
+    const itemLevel = item.score >= 8 ? 'Advanced' : item.score >= 5 ? 'Intermediate' : item.score > 0 ? 'Beginner' : 'Absolute Beginner';
 
-  await prisma.activityLog.create({
-    data: { userId, action: 'VERIFIED_SKILL', details: `GitHub verified: ${normalized} (${score}/10)` },
-  });
+    const savedSkill = await prisma.skill.upsert({
+      where:  { userId_name: { userId, name: skillNorm } },
+      update: { 
+        isVerified: true, 
+        verificationUrl: repoUrl, 
+        verificationSource: 'GITHUB',
+        verifiedAt: new Date(), 
+        calculatedScore: item.score, 
+        showLevel: !!showLevel, 
+        level: itemLevel 
+      },
+      create: { 
+        userId, 
+        name: skillNorm, 
+        level: itemLevel, 
+        isVerified: true, 
+        verificationUrl: repoUrl, 
+        verificationSource: 'GITHUB',
+        verifiedAt: new Date(), 
+        calculatedScore: item.score, 
+        showLevel: !!showLevel 
+      },
+    });
 
-  await sendNotification(
-    userId,
-    'SKILL_VERIFIED',
-    'Skill Verified',
-    `Your ${normalized} repository was successfully verified. You achieved a score of ${score}/10.`
-  );
+    if (skillNorm.toLowerCase() === normalized.toLowerCase()) {
+      primarySkillRecord = savedSkill;
+    }
 
-  logger.info('Skill verified', { userId, skill: normalized, score, repo: repoUrl });
+    await prisma.activityLog.create({
+      data: { userId, action: 'VERIFIED_SKILL', details: `GitHub verified: ${skillNorm} (${item.score}/10)` },
+    });
+
+    await sendNotification(
+      userId,
+      'SKILL_VERIFIED',
+      'Skill Verified',
+      `Your ${skillNorm} skill was verified via GitHub repo. Score: ${item.score}/10.`
+    );
+
+    verifiedList.push({ skillName: skillNorm, score: item.score });
+  }
+
+  logger.info('Skills verified', { userId, verifiedList, repo: repoUrl });
 
   return {
     success: true,
-    score,
-    skill,
+    score: primarySkillRecord ? primarySkillRecord.calculatedScore : score,
+    skill: primarySkillRecord || { name: normalized, calculatedScore: score },
+    verifiedSkills: verifiedList,
     breakdown: {
       reasoning:     breakdownMsg,
       filesAnalyzed: topFiles.map((f) => f.path).join(', '),
