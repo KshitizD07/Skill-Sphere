@@ -205,7 +205,7 @@ model CommentLike {
   comment   Comment  @relation(fields: [commentId], references: [id], onDelete: Cascade)
   userId    String
   createdAt DateTime @default(now())
-  User      User     @relation(fields: [userId], references: [id])
+  User      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@unique([commentId, userId])
   @@index([commentId])
@@ -372,7 +372,7 @@ model MatchDecision {
   timestamp DateTime @default(now())
 
   selectedUserId    String
-  selectedUser      User     @relation(fields: [selectedUserId], references: [id])
+  selectedUser      User     @relation(fields: [selectedUserId], references: [id], onDelete: Cascade)
   alternativesShown String[]
 
   wasConsensus     Boolean @default(false)
@@ -394,7 +394,7 @@ model MatchDecision {
 model MatchOutcome {
   id         String        @id @default(uuid())
   decisionId String        @unique
-  decision   MatchDecision @relation(fields: [decisionId], references: [id])
+  decision   MatchDecision @relation(fields: [decisionId], references: [id], onDelete: Cascade)
 
   accepted       Boolean
   acceptedAt     DateTime?
