@@ -5,6 +5,7 @@ const ProfileAPI = {
   getMyProfile: () => BaseAPI.get('/users/me'),
   getProfile: (userId) => BaseAPI.get(`/users/${userId}`),
   updateProfile: (data) => BaseAPI.patch('/users/me', data),
+  deleteAccount: () => BaseAPI.delete('/users/me'),
 
   // --- Skills ---
   getAllSkills: () => BaseAPI.get('/skills/list'),
