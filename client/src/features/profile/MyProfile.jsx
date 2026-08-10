@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import {
   ArrowLeft, Camera, User, Plus, CheckCircle,
   X, Shield, Github, Linkedin, Save, Building2,
-  Zap, Award
+  Zap, Award, AlertTriangle, Trash2
 } from 'lucide-react';
 import ProfileAPI from './profileAPI';
 import API from '../../api';
@@ -31,6 +31,10 @@ export default function MyProfile({ user, onUserUpdate }) {
   const [leetcodeData, setLeetcodeData] = useState(null);
   const [leetcodeInput, setLeetcodeInput] = useState('');
   const [isSyncingLeetcode, setIsSyncingLeetcode] = useState(false);
+
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [deleteConfirmText, setDeleteConfirmText] = useState('');
+  const [isDeleting, setIsDeleting] = useState(false);
 
   const avatarInputRef = useRef(null);
 
@@ -138,6 +142,26 @@ export default function MyProfile({ user, onUserUpdate }) {
       setLeetcodeInput('');
     } catch (e) {
       alert('Failed to unlink LeetCode');
+    }
+  };
+
+  const handleDeleteAccount = async () => {
+    if (deleteConfirmText.trim().toUpperCase() !== 'DELETE') return;
+    setIsDeleting(true);
+    try {
+      const res = await ProfileAPI.deleteAccount();
+      if (res && res.error) {
+        alert(res.message || 'Failed to delete account.');
+        setIsDeleting(false);
+        return;
+      }
+      localStorage.removeItem('user_data');
+      localStorage.removeItem('ss_token');
+      window.location.replace('/');
+    } catch (err) {
+      console.error('Failed to delete account:', err);
+      alert('Failed to delete account. Please try again.');
+      setIsDeleting(false);
     }
   };
 
@@ -312,6 +336,23 @@ export default function MyProfile({ user, onUserUpdate }) {
                 </div>
               )}
             </div>
+
+            {/* Danger Zone */}
+            <div className="bg-error/5 border border-error/25 rounded-md p-6 relative group hover:border-error/40 transition-colors">
+              <div className="flex items-center gap-2 mb-2">
+                <AlertTriangle className="text-error" size={16} />
+                <h3 className="font-syne text-[10px] font-bold tracking-[0.12em] uppercase text-error">Danger Zone</h3>
+              </div>
+              <p className="text-xs text-text-muted mb-4 leading-relaxed">
+                Permanently delete your account, skills, and portfolio integrations. This action is immediate and cannot be undone.
+              </p>
+              <button
+                onClick={() => { setShowDeleteModal(true); setDeleteConfirmText(''); }}
+                className="w-full py-2 bg-error/10 hover:bg-error text-error hover:text-white border border-error/30 text-xs font-syne font-bold uppercase tracking-wider rounded-xs transition-all flex items-center justify-center gap-2"
+              >
+                <Trash2 size={14} /> Delete Account
+              </button>
+            </div>
           </div>
 
           {/* Right column — form */}
@@ -417,6 +458,70 @@ export default function MyProfile({ user, onUserUpdate }) {
             </button>
             <SkillVerifier userId={activeUser.id} skillName={selectedSkill.name || selectedSkill.skill?.name} skillId={selectedSkill.id}
               onVerifyComplete={() => { setShowVerifier(false); loadUserData(); }} />
+          </div>
+        </div>
+      )}
+
+      {showDeleteModal && (
+        <div className="fixed inset-0 bg-bg-base/90 backdrop-blur-md z-[400] flex items-center justify-center p-4">
+          <div className="relative w-full max-w-md bg-surface border border-error/40 rounded-md p-6 shadow-2xl space-y-5 font-outfit">
+            <button
+              onClick={() => setShowDeleteModal(false)}
+              disabled={isDeleting}
+              className="absolute top-4 right-4 text-outline hover:text-text-primary transition-colors"
+            >
+              <X size={18} />
+            </button>
+
+            <div className="flex items-center gap-3">
+              <div className="p-3 bg-error/15 rounded-full border border-error/30">
+                <AlertTriangle className="w-6 h-6 text-error" />
+              </div>
+              <div>
+                <h3 className="text-lg font-extrabold text-text-primary tracking-tight">Delete Account</h3>
+                <p className="font-syne text-[10px] font-bold tracking-[0.12em] uppercase text-error">Permanent Action</p>
+              </div>
+            </div>
+
+            <div className="p-3.5 bg-error/10 border border-error/20 rounded-xs text-xs text-text-muted leading-relaxed space-y-2">
+              <p className="font-semibold text-text-primary">Warning: This will permanently purge your SkillSphere profile.</p>
+              <ul className="list-disc list-inside space-y-1 text-outline">
+                <li>All verified skills and test scores will be lost</li>
+                <li>Your squad memberships and applications will be deleted</li>
+                <li>Your linked repository metadata will be cleared</li>
+              </ul>
+            </div>
+
+            <div>
+              <label className="block font-syne text-[10px] font-bold tracking-[0.12em] uppercase text-outline mb-1.5">
+                Type <span className="text-error font-extrabold">DELETE</span> to confirm
+              </label>
+              <input
+                type="text"
+                value={deleteConfirmText}
+                onChange={(e) => setDeleteConfirmText(e.target.value)}
+                placeholder="Type DELETE"
+                disabled={isDeleting}
+                className="w-full bg-surface-mid border border-outline-var/40 focus:border-error text-text-primary p-3 rounded-xs text-sm outline-none font-mono"
+              />
+            </div>
+
+            <div className="flex items-center justify-end gap-3 pt-2">
+              <button
+                onClick={() => setShowDeleteModal(false)}
+                disabled={isDeleting}
+                className="px-4 py-2 bg-surface-mid hover:bg-outline-var/20 border border-outline-var/30 text-text-primary text-xs font-syne font-bold uppercase tracking-wider rounded-xs transition"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleDeleteAccount}
+                disabled={isDeleting || deleteConfirmText.trim().toUpperCase() !== 'DELETE'}
+                className="px-5 py-2 bg-error text-white font-syne font-bold text-xs uppercase tracking-wider rounded-xs hover:bg-error/90 disabled:opacity-40 disabled:cursor-not-allowed transition flex items-center gap-2 shadow-lg shadow-error/20"
+              >
+                {isDeleting ? 'Deleting Account...' : 'Confirm Account Deletion'}
+              </button>
+            </div>
           </div>
         </div>
       )}
