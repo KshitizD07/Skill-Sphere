@@ -2,6 +2,8 @@ import cron from 'node-cron';
 import { PrismaClient } from '@prisma/client';
 import logger from '../utils/logger.js';
 
+import { setupUserPruningJob } from './userPruning.js';
+
 const prisma = new PrismaClient();
 
 async function expireStaleSquads() {
@@ -49,6 +51,9 @@ function setupJobs() {
   });
 
   logger.info('Squad maintenance jobs scheduled (daily at midnight)');
+
+  // Schedule account pruning job
+  setupUserPruningJob();
 }
 
 export { setupJobs, expireStaleSquads };
