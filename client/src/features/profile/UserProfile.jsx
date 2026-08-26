@@ -360,12 +360,21 @@ export default function UserProfile() {
   const cleanUrl = (url) => url?.replace(/^https?:\/\//, '');
 
   const fetchPosts = useCallback(() => {
-    API.get(`/posts/user/${id}`).then(res => setPosts(res.data || []));
+    API.get(`/posts/user/${id}`).then(res => {
+      // Posts route may or may not have envelope — handle both
+      const payload = res.data;
+      setPosts(Array.isArray(payload) ? payload : (payload?.data || []));
+    });
   }, [id]);
 
   useEffect(() => {
     API.get(`/users/${id}`)
-      .then(res => { setUser(res.data); setLoading(false); })
+      .then(res => {
+        // /users/:id now returns { success, data } — unwrap
+        const payload = res.data;
+        setUser(payload?.data ?? payload);
+        setLoading(false);
+      })
       .catch(() => setLoading(false));
     fetchPosts();
   }, [id, fetchPosts]);
