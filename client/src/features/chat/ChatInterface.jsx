@@ -196,29 +196,33 @@ export default function ChatInterface() {
 
   // ── Load Conversation or Target User from URL Params ──────────────────────
   useEffect(() => {
-    loadConversations();
+    const initializeConversations = async () => {
+      await loadConversations();
 
-    if (routeRecipientId) {
-      // Find or initialize chat with route recipient
-      ChatAPI.startConversation(routeRecipientId)
-        .then((res) => {
-          if (res?.conversationId) {
-            setActiveConversation(res.conversation);
-            setActiveRecipient(res.conversation?.otherUser);
-            setMobileView('chat');
-            // Join socket room
-            socketRef.current?.emit('JOIN_CONVERSATION', { conversationId: res.conversationId });
+      if (routeRecipientId) {
+        // Find or initialize chat with route recipient
+        ChatAPI.startConversation(routeRecipientId)
+          .then((res) => {
+            if (res?.conversationId) {
+              setActiveConversation(res.conversation);
+              setActiveRecipient(res.conversation?.otherUser);
+              setMobileView('chat');
+              // Join socket room
+              socketRef.current?.emit('JOIN_CONVERSATION', { conversationId: res.conversationId });
 
-            // Fetch message history
-            ChatAPI.getMessages(res.conversationId).then((mRes) => {
-              setMessages(mRes?.messages || []);
-            });
-            // Mark read
-            ChatAPI.markConversationRead(res.conversationId);
-          }
-        })
-        .catch(console.error);
-    }
+              // Fetch message history
+              ChatAPI.getMessages(res.conversationId).then((mRes) => {
+                setMessages(mRes?.messages || []);
+              });
+              // Mark read
+              ChatAPI.markConversationRead(res.conversationId);
+            }
+          })
+          .catch(console.error);
+      }
+    };
+
+    void initializeConversations();
   }, [routeRecipientId, loadConversations]);
 
   // ── Select a Conversation from Sidebar ────────────────────────────────────

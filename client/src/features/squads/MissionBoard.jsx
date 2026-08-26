@@ -295,15 +295,16 @@ function SquadCard({ squad, currentUser }) {
   const navigate = useNavigate();
   const isLeader = squad.leader?.id === currentUser?.id;
   const isFull = squad.currentMembers >= squad.maxMembers;
+  const [renderedAt] = useState(() => Date.now());
 
   const eventStyle = EVENT_COLORS[squad.event] || EVENT_COLORS.HACKATHON;
 
   // Expiry calculation
   const daysLeft = useMemo(() => {
     if (!squad.expiresAt) return null;
-    const diff = new Date(squad.expiresAt).getTime() - Date.now();
+    const diff = new Date(squad.expiresAt).getTime() - renderedAt;
     return Math.max(0, Math.ceil(diff / (1000 * 60 * 60 * 24)));
-  }, [squad.expiresAt]);
+  }, [renderedAt, squad.expiresAt]);
 
   return (
     <div className="bg-surface border border-outline-var/20 hover:border-primary/40 rounded-md transition-all group relative overflow-hidden flex flex-col justify-between p-5 hover:shadow-xl">

@@ -255,7 +255,7 @@ export default function SquadManage() {
                       {/* Pitch Message */}
                       {app.message && (
                         <div className="bg-surface-mid/60 border border-outline-var/20 rounded-xs p-2.5 text-xs text-text-muted italic">
-                          "{app.message}"
+                          &quot;{app.message}&quot;
                         </div>
                       )}
 

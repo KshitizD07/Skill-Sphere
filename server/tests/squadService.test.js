@@ -23,9 +23,8 @@ describe('squadService - createSquad', () => {
   });
 
   test('should successfully create a squad when data is valid', async () => {
-    // Setup mock return value for the user check inside createSquad (assuming it checks user)
-    mockPrisma.user.findUnique.mockResolvedValue({ id: 'leader-123', name: 'Test Leader' });
-    
+    mockPrisma.squad.count.mockResolvedValue(0);
+
     // Setup mock return value for squad creation
     mockPrisma.squad.create.mockResolvedValue({ 
       id: 'mocked-squad-1', 

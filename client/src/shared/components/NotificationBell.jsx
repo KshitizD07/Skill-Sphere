@@ -209,7 +209,7 @@ export default function NotificationBell() {
             ) : notifications.length === 0 ? (
               <div className="p-8 text-center space-y-1">
                 <Sparkles size={24} className="mx-auto text-primary opacity-40 mb-2" />
-                <p className="text-xs font-bold text-text-primary">You're all caught up!</p>
+                <p className="text-xs font-bold text-text-primary">You&apos;re all caught up!</p>
                 <p className="text-[11px] text-outline">No new notifications right now.</p>
               </div>
             ) : (
