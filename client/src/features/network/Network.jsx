@@ -113,11 +113,26 @@ export default function Network() {
   // Debounced directory fetch on filter change
   useEffect(() => {
     const timer = setTimeout(() => {
-      updateUrlParams();
+      const params = {};
+      if (searchQuery.trim()) params.q = searchQuery.trim();
+      if (roleFilter !== 'ALL') params.role = roleFilter;
+      if (skillFilter.trim()) params.skill = skillFilter.trim();
+      if (verifiedOnly) params.verified = 'true';
+      if (collegeFilter.trim()) params.college = collegeFilter.trim();
+      if (isMyCampusOnly) params.campus = 'true';
+      if (sortOption !== 'newest') params.sort = sortOption;
+
+      const newParams = new URLSearchParams(params);
+      if (searchParams.toString() !== newParams.toString()) {
+        setSearchParams(params, { replace: true });
+      }
+
       fetchUsers(false, null);
     }, 300);
+
     return () => clearTimeout(timer);
-  }, [searchQuery, roleFilter, skillFilter, collegeFilter, isMyCampusOnly, verifiedOnly, sortOption, updateUrlParams, fetchUsers]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [searchQuery, roleFilter, skillFilter, collegeFilter, isMyCampusOnly, verifiedOnly, sortOption]);
 
   // Initial load of suggested peers
   useEffect(() => {
