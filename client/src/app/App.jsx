@@ -140,6 +140,11 @@ function App() {
             <ChatInterface />
           </ProtectedRoute>
         } />
+        <Route path="/chat" element={
+          <ProtectedRoute user={user} authChecked={authChecked}>
+            <ChatInterface />
+          </ProtectedRoute>
+        } />
         <Route path="/grid" element={
           <ProtectedRoute user={user} authChecked={authChecked}>
             <GlobalFeed />
