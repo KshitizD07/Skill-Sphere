@@ -10,6 +10,7 @@ const Landing = lazy(() => import('../pages/Landing'));
 const Dashboard = lazy(() => import('../pages/Dashboard'));
 const GlobalFeed = lazy(() => import('../pages/GlobalFeed'));
 const RoadmapPage = lazy(() => import('../pages/Roadmap'));
+const NotificationsPage = lazy(() => import('../pages/NotificationsPage'));
 const NotFound = lazy(() => import('../pages/NotFound'));
 
 // Features
@@ -143,6 +144,11 @@ function App() {
         <Route path="/chat" element={
           <ProtectedRoute user={user} authChecked={authChecked}>
             <ChatInterface />
+          </ProtectedRoute>
+        } />
+        <Route path="/notifications" element={
+          <ProtectedRoute user={user} authChecked={authChecked}>
+            <NotificationsPage />
           </ProtectedRoute>
         } />
         <Route path="/grid" element={
