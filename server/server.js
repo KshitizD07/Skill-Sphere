@@ -71,9 +71,9 @@ async function start() {
 }
 
 function startSelfPing() {
-  // Only ping in production
-  if (process.env.NODE_ENV !== 'production') {
-    logger.info('Self-ping keep-alive skipped (not in production)');
+  // Only ping if running in production or on Render
+  if (process.env.NODE_ENV !== 'production' && process.env.RENDER !== 'true') {
+    logger.info('Self-ping keep-alive skipped (neither production nor Render host)');
     return;
   }
 
@@ -83,7 +83,7 @@ function startSelfPing() {
 
   logger.info(`Self-ping keep-alive initialized targeting: ${url}`);
 
-  // Ping every 10 minutes (600,000 ms)
+  // Ping every 5 minutes (300,000 ms) to keep instance highly active
   setInterval(async () => {
     try {
       const res = await axios.get(url);
@@ -91,7 +91,7 @@ function startSelfPing() {
     } catch (err) {
       logger.warn('Self-ping failed', { error: err.message });
     }
-  }, 10 * 60 * 1000);
+  }, 5 * 60 * 1000);
 }
 
 start();
