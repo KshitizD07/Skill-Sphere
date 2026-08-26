@@ -20,30 +20,40 @@ const SQUAD_SELECT = {
 };
 
 // ── Create squad ──────────────────────────────────────────────────────────────
-export async function createSquad({ title, description, event, maxMembers = 4, visibility = 'PUBLIC', slots = [] }, leaderId) {
+export async function createSquad({ title, description, event, maxMembers = 4, visibility = 'PUBLIC', expiresAt, slots = [] }, leaderId) {
   if (!title?.trim())       throw ApiError.badRequest('Title is required');
   if (title.trim().length < 3 || title.trim().length > 200) throw ApiError.badRequest('Title must be 3-200 characters');
   if (!description?.trim()) throw ApiError.badRequest('Description is required');
   if (description.trim().length < 10 || description.trim().length > 5000) throw ApiError.badRequest('Description must be 10-5000 characters');
   if (slots.length > 10)    throw ApiError.badRequest('Maximum 10 slots per squad');
 
+  // Limit: max 3 active squads per user
+  const activeCount = await prisma.squad.count({
+    where: { leaderId, status: { in: ['OPEN', 'FULL'] } },
+  });
+  if (activeCount >= 3) {
+    throw ApiError.badRequest('You can lead a maximum of 3 active squads at a time.');
+  }
+
+  const expiryDate = expiresAt ? new Date(expiresAt) : new Date(Date.now() + 30 * 24 * 60 * 60 * 1000);
+
   const squad = await prisma.squad.create({
     data: {
       title:       title.trim(),
       description: description.trim(),
       event:       event?.trim() || null,
-      maxMembers,
+      maxMembers:  Math.min(20, Math.max(2, parseInt(maxMembers) || 4)),
       visibility,
       leaderId,
-      expiresAt: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000), // 30 days
+      expiresAt:   expiryDate,
       slots: {
         create: slots.map((s, i) => ({
           roleTitle:       s.roleTitle || 'Member',
           roleDescription: s.roleDescription || null,
           preferredSkills: Array.isArray(s.preferredSkills) ? s.preferredSkills.slice(0, 10) : [],
           requiredSkill:   s.requiredSkill || null,
-          minScore:        Math.min(10, Math.max(0, s.minScore || 0)),
-          requireVerified: s.requireVerified || false,
+          minScore:        Math.min(10, Math.max(0, parseInt(s.minScore) || 0)),
+          requireVerified: !!s.requireVerified,
           position:        i,
         })),
       },
@@ -59,20 +69,77 @@ export async function createSquad({ title, description, event, maxMembers = 4, v
   return squad;
 }
 
-// ── Feed ──────────────────────────────────────────────────────────────────────
-export async function getFeed({ skill, maxScore, page = 1, limit = 12 } = {}) {
-  const where = {
-    status: 'OPEN',
-    ...(skill    && { slots: { some: { requiredSkill: { contains: skill, mode: 'insensitive' } } } }),
-    ...(maxScore && { slots: { some: { minScore: { lte: parseInt(maxScore) } } } }),
-  };
+// ── Feed & Query ──────────────────────────────────────────────────────────────
+export async function getFeed({ skill, event, status, search, maxScore, cursor, page = 1, limit = 12 } = {}) {
+  const where = {};
+
+  if (status && status !== 'ALL') {
+    where.status = status;
+  } else {
+    where.status = { in: ['OPEN', 'FULL'] };
+  }
+
+  if (event && event !== 'ALL') {
+    where.event = event;
+  }
+
+  if (skill?.trim()) {
+    where.slots = {
+      some: {
+        requiredSkill: { contains: skill.trim(), mode: 'insensitive' },
+      },
+    };
+  }
+
+  if (maxScore) {
+    where.slots = {
+      some: { minScore: { lte: parseInt(maxScore) } },
+    };
+  }
+
+  if (search?.trim()) {
+    where.OR = [
+      { title: { contains: search.trim(), mode: 'insensitive' } },
+      { description: { contains: search.trim(), mode: 'insensitive' } },
+      { leader: { name: { contains: search.trim(), mode: 'insensitive' } } },
+    ];
+  }
+
+  if (cursor) {
+    const cursorSquad = await prisma.squad.findUnique({
+      where: { id: cursor },
+      select: { createdAt: true },
+    });
+    if (cursorSquad) {
+      where.createdAt = { lt: cursorSquad.createdAt };
+    }
+  }
 
   const [squads, total] = await Promise.all([
-    prisma.squad.findMany({ where, select: SQUAD_SELECT, orderBy: { createdAt: 'desc' }, skip: (page - 1) * limit, take: limit }),
+    prisma.squad.findMany({
+      where,
+      select: SQUAD_SELECT,
+      orderBy: { createdAt: 'desc' },
+      take: limit + 1,
+      ...(cursor ? {} : { skip: (page - 1) * limit }),
+    }),
     prisma.squad.count({ where }),
   ]);
 
-  return { squads, total, page, limit, totalPages: Math.ceil(total / limit) };
+  const hasMore = squads.length > limit;
+  const items = hasMore ? squads.slice(0, limit) : squads;
+  const nextCursor = hasMore && items.length > 0 ? items[items.length - 1].id : null;
+
+  return {
+    success: true,
+    squads: items,
+    nextCursor,
+    hasMore,
+    total,
+    page,
+    limit,
+    totalPages: Math.ceil(total / limit),
+  };
 }
 
 // ── Single squad ──────────────────────────────────────────────────────────────
@@ -80,17 +147,17 @@ export async function getSquad(squadId) {
   const squad = await prisma.squad.findUnique({
     where: { id: squadId },
     include: {
-      leader:       { select: { id: true, name: true, avatar: true, college: true } },
+      leader:       { select: { id: true, name: true, avatar: true, college: true, headline: true } },
       slots:        { orderBy: { position: 'asc' } },
       applications: {
         include: {
           user: {
             select: {
-              id: true, name: true, avatar: true, college: true, role: true,
+              id: true, name: true, avatar: true, college: true, role: true, headline: true,
               skills: { select: { id: true, name: true, isVerified: true, calculatedScore: true } },
             },
           },
-          slot: { select: { id: true, roleTitle: true, requiredSkill: true } },
+          slot: { select: { id: true, roleTitle: true, requiredSkill: true, minScore: true } },
         },
         orderBy: { appliedAt: 'desc' },
       },
@@ -99,6 +166,120 @@ export async function getSquad(squadId) {
 
   if (!squad) throw ApiError.notFound('Squad');
   return squad;
+}
+
+// ── Edit squad (Leader only) ──────────────────────────────────────────────────
+export async function editSquad(squadId, { title, description, event, expiresAt }, leaderId) {
+  const squad = await prisma.squad.findUnique({ where: { id: squadId } });
+  if (!squad) throw ApiError.notFound('Squad');
+  if (squad.leaderId !== leaderId) throw ApiError.forbidden('Only the squad leader can edit this squad');
+
+  const data = {};
+  if (title?.trim()) data.title = title.trim();
+  if (description?.trim()) data.description = description.trim();
+  if (event) data.event = event.trim();
+  if (expiresAt) data.expiresAt = new Date(expiresAt);
+
+  const updated = await prisma.squad.update({
+    where: { id: squadId },
+    data,
+    include: { slots: true, leader: { select: { id: true, name: true, avatar: true } } },
+  });
+
+  return updated;
+}
+
+// ── Close / Delete squad (Leader only) ────────────────────────────────────────
+export async function deleteSquad(squadId, leaderId) {
+  const squad = await prisma.squad.findUnique({
+    where: { id: squadId },
+    include: { applications: { where: { status: 'PENDING' }, select: { userId: true } } },
+  });
+  if (!squad) throw ApiError.notFound('Squad');
+  if (squad.leaderId !== leaderId) throw ApiError.forbidden('Only the squad leader can close this squad');
+
+  // Soft-close
+  await prisma.squad.update({
+    where: { id: squadId },
+    data: { status: 'CLOSED' },
+  });
+
+  // Notify pending applicants
+  for (const app of squad.applications) {
+    try {
+      const notif = await prisma.inAppNotification.create({
+        data: {
+          userId: app.userId,
+          type: 'SQUAD_REJECTED',
+          title: 'Squad Closed',
+          message: `The squad "${squad.title}" has been closed by its leader.`,
+          actionUrl: '/nexus',
+        },
+      });
+      const { getIO } = await import('../socket.js');
+      getIO().to(app.userId).emit('NOTIFICATION', notif);
+    } catch {
+      // Non-blocking
+    }
+  }
+
+  return { success: true, message: 'Squad closed' };
+}
+
+// ── Leave squad (Member only) ─────────────────────────────────────────────────
+export async function leaveSquad(squadId, userId) {
+  const squad = await prisma.squad.findUnique({ where: { id: squadId } });
+  if (!squad) throw ApiError.notFound('Squad');
+  if (squad.leaderId === userId) {
+    throw ApiError.badRequest('Squad leaders cannot leave the squad. You can close the squad instead.');
+  }
+
+  // Find slot filled by user
+  const filledSlot = await prisma.squadSlot.findFirst({
+    where: { squadId, filledBy: userId },
+  });
+
+  if (filledSlot) {
+    await prisma.squadSlot.update({
+      where: { id: filledSlot.id },
+      data: { status: 'OPEN', filledBy: null },
+    });
+  }
+
+  // Remove accepted application
+  await prisma.squadApplication.deleteMany({
+    where: { squadId, userId, status: 'ACCEPTED' },
+  });
+
+  // Decrement currentMembers and reopen squad if full
+  const newMemberCount = Math.max(1, squad.currentMembers - 1);
+  await prisma.squad.update({
+    where: { id: squadId },
+    data: {
+      currentMembers: newMemberCount,
+      status: squad.status === 'FULL' ? 'OPEN' : squad.status,
+    },
+  });
+
+  // Notify squad leader
+  try {
+    const user = await prisma.user.findUnique({ where: { id: userId }, select: { name: true } });
+    const notif = await prisma.inAppNotification.create({
+      data: {
+        userId: squad.leaderId,
+        type: 'SQUAD_REJECTED',
+        title: 'Member Left Squad',
+        message: `${user?.name || 'A member'} has left ${squad.title}.`,
+        actionUrl: `/squad/${squadId}`,
+      },
+    });
+    const { getIO } = await import('../socket.js');
+    getIO().to(squad.leaderId).emit('NOTIFICATION', notif);
+  } catch {
+    // Non-blocking
+  }
+
+  return { success: true, message: 'Successfully left squad' };
 }
 
 // ── Gatekeeper: check if user qualifies for a squad ──────────────────────────
@@ -111,7 +292,7 @@ export async function checkQualification(squadId, userId) {
 
   if (!squad) throw ApiError.notFound('Squad');
   if (!user)  throw ApiError.notFound('User');
-  if (squad.status !== 'OPEN')           return { qualifies: false, reason: 'Squad is not open' };
+  if (squad.status !== 'OPEN') return { qualifies: false, reason: 'Squad is not open' };
   if (squad.currentMembers >= squad.maxMembers) return { qualifies: false, reason: 'Squad is full' };
 
   const rejectedSlotIds = userApps.filter((a) => a.status === 'REJECTED').map((a) => a.slotId).filter(Boolean);
@@ -201,11 +382,10 @@ export async function applyToSquad(squadId, userId, message, slotId = null) {
         },
       });
 
-      // Emit real-time notification if socket available
       try {
         const { getIO } = await import('../socket.js');
         getIO().to(squad.leaderId).emit('NOTIFICATION', notif);
-      } catch { /* socket not available */ }
+      } catch { /* non-blocking */ }
     }
   } catch (err) {
     logger.warn('Failed to send application notification', { err: err.message });
@@ -283,7 +463,7 @@ export async function updateApplicationStatus(squadId, applicationId, status, le
     try {
       const { getIO } = await import('../socket.js');
       getIO().to(application.userId).emit('NOTIFICATION', notif);
-    } catch { /* socket not available */ }
+    } catch { /* non-blocking */ }
   } catch (err) {
     logger.warn('Failed to send decision notification', { err: err.message });
   }
