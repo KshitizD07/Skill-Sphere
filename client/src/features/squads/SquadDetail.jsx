@@ -38,7 +38,7 @@ export default function SquadDetail() {
     setLoading(true);
     try {
       const data = await SquadAPI.getSquad(id);
-      if (data) {
+      if (data && !data.error) {
         setSquad(data);
         setEditForm({
           title: data.title || '',
@@ -47,8 +47,15 @@ export default function SquadDetail() {
         });
         if (currentUser?.id) {
           const qual = await SquadAPI.checkQualification(id, currentUser.id);
-          setQualification(qual);
+          if (qual && !qual.error) {
+            setQualification(qual);
+          } else {
+            setQualification(null);
+          }
         }
+      } else {
+        setSquad(null);
+        toast.error(data?.message || 'Failed to load squad details.');
       }
     } catch (err) {
       toast.error('Failed to load squad details.');
