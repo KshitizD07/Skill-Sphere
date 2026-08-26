@@ -265,7 +265,7 @@ router.post('/:id/like', authenticateToken, asyncHandler(async (req, res) => {
     where: { postId_userId: { postId, userId } },
   });
 
-  let liked = false;
+  let liked;
   if (existing) {
     await prisma.like.delete({
       where: { postId_userId: { postId, userId } },
@@ -456,7 +456,7 @@ const handleCommentLike = asyncHandler(async (req, res) => {
     where: { commentId_userId: { commentId, userId } },
   });
 
-  let liked = false;
+  let liked;
   if (existing) {
     await prisma.commentLike.delete({
       where: { commentId_userId: { commentId, userId } },
