@@ -67,6 +67,11 @@ export default function ChatInterface() {
   const socketRef = useRef(null);
   const messagesEndRef = useRef(null);
   const typingTimeoutRef = useRef(null);
+  const activeConversationRef = useRef(null);
+
+  useEffect(() => {
+    activeConversationRef.current = activeConversation;
+  }, [activeConversation]);
 
   // Common quick emojis
   const quickEmojis = ['👍', '🔥', '🚀', '👏', '❤️', '💡', '🎉', '✅'];
@@ -118,8 +123,42 @@ export default function ChatInterface() {
         return [...prev, message];
       });
 
-      // Update sidebar conversations preview
-      loadConversations();
+      // Update sidebar conversations preview in-memory
+      setConversations((prevConvs) => {
+        const existingIdx = prevConvs.findIndex((c) => c.id === message.conversationId);
+
+        if (existingIdx !== -1) {
+          const updated = [...prevConvs];
+          const conv = updated[existingIdx];
+
+          const isNotMe = message.senderId !== currentUser.id;
+          const isChatOpen = activeConversationRef.current?.id === message.conversationId;
+          const unreadCount = (isNotMe && !isChatOpen) ? (conv.unreadCount + 1) : conv.unreadCount;
+
+          updated[existingIdx] = {
+            ...conv,
+            lastMessage: {
+              id: message.id,
+              content: message.content,
+              createdAt: message.createdAt,
+              isRead: message.isRead,
+              senderId: message.senderId,
+            },
+            unreadCount,
+          };
+
+          // Re-sort by last message timestamp (newest first)
+          return updated.sort((a, b) => {
+            const timeA = a.lastMessage?.createdAt ? new Date(a.lastMessage.createdAt).getTime() : 0;
+            const timeB = b.lastMessage?.createdAt ? new Date(b.lastMessage.createdAt).getTime() : 0;
+            return timeB - timeA;
+          });
+        }
+
+        // Fallback to API if it's a completely new conversation
+        loadConversations();
+        return prevConvs;
+      });
     });
 
     // Typing listeners
