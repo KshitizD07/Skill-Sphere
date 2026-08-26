@@ -35,8 +35,11 @@ export default function SquadManage() {
     setLoading(true);
     try {
       const data = await SquadAPI.getSquad(id);
-      if (data) {
+      if (data && !data.error) {
         setSquad(data);
+      } else {
+        setSquad(null);
+        toast.error(data?.message || 'Failed to load squad details.');
       }
     } catch (err) {
       toast.error('Failed to load squad manage center.');
