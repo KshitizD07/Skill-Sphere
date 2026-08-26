@@ -7,6 +7,7 @@ import { asyncHandler, ApiError } from '../utils/errorHandler.js';
 import { authenticateToken } from '../middleware/auth.js';
 import cache from '../utils/cache.js';
 import logger from '../utils/logger.js';
+import { isUserOnline } from '../socket.js';
 
 const router = express.Router();
 const prisma = new PrismaClient();
@@ -42,6 +43,278 @@ function normaliseSkills(user) {
     })),
   };
 }
+
+// ── GET /api/users — Paginated Network User Discovery ────────────────────────
+router.get('/', authenticateToken, asyncHandler(async (req, res) => {
+  const currentUserId = req.user.userId;
+  const search = req.query.search?.trim();
+  const role = req.query.role?.trim(); // STUDENT | PROFESSIONAL | RECRUITER | ALL
+  const skill = req.query.skill?.trim();
+  const college = req.query.college?.trim();
+  const verifiedOnly = req.query.verifiedOnly === 'true';
+  const sort = req.query.sort?.trim() || 'newest'; // newest | most_skills | highest_score
+  const cursor = req.query.cursor?.trim();
+  const limit = Math.min(Number(req.query.limit) || 12, 50);
+
+  // Cache fingerprint for 60s
+  const queryFingerprint = `network:discovery:${JSON.stringify(req.query)}:${currentUserId}`;
+  const cached = await cache.get(queryFingerprint);
+  if (cached) return res.json(cached);
+
+  const where = {
+    id: { not: currentUserId }, // Exclude self
+  };
+
+  if (role && role !== 'ALL') {
+    where.role = role;
+  }
+
+  if (college) {
+    where.college = { contains: college, mode: 'insensitive' };
+  }
+
+  if (skill) {
+    where.skills = {
+      some: {
+        name: { contains: skill, mode: 'insensitive' },
+        ...(verifiedOnly ? { isVerified: true } : {}),
+      },
+    };
+  } else if (verifiedOnly) {
+    where.skills = {
+      some: { isVerified: true },
+    };
+  }
+
+  if (search) {
+    where.OR = [
+      { name: { contains: search, mode: 'insensitive' } },
+      { headline: { contains: search, mode: 'insensitive' } },
+      { college: { contains: search, mode: 'insensitive' } },
+      { skills: { some: { name: { contains: search, mode: 'insensitive' } } } },
+    ];
+  }
+
+  if (cursor) {
+    const cursorUser = await prisma.user.findUnique({
+      where: { id: cursor },
+      select: { createdAt: true },
+    });
+    if (cursorUser) {
+      where.createdAt = { lt: cursorUser.createdAt };
+    }
+  }
+
+  let orderBy = [{ createdAt: 'desc' }];
+  if (sort === 'newest') {
+    orderBy = [{ createdAt: 'desc' }];
+  }
+
+  const users = await prisma.user.findMany({
+    where,
+    select: {
+      id: true,
+      name: true,
+      avatar: true,
+      role: true,
+      headline: true,
+      college: true,
+      createdAt: true,
+      skills: {
+        orderBy: [{ isVerified: 'desc' }, { calculatedScore: 'desc' }],
+        select: {
+          id: true,
+          name: true,
+          level: true,
+          isVerified: true,
+          calculatedScore: true,
+        },
+      },
+    },
+    orderBy,
+    take: limit + 1,
+  });
+
+  const hasMore = users.length > limit;
+  const rawList = hasMore ? users.slice(0, limit) : users;
+  const nextCursor = hasMore && rawList.length > 0 ? rawList[rawList.length - 1].id : null;
+
+  // Format and enrich each user
+  let formatted = rawList.map((u) => {
+    const verifiedSkills = (u.skills || []).filter((s) => s.isVerified);
+    const topScore = u.skills?.length > 0 ? Math.max(...u.skills.map((s) => s.calculatedScore || 0)) : 0;
+
+    return {
+      id: u.id,
+      name: u.name,
+      avatar: u.avatar,
+      role: u.role,
+      headline: u.headline,
+      college: u.college,
+      createdAt: u.createdAt,
+      verifiedSkillCount: verifiedSkills.length,
+      totalSkillCount: (u.skills || []).length,
+      topScore,
+      topSkills: (u.skills || []).slice(0, 4),
+      isOnline: isUserOnline(u.id),
+    };
+  });
+
+  // Client sorting in memory for aggregate properties if requested
+  if (sort === 'most_skills') {
+    formatted = formatted.sort((a, b) => b.verifiedSkillCount - a.verifiedSkillCount || b.totalSkillCount - a.totalSkillCount);
+  } else if (sort === 'highest_score') {
+    formatted = formatted.sort((a, b) => b.topScore - a.topScore);
+  }
+
+  const responsePayload = {
+    success: true,
+    data: formatted,
+    nextCursor,
+    hasMore,
+  };
+
+  // Cache for 60 seconds
+  await cache.set(queryFingerprint, responsePayload, 60);
+
+  res.json(responsePayload);
+}));
+
+// ── GET /api/users/suggested — "People You May Know" ─────────────────────────
+router.get('/suggested', authenticateToken, asyncHandler(async (req, res) => {
+  const currentUserId = req.user.userId;
+
+  const currentUser = await prisma.user.findUnique({
+    where: { id: currentUserId },
+    select: {
+      college: true,
+      skills: { select: { name: true } },
+    },
+  });
+
+  if (!currentUser) throw ApiError.notFound('User');
+
+  const mySkills = (currentUser.skills || []).map((s) => s.name.toLowerCase());
+  const myCollege = currentUser.college;
+
+  // Find candidate peers
+  const candidates = await prisma.user.findMany({
+    where: {
+      id: { not: currentUserId },
+      OR: [
+        ...(myCollege ? [{ college: { equals: myCollege, mode: 'insensitive' } }] : []),
+        ...(mySkills.length > 0
+          ? [{ skills: { some: { name: { in: mySkills, mode: 'insensitive' } } } }]
+          : []),
+      ],
+    },
+    select: {
+      id: true,
+      name: true,
+      avatar: true,
+      role: true,
+      headline: true,
+      college: true,
+      skills: {
+        select: { id: true, name: true, isVerified: true, calculatedScore: true },
+      },
+    },
+    take: 20,
+  });
+
+  // Score and rank candidates
+  const scored = candidates.map((cand) => {
+    let score = 0;
+    let matchReasons = [];
+    const candSkillNames = (cand.skills || []).map((s) => s.name.toLowerCase());
+    const sharedSkills = mySkills.filter((s) => candSkillNames.includes(s));
+
+    if (myCollege && cand.college && myCollege.toLowerCase() === cand.college.toLowerCase()) {
+      score += 10;
+      matchReasons.push(`Also from ${cand.college}`);
+    }
+
+    if (sharedSkills.length > 0) {
+      score += sharedSkills.length * 5;
+      const formattedSkills = (cand.skills || [])
+        .filter((s) => sharedSkills.includes(s.name.toLowerCase()))
+        .map((s) => s.name);
+      matchReasons.push(`Both know ${formattedSkills.slice(0, 2).join(', ')}`);
+    }
+
+    const verifiedCount = (cand.skills || []).filter((s) => s.isVerified).length;
+    score += verifiedCount * 2;
+
+    return {
+      id: cand.id,
+      name: cand.name,
+      avatar: cand.avatar,
+      role: cand.role,
+      headline: cand.headline,
+      college: cand.college,
+      matchingSkills: sharedSkills,
+      matchReason: matchReasons[0] || 'Recommended in your network',
+      verifiedSkillCount: verifiedCount,
+      topSkills: (cand.skills || []).slice(0, 3),
+      isOnline: isUserOnline(cand.id),
+      _matchScore: score,
+    };
+  });
+
+  // Top 6 ranked
+  const topSuggestions = scored.sort((a, b) => b._matchScore - a._matchScore).slice(0, 6);
+
+  // If fewer than 6, backfill with most active/verified users
+  if (topSuggestions.length < 6) {
+    const existingIds = [currentUserId, ...topSuggestions.map((s) => s.id)];
+    const backfill = await prisma.user.findMany({
+      where: { id: { notIn: existingIds } },
+      select: {
+        id: true,
+        name: true,
+        avatar: true,
+        role: true,
+        headline: true,
+        college: true,
+        skills: {
+          select: { id: true, name: true, isVerified: true, calculatedScore: true },
+        },
+      },
+      take: 6 - topSuggestions.length,
+    });
+
+    for (const b of backfill) {
+      topSuggestions.push({
+        id: b.id,
+        name: b.name,
+        avatar: b.avatar,
+        role: b.role,
+        headline: b.headline,
+        college: b.college,
+        matchingSkills: [],
+        matchReason: 'Active on SkillSphere',
+        verifiedSkillCount: (b.skills || []).filter((s) => s.isVerified).length,
+        topSkills: (b.skills || []).slice(0, 3),
+        isOnline: isUserOnline(b.id),
+      });
+    }
+  }
+
+  res.json({ success: true, data: topSuggestions });
+}));
+
+// ── GET /api/users/colleges — Unique Colleges ────────────────────────────────
+router.get('/colleges', authenticateToken, asyncHandler(async (_req, res) => {
+  const colleges = await prisma.user.findMany({
+    where: { college: { not: null }, NOT: { college: '' } },
+    select: { college: true },
+    distinct: ['college'],
+    take: 50,
+  });
+
+  const list = colleges.map((c) => c.college).filter(Boolean);
+  res.json({ success: true, data: list });
+}));
 
 // ── GET /api/users/me ────────────────────────────────────────────────────────
 router.get('/me', authenticateToken, asyncHandler(async (req, res) => {
@@ -111,7 +384,7 @@ router.post('/me/skills', authenticateToken, asyncHandler(async (req, res) => {
   res.json({ success: true, count: skillIds.length });
 }));
 
-// ── PATCH /api/users/me/skills/:id — Add proof URL for manual/credential verification
+// ── PATCH /api/users/me/skills/:id — Add proof URL ───────────────────────────
 router.patch('/me/skills/:id', authenticateToken, asyncHandler(async (req, res) => {
   const schema = z.object({
     verificationUrl: z.string().url(),
@@ -137,7 +410,6 @@ router.patch('/me/skills/:id', authenticateToken, asyncHandler(async (req, res) 
 }));
 
 // ── GET /api/users/me/github-stats ────────────────────────────────────────────
-// Returns: publicRepos, totalStars, topLanguages[], recentEvents[]
 router.get('/me/github-stats', authenticateToken, asyncHandler(async (req, res) => {
   const user = await prisma.user.findUnique({
     where:  { id: req.user.userId },
@@ -148,7 +420,6 @@ router.get('/me/github-stats', authenticateToken, asyncHandler(async (req, res) 
     return res.json({ success: true, data: null });
   }
 
-  // Extract username from stored value (may be "github.com/username" or just "username")
   const username = user.github.replace(/^https?:\/\//, '').replace(/^github\.com\//, '').trim();
 
   const cacheKey = `github:stats:${username}`;
@@ -174,7 +445,6 @@ router.get('/me/github-stats', authenticateToken, asyncHandler(async (req, res) 
     return res.json({ success: true, data: null });
   }
 
-  // Aggregate top languages
   const langMap = {};
   for (const repo of repos) {
     if (repo.language) langMap[repo.language] = (langMap[repo.language] || 0) + 1;
@@ -202,15 +472,11 @@ router.get('/me/github-stats', authenticateToken, asyncHandler(async (req, res) 
     createdAt:    profile.created_at,
   };
 
-  // Cache for 1 hour
   await cache.set(cacheKey, stats, 3600);
-
-  logger.info('GitHub stats fetched', { username, userId: req.user.userId });
   res.json({ success: true, data: stats });
 }));
 
 // ── GET /api/users/me/completeness ────────────────────────────────────────────
-// Returns 0-100 score + checklist of what's missing
 router.get('/me/completeness', authenticateToken, asyncHandler(async (req, res) => {
   const user = await prisma.user.findUnique({
     where:  { id: req.user.userId },
@@ -238,7 +504,7 @@ router.get('/me/completeness', authenticateToken, asyncHandler(async (req, res) 
     { key: 'skills',          label: '3 or more skills added',    done: totalSkills >= 3,        points: 10 },
     { key: 'verifiedSkills',  label: 'At least 1 verified skill', done: verifiedSkills >= 1,     points: 20 },
     { key: 'portfolio',       label: 'Portfolio repos selected',  done: hasPortfolio,            points: 5  },
-    { key: 'leetcode',        label: 'LeetCode profile linked',   done: !!user.leetcodeUsername, points: 0  }, // bonus
+    { key: 'leetcode',        label: 'LeetCode profile linked',   done: !!user.leetcodeUsername, points: 0  },
   ];
 
   const earnedPoints = checks.reduce((sum, c) => sum + (c.done ? c.points : 0), 0);
@@ -258,8 +524,6 @@ router.get('/search', authenticateToken, asyncHandler(async (req, res) => {
 
   const users = await prisma.user.findMany({
     where: {
-      github: { not: null },
-      NOT: { github: '' },
       OR: [
         { name:     { contains: q, mode: 'insensitive' } },
         { college:  { contains: q, mode: 'insensitive' } },
@@ -277,12 +541,9 @@ router.get('/search', authenticateToken, asyncHandler(async (req, res) => {
 router.get('/filter', authenticateToken, asyncHandler(async (req, res) => {
   const { role, college, search } = req.query;
 
-  const where = {
-    github: { not: null },
-    NOT: { github: '' },
-  };
+  const where = {};
   if (role && role !== 'ALL') where.role = role;
-  if (college) where.college = college;
+  if (college) where.college = { contains: college, mode: 'insensitive' };
   if (search?.trim()) {
     where.OR = [
       { name:     { contains: search, mode: 'insensitive' } },
@@ -293,7 +554,18 @@ router.get('/filter', authenticateToken, asyncHandler(async (req, res) => {
 
   const users = await prisma.user.findMany({
     where,
-    select: { id: true, name: true, avatar: true, college: true, role: true, headline: true },
+    select: {
+      id: true,
+      name: true,
+      avatar: true,
+      college: true,
+      role: true,
+      headline: true,
+      skills: {
+        select: { id: true, name: true, level: true, isVerified: true },
+        take: 3,
+      },
+    },
     take: 50,
   });
 
