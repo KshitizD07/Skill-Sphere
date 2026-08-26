@@ -28,7 +28,7 @@ export default function DashboardChat({ isOpen, onClose }) {
     if (!isOpen) return;
 
     API.get('/chat/conversations')
-      .then(res => setConversations(res.data || []))
+      .then(res => setConversations(res.data?.data || res.data || []))
       .catch(console.error);
 
     const socket = io(import.meta.env.VITE_SOCKET_URL || 'http://localhost:5001', {
@@ -49,7 +49,7 @@ export default function DashboardChat({ isOpen, onClose }) {
       }
       // Refresh conversations sidebar to update latest message preview
       API.get('/chat/conversations')
-        .then(res => setConversations(res.data || []))
+        .then(res => setConversations(res.data?.data || res.data || []))
         .catch(() => {});
     });
 
@@ -68,7 +68,8 @@ export default function DashboardChat({ isOpen, onClose }) {
     setActiveChat(user);
     try {
       const res = await API.get(`/chat/history/${user.id}`);
-      const formatted = (res.data || []).map(m => ({
+      const rawMessages = res.data?.messages || res.data || [];
+      const formatted = (Array.isArray(rawMessages) ? rawMessages : []).map(m => ({
         sender: m.senderId === currentUser.id ? 'me' : 'them',
         text: m.content
       }));
