@@ -47,10 +47,44 @@ export default function DashboardChat({ isOpen, onClose }) {
           text: message.content
         }]);
       }
-      // Refresh conversations sidebar to update latest message preview
-      API.get('/chat/conversations')
-        .then(res => setConversations(res.data?.data || res.data || []))
-        .catch(() => {});
+      
+      // Update sidebar conversations preview in-memory
+      setConversations((prevConvs) => {
+        const existingIdx = prevConvs.findIndex((c) => c.id === message.conversationId);
+
+        if (existingIdx !== -1) {
+          const updated = [...prevConvs];
+          const conv = updated[existingIdx];
+
+          const isNotMe = message.senderId !== currentUser.id;
+          const isChatOpen = current?.id === conv.otherUser?.id;
+          const unreadCount = (isNotMe && !isChatOpen) ? (conv.unreadCount + 1) : conv.unreadCount;
+
+          updated[existingIdx] = {
+            ...conv,
+            lastMessage: {
+              id: message.id,
+              content: message.content,
+              createdAt: message.createdAt,
+              isRead: message.isRead,
+              senderId: message.senderId,
+            },
+            unreadCount,
+          };
+
+          return updated.sort((a, b) => {
+            const timeA = a.lastMessage?.createdAt ? new Date(a.lastMessage.createdAt).getTime() : 0;
+            const timeB = b.lastMessage?.createdAt ? new Date(b.lastMessage.createdAt).getTime() : 0;
+            return timeB - timeA;
+          });
+        }
+
+        // Fallback to API if it's a completely new conversation
+        API.get('/chat/conversations')
+          .then(res => setConversations(res.data?.data || res.data || []))
+          .catch(() => {});
+        return prevConvs;
+      });
     });
 
     return () => {
