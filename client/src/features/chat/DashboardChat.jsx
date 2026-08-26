@@ -168,9 +168,9 @@ export default function DashboardChat({ isOpen, onClose }) {
                 <div className="text-center text-outline italic text-sm mt-10">No active comms.</div>
               ) : (
                 conversations.map(conv => {
-                  const otherUser = conv.participants?.find(p => p.id !== currentUser.id);
+                  const otherUser = conv.otherUser;
                   if (!otherUser) return null;
-                  const lastMsg = conv.messages?.[0];
+                  const lastMsg = conv.lastMessage;
 
                   return (
                     <div
