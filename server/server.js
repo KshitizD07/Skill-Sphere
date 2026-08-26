@@ -24,6 +24,7 @@ if (missing.length) {
 }
 
 import http from 'http';
+import axios from 'axios';
 import { app, prisma } from './app.js';
 import logger from './utils/logger.js';
 import cache from './utils/cache.js';
@@ -63,7 +64,34 @@ async function start() {
     });
 
     if (process.send) process.send('ready'); // pm2 cluster signal
+
+    // Start self-ping keep-alive
+    startSelfPing();
   });
+}
+
+function startSelfPing() {
+  // Only ping in production
+  if (process.env.NODE_ENV !== 'production') {
+    logger.info('Self-ping keep-alive skipped (not in production)');
+    return;
+  }
+
+  const url = process.env.RENDER_EXTERNAL_URL
+    ? `${process.env.RENDER_EXTERNAL_URL}/ping`
+    : 'https://skill-sphere-backend-29kn.onrender.com/ping';
+
+  logger.info(`Self-ping keep-alive initialized targeting: ${url}`);
+
+  // Ping every 10 minutes (600,000 ms)
+  setInterval(async () => {
+    try {
+      const res = await axios.get(url);
+      logger.info('Self-ping success', { status: res.status });
+    } catch (err) {
+      logger.warn('Self-ping failed', { error: err.message });
+    }
+  }, 10 * 60 * 1000);
 }
 
 start();
