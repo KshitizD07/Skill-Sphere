@@ -595,33 +595,168 @@ export default function GlobalFeed() {
 
   // ── Comments ──────────────────────────────────────────────────────────────
   const handleComment = async (postId, content, parentId = null) => {
+    const optId = `opt_${Date.now()}`;
+    const optimisticComment = {
+      id: optId,
+      postId,
+      parentId,
+      content: content.trim(),
+      createdAt: new Date().toISOString(),
+      author: {
+        id: currentUser.id,
+        name: currentUser.name,
+        avatar: currentUser.avatar,
+      },
+      likes: [],
+      likeCount: 0,
+      isLikedByMe: false,
+      replies: [],
+    };
+
+    // Store backup
+    const originalPosts = [...posts];
+
+    // Optimistically update UI
+    setPosts((prev) =>
+      prev.map((p) => {
+        if (p.id !== postId) return p;
+        const commentCount = (p.commentCount ?? p.comments?.length ?? 0) + 1;
+        let updatedComments = [...(p.comments || [])];
+
+        if (!parentId) {
+          updatedComments.push(optimisticComment);
+        } else {
+          updatedComments = updatedComments.map((c) => {
+            if (c.id === parentId) {
+              return { ...c, replies: [...(c.replies || []), optimisticComment] };
+            }
+            return c;
+          });
+        }
+
+        return { ...p, commentCount, comments: updatedComments };
+      })
+    );
+
     try {
-      const newComment = await FeedAPI.createComment(postId, content, parentId);
+      const res = await FeedAPI.createComment(postId, content, parentId);
+      const newComment = res?.data || res;
       if (newComment) {
-        loadInitialFeed();
+        // Swap optimistic comment with server comment
+        setPosts((prev) =>
+          prev.map((p) => {
+            if (p.id !== postId) return p;
+            let updatedComments = [...(p.comments || [])];
+            if (!parentId) {
+              updatedComments = updatedComments.map((c) => (c.id === optId ? newComment : c));
+            } else {
+              updatedComments = updatedComments.map((c) => {
+                if (c.id === parentId) {
+                  return {
+                    ...c,
+                    replies: (c.replies || []).map((r) => (r.id === optId ? newComment : r)),
+                  };
+                }
+                return c;
+              });
+            }
+            return { ...p, comments: updatedComments };
+          })
+        );
         toast.success('Comment posted');
       }
     } catch (err) {
+      // Revert on error
+      setPosts(originalPosts);
       toast.error(err.message || 'Failed to post comment.');
     }
   };
 
   const handleDeleteComment = async (postId, commentId) => {
+    const originalPosts = [...posts];
+
+    // Optimistically update UI
+    setPosts((prev) =>
+      prev.map((p) => {
+        if (p.id !== postId) return p;
+        let commentCount = p.commentCount ?? p.comments?.length ?? 0;
+        let updatedComments = [...(p.comments || [])];
+
+        // Try to find in top-level comments
+        const commentIndex = updatedComments.findIndex((c) => c.id === commentId);
+        if (commentIndex !== -1) {
+          const comment = updatedComments[commentIndex];
+          if (comment.replies && comment.replies.length > 0) {
+            // Soft delete
+            updatedComments[commentIndex] = { ...comment, content: '[deleted]', isDeleted: true };
+          } else {
+            // Hard delete
+            updatedComments.splice(commentIndex, 1);
+            commentCount = Math.max(0, commentCount - 1);
+          }
+        } else {
+          // Look in replies
+          updatedComments = updatedComments.map((c) => {
+            const replyIndex = (c.replies || []).findIndex((r) => r.id === commentId);
+            if (replyIndex !== -1) {
+              const updatedReplies = [...c.replies];
+              updatedReplies.splice(replyIndex, 1);
+              commentCount = Math.max(0, commentCount - 1);
+              return { ...c, replies: updatedReplies };
+            }
+            return c;
+          });
+        }
+
+        return { ...p, commentCount, comments: updatedComments };
+      })
+    );
+
     try {
       await FeedAPI.deleteComment(postId, commentId);
-      loadInitialFeed();
       toast.success('Comment deleted');
     } catch (err) {
+      setPosts(originalPosts);
       toast.error(err.message || 'Failed to delete comment.');
     }
   };
 
   const handleLikeComment = async (postId, commentId) => {
+    const originalPosts = [...posts];
+
+    // Optimistically toggle like
+    setPosts((prev) =>
+      prev.map((p) => {
+        if (p.id !== postId) return p;
+        const updatedComments = (p.comments || []).map((c) => {
+          // Top-level comment match
+          if (c.id === commentId) {
+            const alreadyLiked = c.isLikedByMe;
+            const likeCount = Math.max(0, (c.likeCount || 0) + (alreadyLiked ? -1 : 1));
+            const likes = alreadyLiked ? (c.likes || []).filter((id) => id !== currentUser.id) : [...(c.likes || []), currentUser.id];
+            return { ...c, isLikedByMe: !alreadyLiked, likeCount, likes };
+          }
+          // Reply match
+          const replyMatchIndex = (c.replies || []).findIndex((r) => r.id === commentId);
+          if (replyMatchIndex !== -1) {
+            const updatedReplies = [...c.replies];
+            const r = updatedReplies[replyMatchIndex];
+            const alreadyLiked = r.isLikedByMe;
+            const likeCount = Math.max(0, (r.likeCount || 0) + (alreadyLiked ? -1 : 1));
+            const likes = alreadyLiked ? (r.likes || []).filter((id) => id !== currentUser.id) : [...(r.likes || []), currentUser.id];
+            updatedReplies[replyMatchIndex] = { ...r, isLikedByMe: !alreadyLiked, likeCount, likes };
+            return { ...c, replies: updatedReplies };
+          }
+          return c;
+        });
+        return { ...p, comments: updatedComments };
+      })
+    );
+
     try {
       await FeedAPI.likeComment(postId, commentId);
-      loadInitialFeed();
     } catch {
-      // Ignore
+      setPosts(originalPosts);
     }
   };
 
