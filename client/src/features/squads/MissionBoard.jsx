@@ -458,7 +458,8 @@ export default function MissionBoard() {
       loadSquads();
     }, 300);
     return () => clearTimeout(timer);
-  }, [loadSquads]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [eventFilter, statusFilter, skillFilter, searchQuery]);
 
   return (
     <div className="min-h-screen bg-bg-base text-text-primary font-outfit flex flex-col md:flex-row">
