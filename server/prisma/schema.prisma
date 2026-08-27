@@ -38,11 +38,14 @@ model User {
   leetcodeTotalPoints Int?
   leetcodeLanguages  Json?       // [{ name, problemsSolved, score, level }]
   leetcodeSyncedAt   DateTime?
+  // Account Status
+  isActive           Boolean     @default(true)
 
   createdAt DateTime @default(now())
 
   // Relations
   skills         Skill[]
+  reportsCreated ContentReport[]    @relation("ReportsCreated")
   githubRepos    GitHubRepo[]
   posts          Post[]
   likes          Like[]
@@ -563,4 +566,34 @@ model Roadmap {
   @@index([userId])
   @@index([shareToken])
 }
+
+// ─────────────────────────────────────────────────────────────────────────────
+// CONTENT REPORTS & MODERATION
+// ─────────────────────────────────────────────────────────────────────────────
+
+model ContentReport {
+  id              String       @id @default(uuid())
+  reporterId      String
+  reporter        User         @relation("ReportsCreated", fields: [reporterId], references: [id], onDelete: Cascade)
+  targetUserId    String?
+  targetPostId    String?
+  targetCommentId String?
+  contentPreview  String?      @db.Text
+  reason          String
+  status          ReportStatus @default(PENDING)
+  resolution      String?
+  resolvedAt      DateTime?
+  reportedAt      DateTime     @default(now())
+
+  @@index([reporterId])
+  @@index([status])
+  @@index([reportedAt(sort: Desc)])
+}
+
+enum ReportStatus {
+  PENDING
+  DISMISSED
+  RESOLVED
+}
+
 
