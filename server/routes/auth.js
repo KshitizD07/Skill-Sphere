@@ -281,7 +281,8 @@ router.get('/github', (req, res) => {
   const backendUrl = req.protocol + '://' + req.get('host');
   const cb = `${backendUrl}/api/auth/github/callback`;
   const scope = 'repo read:user user:email';
-  let url = `https://github.com/login/oauth/authorize?client_id=${process.env.GITHUB_CLIENT_ID}&redirect_uri=${encodeURIComponent(cb)}&scope=${encodeURIComponent(scope)}&state=${stateStr}`;
+  const clientId = process.env.GITHUB_CLIENT_ID?.trim();
+  let url = `https://github.com/login/oauth/authorize?client_id=${clientId}&redirect_uri=${encodeURIComponent(cb)}&scope=${encodeURIComponent(scope)}&state=${stateStr}`;
   if (targetUser) {
     const cleanUser = targetUser.replace(/^https?:\/\//, '').replace(/^github\.com\//, '').replace(/\/$/, '').trim();
     if (cleanUser) url += `&login=${encodeURIComponent(cleanUser)}`;
@@ -325,6 +326,8 @@ router.get('/github/callback', asyncHandler(async (req, res) => {
 
   const backendUrl = req.protocol + '://' + req.get('host');
   const cb = `${backendUrl}/api/auth/github/callback`;
+  const clientId = process.env.GITHUB_CLIENT_ID?.trim();
+  const clientSecret = process.env.GITHUB_CLIENT_SECRET?.trim();
 
   // Exchange code for token
   const tokenRes = await fetch('https://github.com/login/oauth/access_token', {
@@ -334,8 +337,8 @@ router.get('/github/callback', asyncHandler(async (req, res) => {
       'Accept': 'application/json'
     },
     body: JSON.stringify({
-      client_id: process.env.GITHUB_CLIENT_ID,
-      client_secret: process.env.GITHUB_CLIENT_SECRET,
+      client_id: clientId,
+      client_secret: clientSecret,
       code,
       redirect_uri: cb,
     })
@@ -359,17 +362,6 @@ router.get('/github/callback', asyncHandler(async (req, res) => {
 
   // Handle Account Linking case
   if (action === 'link' && linkingUserId) {
-    // Check for target user mismatch
-    if (targetUser) {
-      const cleanTarget = targetUser.replace(/^https?:\/\//, '').replace(/^github\.com\//, '').replace(/\/$/, '').trim().toLowerCase();
-      const actualLogin = (userData.login || '').trim().toLowerCase();
-      if (cleanTarget && actualLogin && cleanTarget !== actualLogin) {
-        return res.redirect(
-          `${frontendUrl}/my-profile?error=GithubAccountMismatch&expected=${encodeURIComponent(cleanTarget)}&actual=${encodeURIComponent(userData.login)}`
-        );
-      }
-    }
-
     await prisma.user.update({
       where: { id: linkingUserId },
       data: {
@@ -378,12 +370,15 @@ router.get('/github/callback', asyncHandler(async (req, res) => {
       },
     });
 
+    // Invalidate user profile cache so fresh data is returned immediately
+    await cache.del(`user:profile:${linkingUserId}`);
+
     // Auto-sync repos in background
     syncUserRepos(linkingUserId).catch((err) =>
       console.error(`Auto-sync failed after GitHub link for user ${linkingUserId}:`, err.message)
     );
 
-    return res.redirect(`${frontendUrl}/my-profile?linked=github&status=success`);
+    return res.redirect(`${frontendUrl}/my-profile?linked=github&username=${encodeURIComponent(userData.login)}`);
   }
 
   // Fetch emails from GitHub (handles private emails)

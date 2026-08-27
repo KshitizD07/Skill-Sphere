@@ -197,13 +197,15 @@ export default function MyProfile({ user, onUserUpdate }) {
   useEffect(() => {
     const urlParams = new URLSearchParams(window.location.search);
     if (urlParams.get('linked') === 'github') {
-      toast.success('GitHub account authorized successfully!');
+      const linkedUser = urlParams.get('username');
+      if (linkedUser) {
+        setFormData((prev) => ({ ...prev, github: linkedUser }));
+      }
+      toast.success(`GitHub account ${linkedUser ? `(@${linkedUser}) ` : ''}linked & synced successfully!`);
       window.history.replaceState({}, document.title, window.location.pathname);
       loadUserData();
-    } else if (urlParams.get('error') === 'GithubAccountMismatch') {
-      const expected = urlParams.get('expected') || '';
-      const actual = urlParams.get('actual') || '';
-      toast.error(`Account Mismatch: Authorized as @${actual}, but target profile is @${expected}. Please switch GitHub accounts in your browser.`);
+    } else if (urlParams.get('error')) {
+      toast.error('GitHub authorization failed. Please try again.');
       window.history.replaceState({}, document.title, window.location.pathname);
     }
   }, [loadUserData]);
