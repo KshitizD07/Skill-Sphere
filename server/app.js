@@ -25,6 +25,7 @@ import notificationRoutes from './routes/notifications.js';
 import antifragileRoutes from './routes/antifragile.js';
 import portfolioRoutes from './routes/portfolio.js';
 import adminRoutes from './routes/admin.js';
+import searchRoutes from './routes/search.js';
 
 const app = express();
 app.use(compression());
@@ -125,6 +126,7 @@ app.use('/api/notifications',               notificationRoutes);
 app.use('/api/antifragile',                 antifragileRoutes);
 app.use('/api/portfolio',                   portfolioRoutes);
 app.use('/api/admin',                       adminRoutes);
+app.use('/api/search',                      searchRoutes);
 
 // ── 404 ───────────────────────────────────────────────────────────────────────
 app.use((req, res) => {
