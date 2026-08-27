@@ -138,7 +138,8 @@ const Navbar = ({ user, onLogout }) => {
     <>
       {/* ── Mobile Top Header ── */}
       <div className="md:hidden flex justify-between items-center p-4 bg-bg-base border-b border-outline-var/30 fixed top-0 w-full z-40">
-        <div onClick={() => navigate('/')} className="font-syne font-extrabold text-xl text-text-primary tracking-tight">
+        <div onClick={() => navigate('/')} className="flex items-center gap-2 cursor-pointer font-syne font-extrabold text-xl text-text-primary tracking-tight">
+          <img src="/logo.jpg" className="w-6 h-6 rounded-sm object-cover" alt="" />
           Skill<span className="text-primary">Sphere</span>
         </div>
         <div className="flex items-center gap-3">
@@ -157,9 +158,7 @@ const Navbar = ({ user, onLogout }) => {
           onClick={() => navigate('/')} 
           className="cursor-pointer p-6 border-b border-outline-var/20 flex items-center gap-2"
         >
-          <div className="w-8 h-8 rounded bg-primary/10 flex items-center justify-center border border-primary/20">
-            <Layers size={18} className="text-primary" />
-          </div>
+          <img src="/logo.jpg" className="w-8 h-8 rounded-sm object-cover border border-outline-var/20" alt="SkillSphere Logo" />
           <span className="text-2xl font-syne font-extrabold text-text-primary tracking-tight">
             Skill<span className="text-primary">Sphere</span>
           </span>
