@@ -1,163 +1,457 @@
-import { useEffect, useState, useRef } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
-import API from '../api';
-import { ArrowLeft, Loader2, Brain, CheckCircle, Circle, Calendar, Target, RefreshCw } from 'lucide-react';
+import { useEffect, useState, useCallback, useMemo } from 'react';
+import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import ReactMarkdown from 'react-markdown';
+import {
+  ArrowLeft, Loader2, Brain, CheckCircle, Circle,
+  Calendar, Target, RefreshCw, Share2, Sparkles,
+  CheckSquare, Square, Copy, Check, BookmarkCheck,
+  ExternalLink, Layers
+} from 'lucide-react';
+import RoadmapAPI from '../features/roadmap/roadmapAPI';
+import { useToast, ToastContainer } from '../shared/components/Toast';
 
 export default function RoadmapPage() {
-  const { skill, role } = useParams();
+  const { skill, role, id, token } = useParams();
+  const location = useLocation();
   const navigate = useNavigate();
+  const toast = useToast();
 
-  const [roadmap, setRoadmap] = useState(null);
-  const [loading, setLoading] = useState(false);
+  const isSharedView = Boolean(token || location.pathname.includes('/roadmap/shared/'));
+  const isIdView = Boolean(id && !skill && !token);
+
+  const [roadmapData, setRoadmapData] = useState(null);
+  const [content, setContent] = useState('');
+  const [targetSkill, setTargetSkill] = useState(skill ? decodeURIComponent(skill) : '');
+  const [targetRole, setTargetRole] = useState(role ? decodeURIComponent(role) : '');
+  const [completedItems, setCompletedItems] = useState([]);
+  const [progress, setProgress] = useState(0);
+  const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [errorType, setErrorType] = useState(null);
-  const fetchedRef = useRef(false);
+  const [savingProgress, setSavingProgress] = useState(false);
+  const [copiedShare, setCopiedShare] = useState(false);
+  const [showShareModal, setShowShareModal] = useState(false);
+  const [shareUrl, setShareUrl] = useState('');
 
-  useEffect(() => {
-    if (fetchedRef.current) return;
-    fetchedRef.current = true;
-    fetchRoadmap();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
-
-  const fetchRoadmap = async () => {
-      setLoading(true);
+  const loadRoadmap = useCallback(async () => {
+    setLoading(true);
     setError(null);
-    setErrorType(null);
+
     try {
-      const res = await API.post('/ai/generate-roadmap', {
-        skill: decodeURIComponent(skill),
-        role: decodeURIComponent(role),
-      });
-      if (res.data.roadmap) {
-        setRoadmap(res.data.roadmap);
-      } else {
-        setError('No roadmap data received.');
+      if (isSharedView) {
+        const shareToken = token || location.pathname.split('/shared/')[1];
+        const res = await RoadmapAPI.getSharedRoadmap(shareToken);
+        if (res) {
+          setRoadmapData(res);
+          setContent(res.content || '');
+          setTargetSkill(res.targetSkill || 'Skill');
+          setTargetRole(res.targetRole || 'Engineering');
+          setCompletedItems(res.completedItems || []);
+          setProgress(res.progress || 0);
+        } else {
+          setError('Shared roadmap could not be found or has expired.');
+        }
+      } else if (isIdView) {
+        const res = await RoadmapAPI.getRoadmapById(id);
+        if (res && !res.error) {
+          setRoadmapData(res);
+          setContent(res.content || '');
+          setTargetSkill(res.targetSkill || '');
+          setTargetRole(res.targetRole || '');
+          setCompletedItems(res.completedItems || []);
+          setProgress(res.progress || 0);
+        } else {
+          setError(res?.message || 'Failed to load saved roadmap.');
+        }
+      } else if (skill && role) {
+        const decodedSkill = decodeURIComponent(skill);
+        const decodedRole = decodeURIComponent(role);
+        setTargetSkill(decodedSkill);
+        setTargetRole(decodedRole);
+
+        const res = await RoadmapAPI.generateRoadmap({
+          targetSkill: decodedSkill,
+          targetRole: decodedRole,
+        });
+
+        if (res && (res.roadmap || res.roadmapMarkdown)) {
+          const rm = res.roadmap;
+          setRoadmapData(rm);
+          setContent(rm?.content || res.roadmapMarkdown || '');
+          setCompletedItems(rm?.completedItems || []);
+          setProgress(rm?.progress || 0);
+        } else {
+          setError('Failed to generate roadmap content.');
+        }
       }
     } catch (err) {
-      if (err.response?.data?.error === 'SKILL_NOT_VERIFIED') {
-        setError('You must verify your GitHub proficiency for this skill before the algorithm can build a custom roadmap.');
-        setErrorType('SKILL_NOT_VERIFIED');
-      } else {
-        setError(err.response?.data?.error || err.response?.data?.message || 'Failed to generate roadmap. Please try again.');
-      }
+      setError(err?.response?.data?.message || err.message || 'Error loading roadmap');
     } finally {
       setLoading(false);
     }
+  }, [isSharedView, isIdView, token, id, skill, role, location.pathname]);
+
+  useEffect(() => {
+    loadRoadmap();
+  }, [loadRoadmap]);
+
+  // Extract actionable milestone items from markdown
+  const milestones = useMemo(() => {
+    if (!content) return [];
+    const lines = content.split('\n');
+    const items = [];
+    let currentSection = 'General';
+
+    for (const line of lines) {
+      if (line.startsWith('## ')) {
+        currentSection = line.replace('## ', '').trim();
+      } else if (/^\s*[-*]\s+/.test(line)) {
+        const rawText = line.replace(/^\s*[-*]\s+/, '').trim();
+        // Ignore purely resource links or very short lines
+        if (rawText.length > 5 && !rawText.startsWith('[')) {
+          items.push({
+            id: `${currentSection}::${rawText.slice(0, 40)}`,
+            text: rawText,
+            section: currentSection,
+          });
+        }
+      }
+    }
+    return items;
+  }, [content]);
+
+  // Toggle milestone completion
+  const handleToggleMilestone = async (itemId) => {
+    if (isSharedView) return; // read-only
+
+    const exists = completedItems.includes(itemId);
+    const newItems = exists
+      ? completedItems.filter((i) => i !== itemId)
+      : [...completedItems, itemId];
+
+    setCompletedItems(newItems);
+
+    const total = Math.max(1, milestones.length);
+    const newProgress = Math.min(100, Math.round((newItems.length / total) * 100));
+    setProgress(newProgress);
+
+    const roadmapId = roadmapData?.id || id;
+    if (roadmapId) {
+      setSavingProgress(true);
+      try {
+        await RoadmapAPI.updateProgress(roadmapId, newItems);
+      } catch (err) {
+        console.error('Failed to sync progress:', err);
+      } finally {
+        setSavingProgress(false);
+      }
+    }
+  };
+
+  const handleShare = async () => {
+    const roadmapId = roadmapData?.id || id;
+    if (!roadmapId) {
+      toast.info('Roadmap must be generated and saved before sharing.');
+      return;
+    }
+
+    try {
+      const res = await RoadmapAPI.getShareToken(roadmapId);
+      if (res?.shareToken) {
+        const fullUrl = `${window.location.origin}/roadmap/shared/${res.shareToken}`;
+        setShareUrl(fullUrl);
+        setShowShareModal(true);
+      }
+    } catch (err) {
+      toast.error('Failed to create share link.');
+    }
+  };
+
+  const copyToClipboard = () => {
+    navigator.clipboard.writeText(shareUrl);
+    setCopiedShare(true);
+    toast.success('Share link copied to clipboard!');
+    setTimeout(() => setCopiedShare(false), 2000);
   };
 
   return (
     <div className="min-h-screen bg-bg-base text-text-primary font-outfit p-4 md:p-8">
-      <div className="w-full max-w-[1200px] mx-auto">
-        {/* Header */}
-        <div className="flex items-center justify-between mb-8 pb-5 border-b border-outline-var/25">
+      <ToastContainer toasts={toast.toasts} removeToast={toast.removeToast} />
+
+      <div className="w-full max-w-5xl mx-auto space-y-6">
+        {/* Top Header */}
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-5 border-b border-outline-var/25">
           <div className="flex items-center gap-4">
-            <button onClick={() => navigate('/dashboard')}
-              className="p-2 border border-outline-var/40 rounded-xs hover:border-primary/40 text-outline hover:text-primary transition-all">
+            <button
+              onClick={() => navigate(isSharedView ? '/' : '/dashboard')}
+              className="p-2 border border-outline-var/40 rounded-xs hover:border-primary/40 text-outline hover:text-primary transition-all"
+            >
               <ArrowLeft size={18} />
             </button>
             <div>
-              <div className="flex items-center gap-2.5 mb-1">
-                <Brain size={20} className="text-primary" />
-                <h1 className="text-2xl font-extrabold text-text-primary tracking-tight">Learning Roadmap</h1>
+              <div className="flex items-center gap-2.5">
+                <Brain size={22} className="text-primary" />
+                <h1 className="text-2xl font-syne font-extrabold text-text-primary tracking-tight">
+                  AI Career GPS
+                </h1>
+                {roadmapData?.creator && (
+                  <span className="text-xs bg-primary/10 text-primary border border-primary/20 px-2 py-0.5 rounded-full font-syne">
+                    Shared by {roadmapData.creator.name}
+                  </span>
+                )}
               </div>
-              <p className="font-syne text-[10px] tracking-[0.12em] uppercase text-outline">
-                AI-Generated · Personalized Learning Path
+              <p className="font-syne text-[10px] tracking-[0.12em] uppercase text-outline mt-0.5">
+                Context-Aware Personalized Learning Roadmap
               </p>
             </div>
           </div>
+
+          <div className="flex items-center gap-2.5">
+            {!isSharedView && (
+              <>
+                <button
+                  onClick={loadRoadmap}
+                  disabled={loading}
+                  className="px-3.5 py-2 bg-surface hover:bg-surface-mid border border-outline-var/30 text-text-muted hover:text-text-primary font-syne font-bold text-xs uppercase tracking-wider rounded-xs transition-all flex items-center gap-1.5"
+                >
+                  <RefreshCw size={13} className={loading ? 'animate-spin' : ''} /> Regenerate
+                </button>
+
+                <button
+                  onClick={handleShare}
+                  className="px-4 py-2 bg-primary text-on-primary hover:bg-secondary-bright font-syne font-bold text-xs uppercase tracking-wider rounded-xs transition-all flex items-center gap-1.5 shadow-md shadow-primary/20"
+                >
+                  <Share2 size={13} /> Share Roadmap
+                </button>
+              </>
+            )}
+
+            {isSharedView && (
+              <button
+                onClick={() => navigate('/auth')}
+                className="px-4 py-2 bg-primary text-on-primary hover:bg-secondary-bright font-syne font-bold text-xs uppercase tracking-wider rounded-xs transition-all flex items-center gap-1.5 shadow-md shadow-primary/20"
+              >
+                <Sparkles size={14} /> Create Your Own Roadmap
+              </button>
+            )}
+          </div>
         </div>
 
-        {/* Context card */}
-        <div className="bg-surface border border-outline-var/20 rounded-md p-6 mb-8">
-          <div className="flex items-start gap-4">
-            <div className="p-2.5 bg-primary/8 rounded-xs border border-primary/15">
-              <Target className="text-primary" size={20} />
+        {/* Target Meta Card */}
+        <div className="bg-surface border border-outline-var/20 rounded-md p-6 relative overflow-hidden shadow-sm">
+          <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
+            <div className="space-y-1">
+              <div className="flex items-center gap-2 text-xs text-text-muted font-syne uppercase tracking-wider">
+                <Target size={14} className="text-primary" /> Target Role
+              </div>
+              <h2 className="text-xl font-bold font-syne text-text-primary">{targetRole || 'Career Track'}</h2>
+              <div className="flex items-center gap-2 pt-1">
+                <span className="text-xs text-outline">Target Skill:</span>
+                <span className="px-2.5 py-0.5 bg-primary/10 border border-primary/30 text-primary text-xs font-bold font-syne rounded-full">
+                  {targetSkill}
+                </span>
+              </div>
             </div>
-            <div className="flex-1">
-              <p className="font-syne text-[10px] font-bold tracking-[0.12em] uppercase text-outline mb-1">Target Skill</p>
-              <div className="text-2xl font-extrabold text-text-primary tracking-tight">{decodeURIComponent(skill)}</div>
-              <div className="flex items-center gap-2 mt-2 text-sm text-text-muted">
-                <span className="text-outline">For role:</span>
-                <span className="text-primary font-semibold">{decodeURIComponent(role)}</span>
+
+            {/* Progress Gauge */}
+            <div className="bg-surface-mid border border-outline-var/30 rounded-md p-4 min-w-[240px] space-y-2">
+              <div className="flex items-center justify-between text-xs font-syne font-bold">
+                <span className="uppercase tracking-wider text-text-muted flex items-center gap-1.5">
+                  <BookmarkCheck size={14} className="text-secondary-bright" /> Milestone Progress
+                </span>
+                <span className="text-primary">{progress}%</span>
+              </div>
+              <div className="w-full h-2 bg-bg-base rounded-full overflow-hidden border border-outline-var/20">
+                <div
+                  className="h-full bg-gradient-to-r from-primary to-secondary-bright transition-all duration-500 rounded-full"
+                  style={{ width: `${progress}%` }}
+                />
+              </div>
+              <div className="flex items-center justify-between text-[10px] text-outline font-mono">
+                <span>{completedItems.length} completed</span>
+                <span>{savingProgress ? 'Saving...' : `${milestones.length} milestones`}</span>
               </div>
             </div>
           </div>
         </div>
 
+        {/* Loading State */}
         {loading && (
-          <div className="flex flex-col items-center justify-center py-20 space-y-5">
-            <Loader2 className="animate-spin text-primary" size={48} />
-            <div className="text-center">
-              <p className="text-lg font-bold text-text-primary mb-1">Generating your roadmap...</p>
-              <p className="text-sm text-outline">AI is analyzing the optimal learning path for you.</p>
+          <div className="flex flex-col items-center justify-center py-20 space-y-4 bg-surface border border-outline-var/20 rounded-md">
+            <Loader2 className="animate-spin text-primary" size={44} />
+            <div className="text-center space-y-1">
+              <h3 className="font-syne font-bold text-lg text-text-primary">Generating AI Learning GPS...</h3>
+              <p className="text-xs text-text-muted max-w-sm mx-auto">
+                Synthesizing verified background skills, role requirements, and fast-tracking bypassed foundations.
+              </p>
             </div>
           </div>
         )}
 
+        {/* Error State */}
         {error && !loading && (
-          <div className="bg-surface border border-error/30 rounded-md p-6 shadow-xl shadow-error-container/5 relative overflow-hidden">
-            <div className="absolute top-0 left-0 w-1 h-full bg-error" />
-            <div className="text-lg font-bold text-error mb-2">{errorType === 'SKILL_NOT_VERIFIED' ? 'Verification Required' : 'Generation Failed'}</div>
-            <p className="text-text-muted text-sm mb-5 leading-relaxed">{error}</p>
-            
-            {errorType === 'SKILL_NOT_VERIFIED' ? (
-               <button onClick={() => navigate('/verify-skill')}
-                className="inline-flex items-center gap-2 px-5 py-2.5 bg-gradient-to-r from-primary to-primary-container text-on-primary hover:opacity-90 transition-all rounded-xs font-syne font-bold text-xs uppercase tracking-wide">
-                <Target size={14} /> Go to Skill Verifier
+          <div className="bg-surface border border-error/30 rounded-md p-6 space-y-4 shadow-xl">
+            <h3 className="text-base font-bold text-error font-syne uppercase tracking-wider">
+              Roadmap Generation Notice
+            </h3>
+            <p className="text-xs text-text-muted leading-relaxed">{error}</p>
+            <div className="flex items-center gap-3">
+              <button
+                onClick={loadRoadmap}
+                className="px-4 py-2 bg-error/10 hover:bg-error/20 border border-error/30 text-error font-syne font-bold text-xs uppercase tracking-wider rounded-xs flex items-center gap-1.5"
+              >
+                <RefreshCw size={12} /> Retry Generation
               </button>
-            ) : (
-              <button onClick={fetchRoadmap}
-                className="inline-flex items-center gap-2 px-4 py-2 bg-error-container/20 border border-error/30 text-error hover:bg-error hover:text-on-primary transition-all rounded-xs font-syne font-bold text-xs uppercase tracking-wide">
-                <RefreshCw size={12} /> Try Again
+              <button
+                onClick={() => navigate('/verify-skill')}
+                className="px-4 py-2 bg-surface hover:bg-surface-mid border border-outline-var/30 text-text-primary font-syne font-bold text-xs uppercase tracking-wider rounded-xs flex items-center gap-1.5"
+              >
+                <Layers size={12} /> Verify Skills First
               </button>
-            )}
+            </div>
           </div>
         )}
 
-        {roadmap && !loading && (
-          <div className="bg-surface border border-outline-var/20 rounded-md p-8 relative overflow-hidden">
-            <div className="absolute top-0 left-0 w-1 h-full bg-gradient-to-b from-primary via-primary-container to-[#29a195]" />
-            <div className="flex items-center gap-3 mb-6 pb-5 border-b border-outline-var/20">
-              <CheckCircle className="text-secondary-bright" size={20} />
-              <h2 className="text-xl font-bold text-text-primary tracking-tight">Your Personalized Roadmap</h2>
+        {/* Interactive Content Grid */}
+        {content && !loading && (
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+            {/* Left: Rendered Markdown Curriculum */}
+            <div className="lg:col-span-8 bg-surface border border-outline-var/20 rounded-md p-6 md:p-8 space-y-6">
+              <div className="flex items-center gap-2 pb-4 border-b border-outline-var/20">
+                <CheckCircle className="text-secondary-bright" size={18} />
+                <h3 className="font-syne font-bold text-sm uppercase tracking-wider text-text-primary">
+                  Structured Curriculum
+                </h3>
+              </div>
+
+              <div className="prose prose-invert max-w-none text-xs leading-relaxed space-y-4">
+                <ReactMarkdown
+                  components={{
+                    h1: ({ ...props }) => (
+                      <h1 className="text-xl font-extrabold text-primary font-syne mt-4 mb-2 tracking-tight" {...props} />
+                    ),
+                    h2: ({ ...props }) => (
+                      <h2 className="text-base font-bold text-secondary-bright font-syne mt-6 mb-2 flex items-center gap-2 border-b border-outline-var/15 pb-2" {...props}>
+                        <Calendar size={15} className="text-primary" /> {props.children}
+                      </h2>
+                    ),
+                    h3: ({ ...props }) => (
+                      <h3 className="text-sm font-bold text-text-primary font-syne mt-4 mb-1" {...props} />
+                    ),
+                    p: ({ ...props }) => (
+                      <p className="text-text-muted leading-relaxed text-xs" {...props} />
+                    ),
+                    ul: ({ ...props }) => (
+                      <ul className="space-y-2 my-2 ml-2" {...props} />
+                    ),
+                    li: ({ ...props }) => (
+                      <li className="text-text-muted flex items-start gap-2 text-xs">
+                        <Circle className="text-primary/60 mt-1 shrink-0" size={5} fill="currentColor" />
+                        <span>{props.children}</span>
+                      </li>
+                    ),
+                    code: ({ inline, ...props }) =>
+                      inline ? (
+                        <code className="bg-surface-mid text-primary font-mono text-[11px] px-1.5 py-0.5 rounded-xs border border-outline-var/30" {...props} />
+                      ) : (
+                        <code className="block bg-surface-mid text-text-primary font-mono text-[11px] p-3 my-2 rounded-xs border border-outline-var/25 overflow-x-auto" {...props} />
+                      ),
+                    a: ({ ...props }) => (
+                      <a className="text-primary hover:text-secondary-bright underline flex-inline items-center gap-1 font-semibold" target="_blank" rel="noopener noreferrer" {...props}>
+                        {props.children} <ExternalLink size={10} className="inline ml-0.5" />
+                      </a>
+                    ),
+                  }}
+                >
+                  {content}
+                </ReactMarkdown>
+              </div>
             </div>
 
-            <div className="prose prose-invert max-w-none">
-              <ReactMarkdown
-                components={{
-                  h1: ({ ...props }) => <h1 className="text-2xl font-extrabold text-primary font-outfit mb-4 mt-8 first:mt-0 tracking-tight" {...props} />,
-                  h2: ({ ...props }) => <h2 className="text-xl font-bold text-secondary-bright font-syne mb-3 mt-6 flex items-center gap-2" {...props}><Calendar size={16} />{props.children}</h2>,
-                  h3: ({ ...props }) => <h3 className="text-base font-bold text-[#bec6e0] mb-2 mt-4" {...props} />,
-                  p: ({ ...props }) => <p className="text-text-muted leading-relaxed mb-4 text-sm" {...props} />,
-                  ul: ({ ...props }) => <ul className="space-y-2 my-4 ml-4" {...props} />,
-                  li: ({ ...props }) => <li className="text-text-muted flex items-start gap-2 text-sm" {...props}><Circle className="text-primary/50 mt-1.5 shrink-0" size={6} fill="currentColor" /><span>{props.children}</span></li>,
-                  code: ({ inline, ...props }) => inline
-                    ? <code className="bg-surface-mid text-secondary-bright px-2 py-0.5 rounded-xs text-sm font-mono border border-outline-var/30" {...props} />
-                    : <code className="block bg-surface-mid text-secondary-bright p-4 my-4 overflow-x-auto font-mono text-sm border border-outline-var/20 rounded-xs" {...props} />,
-                  strong: ({ ...props }) => <strong className="text-text-primary font-semibold" {...props} />,
-                  blockquote: ({ ...props }) => <blockquote className="border-l-2 border-primary/40 pl-4 py-1 my-4 bg-primary/5 text-[#bec6e0] italic text-sm" {...props} />,
-                  a: ({ ...props }) => <a className="text-primary hover:text-secondary-bright underline transition-colors" target="_blank" rel="noopener noreferrer" {...props} />,
-                }}
-              >
-                {roadmap}
-              </ReactMarkdown>
-            </div>
+            {/* Right: Interactive Milestone Checklist */}
+            <div className="lg:col-span-4 space-y-4">
+              <div className="bg-surface border border-outline-var/20 rounded-md p-5 space-y-4 sticky top-6">
+                <div className="flex items-center justify-between pb-3 border-b border-outline-var/20">
+                  <div className="flex items-center gap-2">
+                    <CheckSquare size={16} className="text-primary" />
+                    <h3 className="font-syne font-bold text-xs uppercase tracking-wider text-text-primary">
+                      Milestone Checklist
+                    </h3>
+                  </div>
+                  <span className="text-[10px] font-mono text-text-muted">
+                    {completedItems.length}/{milestones.length} Done
+                  </span>
+                </div>
 
-            <div className="mt-8 pt-5 border-t border-outline-var/20 flex flex-col sm:flex-row gap-3">
-              <button onClick={() => navigate('/dashboard')}
-                className="flex-1 py-3 bg-primary/8 border border-primary/20 text-primary hover:bg-primary hover:text-on-primary transition-all rounded-xs font-syne font-bold text-xs uppercase tracking-[0.1em]">
-                Back to Dashboard
-              </button>
-              <button onClick={fetchRoadmap}
-                className="flex-1 py-3 bg-secondary/8 border border-secondary/20 text-secondary hover:bg-[#29a195] hover:text-on-secondary transition-all rounded-xs font-syne font-bold text-xs uppercase tracking-[0.1em]">
-                Regenerate
-              </button>
+                {milestones.length === 0 ? (
+                  <p className="text-xs text-text-muted italic py-4 text-center">
+                    Checklist items will appear as topics are parsed.
+                  </p>
+                ) : (
+                  <div className="space-y-2.5 max-h-[500px] overflow-y-auto pr-1">
+                    {milestones.map((m) => {
+                      const isDone = completedItems.includes(m.id);
+                      return (
+                        <div
+                          key={m.id}
+                          onClick={() => handleToggleMilestone(m.id)}
+                          className={`p-3 rounded-xs border transition-all cursor-pointer flex items-start gap-2.5 ${
+                            isDone
+                              ? 'bg-primary/5 border-primary/30 text-text-muted line-through'
+                              : 'bg-surface-mid border-outline-var/20 hover:border-primary/40 text-text-primary'
+                          }`}
+                        >
+                          <button className="mt-0.5 shrink-0 text-primary">
+                            {isDone ? <CheckSquare size={14} /> : <Square size={14} className="text-outline" />}
+                          </button>
+                          <div className="text-xs leading-snug">
+                            <span className="text-[9px] font-syne font-bold uppercase tracking-wider text-outline block mb-0.5">
+                              {m.section}
+                            </span>
+                            <span>{m.text}</span>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
+              </div>
             </div>
           </div>
         )}
       </div>
+
+      {/* Share Modal */}
+      {showShareModal && (
+        <div className="fixed inset-0 bg-black/70 backdrop-blur-xs flex items-center justify-center p-4 z-50">
+          <div className="bg-surface border border-outline-var/30 p-6 rounded-md max-w-md w-full space-y-4 shadow-2xl">
+            <div className="flex items-center justify-between">
+              <h3 className="font-syne font-bold text-base text-text-primary flex items-center gap-2">
+                <Share2 size={16} className="text-primary" /> Share Career Roadmap
+              </h3>
+              <button onClick={() => setShowShareModal(false)} className="text-outline hover:text-text-primary">
+                ✕
+              </button>
+            </div>
+            <p className="text-xs text-text-muted">
+              Anyone with this link can view your personalized learning roadmap in clean read-only mode:
+            </p>
+            <div className="flex items-center gap-2 bg-surface-mid border border-outline-var/30 p-2 rounded-xs">
+              <input
+                readOnly
+                value={shareUrl}
+                className="bg-transparent text-xs text-text-primary w-full outline-none font-mono"
+              />
+              <button
+                onClick={copyToClipboard}
+                className="px-3 py-1.5 bg-primary text-on-primary font-syne font-bold text-xs uppercase rounded-xs shrink-0 flex items-center gap-1"
+              >
+                {copiedShare ? <Check size={12} /> : <Copy size={12} />}
+                {copiedShare ? 'Copied' : 'Copy'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

@@ -2,9 +2,11 @@ import { useEffect, useState, useCallback } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import API from '../api';
+import RoadmapAPI from '../features/roadmap/roadmapAPI';
 import {
   AlertTriangle, CheckCircle,
-  Activity, Users, X, Brain, BarChart2, ShieldAlert
+  Activity, Users, X, Brain, BarChart2, ShieldAlert,
+  BookmarkCheck, ArrowRight, Sparkles, Target
 } from 'lucide-react';
 import Navbar from '../shared/components/Navbar';
 import SEOHead from '../shared/components/SEOHead';
@@ -81,6 +83,7 @@ export default function Dashboard({ user, onLogout }) {
   const [selectedMissingSkill, setSelectedMissingSkill] = useState(null);
   const [verifySkillModal, setVerifySkillModal] = useState(null);
   const [activities, setActivities] = useState([]);
+  const [savedRoadmaps, setSavedRoadmaps] = useState([]);
   const [analyzing, setAnalyzing] = useState(false);
 
   useEffect(() => {
@@ -96,15 +99,17 @@ export default function Dashboard({ user, onLogout }) {
   const fetchData = useCallback(async () => {
     if (!currentUser?.id) return;
     try {
-      const [rolesRes, skillsRes, activityRes] = await Promise.all([
+      const [rolesRes, skillsRes, activityRes, roadmapsRes] = await Promise.all([
         API.get('/skills/roles'),
         API.get('/skills/list'),
         API.get(`/activity/${currentUser.id}`),
+        RoadmapAPI.getSavedRoadmaps().catch(() => []),
       ]);
       const catalogue = skillsRes.data || [];
       setRoles(rolesRes.data || []);
       setAllSkills(catalogue);
       setActivities(activityRes.data || []);
+      setSavedRoadmaps(Array.isArray(roadmapsRes) ? roadmapsRes : []);
 
       const profileRes = await API.get('/users/me');
       if (profileRes.data?.skills) {
@@ -347,6 +352,52 @@ export default function Dashboard({ user, onLogout }) {
                 </div>
               )}
             </div>
+
+            {/* My Career Roadmaps panel */}
+            {savedRoadmaps.length > 0 && (
+              <div className="border border-outline-var/30 bg-surface rounded-xl p-6 shadow-xl space-y-4">
+                <div className="flex items-center justify-between">
+                  <h3 className="font-syne text-[10px] font-bold tracking-widest uppercase text-primary flex items-center gap-2">
+                    <Brain size={13} /> Active Learning Roadmaps ({savedRoadmaps.length})
+                  </h3>
+                </div>
+
+                <div className="space-y-3 max-h-56 overflow-y-auto pr-1">
+                  {savedRoadmaps.map((rm) => (
+                    <div
+                      key={rm.id}
+                      onClick={() => navigate(`/roadmap/${rm.id}`)}
+                      className="p-3 bg-surface-mid border border-outline-var/25 hover:border-primary/40 rounded-lg cursor-pointer transition-all flex items-center justify-between gap-3 group"
+                    >
+                      <div className="space-y-1 min-w-0">
+                        <div className="flex items-center gap-2">
+                          <span className="text-xs font-bold text-text-primary group-hover:text-primary transition-colors truncate">
+                            {rm.targetSkill}
+                          </span>
+                          <span className="text-[9px] font-syne uppercase bg-primary/10 text-primary px-2 py-0.5 rounded-full border border-primary/20">
+                            {rm.targetRole}
+                          </span>
+                        </div>
+                        <div className="flex items-center gap-2 text-[10px] text-text-muted">
+                          <div className="w-24 h-1.5 bg-bg-base rounded-full overflow-hidden border border-outline-var/20">
+                            <div
+                              className="h-full bg-secondary-bright rounded-full"
+                              style={{ width: `${rm.progress || 0}%` }}
+                            />
+                          </div>
+                          <span>{rm.progress || 0}% complete</span>
+                        </div>
+                      </div>
+
+                      <div className="flex items-center gap-1 text-primary text-xs font-syne font-bold uppercase tracking-wider shrink-0 group-hover:translate-x-0.5 transition-transform">
+                        <span>Continue</span>
+                        <ArrowRight size={12} />
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
 
             {/* Activity feed panel */}
             <div className="border border-outline-var/30 bg-surface rounded-xl p-6 shadow-xl">
