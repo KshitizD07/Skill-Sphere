@@ -22,6 +22,28 @@ function timeAgo(date) {
   return `${Math.floor(s/86400)}d ago`;
 }
 
+function getGithubUrl(handleOrUrl) {
+  if (!handleOrUrl) return '';
+  const clean = handleOrUrl
+    .replace(/^https?:\/\//, '')
+    .replace(/^www\./, '')
+    .replace(/^github\.com\//, '')
+    .replace(/\/$/, '')
+    .trim();
+  return clean ? `https://github.com/${clean}` : '';
+}
+
+function getLinkedinUrl(handleOrUrl) {
+  if (!handleOrUrl) return '';
+  const clean = handleOrUrl
+    .replace(/^https?:\/\//, '')
+    .replace(/^www\./, '')
+    .replace(/^linkedin\.com\//, '')
+    .replace(/\/$/, '')
+    .trim();
+  return clean ? `https://linkedin.com/${clean.startsWith('in/') ? clean : `in/${clean}`}` : '';
+}
+
 // Fixed Avatar with explicit sizes instead of dynamic Tailwind classes
 function Avatar({ src, name, size = 10 }) {
   const sizeMap = {
@@ -67,7 +89,6 @@ function RecruiterView({ user }) {
   const allSkills = user.skills || [];
   // eslint-disable-next-line
   const recentActivity = user.activities?.some(a => (Date.now() - new Date(a.createdAt).getTime()) < 30*24*60*60*1000);
-  const cleanUrl = (url) => url?.replace(/^https?:\/\//, '');
 
   return (
     <div className="bg-surface border border-error/30 p-8 relative overflow-hidden">
@@ -120,12 +141,12 @@ function RecruiterView({ user }) {
         <h3 className="text-outline font-bold font-syne tracking-wide text-xs mb-3">EVIDENCE_LINKS</h3>
         <div className="flex flex-wrap gap-3">
           {user.github && (
-            <a href={`https://${cleanUrl(user.github)}`} target="_blank" rel="noreferrer" className="flex items-center gap-2 px-3 py-2 bg-surface-mid border border-outline-var/40 hover:border-primary text-text-muted hover:text-text-primary text-xs font-syne tracking-wide transition">
+            <a href={getGithubUrl(user.github)} target="_blank" rel="noreferrer" className="flex items-center gap-2 px-3 py-2 bg-surface-mid border border-outline-var/40 hover:border-primary text-text-muted hover:text-text-primary text-xs font-syne tracking-wide transition">
               <Github size={12} /> GITHUB <ExternalLink size={10} />
             </a>
           )}
           {user.linkedin && (
-            <a href={`https://${cleanUrl(user.linkedin)}`} target="_blank" rel="noreferrer" className="flex items-center gap-2 px-3 py-2 bg-surface-mid border border-outline-var/40 hover:border-blue-400 text-text-muted hover:text-primary-container text-xs font-syne tracking-wide transition">
+            <a href={getLinkedinUrl(user.linkedin)} target="_blank" rel="noreferrer" className="flex items-center gap-2 px-3 py-2 bg-surface-mid border border-outline-var/40 hover:border-blue-400 text-text-muted hover:text-primary-container text-xs font-syne tracking-wide transition">
               <Linkedin size={12} /> LINKEDIN <ExternalLink size={10} />
             </a>
           )}
@@ -359,8 +380,6 @@ export default function UserProfile() {
 
   const currentUser = JSON.parse(localStorage.getItem('user_data') || '{}');
   const isOwner     = currentUser.id === id;
-
-  const cleanUrl = (url) => url?.replace(/^https?:\/\//, '');
 
   const fetchPosts = useCallback(() => {
     API.get(`/posts/user/${id}`).then(res => {
@@ -598,13 +617,13 @@ export default function UserProfile() {
 
               <div className="grid grid-cols-2 gap-2">
                 {user.github && (
-                  <a href={`https://${cleanUrl(user.github)}`} target="_blank" rel="noreferrer"
+                  <a href={getGithubUrl(user.github)} target="_blank" rel="noreferrer"
                     className="p-3 bg-surface border border-outline-var/40 hover:border-primary text-text-muted hover:text-text-primary flex items-center justify-center gap-2 transition">
                     <Github size={16} /> GITHUB
                   </a>
                 )}
                 {user.linkedin && (
-                  <a href={`https://${cleanUrl(user.linkedin)}`} target="_blank" rel="noreferrer"
+                  <a href={getLinkedinUrl(user.linkedin)} target="_blank" rel="noreferrer"
                     className="p-3 bg-surface border border-outline-var/40 hover:border-blue-400 text-text-muted hover:text-primary-container flex items-center justify-center gap-2 transition">
                     <Linkedin size={16} /> NETWORK
                   </a>
