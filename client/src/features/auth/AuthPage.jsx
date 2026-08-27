@@ -52,8 +52,8 @@ export default function AuthPage() {
     <div className={cardBase}>
       <div className={panelBase}>
         <div className="text-center mb-6">
-          <div className="w-12 h-12 bg-primary/10 border border-primary/20 rounded-md flex items-center justify-center mx-auto mb-3">
-            <Shield size={22} className="text-primary" />
+          <div className="w-14 h-14 border border-outline-var/30 rounded-md flex items-center justify-center mx-auto mb-4 overflow-hidden">
+            <img src="/logo.jpg" className="w-full h-full object-cover" alt="SkillSphere Logo" />
           </div>
           <h1 className="text-xl font-extrabold text-text-primary tracking-tight mb-1">
             {isRegister ? 'Join SkillSphere' : 'Sign In to SkillSphere'}
