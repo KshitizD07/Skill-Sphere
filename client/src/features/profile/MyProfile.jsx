@@ -7,6 +7,7 @@ import {
 } from 'lucide-react';
 import ProfileAPI from './profileAPI';
 import SkillAPI from '../skills/skillAPI';
+import BaseAPI from '../../services/BaseAPI';
 import CollegeSelector from './CollegeSelector';
 import SkillVerifier from '../skills/SkillVerifier';
 import Navbar from '../../shared/components/Navbar';
@@ -82,6 +83,61 @@ export default function MyProfile({ user, onUserUpdate }) {
   const [isDeleting, setIsDeleting] = useState(false);
   const avatarInputRef = useRef(null);
 
+  // Admin Escalation State
+  const [adminStatus, setAdminStatus] = useState({ isWhitelisted: false, isEscalated: false });
+  const [showAdminModal, setShowAdminModal] = useState(false);
+  const [adminPasscode, setAdminPasscode] = useState('');
+  const [escalating, setEscalating] = useState(false);
+
+  const loadAdminStatus = useCallback(async () => {
+    try {
+      const res = await BaseAPI.get('/auth/admin-status');
+      const data = res?.data || res;
+      if (data) setAdminStatus(data);
+    } catch (err) {
+      console.error('Failed to load admin status', err);
+    }
+  }, []);
+
+  const handleEscalate = async (e) => {
+    e.preventDefault();
+    if (!adminPasscode.trim()) return;
+    setEscalating(true);
+    try {
+      const res = await BaseAPI.post('/auth/escalate', { adminKey: adminPasscode });
+      const data = res?.data || res;
+      if (data?.user) {
+        localStorage.setItem('user_data', JSON.stringify(data.user));
+        if (data.token) localStorage.setItem('ss_token', data.token);
+        onUserUpdate?.(data.user);
+        toast.success('Admin privileges escalated successfully!');
+        setShowAdminModal(false);
+        setAdminPasscode('');
+        navigate('/admin');
+      }
+    } catch (err) {
+      toast.error(err?.response?.data?.message || err.message || 'Escalation failed');
+    } finally {
+      setEscalating(false);
+    }
+  };
+
+  const handleDemote = async () => {
+    try {
+      const res = await BaseAPI.post('/auth/demote', {});
+      const data = res?.data || res;
+      if (data?.user) {
+        localStorage.setItem('user_data', JSON.stringify(data.user));
+        if (data.token) localStorage.setItem('ss_token', data.token);
+        onUserUpdate?.(data.user);
+        toast.info('Session demoted to standard user mode');
+        setAdminStatus((prev) => ({ ...prev, isEscalated: false }));
+      }
+    } catch (err) {
+      toast.error('Failed to demote session');
+    }
+  };
+
   // ── Data loading ──────────────────────────────────────────────────────────
   const loadUserData = useCallback(async () => {
     try {
@@ -114,7 +170,7 @@ export default function MyProfile({ user, onUserUpdate }) {
 
   useEffect(() => {
     if (activeUser?.id) {
-      Promise.all([loadUserData(), loadAllSkills(), loadCompleteness()])
+      Promise.all([loadUserData(), loadAllSkills(), loadCompleteness(), loadAdminStatus()])
         .finally(() => setInitialLoadDone(true));
     } else { setInitialLoadDone(true); }
   // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -304,6 +360,44 @@ export default function MyProfile({ user, onUserUpdate }) {
 
             {/* Completeness */}
             {completeness && <CompletenessBar score={completeness.score} checks={completeness.checks} />}
+
+            {/* Admin Privilege Escalation Panel (Whitelisted Accounts Only) */}
+            {adminStatus.isWhitelisted && (
+              <div className="bg-surface border border-primary/30 rounded-md p-5 space-y-3 shadow-md">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2 text-xs font-syne font-bold text-primary uppercase tracking-wider">
+                    <Lock size={14} className="text-primary" /> Operator Access
+                  </div>
+                  {adminStatus.isEscalated && (
+                    <span className="px-2 py-0.5 bg-secondary-bright/10 text-secondary-bright border border-secondary-bright/30 text-[9px] font-syne font-bold rounded-full uppercase">
+                      Active Admin
+                    </span>
+                  )}
+                </div>
+
+                <p className="text-xs text-text-muted leading-relaxed">
+                  {adminStatus.isEscalated
+                    ? 'You currently hold active system administrator privileges. Your session will automatically log out and demote after 15 minutes of complete inactivity.'
+                    : 'Your account is whitelisted for administrative access. Enter your security passphrase to elevate privileges.'}
+                </p>
+
+                {adminStatus.isEscalated ? (
+                  <button
+                    onClick={handleDemote}
+                    className="w-full py-2 bg-error/10 hover:bg-error/20 border border-error/30 text-error font-syne font-bold text-xs uppercase tracking-wider rounded-xs transition-colors flex items-center justify-center gap-1.5"
+                  >
+                    Demote Admin Privileges
+                  </button>
+                ) : (
+                  <button
+                    onClick={() => setShowAdminModal(true)}
+                    className="w-full py-2 bg-primary text-on-primary hover:bg-secondary-bright font-syne font-bold text-xs uppercase tracking-wider rounded-xs transition-colors flex items-center justify-center gap-1.5 shadow-md shadow-primary/20"
+                  >
+                    <Lock size={13} /> Elevate to Admin Mode
+                  </button>
+                )}
+              </div>
+            )}
 
             {/* Skills */}
             <div className="bg-surface border border-outline-var/20 rounded-md p-6 relative group hover:border-secondary/15 transition-colors">
@@ -530,6 +624,49 @@ export default function MyProfile({ user, onUserUpdate }) {
               </button>
             </div>
           </div>
+        </div>
+      )}
+
+      {/* Admin Security Key Passcode Modal */}
+      {showAdminModal && (
+        <div className="fixed inset-0 bg-black/70 backdrop-blur-xs flex items-center justify-center p-4 z-50">
+          <form onSubmit={handleEscalate} className="bg-surface border border-outline-var/30 p-6 rounded-md max-w-sm w-full space-y-4 shadow-2xl font-syne">
+            <div className="flex items-center justify-between">
+              <h3 className="font-bold text-base text-text-primary flex items-center gap-2">
+                <Shield size={18} className="text-primary" /> Security Key Required
+              </h3>
+              <button type="button" onClick={() => setShowAdminModal(false)} className="text-outline hover:text-text-primary">
+                <X size={16} />
+              </button>
+            </div>
+            <p className="text-xs text-text-muted font-outfit">
+              Enter your master Admin Security Passphrase to activate platform operator privileges:
+            </p>
+            <input
+              type="password"
+              value={adminPasscode}
+              onChange={(e) => setAdminPasscode(e.target.value)}
+              placeholder="Enter Admin Security Key..."
+              className="w-full bg-surface-mid border border-outline-var/40 rounded-xs p-2.5 text-xs text-text-primary outline-none focus:border-primary/60 font-mono"
+              autoFocus
+            />
+            <div className="flex items-center justify-end gap-2 pt-2">
+              <button
+                type="button"
+                onClick={() => setShowAdminModal(false)}
+                className="px-4 py-2 bg-surface-mid border border-outline-var/30 text-text-muted text-xs font-bold uppercase rounded-xs"
+              >
+                Cancel
+              </button>
+              <button
+                type="submit"
+                disabled={escalating || !adminPasscode.trim()}
+                className="px-4 py-2 bg-primary text-on-primary text-xs font-bold uppercase rounded-xs hover:bg-secondary-bright transition-colors disabled:opacity-50"
+              >
+                {escalating ? 'Verifying...' : 'Elevate Session'}
+              </button>
+            </div>
+          </form>
         </div>
       )}
     </div>
