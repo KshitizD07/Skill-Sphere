@@ -273,14 +273,19 @@ router.get('/github', (req, res) => {
   const role = req.query.role || 'STUDENT';
   const action = req.query.action || 'login';
   const userToken = req.query.token || req.cookies?.ss_token || null;
+  const targetUser = req.query.targetUser || req.query.github || null;
 
-  const statePayload = { role, action, token: userToken };
+  const statePayload = { role, action, token: userToken, targetUser };
   const stateStr = Buffer.from(JSON.stringify(statePayload)).toString('base64url');
 
   const backendUrl = req.protocol + '://' + req.get('host');
   const cb = `${backendUrl}/api/auth/github/callback`;
   const scope = 'repo read:user user:email';
-  const url = `https://github.com/login/oauth/authorize?client_id=${process.env.GITHUB_CLIENT_ID}&redirect_uri=${encodeURIComponent(cb)}&scope=${encodeURIComponent(scope)}&state=${stateStr}`;
+  let url = `https://github.com/login/oauth/authorize?client_id=${process.env.GITHUB_CLIENT_ID}&redirect_uri=${encodeURIComponent(cb)}&scope=${encodeURIComponent(scope)}&state=${stateStr}`;
+  if (targetUser) {
+    const cleanUser = targetUser.replace(/^https?:\/\//, '').replace(/^github\.com\//, '').replace(/\/$/, '').trim();
+    if (cleanUser) url += `&login=${encodeURIComponent(cleanUser)}`;
+  }
   res.redirect(url);
 });
 
@@ -295,6 +300,7 @@ router.get('/github/callback', asyncHandler(async (req, res) => {
   let role = 'STUDENT';
   let action = 'login';
   let linkingUserId = null;
+  let targetUser = null;
 
   if (rawState) {
     try {
@@ -302,6 +308,7 @@ router.get('/github/callback', asyncHandler(async (req, res) => {
       const stateObj = JSON.parse(decodedStr);
       role = stateObj.role || 'STUDENT';
       action = stateObj.action || 'login';
+      targetUser = stateObj.targetUser || null;
       if (stateObj.token) {
         try {
           const decoded = jwt.verify(stateObj.token, process.env.JWT_SECRET);
@@ -352,6 +359,17 @@ router.get('/github/callback', asyncHandler(async (req, res) => {
 
   // Handle Account Linking case
   if (action === 'link' && linkingUserId) {
+    // Check for target user mismatch
+    if (targetUser) {
+      const cleanTarget = targetUser.replace(/^https?:\/\//, '').replace(/^github\.com\//, '').replace(/\/$/, '').trim().toLowerCase();
+      const actualLogin = (userData.login || '').trim().toLowerCase();
+      if (cleanTarget && actualLogin && cleanTarget !== actualLogin) {
+        return res.redirect(
+          `${frontendUrl}/my-profile?error=GithubAccountMismatch&expected=${encodeURIComponent(cleanTarget)}&actual=${encodeURIComponent(userData.login)}`
+        );
+      }
+    }
+
     await prisma.user.update({
       where: { id: linkingUserId },
       data: {

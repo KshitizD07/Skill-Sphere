@@ -186,7 +186,12 @@ export default function MyProfile({ user, onUserUpdate }) {
 
   const handleConnectGithub = () => {
     const token = localStorage.getItem('ss_token') || '';
-    window.location.href = `${API_BASE_URL}/auth/github?action=link&token=${encodeURIComponent(token)}`;
+    const target = (formData.github || '').replace(/^https?:\/\//, '').replace(/^github\.com\//, '').replace(/\/$/, '').trim();
+    let url = `${API_BASE_URL}/auth/github?action=link&token=${encodeURIComponent(token)}`;
+    if (target) {
+      url += `&targetUser=${encodeURIComponent(target)}`;
+    }
+    window.location.href = url;
   };
 
   useEffect(() => {
@@ -195,6 +200,11 @@ export default function MyProfile({ user, onUserUpdate }) {
       toast.success('GitHub account authorized successfully!');
       window.history.replaceState({}, document.title, window.location.pathname);
       loadUserData();
+    } else if (urlParams.get('error') === 'GithubAccountMismatch') {
+      const expected = urlParams.get('expected') || '';
+      const actual = urlParams.get('actual') || '';
+      toast.error(`Account Mismatch: Authorized as @${actual}, but target profile is @${expected}. Please switch GitHub accounts in your browser.`);
+      window.history.replaceState({}, document.title, window.location.pathname);
     }
   }, [loadUserData]);
 
