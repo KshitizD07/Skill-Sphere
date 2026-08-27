@@ -15,28 +15,7 @@ export default defineConfig({
     chunkSizeWarningLimit: 1000,
     sourcemap: false,
     cssCodeSplit: true,
-    target: 'es2020',
-    rollupOptions: {
-      output: {
-        manualChunks(id) {
-          if (id.includes('node_modules')) {
-            if (id.includes('react') || id.includes('react-dom') || id.includes('react-router')) {
-              return 'vendor-react';
-            }
-            if (id.includes('lucide-react')) {
-              return 'vendor-icons';
-            }
-            if (id.includes('three') || id.includes('@react-three')) {
-              return 'vendor-3d';
-            }
-            if (id.includes('framer-motion')) {
-              return 'vendor-animation';
-            }
-            return 'vendor-others';
-          }
-        }
-      }
-    }
+    target: 'es2020'
   },
 
   server: {
