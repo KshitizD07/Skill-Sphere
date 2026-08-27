@@ -48,16 +48,17 @@ export default function SquadManage() {
     } finally {
       setLoading(false);
     }
-  }, [id, toast]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [id]);
 
   // Load N.E.X.U.S. smart recommendations for slot
-  const loadRecommendations = useCallback(async () => {
-    if (!squad?.slots) return;
+  const loadRecommendations = useCallback(async (slots) => {
+    if (!slots || !slots.length) return;
     setLoadingRecs(true);
     const recMap = {};
     try {
       await Promise.all(
-        squad.slots.map(async (slot) => {
+        slots.map(async (slot) => {
           try {
             const recs = await SquadAPI.getSlotRecommendations(id, slot.id);
             if (Array.isArray(recs)) {
@@ -76,17 +77,18 @@ export default function SquadManage() {
     } finally {
       setLoadingRecs(false);
     }
-  }, [id, squad?.slots]);
+  }, [id]);
 
   useEffect(() => {
     loadSquad();
-  }, [loadSquad]);
+  }, [id, loadSquad]);
 
   useEffect(() => {
-    if (squad) {
-      loadRecommendations();
+    if (squad?.slots) {
+      loadRecommendations(squad.slots);
     }
-  }, [squad, loadRecommendations]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [squad?.id, loadRecommendations]);
 
   const handleAction = async (applicationId, status) => {
     setActionLoading(applicationId);

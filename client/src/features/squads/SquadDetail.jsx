@@ -62,11 +62,12 @@ export default function SquadDetail() {
     } finally {
       setLoading(false);
     }
-  }, [id, currentUser?.id, toast]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [id, currentUser?.id]);
 
   useEffect(() => {
     loadSquad();
-  }, [loadSquad]);
+  }, [id, loadSquad]);
 
   const handleApply = async () => {
     if (!selectedSlot) return toast.error('Please select a role slot to apply for.');

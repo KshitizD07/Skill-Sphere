@@ -451,7 +451,8 @@ export default function MissionBoard() {
     } finally {
       setLoading(false);
     }
-  }, [eventFilter, statusFilter, skillFilter, searchQuery, toast]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [eventFilter, statusFilter, skillFilter, searchQuery]);
 
   useEffect(() => {
     const timer = setTimeout(() => {
