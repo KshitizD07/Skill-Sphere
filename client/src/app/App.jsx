@@ -81,35 +81,12 @@ function App() {
     window.location.replace('/');
   };
 
-  // ── Quality Control Nuke ──────────────────────────────────────────────────
-  // If user tries to bypass profile setup without linking GitHub, nuke account
+  // GitHub linking check (non-destructive)
   useEffect(() => {
-    // Wait until auth is fully verified by the server AND we have a user
     if (!authChecked || !user) return;
-    
-    // We only enforce github once the profile has loaded completely from the server, 
-    // avoiding the flash where cached user data might not have the github field.
-    const publicPaths = ['/', '/auth', '/my-profile'];
-    const path = location.pathname.replace(/\/$/, '') || '/';
-    
-    // Strict enforcement: github link is mandatory
     const hasGithub = user.github && user.github.trim() !== '';
-    if (!hasGithub && !publicPaths.includes(path)) {
-      console.warn('⚠️ Quality Control: GitHub not linked. Auto-deleting account...');
-      
-      const nuke = async () => {
-        try {
-          await API.delete('/users/me');
-          localStorage.removeItem('user_data');
-          setUser(null);
-          window.location.href = '/auth?reason=github_required';
-        } catch (err) {
-          console.error('Failed to nuke account:', err);
-          handleLogout();
-        }
-      };
-      
-      nuke();
+    if (!hasGithub) {
+      console.warn('Notice: GitHub account is not linked.');
     }
   }, [user, authChecked, location.pathname]);
 
