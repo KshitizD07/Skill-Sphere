@@ -4,7 +4,7 @@ import {
   Search, Heart, User, Building2, Image as ImageIcon, X,
   MessageCircle, Send, CornerDownRight, Trash2, Pencil,
   Share2, Flag, ArrowUp, Loader2, ThumbsUp, MoreVertical,
-  AlertTriangle, ExternalLink, ShieldCheck
+  AlertTriangle, ExternalLink, ShieldCheck, Users, UserPlus
 } from 'lucide-react';
 import FeedAPI from '../features/feed/feedAPI';
 import API from '../api';
@@ -418,6 +418,7 @@ export default function GlobalFeed() {
 
   const currentUser = JSON.parse(localStorage.getItem('user_data') || '{}');
 
+  const [feedTab, setFeedTab] = useState('all'); // 'all' | 'following'
   const [posts, setPosts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [nextCursor, setNextCursor] = useState(null);
@@ -445,10 +446,11 @@ export default function GlobalFeed() {
   const [showScrollTop, setShowScrollTop] = useState(false);
 
   // ── Load Feed with Cursor Pagination ──────────────────────────────────────
-  const loadInitialFeed = useCallback(async () => {
+  const loadInitialFeed = useCallback(async (tab = feedTab) => {
     setLoading(true);
     try {
-      const res = await FeedAPI.getPosts(null, 10);
+      const fn = tab === 'following' ? FeedAPI.getFollowingPosts : FeedAPI.getPosts;
+      const res = await fn(null, 10);
       if (res?.posts) {
         setPosts(res.posts);
         setNextCursor(res.nextCursor);
@@ -463,13 +465,23 @@ export default function GlobalFeed() {
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [feedTab]);
+
+  const handleTabSwitch = (tab) => {
+    if (tab === feedTab) return;
+    setFeedTab(tab);
+    setPosts([]);
+    setNextCursor(null);
+    setHasMore(true);
+    loadInitialFeed(tab);
+  };
 
   const loadMorePosts = async () => {
     if (!hasMore || loadingMore || !nextCursor) return;
     setLoadingMore(true);
     try {
-      const res = await FeedAPI.getPosts(nextCursor, 10);
+      const fn = feedTab === 'following' ? FeedAPI.getFollowingPosts : FeedAPI.getPosts;
+      const res = await fn(nextCursor, 10);
       if (res?.posts) {
         setPosts((prev) => [...prev, ...res.posts]);
         setNextCursor(res.nextCursor);
@@ -483,8 +495,8 @@ export default function GlobalFeed() {
   };
 
   useEffect(() => {
-    loadInitialFeed();
-  }, [loadInitialFeed]);
+    loadInitialFeed(feedTab);
+  }, [loadInitialFeed, feedTab]);
 
   // Handle scroll to top visibility
   useEffect(() => {
@@ -852,6 +864,30 @@ export default function GlobalFeed() {
           )}
         </div>
 
+        {/* Feed Type Switcher (All vs Following) */}
+        <div className="flex items-center gap-2 mb-6 border-b border-outline-var/20 pb-2">
+          <button
+            onClick={() => handleTabSwitch('all')}
+            className={`px-4 py-2 font-syne font-bold text-xs uppercase tracking-wider rounded-xs transition-all border ${
+              feedTab === 'all'
+                ? 'bg-primary text-on-primary border-primary shadow-sm shadow-primary/20'
+                : 'bg-surface-mid/60 text-text-muted border-outline-var/30 hover:text-text-primary'
+            }`}
+          >
+            All Updates
+          </button>
+          <button
+            onClick={() => handleTabSwitch('following')}
+            className={`px-4 py-2 font-syne font-bold text-xs uppercase tracking-wider rounded-xs transition-all border flex items-center gap-1.5 ${
+              feedTab === 'following'
+                ? 'bg-primary text-on-primary border-primary shadow-sm shadow-primary/20'
+                : 'bg-surface-mid/60 text-text-muted border-outline-var/30 hover:text-text-primary'
+            }`}
+          >
+            <Users size={12} /> Following
+          </button>
+        </div>
+
         {/* Post Composer Card */}
         {currentUser.id && (
           <div className="bg-surface border border-outline-var/20 rounded-md p-5 mb-6 shadow-sm font-outfit">
@@ -934,12 +970,30 @@ export default function GlobalFeed() {
         {!loading && (
           <div className="space-y-4 font-outfit">
             {posts.length === 0 ? (
-              <div className="text-center py-20 border border-dashed border-outline-var/30 rounded-md">
-                <MessageCircle size={40} className="mx-auto text-outline mb-2" />
-                <p className="text-outline font-syne text-[10px] uppercase tracking-[0.12em]">
-                  No posts yet. Be the first to share an update.
-                </p>
-              </div>
+              feedTab === 'following' ? (
+                <div className="text-center py-16 bg-surface border border-dashed border-outline-var/30 rounded-md p-8 space-y-4">
+                  <Users size={40} className="mx-auto text-primary opacity-60" />
+                  <div className="space-y-1">
+                    <h3 className="text-base font-bold text-text-primary">No updates from followed builders yet</h3>
+                    <p className="text-xs text-text-muted max-w-sm mx-auto leading-relaxed">
+                      Follow peer developers, college mates, or squad leaders to see their discussions and launches here.
+                    </p>
+                  </div>
+                  <button
+                    onClick={() => navigate('/network')}
+                    className="px-5 py-2.5 bg-primary text-on-primary font-syne font-bold text-xs uppercase tracking-wider rounded-xs hover:bg-secondary-bright transition-colors shadow-md"
+                  >
+                    Discover People to Follow
+                  </button>
+                </div>
+              ) : (
+                <div className="text-center py-20 border border-dashed border-outline-var/30 rounded-md">
+                  <MessageCircle size={40} className="mx-auto text-outline mb-2" />
+                  <p className="text-outline font-syne text-[10px] uppercase tracking-[0.12em]">
+                    No posts yet. Be the first to share an update.
+                  </p>
+                </div>
+              )
             ) : (
               posts.map((post) => (
                 <PostCard
