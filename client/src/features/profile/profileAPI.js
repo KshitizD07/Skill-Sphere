@@ -27,6 +27,12 @@ const ProfileAPI = {
   likePost:     (postId, userId) => BaseAPI.post(`/posts/${postId}/like`, { userId }),
   commentPost:  (postId, userId, content) => BaseAPI.post(`/posts/${postId}/comment`, { userId, content }),
 
+  // --- Follow & Connection System ---
+  followUser:   async (userId) => unwrap(await BaseAPI.post(`/users/${userId}/follow`)),
+  unfollowUser: async (userId) => unwrap(await BaseAPI.delete(`/users/${userId}/follow`)),
+  getFollowers: async (userId, params) => unwrap(await BaseAPI.get(`/users/${userId}/followers`, { params })),
+  getFollowing: async (userId, params) => unwrap(await BaseAPI.get(`/users/${userId}/following`, { params })),
+
   // --- Logout ---
   logout: () => API.post('/auth/logout'),
 };

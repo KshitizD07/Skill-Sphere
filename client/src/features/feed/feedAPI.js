@@ -7,6 +7,9 @@ const FeedAPI = {
   getPosts: async (cursor = null, limit = 10) =>
     BaseAPI.get(`/posts?limit=${limit}${cursor ? `&cursor=${cursor}` : ''}`),
 
+  getFollowingPosts: async (cursor = null, limit = 10) =>
+    BaseAPI.get(`/posts/following?limit=${limit}${cursor ? `&cursor=${cursor}` : ''}`),
+
   getUserPosts: async (userId, cursor = null, limit = 10) =>
     BaseAPI.get(`/posts/user/${userId}?limit=${limit}${cursor ? `&cursor=${cursor}` : ''}`),
 
