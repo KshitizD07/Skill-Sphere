@@ -462,7 +462,8 @@ Do not use markdown code blocks like \`\`\`json. Just output the raw JSON object
 Provide 5-8 highly relevant skills. Ensure 'importance' is exactly "Required" or "Nice to have".
 
 CRITICAL INSTRUCTIONS FOR SKILL NAMES:
-- The skill names must be atomic, standardized industry-standard terms (e.g. "JavaScript", "Python", "React", "Docker", "System Design").
+- The skill names must be atomic, standardized industry terms (e.g. "JavaScript", "Node.js", "Python", "React", "Docker", "SQL", "REST APIs", "Data Structures").
+- For software engineering roles (e.g. Backend Developer, Frontend Developer, Full Stack), prioritize standard foundational languages and core pillars (such as JavaScript/TypeScript, Python, Node.js, SQL/Databases, REST APIs, Git, Data Structures).
 - NEVER output generic grouping descriptions like "modern programming language like Python, Java, JS" or "frontend tools".
 - Each skill name must represent a single technical skill, language, framework, tool, or engineering concept. ${existingSkillsContext}However, do not be biased towards only using this list — if the role requires other standard industry skills not present in this list, output them using their standard industry names.`;
 

@@ -207,6 +207,73 @@ export async function getOrCreateRole(roleIdentifier, forceRegenerate = false) {
   return role;
 }
 
+// ── Related skill families & aliases for intelligent matching ──────────────────
+const SKILL_FAMILIES = {
+  javascript: ['js', 'javascript', 'typescript', 'ts', 'node.js', 'nodejs', 'express', 'express.js', 'next.js', 'nextjs', 'react', 'react.js'],
+  'node.js': ['nodejs', 'node.js', 'javascript', 'js', 'typescript', 'ts', 'express', 'express.js', 'nest.js', 'nestjs', 'backend development'],
+  typescript: ['ts', 'typescript', 'javascript', 'js', 'node.js', 'nodejs'],
+  python: ['py', 'python', 'django', 'fastapi', 'flask', 'backend development'],
+  java: ['java', 'spring', 'spring boot', 'springboot', 'backend development'],
+  'c++': ['cpp', 'c++', 'c', 'systems programming'],
+  sql: ['sql', 'postgresql', 'postgres', 'mysql', 'sqlite', 'database', 'databases', 'relational databases', 'database design'],
+  postgresql: ['postgres', 'postgresql', 'sql', 'database', 'relational databases'],
+  mysql: ['mysql', 'sql', 'database', 'relational databases'],
+  mongodb: ['mongodb', 'mongo', 'nosql', 'database', 'mongoose'],
+  nosql: ['nosql', 'mongodb', 'mongo', 'redis', 'dynamodb', 'cassandra', 'database'],
+  react: ['react', 'react.js', 'reactjs', 'next.js', 'nextjs', 'frontend development'],
+  docker: ['docker', 'containerization', 'containers', 'kubernetes', 'k8s', 'devops'],
+  kubernetes: ['kubernetes', 'k8s', 'docker', 'devops', 'cloud'],
+  aws: ['aws', 'amazon web services', 'cloud', 'cloud computing', 'devops', 'gcp', 'azure'],
+  'rest apis': ['rest', 'rest api', 'rest apis', 'restful apis', 'api design', 'graphql', 'apis', 'api development'],
+  graphql: ['graphql', 'api design', 'rest apis', 'apis'],
+  git: ['git', 'github', 'version control', 'git/github'],
+  'data structures': ['dsa', 'data structures', 'algorithms', 'data structures and algorithms', 'problem solving'],
+  algorithms: ['dsa', 'algorithms', 'data structures', 'data structures and algorithms', 'problem solving'],
+  dsa: ['dsa', 'data structures', 'algorithms', 'data structures and algorithms', 'problem solving'],
+  html: ['html', 'html5', 'frontend development', 'web development'],
+  css: ['css', 'css3', 'tailwind', 'tailwindcss', 'frontend development'],
+};
+
+function normalizeSkillName(name) {
+  return (name || '').toLowerCase().replace(/[-_]/g, ' ').replace(/\.js\b/g, '').trim();
+}
+
+function findMatchingUserSkill(requiredSkillName, userSkills = []) {
+  const reqNormalized = (requiredSkillName || '').toLowerCase().trim();
+  
+  // 1. Direct exact match
+  let matched = userSkills.find((s) => s.name.toLowerCase().trim() === reqNormalized);
+  if (matched) return { skill: matched, matchType: 'EXACT' };
+
+  // 2. Normalized / clean match (e.g. "React.js" vs "React", "Node.js" vs "Nodejs")
+  const reqClean = normalizeSkillName(requiredSkillName);
+  matched = userSkills.find((s) => normalizeSkillName(s.name) === reqClean);
+  if (matched) return { skill: matched, matchType: 'EXACT' };
+
+  // 3. Family / Synonym match (e.g. required "Node.js" and user has "JavaScript" or "TypeScript")
+  for (const [canonical, aliases] of Object.entries(SKILL_FAMILIES)) {
+    const isTargetInFamily = canonical === reqNormalized || reqNormalized.includes(canonical) || aliases.some(a => reqNormalized === a || reqNormalized.includes(a));
+    if (isTargetInFamily) {
+      const familyUserSkill = userSkills.find((s) => {
+        const uName = s.name.toLowerCase().trim();
+        return uName === canonical || aliases.some(a => uName === a || uName.includes(a));
+      });
+      if (familyUserSkill) {
+        return { skill: familyUserSkill, matchType: 'FAMILY' };
+      }
+    }
+  }
+
+  // 4. Substring / Inclusion match (e.g. "REST APIs" vs "API", "Database Design" vs "SQL")
+  matched = userSkills.find((s) => {
+    const uName = s.name.toLowerCase().trim();
+    return (reqNormalized.length > 3 && uName.includes(reqNormalized)) || (uName.length > 3 && reqNormalized.includes(uName));
+  });
+  if (matched) return { skill: matched, matchType: 'RELATED' };
+
+  return null;
+}
+
 // ── Skill gap analysis ────────────────────────────────────────────────────────
 export async function analyzeSkillGap(userId, roleIdOrName, forceRegenerate = false) {
   const user = await prisma.user.findUnique({
@@ -217,8 +284,6 @@ export async function analyzeSkillGap(userId, roleIdOrName, forceRegenerate = fa
   if (!user) throw ApiError.notFound('User');
   const role = await getOrCreateRole(roleIdOrName, forceRegenerate);
 
-  const userSkillsMap = new Map(user.skills.map((s) => [s.name.toLowerCase(), s]));
-
   let totalWeight = 0;
   let earnedScore = 0;
   const missingSkills = [];
@@ -227,13 +292,16 @@ export async function analyzeSkillGap(userId, roleIdOrName, forceRegenerate = fa
     const weight = rs.importance === 'Required' ? 1.0 : 0.5;
     totalWeight += weight;
 
-    const userSkill = userSkillsMap.get(rs.skillName.toLowerCase());
+    const match = findMatchingUserSkill(rs.skillName, user.skills);
     
-    if (userSkill) {
-      let coefficient = 0.4;
+    if (match) {
+      const userSkill = match.skill;
+      const isFamilyOrRelated = match.matchType !== 'EXACT';
+
+      let coefficient = isFamilyOrRelated ? 0.35 : 0.4;
       if (userSkill.isVerified) {
-        coefficient = 1.0;
-        if (userSkill.calculatedScore >= 8) coefficient = 1.1;
+        coefficient = isFamilyOrRelated ? 0.95 : 1.0;
+        if (userSkill.calculatedScore >= 8) coefficient = isFamilyOrRelated ? 1.05 : 1.1;
       }
       earnedScore += (weight * coefficient);
     } else {
@@ -250,7 +318,7 @@ export async function analyzeSkillGap(userId, roleIdOrName, forceRegenerate = fa
     role: role.title,
     currentScore: score,
     missingSkills,
-    verifiedSkills: user.skills.filter((s) => s.isVerified && userSkillsMap.has(s.name.toLowerCase())),
+    verifiedSkills: user.skills.filter((s) => s.isVerified),
   });
 
   return { role: role.title, score, missingSkills, userSkills: user.skills, diagnosticReport };

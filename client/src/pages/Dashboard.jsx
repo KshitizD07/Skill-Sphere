@@ -99,29 +99,48 @@ export default function Dashboard({ user, onLogout }) {
   const fetchData = useCallback(async () => {
     if (!currentUser?.id) return;
     try {
-      const [rolesRes, skillsRes, activityRes, roadmapsRes] = await Promise.all([
+      const [rolesRes, skillsRes, activityRes, roadmapsRes, profileRes] = await Promise.all([
         API.get('/skills/roles'),
         API.get('/skills/list'),
         API.get(`/activity/${currentUser.id}`),
         RoadmapAPI.getSavedRoadmaps().catch(() => []),
+        API.get('/users/me'),
       ]);
       const catalogue = skillsRes.data || [];
+      const userSkills = profileRes.data?.skills || [];
+      setUserSkillsData(userSkills);
+
+      // Merge catalogue skills and user's profile/verified skills so inventory is never empty
+      const skillMap = new Map();
+      catalogue.forEach(c => {
+        if (c.name) skillMap.set(c.name.toLowerCase(), { id: c.id, name: c.name });
+      });
+      userSkills.forEach(u => {
+        const uName = u.name || u.skill?.name;
+        if (uName) {
+          const key = uName.toLowerCase();
+          if (!skillMap.has(key)) {
+            skillMap.set(key, { id: u.id || `user-skill-${key}`, name: uName });
+          }
+        }
+      });
+
+      const combinedSkills = Array.from(skillMap.values()).sort((a, b) => a.name.localeCompare(b.name));
+      setAllSkills(combinedSkills);
       setRoles(rolesRes.data || []);
-      setAllSkills(catalogue);
       setActivities(activityRes.data || []);
       setSavedRoadmaps(Array.isArray(roadmapsRes) ? roadmapsRes : []);
 
-      const profileRes = await API.get('/users/me');
-      if (profileRes.data?.skills) {
-        setUserSkillsData(profileRes.data.skills);
-        const savedNames = profileRes.data.skills.map(s => s.name);
-        const matchedIds = catalogue.filter(c => savedNames.includes(c.name)).map(c => c.id);
-        setMySkills(matchedIds);
-      }
+      // Check all skills that the user has on their profile (case-insensitive)
+      const userSkillNames = new Set(userSkills.map(s => (s.name || s.skill?.name || '').toLowerCase()));
+      const matchedIds = combinedSkills
+        .filter(c => userSkillNames.has(c.name.toLowerCase()))
+        .map(c => c.id);
+      setMySkills(matchedIds);
     } catch (e) {
       console.error('Dashboard fetch error:', e);
     }
-  }, [currentUser]);
+  }, [currentUser?.id]);
 
   // eslint-disable-next-line react-hooks/set-state-in-effect
   useEffect(() => { fetchData(); }, [fetchData]);
