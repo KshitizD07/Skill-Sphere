@@ -131,13 +131,21 @@ export default function SquadDetail() {
         <div className="text-center bg-surface border border-outline-var/30 p-8 rounded-md max-w-md w-full">
           <AlertCircle size={44} className="mx-auto text-error mb-4" />
           <h3 className="text-lg font-bold text-text-primary uppercase tracking-wider">Mission Not Found</h3>
-          <p className="text-xs text-text-muted mt-2">The squad you are looking for does not exist or has been closed.</p>
-          <button
-            onClick={() => navigate('/nexus')}
-            className="mt-6 px-5 py-2 bg-primary text-on-primary font-bold text-xs uppercase tracking-wider rounded-xs"
-          >
-            Back to Mission Board
-          </button>
+          <p className="text-xs text-text-muted mt-2">The squad you are looking for could not be loaded or has been closed.</p>
+          <div className="mt-6 flex items-center justify-center gap-3">
+            <button
+              onClick={loadSquad}
+              className="px-5 py-2 bg-surface hover:bg-surface-mid border border-outline-var/40 text-text-primary font-bold text-xs uppercase tracking-wider rounded-xs transition-colors"
+            >
+              Retry
+            </button>
+            <button
+              onClick={() => navigate('/nexus')}
+              className="px-5 py-2 bg-primary text-on-primary hover:bg-secondary-bright font-bold text-xs uppercase tracking-wider rounded-xs transition-all"
+            >
+              Back to Mission Board
+            </button>
+          </div>
         </div>
       </div>
     );

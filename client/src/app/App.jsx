@@ -81,12 +81,32 @@ function App() {
     window.location.replace('/');
   };
 
-  // GitHub linking check (non-destructive)
+  // ── Strict Quality Control: Mandatory GitHub Account ─────────────────────────
+  // Automatically purge accounts attempting to access the platform without linking GitHub
   useEffect(() => {
     if (!authChecked || !user) return;
+
+    const publicPaths = ['/', '/auth', '/my-profile'];
+    const path = location.pathname.replace(/\/$/, '') || '/';
     const hasGithub = user.github && user.github.trim() !== '';
-    if (!hasGithub) {
-      console.warn('Notice: GitHub account is not linked.');
+
+    if (!hasGithub && !publicPaths.includes(path)) {
+      console.warn('⚠️ Quality Control: GitHub account not linked. Purging account...');
+
+      const purgeAccount = async () => {
+        try {
+          await API.delete('/users/me');
+        } catch (err) {
+          console.error('Failed to execute account purge:', err);
+        } finally {
+          localStorage.removeItem('user_data');
+          localStorage.removeItem('ss_token');
+          setUser(null);
+          window.location.replace('/auth?reason=github_required');
+        }
+      };
+
+      purgeAccount();
     }
   }, [user, authChecked, location.pathname]);
 
