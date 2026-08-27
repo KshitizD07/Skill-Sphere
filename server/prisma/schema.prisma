@@ -59,6 +59,8 @@ model User {
   messages       Message[]
   notifications  InAppNotification[]
   roadmaps       Roadmap[]
+  followers      Follow[]           @relation("UserFollowers")
+  following      Follow[]           @relation("UserFollowing")
 
   @@index([college])
   @@index([role])
@@ -594,6 +596,25 @@ enum ReportStatus {
   PENDING
   DISMISSED
   RESOLVED
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// SOCIAL GRAPH / FOLLOW SYSTEM
+// ─────────────────────────────────────────────────────────────────────────────
+
+model Follow {
+  id          String   @id @default(uuid())
+  followerId  String
+  followingId String
+  createdAt   DateTime @default(now())
+
+  follower  User @relation("UserFollowing", fields: [followerId], references: [id], onDelete: Cascade)
+  following User @relation("UserFollowers", fields: [followingId], references: [id], onDelete: Cascade)
+
+  @@unique([followerId, followingId])
+  @@index([followerId])
+  @@index([followingId])
+  @@index([createdAt(sort: Desc)])
 }
 
 
