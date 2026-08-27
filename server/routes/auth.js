@@ -8,6 +8,7 @@ import { asyncHandler, ApiError } from '../utils/errorHandler.js';
 import { authenticateToken } from '../middleware/auth.js';
 import { sendOtp, verifyOtp, sendVerificationEmail, generateAndSaveOtp } from '../services/emailService.js';
 import { syncUserRepos } from '../services/githubPortfolioService.js';
+import cache from '../utils/cache.js';
 
 const router = express.Router();
 const prisma = new PrismaClient();
@@ -301,7 +302,6 @@ router.get('/github/callback', asyncHandler(async (req, res) => {
   let role = 'STUDENT';
   let action = 'login';
   let linkingUserId = null;
-  let targetUser = null;
 
   if (rawState) {
     try {
@@ -309,7 +309,6 @@ router.get('/github/callback', asyncHandler(async (req, res) => {
       const stateObj = JSON.parse(decodedStr);
       role = stateObj.role || 'STUDENT';
       action = stateObj.action || 'login';
-      targetUser = stateObj.targetUser || null;
       if (stateObj.token) {
         try {
           const decoded = jwt.verify(stateObj.token, process.env.JWT_SECRET);
