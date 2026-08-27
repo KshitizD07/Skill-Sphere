@@ -112,6 +112,71 @@ router.get('/', authenticateToken, asyncHandler(async (req, res) => {
   });
 }));
 
+// ── GET /api/posts/following — Feed from Followed Users ─────────────────────
+router.get('/following', authenticateToken, asyncHandler(async (req, res) => {
+  const currentUserId = req.user.userId;
+  const limit = Math.min(Number(req.query.limit) || 10, 50);
+  const cursor = req.query.cursor?.trim();
+
+  // Find all users the current user follows
+  const followingRows = await prisma.follow.findMany({
+    where: { followerId: currentUserId },
+    select: { followingId: true },
+  });
+
+  const followingIds = followingRows.map((r) => r.followingId);
+
+  if (followingIds.length === 0) {
+    return res.json({
+      success: true,
+      posts: [],
+      nextCursor: null,
+      hasMore: false,
+    });
+  }
+
+  let where = {
+    userId: { in: followingIds },
+  };
+
+  if (cursor) {
+    const cursorPost = await prisma.post.findUnique({ where: { id: cursor }, select: { createdAt: true } });
+    if (cursorPost) {
+      where.createdAt = { lt: cursorPost.createdAt };
+    }
+  }
+
+  const posts = await prisma.post.findMany({
+    where,
+    include: {
+      user: { select: USER_SELECT },
+      likes: { select: { userId: true } },
+      _count: { select: { likes: true, comments: true } },
+      comments: {
+        where: { parentId: null },
+        include: COMMENT_INCLUDE,
+        orderBy: { createdAt: 'asc' },
+        take: 3,
+      },
+    },
+    orderBy: { createdAt: 'desc' },
+    take: limit + 1,
+  });
+
+  const hasMore = posts.length > limit;
+  const items = hasMore ? posts.slice(0, limit) : posts;
+  const nextCursor = hasMore && items.length > 0 ? items[items.length - 1].id : null;
+
+  const formatted = items.map((p) => formatPost(p, currentUserId));
+
+  res.json({
+    success: true,
+    posts: formatted,
+    nextCursor,
+    hasMore,
+  });
+}));
+
 // Legacy alias for /all
 router.get('/all', authenticateToken, asyncHandler(async (req, res) => {
   const posts = await prisma.post.findMany({
