@@ -382,4 +382,111 @@ async function handleOAuthLogin(email, name, res, githubUsername = null, githubA
   }
 }
 
+// ── Admin Whitelist Helper ────────────────────────────────────────────────────
+function isWhitelistedAdmin(email) {
+  if (!email) return false;
+  const rawList = process.env.ADMIN_WHITELIST || '';
+  const whitelistedEmails = rawList
+    .split(',')
+    .map((e) => e.trim().toLowerCase())
+    .filter(Boolean);
+
+  if (whitelistedEmails.length === 0) return true;
+  return whitelistedEmails.includes(email.toLowerCase().trim());
+}
+
+// ── GET /api/auth/admin-status — Check if user is whitelisted for admin ─────
+router.get('/admin-status', authenticateToken, asyncHandler(async (req, res) => {
+  const isWhitelisted = isWhitelistedAdmin(req.user.email);
+  const isEscalated = req.user.role === 'ADMIN';
+
+  res.json({
+    success: true,
+    data: {
+      isWhitelisted,
+      isEscalated,
+      role: req.user.role,
+    },
+  });
+}));
+
+// ── POST /api/auth/escalate — Temporary Admin Privilege Escalation ────────────
+router.post('/escalate', authenticateToken, asyncHandler(async (req, res) => {
+  const { adminKey } = req.body;
+  const user = await prisma.user.findUnique({ where: { id: req.user.userId } });
+
+  if (!user) throw ApiError.notFound('User not found');
+
+  const isWhitelisted = isWhitelistedAdmin(user.email);
+  if (!isWhitelisted) {
+    throw ApiError.forbidden('Your account is not whitelisted for Admin Escalation');
+  }
+
+  const validKey = process.env.ADMIN_ESCALATION_KEY || 'SkillSphereAdmin2026!';
+  if (!adminKey || adminKey.trim() !== validKey.trim()) {
+    throw ApiError.unauthorized('Invalid Admin Security Key');
+  }
+
+  // Issue elevated token
+  const elevatedToken = jwt.sign(
+    {
+      userId: user.id,
+      email: user.email,
+      role: 'ADMIN',
+      baseRole: user.role,
+      isEscalated: true,
+    },
+    process.env.JWT_SECRET,
+    { expiresIn: '12h' }
+  );
+
+  setTokenCookie(res, elevatedToken);
+
+  res.json({
+    success: true,
+    message: 'Admin privilege escalation successful',
+    token: elevatedToken,
+    user: {
+      id: user.id,
+      name: user.name,
+      email: user.email,
+      role: 'ADMIN',
+      baseRole: user.role,
+      isEscalated: true,
+    },
+  });
+}));
+
+// ── POST /api/auth/demote — Demote Admin Session Back to Standard Role ───────
+router.post('/demote', authenticateToken, asyncHandler(async (req, res) => {
+  const user = await prisma.user.findUnique({ where: { id: req.user.userId } });
+  if (!user) throw ApiError.notFound('User not found');
+
+  const standardToken = jwt.sign(
+    {
+      userId: user.id,
+      email: user.email,
+      role: user.role,
+      isEscalated: false,
+    },
+    process.env.JWT_SECRET,
+    { expiresIn: process.env.JWT_EXPIRES_IN || '7d' }
+  );
+
+  setTokenCookie(res, standardToken);
+
+  res.json({
+    success: true,
+    message: 'Session demoted to standard user mode',
+    token: standardToken,
+    user: {
+      id: user.id,
+      name: user.name,
+      email: user.email,
+      role: user.role,
+      isEscalated: false,
+    },
+  });
+}));
+
 export default router;
