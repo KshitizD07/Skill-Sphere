@@ -10,6 +10,7 @@ import {
 } from 'lucide-react';
 import Navbar from '../../shared/components/Navbar';
 import { useToast, ToastContainer } from '../../shared/components/Toast';
+import NexusMatchModal from './components/NexusMatchModal';
 
 export default function SquadManage() {
   const { id } = useParams();
@@ -30,6 +31,7 @@ export default function SquadManage() {
   const [selectedSlotId, setSelectedSlotId] = useState('ALL');
   const [recommendationsMap, setRecommendationsMap] = useState({});
   const [loadingRecs, setLoadingRecs] = useState(false);
+  const [nexusModalOpen, setNexusModalOpen] = useState(false);
 
   const loadSquad = useCallback(async () => {
     setLoading(true);
@@ -208,6 +210,14 @@ export default function SquadManage() {
             <h2 className="text-sm font-syne font-bold uppercase tracking-wider text-text-primary">
               Pending Candidates ({filteredPending.length})
             </h2>
+            {selectedSlotId !== 'ALL' && filteredPending.length > 0 && (
+              <button
+                onClick={() => setNexusModalOpen(true)}
+                className="px-4 py-2 bg-secondary-bright text-[#000] font-syne font-bold text-xs uppercase tracking-wider rounded-xs flex items-center gap-2 transition-all hover:brightness-110 shadow-[0_0_15px_rgba(4,217,255,0.3)]"
+              >
+                <Sparkles size={14} /> Run N.E.X.U.S.
+              </button>
+            )}
           </div>
 
           {filteredPending.length === 0 ? (
@@ -345,6 +355,19 @@ export default function SquadManage() {
           </div>
         )}
       </div>
+
+      {nexusModalOpen && (
+        <NexusMatchModal 
+          isOpen={nexusModalOpen}
+          onClose={() => setNexusModalOpen(false)}
+          squad={squad}
+          slotId={selectedSlotId}
+          candidates={filteredPending.map(a => a.user?.id)}
+          onMatchAccepted={() => {
+            loadSquad();
+          }}
+        />
+      )}
     </div>
   );
 }
