@@ -104,7 +104,8 @@ export default function NotificationsPage() {
       setLoading(false);
       setLoadingMore(false);
     }
-  }, [toast]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   useEffect(() => {
     fetchNotifications(activeTab);

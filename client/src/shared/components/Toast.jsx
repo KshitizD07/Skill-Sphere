@@ -1,4 +1,4 @@
-import { useState, useCallback, useEffect, useRef } from "react";
+import { useState, useCallback, useEffect, useRef, useMemo } from "react";
 import { createPortal } from "react-dom";
 import { CheckCircle, XCircle, AlertTriangle, Info, X } from "lucide-react";
 
@@ -84,12 +84,12 @@ export function useToast() {
   const warning = useCallback((msg, opts) => toast("warning", msg, opts), [toast]);
   const info    = useCallback((msg, opts) => toast("info",    msg, opts), [toast]);
 
-  return {
+  return useMemo(() => ({
     toasts,
     removeToast,
     success,
     error,
     warning,
     info,
-  };
+  }), [toasts, removeToast, success, error, warning, info]);
 }
