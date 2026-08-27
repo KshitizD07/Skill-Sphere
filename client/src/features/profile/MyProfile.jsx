@@ -12,6 +12,7 @@ import CollegeSelector from './CollegeSelector';
 import SkillVerifier from '../skills/SkillVerifier';
 import Navbar from '../../shared/components/Navbar';
 import RepoSelector from '../portfolio/RepoSelector';
+import FollowModal from './components/FollowModal';
 import { useToast, ToastContainer } from '../../shared/components/Toast';
 
 // ── Profile Completeness Bar ─────────────────────────────────────────────────
@@ -83,6 +84,12 @@ export default function MyProfile({ user, onUserUpdate }) {
   const [isDeleting, setIsDeleting] = useState(false);
   const avatarInputRef = useRef(null);
 
+  // Social Graph state
+  const [followerCount, setFollowerCount] = useState(0);
+  const [followingCount, setFollowingCount] = useState(0);
+  const [showFollowModal, setShowFollowModal] = useState(false);
+  const [modalTab, setModalTab] = useState('followers');
+
   // Admin Escalation State
   const [adminStatus, setAdminStatus] = useState({ isWhitelisted: false, isEscalated: false });
   const [showAdminModal, setShowAdminModal] = useState(false);
@@ -153,8 +160,16 @@ export default function MyProfile({ user, onUserUpdate }) {
         setMySkillNames(userData.skills.map((s) => s.name || s.skill?.name).filter(Boolean));
       }
       if (userData.leetcodeUsername) setLeetcodeData(userData);
+
+      if (activeUser?.id) {
+        const publicProfile = await ProfileAPI.getProfile(activeUser.id);
+        if (publicProfile) {
+          setFollowerCount(publicProfile.followerCount || 0);
+          setFollowingCount(publicProfile.followingCount || 0);
+        }
+      }
     } catch (err) { console.error('Failed to load user data:', err); }
-  }, []);
+  }, [activeUser?.id]);
 
   const loadAllSkills = useCallback(async () => {
     const skills = await ProfileAPI.getAllSkills();
@@ -343,6 +358,35 @@ export default function MyProfile({ user, onUserUpdate }) {
               <p className="text-primary font-syne tracking-wide text-xs mt-1">{formData.headline || 'NO_HEADLINE_TAG'}</p>
               <div className="mt-3 px-3 py-1 bg-primary/10 border border-primary/20 rounded text-[10px] font-bold tracking-widest text-text-primary">
                 {activeUser.role === 'GUEST' ? `GUEST ${activeUser.guestPersona || 'STUDENT'}` : `${activeUser.role} CLASS`}
+              </div>
+
+              {/* Social Graph: Followers & Following Stats */}
+              <div className="flex items-center justify-center gap-6 mt-4 pt-4 border-t border-outline-var/20 w-full font-outfit">
+                <button
+                  type="button"
+                  onClick={() => { setModalTab('followers'); setShowFollowModal(true); }}
+                  className="flex flex-col items-center group cursor-pointer"
+                >
+                  <span className="font-bold text-base text-text-primary group-hover:text-primary transition-colors">
+                    {followerCount}
+                  </span>
+                  <span className="text-[10px] font-syne uppercase tracking-wider text-outline group-hover:text-text-muted">
+                    Followers
+                  </span>
+                </button>
+                <div className="w-px h-6 bg-outline-var/20" />
+                <button
+                  type="button"
+                  onClick={() => { setModalTab('following'); setShowFollowModal(true); }}
+                  className="flex flex-col items-center group cursor-pointer"
+                >
+                  <span className="font-bold text-base text-text-primary group-hover:text-primary transition-colors">
+                    {followingCount}
+                  </span>
+                  <span className="text-[10px] font-syne uppercase tracking-wider text-outline group-hover:text-text-muted">
+                    Following
+                  </span>
+                </button>
               </div>
               <p className={`${labelBase} mt-4`}>Profile Photo</p>
               <input ref={avatarInputRef} type="file" accept="image/*" onChange={handleAvatarFileChange} className="hidden" />
@@ -668,6 +712,18 @@ export default function MyProfile({ user, onUserUpdate }) {
             </div>
           </form>
         </div>
+      )}
+
+      {/* Followers / Following Modal */}
+      {showFollowModal && activeUser?.id && (
+        <FollowModal
+          userId={activeUser.id}
+          initialTab={modalTab}
+          followerCount={followerCount}
+          followingCount={followingCount}
+          onClose={() => setShowFollowModal(false)}
+          onFollowChange={loadUserData}
+        />
       )}
     </div>
   );

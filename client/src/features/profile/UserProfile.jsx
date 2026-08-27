@@ -5,10 +5,13 @@ import {
   User, ArrowLeft, Github, Linkedin, Cpu, MessageSquare,
   Shield, Edit3, Building2, Heart, MessageCircle, Send,
   Image as ImageIcon, Eye, EyeOff, CheckCircle, Clock,
-  ExternalLink, X, Trash2, Pencil, CornerDownRight, Award
+  ExternalLink, X, Trash2, Pencil, CornerDownRight, Award,
+  UserPlus, UserCheck, Users
 } from 'lucide-react';
 import LeetCodeCard from './LeetCodeCard';
 import GitHubProjectsSummary from '../portfolio/GitHubProjectsSummary';
+import FollowModal from './components/FollowModal';
+import ProfileAPI from './profileAPI';
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 function timeAgo(date) {
@@ -367,17 +370,58 @@ export default function UserProfile() {
     });
   }, [id]);
 
-  useEffect(() => {
+  const [showFollowModal, setShowFollowModal] = useState(false);
+  const [modalTab, setModalTab] = useState('followers');
+  const [followingActionLoading, setFollowingActionLoading] = useState(false);
+
+  const fetchProfile = useCallback(() => {
     API.get(`/users/${id}`)
       .then(res => {
-        // /users/:id now returns { success, data } — unwrap
         const payload = res.data;
         setUser(payload?.data ?? payload);
         setLoading(false);
       })
       .catch(() => setLoading(false));
+  }, [id]);
+
+  useEffect(() => {
+    fetchProfile();
     fetchPosts();
-  }, [id, fetchPosts]);
+  }, [fetchProfile, fetchPosts]);
+
+  const handleFollowToggle = async () => {
+    if (!user || followingActionLoading) return;
+    const isFollowing = user.isFollowedByMe;
+    const newCount = (user.followerCount || 0) + (isFollowing ? -1 : 1);
+
+    setFollowingActionLoading(true);
+    // Optimistic UI update
+    setUser(prev => ({
+      ...prev,
+      isFollowedByMe: !isFollowing,
+      followerCount: Math.max(0, newCount),
+      isMutual: !isFollowing && !!prev.isFollowingMe
+    }));
+
+    try {
+      if (isFollowing) {
+        await ProfileAPI.unfollowUser(id);
+      } else {
+        await ProfileAPI.followUser(id);
+      }
+    } catch (err) {
+      console.error(err);
+      // Revert on failure
+      setUser(prev => ({
+        ...prev,
+        isFollowedByMe: isFollowing,
+        followerCount: (prev.followerCount || 0) + (isFollowing ? 1 : -1),
+        isMutual: isFollowing && !!prev.isFollowingMe
+      }));
+    } finally {
+      setFollowingActionLoading(false);
+    }
+  };
 
   const handleCreatePost = async () => {
     if (!newPostContent.trim()) return;
@@ -472,10 +516,72 @@ export default function UserProfile() {
                     : user.role === 'PROFESSIONAL' ? 'Working Professional'
                     : user.role.charAt(0) + user.role.slice(1).toLowerCase()}
                 </div>
-                {!isOwner && (
-                  <button type="button" onClick={() => navigate(`/chat/${user.id}`)} className="w-full mt-6 py-3 bg-primary text-on-primary font-bold hover:bg-secondary-bright transition flex items-center justify-center gap-2 font-syne tracking-wide">
-                    <MessageSquare size={16} /> Send Message
+                {/* Social Graph: Followers & Following Stats */}
+                <div className="flex items-center justify-center gap-6 mt-4 pt-4 border-t border-outline-var/20 w-full font-outfit">
+                  <button
+                    type="button"
+                    onClick={() => { setModalTab('followers'); setShowFollowModal(true); }}
+                    className="flex flex-col items-center group cursor-pointer"
+                  >
+                    <span className="font-bold text-base text-text-primary group-hover:text-primary transition-colors">
+                      {user.followerCount || 0}
+                    </span>
+                    <span className="text-[10px] font-syne uppercase tracking-wider text-outline group-hover:text-text-muted">
+                      Followers
+                    </span>
                   </button>
+                  <div className="w-px h-6 bg-outline-var/20" />
+                  <button
+                    type="button"
+                    onClick={() => { setModalTab('following'); setShowFollowModal(true); }}
+                    className="flex flex-col items-center group cursor-pointer"
+                  >
+                    <span className="font-bold text-base text-text-primary group-hover:text-primary transition-colors">
+                      {user.followingCount || 0}
+                    </span>
+                    <span className="text-[10px] font-syne uppercase tracking-wider text-outline group-hover:text-text-muted">
+                      Following
+                    </span>
+                  </button>
+                </div>
+
+                {!isOwner && (
+                  <div className="w-full mt-4 space-y-2 font-syne">
+                    <button
+                      type="button"
+                      onClick={handleFollowToggle}
+                      disabled={followingActionLoading}
+                      className={`w-full py-2.5 font-bold tracking-wide text-xs uppercase rounded-xs transition-all flex items-center justify-center gap-2 border shadow-sm ${
+                        user.isMutual
+                          ? 'bg-secondary-bright/10 text-secondary-bright border-secondary-bright/30 hover:bg-secondary-bright/20'
+                          : user.isFollowedByMe
+                          ? 'bg-surface-mid text-text-muted border-outline-var/40 hover:border-error hover:text-error'
+                          : 'bg-primary text-on-primary border-primary hover:bg-secondary-bright'
+                      }`}
+                    >
+                      {user.isMutual ? (
+                        <>
+                          <Users size={14} className="text-secondary-bright" /> Connected ⇄
+                        </>
+                      ) : user.isFollowedByMe ? (
+                        <>
+                          <UserCheck size={14} /> Following
+                        </>
+                      ) : (
+                        <>
+                          <UserPlus size={14} /> Follow
+                        </>
+                      )}
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={() => navigate(`/chat/${user.id}`)}
+                      className="w-full py-2.5 bg-surface-mid hover:bg-surface border border-outline-var/30 text-text-primary font-bold transition flex items-center justify-center gap-2 tracking-wide text-xs uppercase rounded-xs"
+                    >
+                      <MessageSquare size={14} /> Send Message
+                    </button>
+                  </div>
                 )}
               </div>
 
@@ -609,6 +715,18 @@ export default function UserProfile() {
           </div>
         )}
       </div>
+
+      {/* Followers / Following Modal */}
+      {showFollowModal && (
+        <FollowModal
+          userId={id}
+          initialTab={modalTab}
+          followerCount={user?.followerCount || 0}
+          followingCount={user?.followingCount || 0}
+          onClose={() => setShowFollowModal(false)}
+          onFollowChange={fetchProfile}
+        />
+      )}
     </div>
   );
 }
