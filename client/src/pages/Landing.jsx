@@ -89,18 +89,6 @@ export default function Landing() {
         </div>
       </header>
 
-      {/* Brand Banner Preview */}
-      <div className="w-full max-w-[1200px] mx-auto px-4 pb-16 sm:pb-24">
-        <div className="relative rounded-xl overflow-hidden border border-[#44403c]/40 shadow-2xl bg-[#161513] group">
-          <img 
-            src="/brand.jpg" 
-            className="w-full h-auto object-cover opacity-90 group-hover:opacity-100 transition-opacity duration-300 max-h-[500px]" 
-            alt="SkillSphere Brand Showcase" 
-          />
-          <div className="absolute inset-0 bg-gradient-to-t from-[#121110] via-transparent to-transparent opacity-85 pointer-events-none" />
-        </div>
-      </div>
-
       {/* ── AI Analysis ── */}
       <section id="analysis" className="py-12 sm:py-20 md:py-24 border-t border-[#44403c]/20 bg-[#23211f]/20">
         <div className="w-full max-w-[1400px] mx-auto px-4 sm:px-6 grid md:grid-cols-2 gap-8 md:gap-16 items-center">
