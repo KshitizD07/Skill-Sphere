@@ -14,6 +14,7 @@ import Navbar from '../../shared/components/Navbar';
 import RepoSelector from '../portfolio/RepoSelector';
 import FollowModal from './components/FollowModal';
 import { useToast, ToastContainer } from '../../shared/components/Toast';
+import { API_BASE_URL } from '../../config/constants';
 
 // ── Profile Completeness Bar ─────────────────────────────────────────────────
 function CompletenessBar({ score, checks }) {
@@ -182,6 +183,20 @@ export default function MyProfile({ user, onUserUpdate }) {
       if (data && !data.error) setCompleteness(data);
     } catch { /* non-critical */ }
   }, []);
+
+  const handleConnectGithub = () => {
+    const token = localStorage.getItem('ss_token') || '';
+    window.location.href = `${API_BASE_URL}/auth/github?action=link&token=${encodeURIComponent(token)}`;
+  };
+
+  useEffect(() => {
+    const urlParams = new URLSearchParams(window.location.search);
+    if (urlParams.get('linked') === 'github') {
+      toast.success('GitHub account authorized successfully!');
+      window.history.replaceState({}, document.title, window.location.pathname);
+      loadUserData();
+    }
+  }, [loadUserData]);
 
   useEffect(() => {
     if (activeUser?.id) {
@@ -564,8 +579,21 @@ export default function MyProfile({ user, onUserUpdate }) {
                 <h3 className="font-syne text-[10px] font-bold tracking-[0.12em] uppercase text-outline mb-4">Social Connections</h3>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
                   <div>
-                    <label className={`${labelBase} flex items-center gap-1.5`}><Github size={12} /> GitHub Profile <span className="text-error">*</span></label>
+                    <div className="flex items-center justify-between mb-1.5">
+                      <label className={`${labelBase} flex items-center gap-1.5`}><Github size={12} /> GitHub Profile <span className="text-error">*</span></label>
+                      <button
+                        type="button"
+                        onClick={handleConnectGithub}
+                        className="px-2.5 py-1 bg-primary/10 hover:bg-primary/20 border border-primary/30 text-primary text-[10px] font-syne font-bold uppercase tracking-wider rounded-xs transition flex items-center gap-1"
+                      >
+                        <Github size={10} />
+                        {formData.github ? 'Re-authorize OAuth' : 'Link via OAuth'}
+                      </button>
+                    </div>
                     <input value={formData.github} onChange={(e) => setFormData({...formData, github: e.target.value})} placeholder="github.com/username" className={`${inputBase} ${!formData.github ? 'border-error/40 focus:border-error/80' : ''}`} />
+                    <p className="text-[10px] text-text-muted mt-1">
+                      Authorizing via OAuth grants access to fetch your owned and contributed repositories for your showcase.
+                    </p>
                   </div>
                   <div>
                     <label className={`${labelBase} flex items-center gap-1.5`}><Linkedin size={12} /> LinkedIn Profile</label>

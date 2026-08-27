@@ -7,6 +7,7 @@ import { PrismaClient } from '@prisma/client';
 import { asyncHandler, ApiError } from '../utils/errorHandler.js';
 import { authenticateToken } from '../middleware/auth.js';
 import { sendOtp, verifyOtp, sendVerificationEmail, generateAndSaveOtp } from '../services/emailService.js';
+import { syncUserRepos } from '../services/githubPortfolioService.js';
 
 const router = express.Router();
 const prisma = new PrismaClient();
@@ -270,17 +271,50 @@ router.get('/google/callback', asyncHandler(async (req, res) => {
 // ── GET /api/auth/github ──────────────────────────────────────────────────────
 router.get('/github', (req, res) => {
   const role = req.query.role || 'STUDENT';
+  const action = req.query.action || 'login';
+  const userToken = req.query.token || req.cookies?.ss_token || null;
+
+  const statePayload = { role, action, token: userToken };
+  const stateStr = Buffer.from(JSON.stringify(statePayload)).toString('base64url');
+
   const backendUrl = req.protocol + '://' + req.get('host');
   const cb = `${backendUrl}/api/auth/github/callback`;
-  const url = `https://github.com/login/oauth/authorize?client_id=${process.env.GITHUB_CLIENT_ID}&redirect_uri=${cb}&scope=user:email&state=${role}`;
+  const scope = 'repo read:user user:email';
+  const url = `https://github.com/login/oauth/authorize?client_id=${process.env.GITHUB_CLIENT_ID}&redirect_uri=${encodeURIComponent(cb)}&scope=${encodeURIComponent(scope)}&state=${stateStr}`;
   res.redirect(url);
 });
 
 // ── GET /api/auth/github/callback ─────────────────────────────────────────────
 router.get('/github/callback', asyncHandler(async (req, res) => {
   const code = req.query.code;
-  const role = req.query.state || 'STUDENT';
-  if (!code) return res.redirect(`${process.env.FRONTEND_URL || 'http://localhost:5173'}/auth?error=OAuthCodeMissing`);
+  const rawState = req.query.state;
+  const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:5173';
+
+  if (!code) return res.redirect(`${frontendUrl}/auth?error=OAuthCodeMissing`);
+
+  let role = 'STUDENT';
+  let action = 'login';
+  let linkingUserId = null;
+
+  if (rawState) {
+    try {
+      const decodedStr = Buffer.from(rawState, 'base64url').toString('utf8');
+      const stateObj = JSON.parse(decodedStr);
+      role = stateObj.role || 'STUDENT';
+      action = stateObj.action || 'login';
+      if (stateObj.token) {
+        try {
+          const decoded = jwt.verify(stateObj.token, process.env.JWT_SECRET);
+          linkingUserId = decoded.userId;
+        } catch {
+          // Token in state expired or invalid
+        }
+      }
+    } catch {
+      // Fallback if state was raw string
+      role = rawState;
+    }
+  }
 
   const backendUrl = req.protocol + '://' + req.get('host');
   const cb = `${backendUrl}/api/auth/github/callback`;
@@ -300,9 +334,9 @@ router.get('/github/callback', asyncHandler(async (req, res) => {
     })
   });
   const tokenData = await tokenRes.json();
-  if (tokenData.error) return res.redirect(`${process.env.FRONTEND_URL || 'http://localhost:5173'}/auth?error=GithubOAuthFailed`);
+  if (tokenData.error) return res.redirect(`${frontendUrl}/auth?error=GithubOAuthFailed`);
 
-  // Get user info
+  // Get user info from GitHub
   const userRes = await fetch('https://api.github.com/user', {
     headers: {
       'Authorization': `Bearer ${tokenData.access_token}`,
@@ -311,10 +345,32 @@ router.get('/github/callback', asyncHandler(async (req, res) => {
     }
   });
   const userData = await userRes.json();
-  
+
+  if (!userData.login) {
+    return res.redirect(`${frontendUrl}/auth?error=GithubProfileFailed`);
+  }
+
+  // Handle Account Linking case
+  if (action === 'link' && linkingUserId) {
+    await prisma.user.update({
+      where: { id: linkingUserId },
+      data: {
+        github: userData.login,
+        githubAccessToken: tokenData.access_token,
+      },
+    });
+
+    // Auto-sync repos in background
+    syncUserRepos(linkingUserId).catch((err) =>
+      console.error(`Auto-sync failed after GitHub link for user ${linkingUserId}:`, err.message)
+    );
+
+    return res.redirect(`${frontendUrl}/my-profile?linked=github&status=success`);
+  }
+
+  // Fetch emails from GitHub (handles private emails)
   let email = userData.email;
   if (!email) {
-    // Fetch emails
     const emailsRes = await fetch('https://api.github.com/user/emails', {
       headers: {
         'Authorization': `Bearer ${tokenData.access_token}`,
@@ -324,12 +380,14 @@ router.get('/github/callback', asyncHandler(async (req, res) => {
     });
     const emails = await emailsRes.json();
     if (Array.isArray(emails)) {
-      const primaryEmail = emails.find(e => e.primary) || emails[0];
-      if (primaryEmail) email = primaryEmail.email;
+      const primaryVerified = emails.find(e => e.primary && e.verified);
+      const primary = emails.find(e => e.primary);
+      const verified = emails.find(e => e.verified);
+      email = primaryVerified?.email || primary?.email || verified?.email || emails[0]?.email;
     }
   }
-  
-  if (!email) return res.redirect(`${process.env.FRONTEND_URL || 'http://localhost:5173'}/auth?error=EmailMissing`);
+
+  if (!email) return res.redirect(`${frontendUrl}/auth?error=EmailMissing`);
 
   await handleOAuthLogin(email, userData.name || userData.login, res, userData.login, tokenData.access_token, role);
 }));
@@ -357,7 +415,7 @@ async function handleOAuthLogin(email, name, res, githubUsername = null, githubA
     });
   } else {
     const updateData = {};
-    if (githubUsername && !user.github) updateData.github = githubUsername;
+    if (githubUsername) updateData.github = githubUsername;
     if (githubAccessToken) updateData.githubAccessToken = githubAccessToken;
 
     if (Object.keys(updateData).length > 0) {
@@ -369,6 +427,13 @@ async function handleOAuthLogin(email, name, res, githubUsername = null, githubA
     await prisma.activityLog.create({
       data: { userId: user.id, action: 'USER_LOGIN', details: 'Logged in via OAuth' },
     }).catch(() => {});
+  }
+
+  // Trigger background sync for repos
+  if (user.id && (githubAccessToken || user.githubAccessToken)) {
+    syncUserRepos(user.id).catch((err) =>
+      console.error(`Auto-sync failed after OAuth login for user ${user.id}:`, err.message)
+    );
   }
 
   const token = signToken(user);

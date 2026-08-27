@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { RefreshCw, Search, Check, AlertCircle, Github, GitFork, Star, Code } from 'lucide-react';
 import PortfolioAPI from './portfolioAPI';
+import { API_BASE_URL } from '../../config/constants';
 
 export default function RepoSelector({ onSelectionChange }) {
   const [repos, setRepos] = useState([]);
@@ -13,6 +14,11 @@ export default function RepoSelector({ onSelectionChange }) {
   const [ownedSearch, setOwnedSearch] = useState('');
   const [contributedSearch, setContributedSearch] = useState('');
 
+  const handleConnectGithub = () => {
+    const token = localStorage.getItem('ss_token') || '';
+    window.location.href = `${API_BASE_URL}/auth/github?action=link&token=${encodeURIComponent(token)}`;
+  };
+
   const loadRepos = async () => {
     setLoading(true);
     setError(null);
@@ -21,7 +27,7 @@ export default function RepoSelector({ onSelectionChange }) {
       setRepos(Array.isArray(data) ? data : []);
     } catch (err) {
       console.error('Failed to load GitHub repos:', err);
-      setError('Could not load repositories. Please sync or link GitHub account.');
+      setError('Could not load repositories. Please link GitHub via OAuth.');
     } finally {
       setLoading(false);
     }
@@ -134,9 +140,18 @@ export default function RepoSelector({ onSelectionChange }) {
       </div>
 
       {error && (
-        <div className="p-3 bg-error/10 border border-error/30 text-error text-xs rounded-xs flex items-center gap-2">
-          <AlertCircle size={14} className="shrink-0" />
-          <span>{error}</span>
+        <div className="p-3 bg-error/10 border border-error/30 text-error text-xs rounded-xs flex items-center justify-between gap-2">
+          <div className="flex items-center gap-2">
+            <AlertCircle size={14} className="shrink-0" />
+            <span>{error}</span>
+          </div>
+          <button
+            onClick={handleConnectGithub}
+            className="px-2.5 py-1 bg-error/20 hover:bg-error/30 border border-error/40 text-error text-[10px] font-syne font-bold uppercase tracking-wider rounded-xs transition shrink-0 flex items-center gap-1"
+          >
+            <Github size={10} />
+            Link OAuth
+          </button>
         </div>
       )}
 
@@ -153,15 +168,24 @@ export default function RepoSelector({ onSelectionChange }) {
         </div>
       ) : repos.length === 0 ? (
         <div className="py-8 text-center bg-surface-mid/40 border border-outline-var/20 rounded-xs p-4">
-          <p className="text-text-muted text-xs mb-3">No repositories found. Sync your GitHub account to load your repositories.</p>
-          <button
-            onClick={handleSync}
-            disabled={syncing}
-            className="px-4 py-2 bg-primary text-on-primary text-xs font-syne font-bold uppercase tracking-wider rounded-xs hover:bg-primary/90 transition inline-flex items-center gap-2"
-          >
-            <RefreshCw size={14} className={syncing ? 'animate-spin' : ''} />
-            Fetch Repositories Now
-          </button>
+          <p className="text-text-muted text-xs mb-3">No repositories found. Authorize GitHub via OAuth to fetch your repositories.</p>
+          <div className="flex flex-wrap items-center justify-center gap-3">
+            <button
+              onClick={handleConnectGithub}
+              className="px-4 py-2 bg-primary text-on-primary text-xs font-syne font-bold uppercase tracking-wider rounded-xs hover:bg-primary/90 transition inline-flex items-center gap-2"
+            >
+              <Github size={14} />
+              Authorize GitHub Account
+            </button>
+            <button
+              onClick={handleSync}
+              disabled={syncing}
+              className="px-4 py-2 bg-surface-mid border border-outline-var/30 text-text-primary text-xs font-syne font-bold uppercase tracking-wider rounded-xs hover:bg-surface transition inline-flex items-center gap-2"
+            >
+              <RefreshCw size={14} className={syncing ? 'animate-spin' : ''} />
+              {syncing ? 'Syncing...' : 'Sync Repos'}
+            </button>
+          </div>
         </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
