@@ -28,7 +28,8 @@ export default function Landing() {
         <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[300px] sm:w-[600px] h-[1px] bg-gradient-to-r from-transparent via-[#f59e0b]/40 to-transparent" />
 
         <nav className="w-full flex justify-between items-center px-4 sm:px-6 md:px-12 py-4 md:py-5 z-50 border-b border-[#44403c]/30 backdrop-blur-md bg-[#121110]/80">
-          <div className="font-['Syne',sans-serif] font-extrabold text-xl sm:text-2xl tracking-tight text-[#f5f5f4]">
+          <div className="flex items-center gap-2 font-['Syne',sans-serif] font-extrabold text-xl sm:text-2xl tracking-tight text-[#f5f5f4] cursor-pointer" onClick={() => navigate('/')}>
+            <img src="/logo.jpg" className="w-8 h-8 rounded-sm object-cover border border-[#44403c]/40" alt="" />
             Skill<span className="text-[#f59e0b]">Sphere</span>
           </div>
           <div className="flex items-center gap-2 sm:gap-3">
@@ -87,6 +88,18 @@ export default function Landing() {
           </div>
         </div>
       </header>
+
+      {/* Brand Banner Preview */}
+      <div className="w-full max-w-[1200px] mx-auto px-4 pb-16 sm:pb-24">
+        <div className="relative rounded-xl overflow-hidden border border-[#44403c]/40 shadow-2xl bg-[#161513] group">
+          <img 
+            src="/brand.jpg" 
+            className="w-full h-auto object-cover opacity-90 group-hover:opacity-100 transition-opacity duration-300 max-h-[500px]" 
+            alt="SkillSphere Brand Showcase" 
+          />
+          <div className="absolute inset-0 bg-gradient-to-t from-[#121110] via-transparent to-transparent opacity-85 pointer-events-none" />
+        </div>
+      </div>
 
       {/* ── AI Analysis ── */}
       <section id="analysis" className="py-12 sm:py-20 md:py-24 border-t border-[#44403c]/20 bg-[#23211f]/20">
@@ -187,7 +200,8 @@ export default function Landing() {
       </section>
 
       {/* ── Footer ── */}
-      <footer className="bg-[#161513] text-[#57534e] py-8 sm:py-12 text-center border-t border-[#44403c]/20">
+      <footer className="bg-[#161513] text-[#57534e] py-8 sm:py-12 text-center border-t border-[#44403c]/20 flex flex-col items-center justify-center gap-3">
+        <img src="/logo.jpg" className="w-8 h-8 rounded-sm opacity-50 grayscale hover:grayscale-0 hover:opacity-100 transition-all duration-300 border border-[#44403c]/30" alt="SkillSphere logo" />
         <p className="font-['Syne',sans-serif] text-[9px] sm:text-[10px] tracking-widest uppercase">SkillSphere © 2026 · Professional Skill Intelligence</p>
       </footer>
     </div>
