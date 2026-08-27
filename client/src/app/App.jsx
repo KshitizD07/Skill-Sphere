@@ -23,7 +23,7 @@ const SquadManage = lazy(() => import('../features/squads/SquadManage'));
 const MyApplications = lazy(() => import('../features/squads/MyApplications'));
 const SkillVerifier = lazy(() => import('../features/skills/SkillVerifier'));
 const Network = lazy(() => import('../features/network/Network'));
-const AntifragileAdmin = lazy(() => import('../features/admin/AntifragileAdmin'));
+const AdminDashboard = lazy(() => import('../features/admin/AdminDashboard'));
 
 // Shared
 import ProtectedRoute from '../shared/components/ProtectedRoute';
@@ -197,9 +197,14 @@ function App() {
         } />
 
         {/* Admin */}
+        <Route path="/admin" element={
+          <ProtectedRoute user={user} authChecked={authChecked}>
+            <AdminDashboard />
+          </ProtectedRoute>
+        } />
         <Route path="/antifragile-admin" element={
           <ProtectedRoute user={user} authChecked={authChecked}>
-            <AntifragileAdmin />
+            <AdminDashboard />
           </ProtectedRoute>
         } />
 
