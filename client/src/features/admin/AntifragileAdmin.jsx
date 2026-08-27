@@ -1,8 +1,8 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Shield, ArrowLeft, Activity, Database, BarChart3, Settings2 } from 'lucide-react';
-import API from '../../../api';
-import { useToast, ToastContainer } from '../../../shared/components/Toast';
+import API from '../../api';
+import { useToast, ToastContainer } from '../../shared/components/Toast';
 import {
   BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid, LineChart, Line
 } from 'recharts';
