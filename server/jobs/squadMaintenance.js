@@ -4,6 +4,7 @@ import logger from '../utils/logger.js';
 
 import { setupUserPruningJob } from './userPruning.js';
 import { setupKeepAliveJob } from './keepAlive.js';
+import { setupStrategyEvolutionJob } from './strategyEvolution.js';
 
 const prisma = new PrismaClient();
 
@@ -58,6 +59,9 @@ function setupJobs() {
 
   // Schedule self-ping keep-alive job
   setupKeepAliveJob();
+
+  // Schedule strategy evolution job
+  setupStrategyEvolutionJob();
 }
 
 export { setupJobs, expireStaleSquads };
