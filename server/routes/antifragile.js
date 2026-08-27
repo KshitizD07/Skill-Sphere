@@ -22,6 +22,7 @@ import { PrismaClient } from '@prisma/client';
 import strategyRegistry from '../services/strategyRegistry.js';
 import consensusEngine from '../services/consensusEngine.js';
 import decisionLogger from '../services/decisionLogger.js';
+import matchOrchestrator from '../services/matchOrchestrator.js';
 import { authenticateToken, requireRole } from '../middleware/auth.js';
 
 const router = express.Router();
@@ -35,6 +36,35 @@ const requireAdmin = requireRole('ADMIN');
 
 // For demo purposes, you might want to temporarily allow any authenticated user:
 // const requireAdmin = authenticateToken;
+
+// ============================================================================
+// 0. TRIGGER N.E.X.U.S. MATCH (Leader Only)
+// ============================================================================
+router.post('/match', authenticateToken, async (req, res) => {
+  try {
+    const { squadId, slotId, candidateIds } = req.body;
+
+    // Verify leader
+    const squad = await prisma.squad.findUnique({
+      where: { id: squadId },
+      select: { leaderId: true }
+    });
+
+    if (!squad) {
+      return res.status(404).json({ success: false, message: 'Squad not found' });
+    }
+
+    if (squad.leaderId !== req.user.userId) {
+      return res.status(403).json({ success: false, message: 'Only squad leader can trigger match' });
+    }
+
+    const result = await matchOrchestrator.matchCandidatesForSlot(squadId, slotId, candidateIds);
+    res.json({ success: true, data: result });
+  } catch (error) {
+    console.error('Error triggering match:', error);
+    res.status(500).json({ success: false, message: error.message });
+  }
+});
 
 // ============================================================================
 // 1. GET ALL STRATEGIES
