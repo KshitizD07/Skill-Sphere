@@ -24,6 +24,7 @@ import chatRoutes from './routes/chat.js';
 import notificationRoutes from './routes/notifications.js';
 import antifragileRoutes from './routes/antifragile.js';
 import portfolioRoutes from './routes/portfolio.js';
+import adminRoutes from './routes/admin.js';
 
 const app = express();
 app.use(compression());
@@ -123,6 +124,7 @@ app.use('/api/chat',                        chatRoutes);
 app.use('/api/notifications',               notificationRoutes);
 app.use('/api/antifragile',                 antifragileRoutes);
 app.use('/api/portfolio',                   portfolioRoutes);
+app.use('/api/admin',                       adminRoutes);
 
 // ── 404 ───────────────────────────────────────────────────────────────────────
 app.use((req, res) => {
