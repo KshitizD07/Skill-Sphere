@@ -442,14 +442,15 @@ router.post('/escalate', authenticateToken, asyncHandler(async (req, res) => {
 
   setTokenCookie(res, elevatedToken);
 
+  const cleanUser = { ...user };
+  delete cleanUser.password;
+
   res.json({
     success: true,
     message: 'Admin privilege escalation successful',
     token: elevatedToken,
     user: {
-      id: user.id,
-      name: user.name,
-      email: user.email,
+      ...cleanUser,
       role: 'ADMIN',
       baseRole: user.role,
       isEscalated: true,
@@ -475,14 +476,15 @@ router.post('/demote', authenticateToken, asyncHandler(async (req, res) => {
 
   setTokenCookie(res, standardToken);
 
+  const cleanUser = { ...user };
+  delete cleanUser.password;
+
   res.json({
     success: true,
     message: 'Session demoted to standard user mode',
     token: standardToken,
     user: {
-      id: user.id,
-      name: user.name,
-      email: user.email,
+      ...cleanUser,
       role: user.role,
       isEscalated: false,
     },
