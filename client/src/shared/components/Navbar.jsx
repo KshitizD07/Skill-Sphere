@@ -3,7 +3,7 @@ import { useNavigate, useLocation } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
   Menu, X, BarChart2, Users, Layers, 
-  User, LogOut, LayoutDashboard, MessageSquare
+  User, LogOut, LayoutDashboard, MessageSquare, Shield
 } from 'lucide-react';
 import NotificationBell from './NotificationBell';
 import DashboardChat from '../../features/chat/DashboardChat';
@@ -21,6 +21,7 @@ const Navbar = ({ user, onLogout }) => {
     { name: 'Teams', path: '/nexus', icon: Layers },
     { name: 'Chat', path: 'chat_drawer', icon: MessageSquare },
     { name: 'Profile', path: '/my-profile', icon: User },
+    ...(user?.role === 'ADMIN' ? [{ name: 'Admin', path: '/admin', icon: Shield }] : []),
   ];
 
   const handleNavigate = (path) => {
