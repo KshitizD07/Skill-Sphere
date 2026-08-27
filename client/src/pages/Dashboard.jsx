@@ -107,7 +107,7 @@ export default function Dashboard({ user, onLogout }) {
         API.get('/users/me'),
       ]);
       const catalogue = skillsRes.data || [];
-      const userSkills = profileRes.data?.skills || [];
+      const userSkills = profileRes.data?.data?.skills || [];
       setUserSkillsData(userSkills);
 
       // Merge catalogue skills and user's profile/verified skills so inventory is never empty
