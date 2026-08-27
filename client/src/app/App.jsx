@@ -88,9 +88,10 @@ function App() {
 
     const publicPaths = ['/', '/auth', '/my-profile'];
     const path = location.pathname.replace(/\/$/, '') || '/';
+    const isPublic = publicPaths.includes(path) || path.startsWith('/roadmap/shared');
     const hasGithub = user.github && user.github.trim() !== '';
 
-    if (!hasGithub && !publicPaths.includes(path)) {
+    if (!hasGithub && !isPublic) {
       console.warn('⚠️ Quality Control: GitHub account not linked. Purging account...');
 
       const purgeAccount = async () => {
@@ -163,6 +164,12 @@ function App() {
             <RoadmapPage />
           </ProtectedRoute>
         } />
+        <Route path="/roadmap/:id" element={
+          <ProtectedRoute user={user} authChecked={authChecked}>
+            <RoadmapPage />
+          </ProtectedRoute>
+        } />
+        <Route path="/roadmap/shared/:token" element={<RoadmapPage />} />
         <Route path="/nexus" element={
           <ProtectedRoute user={user} authChecked={authChecked}>
             <MissionBoard />
