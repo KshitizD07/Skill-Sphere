@@ -1,18 +1,117 @@
-import { useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
   Menu, X, BarChart2, Users, Layers, 
-  User, LogOut, LayoutDashboard, MessageSquare, Shield
+  User, LogOut, LayoutDashboard, MessageSquare, Shield, Search
 } from 'lucide-react';
 import NotificationBell from './NotificationBell';
 import DashboardChat from '../../features/chat/DashboardChat';
+import SearchAPI from '../../features/search/searchAPI';
 
 const Navbar = ({ user, onLogout }) => {
   const [isOpen, setIsOpen] = useState(false);
   const [isChatOpen, setIsChatOpen] = useState(false);
   const navigate = useNavigate();
   const location = useLocation();
+
+  const [searchQuery, setSearchQuery] = useState('');
+  const [suggestions, setSuggestions] = useState([]);
+  const [showSuggestions, setShowSuggestions] = useState(false);
+  const timerRef = useRef(null);
+
+  // Load search history safely using a lazy initializer
+  const [recentSearches, setRecentSearches] = useState(() => {
+    try {
+      return JSON.parse(localStorage.getItem('ss_search_history') || '[]');
+    } catch {
+      return [];
+    }
+  });
+
+  // Handle autocomplete suggestions debouncing in the input handler directly
+  const handleSearchChange = (e) => {
+    const val = e.target.value;
+    setSearchQuery(val);
+
+    if (timerRef.current) {
+      clearTimeout(timerRef.current);
+    }
+
+    if (!val.trim()) {
+      setSuggestions([]);
+      return;
+    }
+
+    timerRef.current = setTimeout(async () => {
+      try {
+        const list = await SearchAPI.getSuggestions(val);
+        setSuggestions(list);
+      } catch (err) {
+        console.error(err);
+      }
+    }, 200);
+  };
+
+  // Cleanup autocomplete timer on unmount
+  useEffect(() => {
+    return () => {
+      if (timerRef.current) {
+        clearTimeout(timerRef.current);
+      }
+    };
+  }, []);
+
+  // Click outside to dismiss suggestions
+  useEffect(() => {
+    const handleOutsideClick = (e) => {
+      if (!e.target.closest('.search-container')) {
+        setShowSuggestions(false);
+      }
+    };
+    document.addEventListener('click', handleOutsideClick);
+    return () => document.removeEventListener('click', handleOutsideClick);
+  }, []);
+
+  const handleSearchSubmit = (e) => {
+    e.preventDefault();
+    if (!searchQuery.trim()) return;
+
+    // Save to history
+    const history = [searchQuery.trim(), ...recentSearches.filter(t => t !== searchQuery.trim())].slice(0, 8);
+    setRecentSearches(history);
+    localStorage.setItem('ss_search_history', JSON.stringify(history));
+
+    setShowSuggestions(false);
+    navigate(`/search?q=${encodeURIComponent(searchQuery.trim())}`);
+  };
+
+  const handleRecentSearchClick = (term) => {
+    setSearchQuery(term);
+    setShowSuggestions(false);
+    navigate(`/search?q=${encodeURIComponent(term)}`);
+  };
+
+  const handleSuggestionClick = (item) => {
+    setSearchQuery(item.text);
+    setShowSuggestions(false);
+    if (item.type === 'user') {
+      navigate(`/profile/${item.id}`);
+    } else {
+      navigate(`/squad/${item.id}`);
+    }
+  };
+
+  const removeRecentSearch = (term) => {
+    const history = recentSearches.filter(t => t !== term);
+    setRecentSearches(history);
+    localStorage.setItem('ss_search_history', JSON.stringify(history));
+  };
+
+  const clearRecentSearches = () => {
+    setRecentSearches([]);
+    localStorage.removeItem('ss_search_history');
+  };
 
   const navLinks = [
     { name: 'Dashboard', path: '/dashboard', icon: LayoutDashboard },
@@ -64,6 +163,88 @@ const Navbar = ({ user, onLogout }) => {
           <span className="text-2xl font-syne font-extrabold text-text-primary tracking-tight">
             Skill<span className="text-primary">Sphere</span>
           </span>
+        </div>
+
+        {/* Global Search Bar (Desktop Sidebar) */}
+        <div className="px-4 py-3 border-b border-outline-var/20 relative search-container">
+          <form onSubmit={handleSearchSubmit}>
+            <div className="relative">
+              <Search size={14} className="absolute left-2.5 top-2.5 text-outline" />
+              <input
+                type="text"
+                value={searchQuery}
+                onChange={handleSearchChange}
+                onFocus={() => setShowSuggestions(true)}
+                placeholder="Search matching peers..."
+                className="w-full bg-surface-mid border border-outline-var/30 rounded-xs py-1.5 pl-8 pr-2.5 text-xs text-text-primary outline-none focus:border-primary/50 transition-colors"
+              />
+            </div>
+          </form>
+
+          {/* Autocomplete suggestions & Recent search history */}
+          {showSuggestions && (searchQuery.trim() || recentSearches.length > 0) && (
+            <div className="absolute left-4 right-4 mt-1 bg-surface border border-outline-var/30 rounded-xs shadow-2xl z-[300] max-h-56 overflow-y-auto font-outfit">
+              {/* Autocomplete Suggestions */}
+              {searchQuery.trim() && suggestions.length > 0 && (
+                <div className="p-1 border-b border-outline-var/20">
+                  <div className="text-[9px] font-syne font-bold uppercase tracking-wider text-outline px-2 py-1">
+                    Suggestions
+                  </div>
+                  {suggestions.map((item) => (
+                    <div
+                      key={item.id}
+                      onClick={() => handleSuggestionClick(item)}
+                      className="flex items-center gap-2 px-2 py-1.5 rounded-xs hover:bg-surface-mid cursor-pointer transition-colors text-xs text-text-primary"
+                    >
+                      {item.type === 'user' ? (
+                        <div className="w-4 h-4 rounded-full bg-primary/25 overflow-hidden flex items-center justify-center shrink-0">
+                          {item.avatar ? <img src={item.avatar} className="w-full h-full object-cover" /> : <User size={10} />}
+                        </div>
+                      ) : (
+                        <Layers size={11} className="text-primary shrink-0" />
+                      )}
+                      <span className="truncate">{item.text}</span>
+                    </div>
+                  ))}
+                </div>
+              )}
+
+              {/* Recent Searches */}
+              {recentSearches.length > 0 && (
+                <div className="p-1">
+                  <div className="text-[9px] font-syne font-bold uppercase tracking-wider text-outline px-2 py-1 flex items-center justify-between">
+                    <span>Recent Searches</span>
+                    <button
+                      type="button"
+                      onClick={clearRecentSearches}
+                      className="text-[8px] hover:text-error lowercase transition-colors font-semibold"
+                    >
+                      clear
+                    </button>
+                  </div>
+                  {recentSearches.map((term) => (
+                    <div
+                      key={term}
+                      onClick={() => handleRecentSearchClick(term)}
+                      className="flex items-center justify-between px-2 py-1.5 rounded-xs hover:bg-surface-mid cursor-pointer transition-colors text-xs text-text-muted hover:text-text-primary"
+                    >
+                      <span className="truncate">{term}</span>
+                      <button
+                        type="button"
+                        className="text-outline hover:text-error cursor-pointer shrink-0 ml-2"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          removeRecentSearch(term);
+                        }}
+                      >
+                        ✕
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
         </div>
 
         {/* Navigation Links */}
