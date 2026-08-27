@@ -12,6 +12,7 @@ const GlobalFeed = lazy(() => import('../pages/GlobalFeed'));
 const RoadmapPage = lazy(() => import('../pages/Roadmap'));
 const NotificationsPage = lazy(() => import('../pages/NotificationsPage'));
 const NotFound = lazy(() => import('../pages/NotFound'));
+const SearchPage = lazy(() => import('../pages/Search'));
 
 // Features
 const MyProfile = lazy(() => import('../features/profile/MyProfile'));
@@ -164,6 +165,11 @@ function App() {
         <Route path="/network" element={
           <ProtectedRoute user={user} authChecked={authChecked}>
             <Network />
+          </ProtectedRoute>
+        } />
+        <Route path="/search" element={
+          <ProtectedRoute user={user} authChecked={authChecked}>
+            <SearchPage />
           </ProtectedRoute>
         } />
         <Route path="/roadmap/:skill/:role" element={
