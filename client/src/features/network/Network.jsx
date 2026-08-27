@@ -3,9 +3,10 @@ import { useNavigate, useSearchParams } from 'react-router-dom';
 import {
   Users, Building2, Shield, Search, ArrowRight, MessageSquare,
   Sparkles, RefreshCw, CheckCircle2, Star, ExternalLink,
-  Filter, X, User, Check, Flame
+  Filter, X, User, Check, Flame, UserPlus, UserCheck
 } from 'lucide-react';
 import NetworkAPI from './networkAPI';
+import ProfileAPI from '../profile/profileAPI';
 import API from '../../api';
 import Navbar from '../../shared/components/Navbar';
 import { useToast, ToastContainer } from '../../shared/components/Toast';
@@ -546,6 +547,26 @@ export default function Network() {
 
                     {/* Footer Actions */}
                     <div className="flex items-center gap-2 mt-4 pt-4 border-t border-outline-var/20">
+                      <button
+                        onClick={async () => {
+                          const isCurrentlyFollowing = user.isFollowing;
+                          setUsers(prev => prev.map(u => u.id === user.id ? { ...u, isFollowing: !isCurrentlyFollowing } : u));
+                          try {
+                            if (isCurrentlyFollowing) await ProfileAPI.unfollowUser(user.id);
+                            else await ProfileAPI.followUser(user.id);
+                          } catch {
+                            setUsers(prev => prev.map(u => u.id === user.id ? { ...u, isFollowing: isCurrentlyFollowing } : u));
+                          }
+                        }}
+                        className={`px-3 py-2 border font-syne font-bold text-xs uppercase tracking-wider rounded-xs transition-all flex items-center justify-center gap-1 shrink-0 ${
+                          user.isFollowing
+                            ? 'bg-surface-mid border-outline-var/30 text-text-muted hover:border-error hover:text-error'
+                            : 'bg-primary/15 border-primary/30 text-primary hover:bg-primary hover:text-on-primary'
+                        }`}
+                        title={user.isFollowing ? 'Unfollow' : 'Follow'}
+                      >
+                        {user.isFollowing ? <UserCheck size={13} /> : <UserPlus size={13} />}
+                      </button>
                       <button
                         onClick={() => navigate(`/chat/${user.id}`)}
                         className="flex-1 py-2 bg-primary/10 hover:bg-primary text-primary hover:text-on-primary font-syne font-bold text-xs uppercase tracking-wider rounded-xs transition-all flex items-center justify-center gap-1.5"
