@@ -280,7 +280,7 @@ router.get('/github', (req, res) => {
 
   const backendUrl = req.protocol + '://' + req.get('host');
   const cb = `${backendUrl}/api/auth/github/callback`;
-  const scope = 'repo read:user user:email';
+  const scope = 'read:user user:email';
   const clientId = process.env.GITHUB_CLIENT_ID?.trim();
   let url = `https://github.com/login/oauth/authorize?client_id=${clientId}&redirect_uri=${encodeURIComponent(cb)}&scope=${encodeURIComponent(scope)}&state=${stateStr}`;
   if (targetUser) {
