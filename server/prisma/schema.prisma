@@ -55,6 +55,7 @@ model User {
   conversations  Conversation[]     @relation("UserConversations")
   messages       Message[]
   notifications  InAppNotification[]
+  roadmaps       Roadmap[]
 
   @@index([college])
   @@index([role])
@@ -541,3 +542,25 @@ model InAppNotification {
   @@index([createdAt(sort: Desc)])
   @@index([isRead])
 }
+
+// ─────────────────────────────────────────────────────────────────────────────
+// CAREER ROADMAPS
+// ─────────────────────────────────────────────────────────────────────────────
+
+model Roadmap {
+  id             String   @id @default(uuid())
+  userId         String
+  user           User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  targetRole     String
+  targetSkill    String
+  content        String   @db.Text
+  completedItems String[] @default([])
+  progress       Float    @default(0)
+  shareToken     String?  @unique
+  generatedAt    DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  @@index([userId])
+  @@index([shareToken])
+}
+
