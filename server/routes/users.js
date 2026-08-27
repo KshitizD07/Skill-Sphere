@@ -8,6 +8,7 @@ import { authenticateToken } from '../middleware/auth.js';
 import cache from '../utils/cache.js';
 import logger from '../utils/logger.js';
 import { isUserOnline } from '../socket.js';
+import { sendNotification } from '../utils/notify.js';
 
 const router = express.Router();
 const prisma = new PrismaClient();
@@ -572,17 +573,267 @@ router.get('/filter', authenticateToken, asyncHandler(async (req, res) => {
   res.json({ success: true, data: users });
 }));
 
+// ── POST /api/users/:id/follow — Follow a user ──────────────────────────────
+router.post('/:id/follow', authenticateToken, asyncHandler(async (req, res) => {
+  const targetId = req.params.id;
+  const currentUserId = req.user.userId;
+
+  if (targetId === currentUserId) {
+    throw ApiError.badRequest('You cannot follow yourself');
+  }
+
+  const targetUser = await prisma.user.findUnique({
+    where: { id: targetId },
+    select: { id: true, name: true },
+  });
+
+  if (!targetUser) throw ApiError.notFound('Target user not found');
+
+  const currentUser = await prisma.user.findUnique({
+    where: { id: currentUserId },
+    select: { id: true, name: true, avatar: true },
+  });
+
+  // Create follow record idempotently
+  await prisma.follow.upsert({
+    where: {
+      followerId_followingId: {
+        followerId: currentUserId,
+        followingId: targetId,
+      },
+    },
+    update: {},
+    create: {
+      followerId: currentUserId,
+      followingId: targetId,
+    },
+  });
+
+  // Clear cache
+  await cache.del(`user:profile:${targetId}`);
+  await cache.del(`user:profile:${currentUserId}`);
+
+  // Send real-time in-app notification to target user
+  await sendNotification(targetId, {
+    type: 'FOLLOW',
+    title: 'New Follower',
+    message: `👤 ${currentUser.name} started following you`,
+    actionUrl: `/profile/${currentUser.id}`,
+    senderAvatar: currentUser.avatar,
+  });
+
+  // Compute counts and mutual status
+  const [followerCount, isMutual] = await Promise.all([
+    prisma.follow.count({ where: { followingId: targetId } }),
+    prisma.follow.findUnique({
+      where: {
+        followerId_followingId: {
+          followerId: targetId,
+          followingId: currentUserId,
+        },
+      },
+    }),
+  ]);
+
+  res.json({
+    success: true,
+    data: {
+      following: true,
+      followerCount,
+      isMutual: !!isMutual,
+    },
+  });
+}));
+
+// ── DELETE /api/users/:id/follow — Unfollow a user ────────────────────────────
+router.delete('/:id/follow', authenticateToken, asyncHandler(async (req, res) => {
+  const targetId = req.params.id;
+  const currentUserId = req.user.userId;
+
+  await prisma.follow.deleteMany({
+    where: {
+      followerId: currentUserId,
+      followingId: targetId,
+    },
+  });
+
+  // Clear cache
+  await cache.del(`user:profile:${targetId}`);
+  await cache.del(`user:profile:${currentUserId}`);
+
+  const followerCount = await prisma.follow.count({ where: { followingId: targetId } });
+
+  res.json({
+    success: true,
+    data: {
+      following: false,
+      followerCount,
+      isMutual: false,
+    },
+  });
+}));
+
+// ── GET /api/users/:id/followers — Paginated Followers List ──────────────────
+router.get('/:id/followers', authenticateToken, asyncHandler(async (req, res) => {
+  const targetId = req.params.id;
+  const currentUserId = req.user.userId;
+  const limit = Math.min(Number(req.query.limit) || 20, 50);
+  const cursor = req.query.cursor?.trim();
+
+  const followers = await prisma.follow.findMany({
+    where: { followingId: targetId },
+    include: {
+      follower: {
+        select: {
+          id: true,
+          name: true,
+          avatar: true,
+          headline: true,
+          college: true,
+          role: true,
+        },
+      },
+    },
+    take: limit + 1,
+    cursor: cursor ? { id: cursor } : undefined,
+    orderBy: { createdAt: 'desc' },
+  });
+
+  const hasMore = followers.length > limit;
+  const resultList = hasMore ? followers.slice(0, limit) : followers;
+  const nextCursor = hasMore ? resultList[resultList.length - 1].id : null;
+
+  // Find who the current user is following among these
+  const followerIds = resultList.map((f) => f.follower.id);
+  const myFollowing = await prisma.follow.findMany({
+    where: {
+      followerId: currentUserId,
+      followingId: { in: followerIds },
+    },
+    select: { followingId: true },
+  });
+  const myFollowingSet = new Set(myFollowing.map((f) => f.followingId));
+
+  const data = resultList.map((f) => ({
+    ...f.follower,
+    isFollowing: myFollowingSet.has(f.follower.id),
+    isSelf: f.follower.id === currentUserId,
+  }));
+
+  res.json({
+    success: true,
+    data: {
+      followers: data,
+      nextCursor,
+      hasMore,
+    },
+  });
+}));
+
+// ── GET /api/users/:id/following — Paginated Following List ──────────────────
+router.get('/:id/following', authenticateToken, asyncHandler(async (req, res) => {
+  const targetId = req.params.id;
+  const currentUserId = req.user.userId;
+  const limit = Math.min(Number(req.query.limit) || 20, 50);
+  const cursor = req.query.cursor?.trim();
+
+  const followings = await prisma.follow.findMany({
+    where: { followerId: targetId },
+    include: {
+      following: {
+        select: {
+          id: true,
+          name: true,
+          avatar: true,
+          headline: true,
+          college: true,
+          role: true,
+        },
+      },
+    },
+    take: limit + 1,
+    cursor: cursor ? { id: cursor } : undefined,
+    orderBy: { createdAt: 'desc' },
+  });
+
+  const hasMore = followings.length > limit;
+  const resultList = hasMore ? followings.slice(0, limit) : followings;
+  const nextCursor = hasMore ? resultList[resultList.length - 1].id : null;
+
+  // Find who the current user is following among these
+  const followingIds = resultList.map((f) => f.following.id);
+  const myFollowing = await prisma.follow.findMany({
+    where: {
+      followerId: currentUserId,
+      followingId: { in: followingIds },
+    },
+    select: { followingId: true },
+  });
+  const myFollowingSet = new Set(myFollowing.map((f) => f.followingId));
+
+  const data = resultList.map((f) => ({
+    ...f.following,
+    isFollowing: myFollowingSet.has(f.following.id),
+    isSelf: f.following.id === currentUserId,
+  }));
+
+  res.json({
+    success: true,
+    data: {
+      following: data,
+      nextCursor,
+      hasMore,
+    },
+  });
+}));
+
 // ── GET /api/users/:id — public profile ──────────────────────────────────────
 router.get('/:id', authenticateToken, asyncHandler(async (req, res) => {
-  const cacheKey = `user:profile:${req.params.id}`;
-  const cached   = await cache.get(cacheKey);
-  if (cached) return res.json({ success: true, data: cached });
+  const targetId = req.params.id;
+  const currentUserId = req.user.userId;
 
-  const user = await prisma.user.findUnique({ where: { id: req.params.id }, select: PUBLIC_PROFILE_SELECT });
+  const user = await prisma.user.findUnique({
+    where: { id: targetId },
+    select: {
+      ...PUBLIC_PROFILE_SELECT,
+      _count: {
+        select: {
+          followers: true,
+          following: true,
+        },
+      },
+    },
+  });
   if (!user) throw ApiError.notFound('User');
 
-  const result = normaliseSkills(user);
-  await cache.set(cacheKey, result, 300);
+  const [isFollowedByMe, isFollowingMe] = await Promise.all([
+    prisma.follow.findUnique({
+      where: {
+        followerId_followingId: {
+          followerId: currentUserId,
+          followingId: targetId,
+        },
+      },
+    }),
+    prisma.follow.findUnique({
+      where: {
+        followerId_followingId: {
+          followerId: targetId,
+          followingId: currentUserId,
+        },
+      },
+    }),
+  ]);
+
+  const result = {
+    ...normaliseSkills(user),
+    followerCount: user._count?.followers || 0,
+    followingCount: user._count?.following || 0,
+    isFollowedByMe: !!isFollowedByMe,
+    isFollowingMe: !!isFollowingMe,
+    isMutual: !!isFollowedByMe && !!isFollowingMe,
+  };
+
   res.json({ success: true, data: result });
 }));
 
