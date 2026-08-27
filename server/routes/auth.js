@@ -361,6 +361,20 @@ router.get('/github/callback', asyncHandler(async (req, res) => {
 
   // Handle Account Linking case
   if (action === 'link' && linkingUserId) {
+    // Check if this GitHub username is already linked to another user
+    const duplicateUser = await prisma.user.findFirst({
+      where: {
+        github: { equals: userData.login, mode: 'insensitive' },
+        id: { not: linkingUserId },
+      },
+    });
+
+    if (duplicateUser) {
+      return res.redirect(
+        `${frontendUrl}/my-profile?error=GithubAlreadyLinked&username=${encodeURIComponent(userData.login)}`
+      );
+    }
+
     await prisma.user.update({
       where: { id: linkingUserId },
       data: {
@@ -465,10 +479,10 @@ function isWhitelistedAdmin(email) {
   const rawList = process.env.ADMIN_WHITELIST || '';
   const whitelistedEmails = rawList
     .split(',')
-    .map((e) => e.trim().toLowerCase())
+    .map((e) => e.replace(/['"]/g, '').trim().toLowerCase())
     .filter(Boolean);
 
-  if (whitelistedEmails.length === 0) return true;
+  if (whitelistedEmails.length === 0) return false;
   return whitelistedEmails.includes(email.toLowerCase().trim());
 }
 

@@ -130,7 +130,24 @@ router.post('/leetcode-profile-sync', authenticateToken, asyncHandler(async (req
     return res.status(400).json({ error: 'BAD_REQUEST', message: 'LeetCode username is required' });
   }
 
-  const scanResult = await scanLeetCodeProfile({ username: username.trim() });
+  const trimmed = username.trim();
+
+  // Check if LeetCode username is already linked to another user
+  const duplicate = await prisma.user.findFirst({
+    where: {
+      leetcodeUsername: { equals: trimmed, mode: 'insensitive' },
+      id: { not: req.user.userId },
+    },
+  });
+
+  if (duplicate) {
+    return res.status(409).json({
+      error: 'CONFLICT',
+      message: 'This LeetCode account is already linked to another SkillSphere profile.',
+    });
+  }
+
+  const scanResult = await scanLeetCodeProfile({ username: trimmed });
 
   const updated = await prisma.user.update({
     where: { id: req.user.userId },

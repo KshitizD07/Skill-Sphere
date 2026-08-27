@@ -204,6 +204,10 @@ export default function MyProfile({ user, onUserUpdate }) {
       toast.success(`GitHub account ${linkedUser ? `(@${linkedUser}) ` : ''}linked & synced successfully!`);
       window.history.replaceState({}, document.title, window.location.pathname);
       loadUserData();
+    } else if (urlParams.get('error') === 'GithubAlreadyLinked') {
+      const linkedUser = urlParams.get('username') || '';
+      toast.error(`GitHub account ${linkedUser ? `(@${linkedUser}) ` : ''}is already linked to another profile.`);
+      window.history.replaceState({}, document.title, window.location.pathname);
     } else if (urlParams.get('error')) {
       toast.error('GitHub authorization failed. Please try again.');
       window.history.replaceState({}, document.title, window.location.pathname);
@@ -271,18 +275,24 @@ export default function MyProfile({ user, onUserUpdate }) {
   };
 
   // ── LeetCode ──────────────────────────────────────────────────────────────
-  const handleConnectLeetcode = async () => {
-    if (!leetcodeInput.trim()) return;
+  const handleConnectLeetcode = async (username) => {
+    const target = (typeof username === 'string' ? username : leetcodeInput).trim();
+    if (!target) return;
     setIsSyncingLeetcode(true);
     try {
-      const res = await SkillAPI.syncLeetCodeProfile(leetcodeInput);
-      if (res.success) {
+      const res = await SkillAPI.syncLeetCodeProfile(target);
+      if (res?.success) {
         setLeetcodeData(res.leetcode);
         setLeetcodeInput('');
         toast.success('LeetCode connected!', { title: 'Connected' });
-      } else { toast.error(res.message || 'Failed to connect LeetCode'); }
-    } catch (e) { toast.error(e.message || 'Failed to connect LeetCode'); }
-    finally { setIsSyncingLeetcode(false); }
+      } else {
+        toast.error(res?.message || 'Failed to connect LeetCode');
+      }
+    } catch (e) {
+      toast.error(e?.response?.data?.message || e?.message || 'Failed to connect LeetCode');
+    } finally {
+      setIsSyncingLeetcode(false);
+    }
   };
 
   const handleUnlinkLeetcode = async () => {
@@ -481,12 +491,25 @@ export default function MyProfile({ user, onUserUpdate }) {
               </div>
               {showSkillSelector && (
                 <div className="absolute top-14 left-0 w-full bg-surface-mid border border-outline-var/40 rounded-xs z-[200] max-h-48 overflow-y-auto shadow-2xl">
-                  {allSkills.map((skill) => (
-                    <div key={skill.name} onClick={() => toggleSkill(skill.name)}
-                      className={`p-2.5 text-xs cursor-pointer hover:bg-surface-mid border-b border-outline-var/20 transition-colors ${mySkillNames.includes(skill.name) ? 'text-secondary-bright bg-surface-mid/50' : 'text-text-muted'}`}>
-                      {skill.name} {mySkillNames.includes(skill.name) && '\u2713'}
-                    </div>
-                  ))}
+                  {allSkills.map((skill) => {
+                    const isSelected = mySkillNames.includes(skill.name);
+                    const userSk = mySkillsRaw.find((s) => (s.name || s.skill?.name)?.toLowerCase() === skill.name?.toLowerCase());
+                    const isVerified = userSk?.isVerified;
+                    return (
+                      <div key={skill.name} onClick={() => toggleSkill(skill.name)}
+                        className={`p-2.5 text-xs cursor-pointer hover:bg-surface border-b border-outline-var/20 transition-colors flex items-center justify-between ${isSelected ? 'text-secondary-bright bg-surface-mid/50' : 'text-text-muted'}`}>
+                        <div className="flex items-center gap-2">
+                          <span>{skill.name}</span>
+                          {isVerified && (
+                            <span className="text-[9px] font-bold text-secondary-bright bg-secondary-bright/10 px-1.5 py-0.5 rounded border border-secondary-bright/30">
+                              🛡️ Verified
+                            </span>
+                          )}
+                        </div>
+                        {isSelected && <span className="font-bold text-secondary-bright">✓</span>}
+                      </div>
+                    );
+                  })}
                 </div>
               )}
               <div className="flex flex-wrap gap-2">
@@ -630,7 +653,7 @@ export default function MyProfile({ user, onUserUpdate }) {
                       </div>
                     </div>
                     <div className="flex gap-2">
-                      <button onClick={async () => { setLeetcodeInput(leetcodeData.leetcodeUsername); await handleConnectLeetcode(); }} disabled={isSyncingLeetcode} className="px-3 py-1.5 bg-surface border border-outline-var/40 text-[10px] font-syne font-bold uppercase tracking-wider hover:text-primary transition rounded-xs">
+                      <button onClick={() => handleConnectLeetcode(leetcodeData.leetcodeUsername)} disabled={isSyncingLeetcode} className="px-3 py-1.5 bg-surface border border-outline-var/40 text-[10px] font-syne font-bold uppercase tracking-wider hover:text-primary transition rounded-xs">
                         {isSyncingLeetcode ? 'Syncing...' : 'Re-sync'}
                       </button>
                       <button onClick={handleUnlinkLeetcode} className="px-3 py-1.5 bg-error/10 text-error border border-error/30 text-[10px] font-syne font-bold uppercase tracking-wider hover:bg-error hover:text-on-primary transition rounded-xs">Unlink</button>
@@ -641,7 +664,7 @@ export default function MyProfile({ user, onUserUpdate }) {
                     <label className={labelBase}>LeetCode Username</label>
                     <div className="flex gap-2">
                       <input value={leetcodeInput} onChange={(e) => setLeetcodeInput(e.target.value)} onKeyDown={(e) => e.key === 'Enter' && handleConnectLeetcode()} placeholder="username" className={inputBase} />
-                      <button onClick={handleConnectLeetcode} disabled={isSyncingLeetcode || !leetcodeInput.trim()} className="px-5 py-2 bg-[#f59e0b]/10 border border-[#f59e0b]/30 text-[#f59e0b] text-xs font-syne font-bold uppercase tracking-wider hover:bg-[#f59e0b] hover:text-white disabled:opacity-50 transition rounded-xs">
+                      <button onClick={() => handleConnectLeetcode()} disabled={isSyncingLeetcode || !leetcodeInput.trim()} className="px-5 py-2 bg-[#f59e0b]/10 border border-[#f59e0b]/30 text-[#f59e0b] text-xs font-syne font-bold uppercase tracking-wider hover:bg-[#f59e0b] hover:text-white disabled:opacity-50 transition rounded-xs">
                         {isSyncingLeetcode ? 'Connecting...' : 'Connect'}
                       </button>
                     </div>

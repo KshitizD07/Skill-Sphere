@@ -246,8 +246,28 @@ export default function Dashboard({ user, onLogout }) {
                       </span>
                       {(() => {
                         const userSk = userSkillsData.find(s => s.name.toLowerCase() === skill.name.toLowerCase());
-                        if (userSk && userSk.isVerified) return <span title={`Verified Score: ${userSk.calculatedScore}/10`} className="text-[10px] text-secondary-bright font-syne uppercase tracking-wider font-bold">🛡️ {userSk.calculatedScore}/10</span>;
-                        if (userSk) return <span title="Self-Declared" className="text-[10px] text-error font-syne uppercase tracking-wider font-bold cursor-pointer hover:underline" onClick={(e) => { e.stopPropagation(); setVerifySkillModal(skill.name); }}>⚠️ Verify</span>;
+                        if (userSk && userSk.isVerified) {
+                          const scoreText = userSk.calculatedScore != null ? `${userSk.calculatedScore}/10` : 'Verified';
+                          return (
+                            <span 
+                              title={`Verified Score: ${scoreText}`} 
+                              className="text-[10px] text-secondary-bright font-syne uppercase tracking-wider font-bold bg-secondary-bright/10 border border-secondary-bright/30 px-2 py-0.5 rounded flex items-center gap-1"
+                            >
+                              🛡️ {scoreText}
+                            </span>
+                          );
+                        }
+                        if (userSk) {
+                          return (
+                            <span 
+                              title="Self-Declared" 
+                              className="text-[10px] text-error font-syne uppercase tracking-wider font-bold cursor-pointer hover:underline bg-error/10 border border-error/20 px-2 py-0.5 rounded" 
+                              onClick={(e) => { e.stopPropagation(); setVerifySkillModal(skill.name); }}
+                            >
+                              ⚠️ Verify
+                            </span>
+                          );
+                        }
                         return null;
                       })()}
                     </div>
