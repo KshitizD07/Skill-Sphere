@@ -27,6 +27,8 @@ const AdminDashboard = lazy(() => import('../features/admin/AdminDashboard'));
 
 // Shared
 import ProtectedRoute from '../shared/components/ProtectedRoute';
+import { useAdminInactivityTimer } from '../shared/hooks/useAdminInactivityTimer';
+import { useToast, ToastContainer } from '../shared/components/Toast';
 
 // Loading fallback
 const PageLoader = () => (
@@ -39,6 +41,10 @@ function App() {
   const [user, setUser] = useState(null);
   const [authChecked, setAuthChecked] = useState(false);
   const location = useLocation();
+  const toast = useToast();
+
+  // Enforce 15-minute rolling inactivity demotion for elevated admins
+  useAdminInactivityTimer(user, (updatedUser) => setUser(updatedUser), toast);
 
   // Rehydrate user from httpOnly cookie session on mount
   useEffect(() => {
@@ -113,6 +119,7 @@ function App() {
 
   return (
     <Suspense fallback={<PageLoader />}>
+      <ToastContainer toasts={toast.toasts} removeToast={toast.removeToast} />
       <Routes>
         {/* Public routes */}
         <Route path="/" element={<Landing />} />
