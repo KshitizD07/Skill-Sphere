@@ -140,7 +140,7 @@ export default function Dashboard({ user, onLogout }) {
     } catch (e) {
       console.error('Dashboard fetch error:', e);
     }
-  }, [currentUser?.id]);
+  }, [currentUser]);
 
   // eslint-disable-next-line react-hooks/set-state-in-effect
   useEffect(() => { fetchData(); }, [fetchData]);
