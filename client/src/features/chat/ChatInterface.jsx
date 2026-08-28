@@ -62,7 +62,8 @@ export default function ChatInterface() {
   const [userSearchResults, setUserSearchResults] = useState([]);
   const [userSearchQuery, setUserSearchQuery] = useState('');
   const [showEmojiPicker, setShowEmojiPicker] = useState(false);
-  const [mobileView, setMobileView] = useState('list'); // 'list' | 'chat'
+  const [mobileView, setMobileView] = useState(routeRecipientId ? 'chat' : 'list'); // 'list' | 'chat'
+  const [loadingChat, setLoadingChat] = useState(!!routeRecipientId);
 
   const socketRef = useRef(null);
   const messagesEndRef = useRef(null);
@@ -194,36 +195,63 @@ export default function ChatInterface() {
     };
   }, [currentUser.id, loadConversations]);
 
-  // ── Load Conversation or Target User from URL Params ──────────────────────
+  // ── Parallelized Fast Load from URL Params ────────────────────────────────
   useEffect(() => {
-    const initializeConversations = async () => {
-      await loadConversations();
+    let isMounted = true;
 
-      if (routeRecipientId) {
-        // Find or initialize chat with route recipient
-        ChatAPI.startConversation(routeRecipientId)
-          .then((res) => {
-            if (res?.conversationId) {
-              setActiveConversation(res.conversation);
-              setActiveRecipient(res.conversation?.otherUser);
-              setMobileView('chat');
-              // Join socket room
-              socketRef.current?.emit('JOIN_CONVERSATION', { conversationId: res.conversationId });
+    if (routeRecipientId) {
+      // Concurrently run startConversation AND getConversations in parallel!
+      Promise.all([
+        ChatAPI.startConversation(routeRecipientId).catch((err) => {
+          console.error('Failed to start conversation:', err);
+          return null;
+        }),
+        ChatAPI.getConversations().catch((err) => {
+          console.error('Failed to load conversations:', err);
+          return [];
+        }),
+      ]).then(([startRes, convsRes]) => {
+        if (!isMounted) return;
+        setLoadingChat(false);
 
-              // Fetch message history
-              ChatAPI.getMessages(res.conversationId).then((mRes) => {
-                setMessages(mRes?.messages || []);
-              });
-              // Mark read
-              ChatAPI.markConversationRead(res.conversationId);
-            }
-          })
-          .catch(console.error);
-      }
+        if (Array.isArray(convsRes)) {
+          setConversations(convsRes);
+        }
+
+        if (startRes?.conversationId) {
+          setActiveConversation(startRes.conversation);
+          setActiveRecipient(startRes.conversation?.otherUser);
+          setMobileView('chat');
+
+          if (Array.isArray(startRes.messages)) {
+            setMessages(startRes.messages);
+          } else {
+            ChatAPI.getMessages(startRes.conversationId).then((mRes) => {
+              if (isMounted) setMessages(mRes?.messages || []);
+            });
+          }
+
+          // Join socket room
+          socketRef.current?.emit('JOIN_CONVERSATION', { conversationId: startRes.conversationId });
+
+          // Mark read
+          ChatAPI.markConversationRead(startRes.conversationId);
+        }
+      });
+    } else {
+      ChatAPI.getConversations()
+        .then((data) => {
+          if (isMounted && Array.isArray(data)) {
+            setConversations(data);
+          }
+        })
+        .catch(console.error);
+    }
+
+    return () => {
+      isMounted = false;
     };
-
-    void initializeConversations();
-  }, [routeRecipientId, loadConversations]);
+  }, [routeRecipientId]);
 
   // ── Select a Conversation from Sidebar ────────────────────────────────────
   const selectConversation = async (conv) => {
@@ -354,7 +382,7 @@ export default function ChatInterface() {
       <Navbar user={currentUser} onLogout={() => {}} />
       <ToastContainer toasts={toast.toasts} removeToast={toast.removeToast} />
 
-      <div className="flex-1 md:ml-64 pt-16 md:pt-0 h-screen overflow-hidden flex">
+      <div className="flex-1 md:ml-64 pt-16 md:pt-0 h-[100dvh] overflow-hidden flex">
         {/* ── LEFT PANE: Conversations List ───────────────────────────────── */}
         <div
           className={`w-full md:w-80 lg:w-96 bg-surface border-r border-outline-var/30 flex flex-col h-full shrink-0 ${
@@ -471,16 +499,58 @@ export default function ChatInterface() {
             mobileView === 'list' ? 'hidden md:flex' : 'flex'
           }`}
         >
-          {activeRecipient ? (
+          {loadingChat ? (
+            /* ── Instant Loading Skeleton for Rapid Transition ─────────── */
+            <div className="flex-1 flex flex-col h-full animate-pulse">
+              <div className="p-3.5 bg-surface border-b border-outline-var/20 flex items-center justify-between shrink-0 shadow-sm">
+                <div className="flex items-center gap-3">
+                  <button
+                    onClick={() => {
+                      setMobileView('list');
+                      if (routeRecipientId) navigate('/chat');
+                    }}
+                    className="md:hidden p-2 -ml-2 text-outline"
+                  >
+                    <ChevronLeft size={22} />
+                  </button>
+                  <div className="w-10 h-10 rounded-full bg-surface-mid border border-outline-var/30" />
+                  <div className="space-y-1.5">
+                    <div className="w-28 h-3.5 bg-surface-mid rounded-xs" />
+                    <div className="w-16 h-2.5 bg-surface-mid/60 rounded-xs" />
+                  </div>
+                </div>
+              </div>
+
+              <div className="flex-1 p-4 md:p-6 space-y-4 overflow-y-auto">
+                <div className="flex justify-start">
+                  <div className="w-48 h-10 bg-surface border border-outline-var/20 rounded-md" />
+                </div>
+                <div className="flex justify-end">
+                  <div className="w-56 h-12 bg-primary/20 rounded-md" />
+                </div>
+                <div className="flex justify-start">
+                  <div className="w-40 h-8 bg-surface border border-outline-var/20 rounded-md" />
+                </div>
+              </div>
+
+              <div className="p-3 bg-surface border-t border-outline-var/20">
+                <div className="w-full h-10 bg-surface-mid border border-outline-var/30 rounded-xs" />
+              </div>
+            </div>
+          ) : activeRecipient ? (
             <>
               {/* Thread Header */}
               <div className="p-3.5 bg-surface border-b border-outline-var/20 flex items-center justify-between shrink-0 shadow-sm">
                 <div className="flex items-center gap-3">
                   <button
-                    onClick={() => setMobileView('list')}
-                    className="md:hidden p-1 text-outline hover:text-text-primary"
+                    onClick={() => {
+                      setMobileView('list');
+                      if (routeRecipientId) navigate('/chat');
+                    }}
+                    className="md:hidden p-2 -ml-2 text-outline hover:text-text-primary active:scale-95 transition-transform"
+                    aria-label="Back to conversations"
                   >
-                    <ChevronLeft size={20} />
+                    <ChevronLeft size={22} />
                   </button>
 
                   <div className="relative">
@@ -534,7 +604,7 @@ export default function ChatInterface() {
                 {messages.length === 0 ? (
                   <div className="text-center py-16 text-outline font-outfit">
                     <MessageSquare size={36} className="mx-auto mb-2 text-primary opacity-50" />
-                    <h4 className="text-sm font-bold text-text-primary">Encrypted Direct Communication</h4>
+                    <h4 className="text-sm font-bold text-text-primary">Direct Message Channel</h4>
                     <p className="text-xs text-text-muted mt-1 max-w-sm mx-auto">
                       Say hello to {activeRecipient.name} to start collaborating on skills and squads.
                     </p>
@@ -546,7 +616,7 @@ export default function ChatInterface() {
 
                     return (
                       <div key={m.id || idx} className={`flex ${isMe ? 'justify-end' : 'justify-start'} group`}>
-                        <div className={`max-w-[80%] md:max-w-[70%] space-y-1`}>
+                        <div className={`max-w-[85%] md:max-w-[70%] space-y-1`}>
                           <div
                             className={`p-3 rounded-md text-sm leading-relaxed relative ${
                               isDeleted
@@ -602,7 +672,7 @@ export default function ChatInterface() {
               </div>
 
               {/* Compose Bar */}
-              <div className="p-3 bg-surface border-t border-outline-var/20 shrink-0 relative">
+              <div className="p-3 bg-surface border-t border-outline-var/20 shrink-0 relative pb-safe">
                 {/* Quick emoji drawer */}
                 {showEmojiPicker && (
                   <div className="absolute bottom-full left-3 mb-2 p-2 bg-surface border border-outline-var/30 rounded-md shadow-2xl flex gap-1.5 z-20">
@@ -641,7 +711,7 @@ export default function ChatInterface() {
                         handleSendMessage();
                       }
                     }}
-                    placeholder={`Message ${activeRecipient.name}... (Enter to send, Shift+Enter for newline)`}
+                    placeholder={`Message ${activeRecipient.name}...`}
                     rows={1}
                     maxLength={2000}
                     className="flex-1 bg-surface-mid border border-outline-var/30 focus:border-primary/60 text-text-primary p-2.5 rounded-xs text-sm outline-none resize-none max-h-32 placeholder-outline-var font-outfit"

@@ -37,44 +37,53 @@ router.get('/conversations', authenticateToken, asyncHandler(async (req, res) =>
     orderBy: { updatedAt: 'desc' },
   });
 
-  const formatted = await Promise.all(
-    conversations.map(async (conv) => {
-      const otherUser = conv.participants.find((p) => p.id !== currentUserId) || conv.participants[0];
-      const lastMsg = conv.messages[0] || null;
-
-      // Count unread messages
-      const unreadCount = await prisma.message.count({
+  // Batch unread count in 1 single groupBy query to eliminate N+1 DB roundtrips
+  const convIds = conversations.map((c) => c.id);
+  const unreadGroups = convIds.length > 0
+    ? await prisma.message.groupBy({
+        by: ['conversationId'],
         where: {
-          conversationId: conv.id,
+          conversationId: { in: convIds },
           senderId: { not: currentUserId },
           isRead: false,
         },
-      });
+        _count: { id: true },
+      })
+    : [];
 
-      return {
-        id: conv.id,
-        updatedAt: conv.updatedAt,
-        createdAt: conv.createdAt,
-        otherUser: otherUser
-          ? {
-              ...otherUser,
-              isOnline: isUserOnline(otherUser.id),
-            }
-          : null,
-        lastMessage: lastMsg
-          ? {
-              id: lastMsg.id,
-              content: lastMsg.content,
-              createdAt: lastMsg.createdAt,
-              isRead: lastMsg.isRead,
-              senderId: lastMsg.senderId,
-              senderName: lastMsg.sender?.name,
-            }
-          : null,
-        unreadCount,
-      };
-    })
-  );
+  const unreadMap = {};
+  for (const g of unreadGroups) {
+    unreadMap[g.conversationId] = g._count.id;
+  }
+
+  const formatted = conversations.map((conv) => {
+    const otherUser = conv.participants.find((p) => p.id !== currentUserId) || conv.participants[0];
+    const lastMsg = conv.messages[0] || null;
+    const unreadCount = unreadMap[conv.id] || 0;
+
+    return {
+      id: conv.id,
+      updatedAt: conv.updatedAt,
+      createdAt: conv.createdAt,
+      otherUser: otherUser
+        ? {
+            ...otherUser,
+            isOnline: isUserOnline(otherUser.id),
+          }
+        : null,
+      lastMessage: lastMsg
+        ? {
+            id: lastMsg.id,
+            content: lastMsg.content,
+            createdAt: lastMsg.createdAt,
+            isRead: lastMsg.isRead,
+            senderId: lastMsg.senderId,
+            senderName: lastMsg.sender?.name,
+          }
+        : null,
+      unreadCount,
+    };
+  });
 
   res.json({ success: true, data: formatted });
 }));
@@ -193,6 +202,11 @@ router.post('/conversations', authenticateToken, asyncHandler(async (req, res) =
     },
     include: {
       participants: { select: USER_SELECT },
+      messages: {
+        orderBy: { createdAt: 'desc' },
+        take: 40,
+        include: { sender: { select: USER_SELECT } },
+      },
     },
   });
 
@@ -205,13 +219,19 @@ router.post('/conversations', authenticateToken, asyncHandler(async (req, res) =
       },
       include: {
         participants: { select: USER_SELECT },
+        messages: {
+          include: { sender: { select: USER_SELECT } },
+        },
       },
     });
   }
 
+  const chronologicalMessages = [...(conversation.messages || [])].reverse();
+
   res.json({
     success: true,
     conversationId: conversation.id,
+    messages: chronologicalMessages,
     conversation: {
       ...conversation,
       otherUser: { ...recipient, isOnline: isUserOnline(recipient.id) },
