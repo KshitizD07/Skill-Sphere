@@ -4,7 +4,7 @@ import {
   Heart, User, Building2, Image as ImageIcon, X,
   MessageCircle, Send, CornerDownRight, Trash2, Pencil,
   Share2, Flag, ArrowUp, Loader2, ThumbsUp,
-  AlertTriangle, ExternalLink, Users
+  AlertTriangle, ExternalLink, Users, MoreVertical
 } from 'lucide-react';
 import FeedAPI from '../features/feed/feedAPI';
 import API from '../api';
@@ -179,6 +179,20 @@ function PostCard({
   const [editContent, setEditContent] = useState(post.content);
   const [isExpanded, setIsExpanded] = useState(false);
   const [showImageLightbox, setShowImageLightbox] = useState(false);
+  const [showMenu, setShowMenu] = useState(false);
+  const menuRef = useRef(null);
+
+  useEffect(() => {
+    const handleClickOutside = (e) => {
+      if (menuRef.current && !menuRef.current.contains(e.target)) {
+        setShowMenu(false);
+      }
+    };
+    if (showMenu) {
+      document.addEventListener('mousedown', handleClickOutside);
+    }
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, [showMenu]);
 
   const isOwner = post.author?.id === currentUser.id;
   const liked = post.isLikedByMe || post.likes?.some((l) => l.userId === currentUser.id);
@@ -197,11 +211,11 @@ function PostCard({
     <div className="bg-surface border border-outline-var/20 rounded-md hover:border-secondary/20 transition-colors group relative font-outfit">
       {/* Header */}
       <div className="flex items-center justify-between p-4 pb-3">
-        <div className="flex items-center gap-3 cursor-pointer" onClick={() => navigate(`/profile/${post.author?.id}`)}>
+        <div className="flex items-center gap-3 cursor-pointer min-w-0 flex-1 mr-2" onClick={() => navigate(`/profile/${post.author?.id}`)}>
           <Avatar src={post.author?.avatar} name={post.author?.name} size={10} />
-          <div>
-            <div className="flex items-center gap-1.5">
-              <span className="text-text-primary font-semibold hover:text-primary transition-colors text-sm">
+          <div className="min-w-0 flex-1">
+            <div className="flex items-center gap-1.5 flex-wrap">
+              <span className="text-text-primary font-semibold hover:text-primary transition-colors text-sm truncate">
                 {post.author?.name}
               </span>
               {post.author?.role === 'PROFESSIONAL' && (
@@ -210,47 +224,82 @@ function PostCard({
                 </span>
               )}
             </div>
-            <div className="flex items-center gap-2 text-[10px] font-syne text-outline">
-              {post.author?.headline && <span className="truncate max-w-[200px]">{post.author.headline}</span>}
+            <div className="flex items-center gap-2 text-[10px] font-syne text-outline truncate">
+              {post.author?.headline && <span className="truncate">{post.author.headline}</span>}
               {post.author?.college && (
-                <span className="flex items-center gap-1">
+                <span className="flex items-center gap-1 shrink-0">
                   <Building2 size={10} /> {post.author.college}
                 </span>
               )}
-              <span>• {timeAgo(post.createdAt)}</span>
             </div>
           </div>
         </div>
 
-        <div className="flex items-center gap-1">
-          {isOwner && (
-            <button
-              onClick={() => {
-                setEditing(!editing);
-                setEditContent(post.content);
-              }}
-              className="p-1.5 text-outline hover:text-primary transition-colors rounded-xs"
-              title="Edit post"
-            >
-              <Pencil size={14} />
-            </button>
-          )}
-          {isOwner && (
-            <button
-              onClick={() => onDelete(post.id)}
-              className="p-1.5 text-outline hover:text-error transition-colors rounded-xs"
-              title="Delete post"
-            >
-              <Trash2 size={14} />
-            </button>
-          )}
+        {/* 3-Dot Options Dropdown */}
+        <div className="relative shrink-0" ref={menuRef}>
           <button
-            onClick={() => onOpenReportModal(post.id)}
-            className="p-1.5 text-outline-var hover:text-[#f59e0b] transition-colors rounded-xs"
-            title="Report post"
+            type="button"
+            onClick={() => setShowMenu(!showMenu)}
+            className="p-1.5 text-outline hover:text-text-primary transition-colors rounded-xs hover:bg-surface-mid"
+            title="More options"
           >
-            <Flag size={14} />
+            <MoreVertical size={16} />
           </button>
+
+          {showMenu && (
+            <div className="absolute right-0 top-full mt-1 w-44 bg-surface-mid border border-outline-var/40 rounded-xs shadow-2xl z-50 py-1 font-outfit text-xs">
+              <button
+                type="button"
+                onClick={() => {
+                  onShare(post.id);
+                  setShowMenu(false);
+                }}
+                className="w-full px-3 py-2 text-left text-text-primary hover:bg-surface flex items-center gap-2 transition-colors"
+              >
+                <Share2 size={13} className="text-primary" /> Copy Link
+              </button>
+
+              {isOwner && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    setEditing(true);
+                    setEditContent(post.content);
+                    setShowMenu(false);
+                  }}
+                  className="w-full px-3 py-2 text-left text-text-primary hover:bg-surface flex items-center gap-2 transition-colors"
+                >
+                  <Pencil size={13} className="text-primary" /> Edit Post
+                </button>
+              )}
+
+              {isOwner && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    onDelete(post.id);
+                    setShowMenu(false);
+                  }}
+                  className="w-full px-3 py-2 text-left text-error hover:bg-surface flex items-center gap-2 transition-colors border-t border-outline-var/20"
+                >
+                  <Trash2 size={13} /> Delete Post
+                </button>
+              )}
+
+              {!isOwner && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    onOpenReportModal(post.id);
+                    setShowMenu(false);
+                  }}
+                  className="w-full px-3 py-2 text-left text-[#f59e0b] hover:bg-surface flex items-center gap-2 transition-colors border-t border-outline-var/20"
+                >
+                  <Flag size={13} /> Report Post
+                </button>
+              )}
+            </div>
+          )}
         </div>
       </div>
 
@@ -338,13 +387,10 @@ function PostCard({
           </button>
         </div>
 
-        <button
-          onClick={() => onShare(post.id)}
-          className="flex items-center gap-1.5 text-xs text-outline hover:text-text-primary transition-colors font-syne uppercase tracking-wider"
-          title="Copy link to post"
-        >
-          <Share2 size={14} /> Share
-        </button>
+        {/* Post Timestamp (Positioned on the bottom right) */}
+        <div className="text-outline text-[11px] font-syne tracking-wide flex items-center gap-1 select-none">
+          {timeAgo(post.createdAt)}
+        </div>
       </div>
 
       {/* Expandable Comment Section */}
