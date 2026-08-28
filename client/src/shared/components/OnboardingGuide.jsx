@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
   Sparkles, X, Shield, Brain, Layers, Users, 
-  ArrowRight, ArrowLeft, Check
+  ArrowRight, ArrowLeft, Check, HeartHandshake
 } from 'lucide-react';
 
 const GUIDE_STORAGE_KEY = 'ss_onboarding_guide_seen';
@@ -13,7 +13,7 @@ const STEPS = [
     id: 'proof',
     icon: Shield,
     title: 'Verifiable Proof Engine',
-    badge: 'Step 1 of 4 · Credibility',
+    badge: 'Step 1 of 5 · Credibility',
     description:
       'SkillSphere replaces unverified resumes with proof. Connect your GitHub and LeetCode to auto-generate tamper-proof algorithmic badges and repository commit data.',
     actionLabel: 'Connect Repos',
@@ -23,7 +23,7 @@ const STEPS = [
     id: 'diagnostics',
     icon: Brain,
     title: 'AI Gap Diagnostics & Roadmaps',
-    badge: 'Step 2 of 4 · Intelligence',
+    badge: 'Step 2 of 5 · Intelligence',
     description:
       'Benchmark your current stack against live industry role specifications. Our AI maps missing requirements and generates a personalized, step-by-step learning roadmap.',
     actionLabel: 'Run Diagnostics',
@@ -33,7 +33,7 @@ const STEPS = [
     id: 'nexus',
     icon: Layers,
     title: 'N.E.X.U.S. Squad Matching',
-    badge: 'Step 3 of 4 · Collaboration',
+    badge: 'Step 3 of 5 · Collaboration',
     description:
       'Form or join high-octane engineering squads for hackathons, startups, and open-source. Role slots are skill-gated to ensure high-commitment teams.',
     actionLabel: 'Explore Teams',
@@ -43,11 +43,21 @@ const STEPS = [
     id: 'network',
     icon: Users,
     title: 'Peer Network & Direct Comms',
-    badge: 'Step 4 of 4 · Community',
+    badge: 'Step 4 of 5 · Community',
     description:
       'Discover matching developer peers across institutions, request mentorship sessions, and chat directly in real-time to build projects together.',
     actionLabel: 'Find Peers',
     actionPath: '/network',
+  },
+  {
+    id: 'feedback',
+    icon: HeartHandshake,
+    title: 'Direct Feedback & Co-Creation',
+    badge: 'Step 5 of 5 · Evolution',
+    description:
+      'Help shape SkillSphere. Send direct thoughts, report bugs, or volunteer to co-build features directly with our student engineering team.',
+    actionLabel: 'Give Feedback',
+    actionPath: '/feedback',
   },
 ];
 
@@ -175,7 +185,7 @@ export default function OnboardingGuide() {
                     <h3 className="font-syne font-extrabold text-base tracking-tight text-text-primary">
                       SkillSphere Quick Tour
                     </h3>
-                    <p className="text-[11px] text-text-muted">Master the 4 core pillars in 30 seconds</p>
+                    <p className="text-[11px] text-text-muted">Master the 5 core pillars in 30 seconds</p>
                   </div>
                 </div>
 

@@ -11,7 +11,7 @@ const prisma = new PrismaClient();
 // POST /api/feedback
 router.post('/', authMiddleware, async (req, res, next) => {
   try {
-    const { category, rating, feedback, mostValuable, improvement, deviceInfo } = req.body;
+    const { category, rating, feedback, mostValuable, improvement, wantsToContribute, contributorAreas, contributorContact, deviceInfo } = req.body;
 
     if (!feedback || typeof feedback !== 'string' || feedback.trim().length < 5) {
       throw ApiError.badRequest('Please provide feedback of at least 5 characters');
@@ -38,6 +38,7 @@ router.post('/', authMiddleware, async (req, res, next) => {
       email: user.email,
       category: category || 'General',
       rating: rating || 5,
+      wantsToContribute: !!wantsToContribute,
     });
 
     // Send the email directly to developer inbox
@@ -48,6 +49,9 @@ router.post('/', authMiddleware, async (req, res, next) => {
       feedback: feedback.trim(),
       mostValuable: mostValuable ? String(mostValuable).trim() : '',
       improvement: improvement ? String(improvement).trim() : '',
+      wantsToContribute: Boolean(wantsToContribute),
+      contributorAreas: Array.isArray(contributorAreas) ? contributorAreas : (contributorAreas ? [String(contributorAreas)] : []),
+      contributorContact: contributorContact ? String(contributorContact).trim() : '',
       deviceInfo: deviceInfo || req.headers['user-agent'] || 'Web App',
     });
 

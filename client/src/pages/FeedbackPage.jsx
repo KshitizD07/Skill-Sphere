@@ -27,6 +27,14 @@ const RATING_LABELS = {
   5: 'Exceptional & Love It!',
 };
 
+const CONTRIBUTOR_AREAS = [
+  'Frontend (React / Tailwind)',
+  'Backend (Node.js / Prisma)',
+  'AI Diagnostics & Prompts',
+  'UI / UX & Design',
+  'Bug Testing & QA',
+];
+
 export default function FeedbackPage() {
   const navigate = useNavigate();
   const toast = useToast();
@@ -45,8 +53,17 @@ export default function FeedbackPage() {
   const [feedback, setFeedback] = useState('');
   const [mostValuable, setMostValuable] = useState('');
   const [improvement, setImprovement] = useState('');
+  const [wantsToContribute, setWantsToContribute] = useState(false);
+  const [contributorAreas, setContributorAreas] = useState([]);
+  const [contributorContact, setContributorContact] = useState('');
   const [submitting, setSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState(false);
+
+  const toggleContributorArea = (area) => {
+    setContributorAreas((prev) =>
+      prev.includes(area) ? prev.filter((a) => a !== area) : [...prev, area]
+    );
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -65,6 +82,9 @@ export default function FeedbackPage() {
         feedback: feedback.trim(),
         mostValuable: mostValuable.trim(),
         improvement: improvement.trim(),
+        wantsToContribute,
+        contributorAreas,
+        contributorContact: contributorContact.trim() || currentUser.email || '',
         deviceInfo: `${window.navigator.userAgent} (${window.innerWidth}x${window.innerHeight})`,
       });
 
@@ -85,6 +105,9 @@ export default function FeedbackPage() {
     setFeedback('');
     setMostValuable('');
     setImprovement('');
+    setWantsToContribute(false);
+    setContributorAreas([]);
+    setContributorContact('');
     setSubmitted(false);
   };
 
@@ -100,9 +123,14 @@ export default function FeedbackPage() {
       <main className="flex-1 md:ml-64 pt-20 md:pt-10 pb-16 px-4 sm:px-6 md:px-10 max-w-4xl mx-auto w-full">
         {/* ── Page Header ── */}
         <div className="mb-8 text-center md:text-left">
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-xs bg-[#F5F3FF] border border-[#DDD6FE] text-[#6D28D9] text-[10px] font-syne font-bold uppercase tracking-wider mb-2.5">
-            <HeartHandshake size={13} />
-            <span>Developer Direct Line</span>
+          <div className="flex flex-wrap items-center justify-center md:justify-start gap-2 mb-2.5">
+            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-xs bg-[#F5F3FF] border border-[#DDD6FE] text-[#6D28D9] text-[10px] font-syne font-bold uppercase tracking-wider">
+              <HeartHandshake size={13} />
+              <span>Developer Direct Line</span>
+            </div>
+            <span className="inline-flex items-center gap-1 px-3 py-1 rounded-xs text-[10px] font-syne font-bold tracking-wider uppercase text-[#6D28D9] bg-[#F5F3FF] border border-[#DDD6FE]/80">
+              ✦ For the students, built by students
+            </span>
           </div>
           <h1 className="text-2xl sm:text-3xl md:text-4xl font-syne font-extrabold text-text-primary tracking-tight">
             Help Us Shape <span className="text-primary">SkillSphere</span>
@@ -297,7 +325,76 @@ export default function FeedbackPage() {
                 </div>
               </div>
 
-              {/* ── 6. Submit Button ── */}
+              {/* ── 6. Contributor Co-Builder Option ── */}
+              <div className="p-4 rounded-lg bg-surface-mid border border-accent/30 space-y-3">
+                <label className="flex items-start gap-3 cursor-pointer select-none">
+                  <input
+                    type="checkbox"
+                    checked={wantsToContribute}
+                    onChange={(e) => setWantsToContribute(e.target.checked)}
+                    className="mt-0.5 w-4 h-4 rounded text-accent accent-[#6B7F5E] cursor-pointer shrink-0"
+                  />
+                  <div className="flex-1">
+                    <div className="flex items-center gap-1.5 flex-wrap">
+                      <span className="font-bold text-xs sm:text-sm text-text-primary">
+                        🚀 Want to help develop or contribute to SkillSphere?
+                      </span>
+                    </div>
+                    <p className="text-[11px] text-text-muted mt-0.5 leading-relaxed">
+                      Check this if you&apos;d like to collaborate on the platform, work on this feature/bug, or join our developer contributor group.
+                    </p>
+                  </div>
+                </label>
+
+                {wantsToContribute && (
+                  <motion.div
+                    initial={{ opacity: 0, height: 0 }}
+                    animate={{ opacity: 1, height: 'auto' }}
+                    exit={{ opacity: 0, height: 0 }}
+                    className="pt-3 border-t border-outline-var/30 space-y-3"
+                  >
+                    <div>
+                      <label className="block text-[11px] font-syne font-bold uppercase tracking-wider text-text-muted mb-1.5">
+                        Select your areas of interest:
+                      </label>
+                      <div className="flex flex-wrap gap-1.5">
+                        {CONTRIBUTOR_AREAS.map((area) => {
+                          const active = contributorAreas.includes(area);
+                          return (
+                            <button
+                              type="button"
+                              key={area}
+                              onClick={() => toggleContributorArea(area)}
+                              className={`px-2.5 py-1 rounded-xs text-[11px] font-syne font-bold transition-all cursor-pointer min-h-[32px] flex items-center ${
+                                active
+                                  ? 'bg-accent text-white shadow-xs'
+                                  : 'bg-surface border border-outline-var/40 text-text-muted hover:border-accent'
+                              }`}
+                            >
+                              {active ? '✓ ' : '+ '}{area}
+                            </button>
+                          );
+                        })}
+                      </div>
+                    </div>
+
+                    <div>
+                      <label className="block text-[11px] font-syne font-bold uppercase tracking-wider text-text-muted mb-1">
+                        Preferred Contact / GitHub / Discord handle:
+                      </label>
+                      <input
+                        type="text"
+                        value={contributorContact}
+                        onChange={(e) => setContributorContact(e.target.value)}
+                        placeholder="e.g. github.com/username or Discord #tag"
+                        className="w-full bg-surface border border-outline-var/30 focus:border-accent rounded-xs py-2 px-3 text-xs text-text-primary outline-none transition-colors placeholder:text-outline-var font-outfit"
+                      />
+                    </div>
+                  </motion.div>
+                )}
+              </div>
+
+              {/* ── 7. Submit Button ── */}
               <div className="pt-3 border-t border-outline-var/20 flex flex-col sm:flex-row items-center justify-between gap-3">
                 <p className="text-[11px] text-outline flex items-center gap-1">
                   <Sparkles size={12} className="text-primary shrink-0" />

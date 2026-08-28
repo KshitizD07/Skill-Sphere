@@ -167,7 +167,7 @@ export async function verifyOtp(email, otp) {
 }
 
 // ── Send Feedback Email ──────────────────────────────────────────────────────
-export async function sendFeedbackEmail({ user, category, rating, feedback, mostValuable, improvement, deviceInfo }) {
+export async function sendFeedbackEmail({ user, category, rating, feedback, mostValuable, improvement, wantsToContribute, contributorAreas, contributorContact, deviceInfo }) {
   const cleanUser = (process.env.SMTP_USER || '').replace(/['"]+/g, '').trim();
   const rawAdmin  = process.env.ADMIN_FEEDBACK_EMAIL ? process.env.ADMIN_FEEDBACK_EMAIL.replace(/['"]+/g, '').trim() : '';
 
@@ -177,19 +177,20 @@ export async function sendFeedbackEmail({ user, category, rating, feedback, most
   if (rawAdmin)  emailSet.add(rawAdmin);
   const targetEmails = Array.from(emailSet);
 
-  const subject = `[SkillSphere Feedback] ${category || 'General'} · from ${user.name || 'User'} (${rating || 5}/5 ⭐)`;
+  const subjectPrefix = wantsToContribute ? '🔥 [CONTRIBUTOR LEAD + FEEDBACK]' : '[SkillSphere Feedback]';
+  const subject = `${subjectPrefix} ${category || 'General'} · from ${user.name || 'User'} (${rating || 5}/5 ⭐)`;
   const fromAddr = process.env.SMTP_FROM || `"SkillSphere Feedback" <${cleanUser || 'noreply@skillsphere.com'}>`;
 
   const starIcons = '⭐'.repeat(Math.max(1, Math.min(5, Number(rating) || 5)));
 
   const html = `
     <div style="font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #F5F2EB; color: #111111; padding: 32px 16px; margin: 0;">
-      <div style="max-width: 600px; margin: 0 auto; background: #FFFFFF; border: 1px solid #D5D1C8; border-top: 4px solid #6D28D9; border-radius: 8px; overflow: hidden; box-shadow: 0 4px 12px rgba(90,85,80,0.08);">
+      <div style="max-width: 600px; margin: 0 auto; background: #FFFFFF; border: 1px solid #D5D1C8; border-top: 4px solid ${wantsToContribute ? '#6B7F5E' : '#6D28D9'}; border-radius: 8px; overflow: hidden; box-shadow: 0 4px 12px rgba(90,85,80,0.08);">
         
         <!-- Header -->
         <div style="background: #FAF7F0; padding: 24px; border-bottom: 1px solid #EAE6DC;">
           <div style="display: flex; align-items: center; justify-content: space-between;">
-            <span style="font-size: 11px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.12em; color: #6D28D9; background: #F5F3FF; padding: 4px 10px; border-radius: 4px; border: 1px solid #DDD6FE;">
+            <span style="font-size: 11px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.12em; color: ${wantsToContribute ? '#556B4A' : '#6D28D9'}; background: ${wantsToContribute ? '#E8EDE4' : '#F5F3FF'}; padding: 4px 10px; border-radius: 4px; border: 1px solid ${wantsToContribute ? '#C7D5BF' : '#DDD6FE'};">
               ${category || 'User Feedback'}
             </span>
             <span style="font-size: 16px;">${starIcons}</span>
@@ -201,6 +202,37 @@ export async function sendFeedbackEmail({ user, category, rating, feedback, most
             Submitted on ${new Date().toLocaleString('en-US', { timeZone: 'Asia/Kolkata' })} IST
           </p>
         </div>
+
+        ${wantsToContribute ? `
+          <!-- Contributor Lead Alert Box -->
+          <div style="background: #F0F5EC; border-bottom: 2px solid #6B7F5E; padding: 18px 24px;">
+            <div style="display: flex; align-items: center; gap: 8px;">
+              <span style="font-size: 18px;">🚀</span>
+              <strong style="font-size: 14px; color: #364B29; text-transform: uppercase; letter-spacing: 0.05em;">
+                User Wants to Help Build SkillSphere!
+              </strong>
+            </div>
+            <p style="margin: 6px 0 10px 0; font-size: 12px; color: #4A633B; line-height: 1.5;">
+              This engineer opted in to help develop the platform or collaborate on the feature/bug reported above.
+            </p>
+            ${contributorAreas && contributorAreas.length ? `
+              <div style="margin-bottom: 8px;">
+                <span style="font-size: 11px; font-weight: 700; color: #364B29; text-transform: uppercase;">Areas of Interest:</span>
+                <span style="font-size: 12px; color: #111111; font-weight: 600; margin-left: 6px;">
+                  ${Array.isArray(contributorAreas) ? contributorAreas.join(', ') : contributorAreas}
+                </span>
+              </div>
+            ` : ''}
+            ${contributorContact ? `
+              <div>
+                <span style="font-size: 11px; font-weight: 700; color: #364B29; text-transform: uppercase;">Direct Contact / Discord / GitHub:</span>
+                <span style="font-size: 12px; color: #111111; font-weight: 600; margin-left: 6px;">
+                  ${contributorContact}
+                </span>
+              </div>
+            ` : ''}
+          </div>
+        ` : ''}
 
         <!-- User Information Box -->
         <div style="padding: 20px 24px; background: #FFFFFF; border-bottom: 1px solid #F0EDE4;">
