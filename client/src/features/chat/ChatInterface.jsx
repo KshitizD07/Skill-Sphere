@@ -378,14 +378,14 @@ export default function ChatInterface() {
   );
 
   return (
-    <div className="min-h-screen bg-bg-base text-text-primary font-outfit flex flex-col md:flex-row">
+    <div className="h-[100dvh] max-h-[100dvh] bg-bg-base text-text-primary font-outfit flex flex-col md:flex-row overflow-hidden">
       <Navbar user={currentUser} onLogout={() => {}} />
       <ToastContainer toasts={toast.toasts} removeToast={toast.removeToast} />
 
-      <div className="flex-1 md:ml-64 pt-16 md:pt-0 h-[100dvh] overflow-hidden flex">
+      <div className="flex-1 md:ml-64 pt-16 md:pt-0 h-full max-h-full overflow-hidden flex min-h-0">
         {/* ── LEFT PANE: Conversations List ───────────────────────────────── */}
         <div
-          className={`w-full md:w-80 lg:w-96 bg-surface border-r border-outline-var/30 flex flex-col h-full shrink-0 ${
+          className={`w-full md:w-80 lg:w-96 bg-surface border-r border-outline-var/30 flex flex-col h-full min-h-0 shrink-0 ${
             mobileView === 'chat' ? 'hidden md:flex' : 'flex'
           }`}
         >
@@ -495,13 +495,13 @@ export default function ChatInterface() {
 
         {/* ── RIGHT PANE: Active Chat Thread ──────────────────────────────── */}
         <div
-          className={`flex-1 flex flex-col h-full bg-surface-mid/30 relative ${
+          className={`flex-1 flex flex-col h-full min-h-0 bg-surface-mid/30 relative ${
             mobileView === 'list' ? 'hidden md:flex' : 'flex'
           }`}
         >
           {loadingChat ? (
             /* ── Instant Loading Skeleton for Rapid Transition ─────────── */
-            <div className="flex-1 flex flex-col h-full animate-pulse">
+            <div className="flex-1 min-h-0 flex flex-col h-full animate-pulse">
               <div className="p-3.5 bg-surface border-b border-outline-var/20 flex items-center justify-between shrink-0 shadow-sm">
                 <div className="flex items-center gap-3">
                   <button
@@ -521,7 +521,7 @@ export default function ChatInterface() {
                 </div>
               </div>
 
-              <div className="flex-1 p-4 md:p-6 space-y-4 overflow-y-auto">
+              <div className="flex-1 min-h-0 p-4 md:p-6 space-y-4 overflow-y-auto">
                 <div className="flex justify-start">
                   <div className="w-48 h-10 bg-surface border border-outline-var/20 rounded-md" />
                 </div>
@@ -533,7 +533,7 @@ export default function ChatInterface() {
                 </div>
               </div>
 
-              <div className="p-3 bg-surface border-t border-outline-var/20">
+              <div className="p-3 bg-surface border-t border-outline-var/20 shrink-0 mt-auto">
                 <div className="w-full h-10 bg-surface-mid border border-outline-var/30 rounded-xs" />
               </div>
             </div>
@@ -600,9 +600,9 @@ export default function ChatInterface() {
               </div>
 
               {/* Messages Stream */}
-              <div className="flex-1 overflow-y-auto p-4 md:p-6 space-y-3">
+              <div className="flex-1 min-h-0 overflow-y-auto p-4 md:p-6 space-y-3 flex flex-col">
                 {messages.length === 0 ? (
-                  <div className="text-center py-16 text-outline font-outfit">
+                  <div className="my-auto text-center py-12 text-outline font-outfit">
                     <MessageSquare size={36} className="mx-auto mb-2 text-primary opacity-50" />
                     <h4 className="text-sm font-bold text-text-primary">Direct Message Channel</h4>
                     <p className="text-xs text-text-muted mt-1 max-w-sm mx-auto">
@@ -672,7 +672,7 @@ export default function ChatInterface() {
               </div>
 
               {/* Compose Bar */}
-              <div className="p-3 bg-surface border-t border-outline-var/20 shrink-0 relative pb-safe">
+              <div className="p-3 bg-surface border-t border-outline-var/20 shrink-0 relative mt-auto pb-safe">
                 {/* Quick emoji drawer */}
                 {showEmojiPicker && (
                   <div className="absolute bottom-full left-3 mb-2 p-2 bg-surface border border-outline-var/30 rounded-md shadow-2xl flex gap-1.5 z-20">
