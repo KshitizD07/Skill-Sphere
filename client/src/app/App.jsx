@@ -13,6 +13,7 @@ const RoadmapPage = lazy(() => import('../pages/Roadmap'));
 const NotificationsPage = lazy(() => import('../pages/NotificationsPage'));
 const NotFound = lazy(() => import('../pages/NotFound'));
 const SearchPage = lazy(() => import('../pages/Search'));
+const FeedbackPage = lazy(() => import('../pages/FeedbackPage'));
 
 // Features
 const MyProfile = lazy(() => import('../features/profile/MyProfile'));
@@ -170,6 +171,11 @@ function App() {
         <Route path="/search" element={
           <ProtectedRoute user={user} authChecked={authChecked}>
             <SearchPage />
+          </ProtectedRoute>
+        } />
+        <Route path="/feedback" element={
+          <ProtectedRoute user={user} authChecked={authChecked}>
+            <FeedbackPage />
           </ProtectedRoute>
         } />
         <Route path="/roadmap/:skill/:role" element={

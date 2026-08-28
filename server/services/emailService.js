@@ -176,3 +176,107 @@ export async function verifyOtp(email, otp) {
 
   return { verified: true };
 }
+
+// ── Send Feedback Email ──────────────────────────────────────────────────────
+export async function sendFeedbackEmail({ user, category, rating, feedback, mostValuable, improvement, deviceInfo }) {
+  const targetEmail = process.env.ADMIN_FEEDBACK_EMAIL || process.env.SMTP_USER || 'kshitijdhyani07@gmail.com';
+  const subject = `[SkillSphere Feedback] ${category || 'General'} · from ${user.name || 'User'} (${rating || 5}/5 ⭐)`;
+  const fromAddr = process.env.SMTP_FROM || `"SkillSphere Feedback" <${process.env.SMTP_USER || 'noreply@skillsphere.com'}>`;
+
+  const starIcons = '⭐'.repeat(Math.max(1, Math.min(5, Number(rating) || 5)));
+
+  const html = `
+    <div style="font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #F5F2EB; color: #111111; padding: 32px 16px; margin: 0;">
+      <div style="max-width: 600px; margin: 0 auto; background: #FFFFFF; border: 1px solid #D5D1C8; border-top: 4px solid #6D28D9; border-radius: 8px; overflow: hidden; box-shadow: 0 4px 12px rgba(90,85,80,0.08);">
+        
+        <!-- Header -->
+        <div style="background: #FAF7F0; padding: 24px; border-bottom: 1px solid #EAE6DC;">
+          <div style="display: flex; align-items: center; justify-content: space-between;">
+            <span style="font-size: 11px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.12em; color: #6D28D9; background: #F5F3FF; padding: 4px 10px; border-radius: 4px; border: 1px solid #DDD6FE;">
+              ${category || 'User Feedback'}
+            </span>
+            <span style="font-size: 16px;">${starIcons}</span>
+          </div>
+          <h2 style="margin: 12px 0 4px 0; font-size: 20px; font-weight: 800; color: #111111;">
+            New Platform Feedback
+          </h2>
+          <p style="margin: 0; font-size: 13px; color: #5C5752;">
+            Submitted on ${new Date().toLocaleString('en-US', { timeZone: 'Asia/Kolkata' })} IST
+          </p>
+        </div>
+
+        <!-- User Information Box -->
+        <div style="padding: 20px 24px; background: #FFFFFF; border-bottom: 1px solid #F0EDE4;">
+          <h3 style="margin: 0 0 12px 0; font-size: 11px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.1em; color: #5C5752;">
+            👤 User Details
+          </h3>
+          <table style="width: 100%; font-size: 13px; line-height: 1.6; border-collapse: collapse;">
+            <tr>
+              <td style="width: 120px; color: #5C5752; font-weight: 600; padding: 4px 0;">Name:</td>
+              <td style="color: #111111; font-weight: 700; padding: 4px 0;">${user.name || 'Anonymous'}</td>
+            </tr>
+            <tr>
+              <td style="color: #5C5752; font-weight: 600; padding: 4px 0;">Email:</td>
+              <td style="color: #111111; padding: 4px 0;"><a href="mailto:${user.email}" style="color: #6D28D9; text-decoration: none;">${user.email}</a></td>
+            </tr>
+            <tr>
+              <td style="color: #5C5752; font-weight: 600; padding: 4px 0;">College / Campus:</td>
+              <td style="color: #111111; padding: 4px 0;">${user.college || 'Not Specified'}</td>
+            </tr>
+            <tr>
+              <td style="color: #5C5752; font-weight: 600; padding: 4px 0;">Role:</td>
+              <td style="color: #111111; padding: 4px 0;">${user.role || 'STUDENT'}</td>
+            </tr>
+            <tr>
+              <td style="color: #5C5752; font-weight: 600; padding: 4px 0;">User ID:</td>
+              <td style="color: #5C5752; font-size: 11px; font-family: monospace; padding: 4px 0;">${user.id}</td>
+            </tr>
+          </table>
+        </div>
+
+        <!-- Core Feedback Content -->
+        <div style="padding: 24px;">
+          <h3 style="margin: 0 0 10px 0; font-size: 11px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.1em; color: #5C5752;">
+            💬 Detailed Feedback
+          </h3>
+          <div style="background: #FAF7F0; border: 1px solid #EAE6DC; border-radius: 6px; padding: 16px; font-size: 14px; line-height: 1.6; color: #111111; white-space: pre-wrap;">${feedback}</div>
+
+          ${mostValuable ? `
+            <div style="margin-top: 18px;">
+              <h4 style="margin: 0 0 6px 0; font-size: 12px; font-weight: 700; color: #3A3633;">✨ Most Valuable Feature:</h4>
+              <p style="margin: 0; font-size: 13px; color: #111111; background: #FFFFFF; border: 1px solid #EAE6DC; border-radius: 4px; padding: 10px 12px;">${mostValuable}</p>
+            </div>
+          ` : ''}
+
+          ${improvement ? `
+            <div style="margin-top: 16px;">
+              <h4 style="margin: 0 0 6px 0; font-size: 12px; font-weight: 700; color: #3A3633;">🛠️ Suggested Improvement / Next Feature:</h4>
+              <p style="margin: 0; font-size: 13px; color: #111111; background: #FFFFFF; border: 1px solid #EAE6DC; border-radius: 4px; padding: 10px 12px;">${improvement}</p>
+            </div>
+          ` : ''}
+        </div>
+
+        <!-- Footer -->
+        <div style="background: #FAF7F0; padding: 14px 24px; border-top: 1px solid #EAE6DC; font-size: 11px; color: #5C5752; display: flex; justify-content: space-between;">
+          <span>SkillSphere Intelligence Platform</span>
+          <span>${deviceInfo || 'Web Client'}</span>
+        </div>
+
+      </div>
+    </div>
+  `;
+
+  try {
+    if (process.env.SMTP_USER && process.env.SMTP_PASS) {
+      await getTransporter().sendMail({ from: fromAddr, to: targetEmail, subject, html, replyTo: user.email });
+      logger.info('Feedback email delivered successfully', { fromUser: user.email, targetEmail });
+    } else {
+      logger.warn('Email service unconfigured: logged feedback in mock mode', { fromUser: user.email, category, rating, feedback });
+    }
+  } catch (err) {
+    logger.error('Failed to send feedback email via SMTP', { err: err.message });
+    // Don't crash request if email transport is temporarily unavailable
+  }
+
+  return { success: true };
+}
