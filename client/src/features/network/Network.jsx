@@ -236,11 +236,11 @@ export default function Network() {
               onClick={() => setVerifiedOnly(!verifiedOnly)}
               className={`flex items-center gap-1.5 px-3 py-1 rounded-xs font-syne text-[10px] font-bold uppercase tracking-wider border transition-all ${
                 verifiedOnly
-                  ? 'bg-secondary-bright/10 border-secondary-bright text-secondary-bright'
+                  ? 'bg-accent/10 border-accent text-accent'
                   : 'bg-surface-mid border-outline-var/30 text-outline hover:text-text-primary'
               }`}
             >
-              <CheckCircle2 size={12} className={verifiedOnly ? 'text-secondary-bright' : 'text-outline'} />
+              <CheckCircle2 size={12} className={verifiedOnly ? 'text-accent' : 'text-outline'} />
               Verified Skills Only
             </button>
           </div>
@@ -344,7 +344,7 @@ export default function Network() {
               {users.map((user) => {
                 const roleBadgeClass =
                   user.role === 'PROFESSIONAL'
-                    ? 'bg-secondary-bright/10 text-secondary-bright border-secondary-bright/20'
+                    ? 'bg-accent/10 text-accent border-accent/20'
                     : user.role === 'RECRUITER'
                     ? 'bg-purple-500/10 text-purple-400 border-purple-500/20'
                     : 'bg-primary/10 text-primary border-primary/20';
@@ -362,12 +362,12 @@ export default function Network() {
                             {user.avatar ? (
                               <img src={user.avatar} className="w-full h-full object-cover" alt="" />
                             ) : (
-                              <User size={20} className="text-[#656d84]" />
+                              <User size={20} className="text-outline" />
                             )}
                           </div>
                           <span
                             className={`absolute bottom-0 right-0 w-3 h-3 rounded-full border-2 border-surface ${
-                              user.isOnline ? 'bg-secondary-bright' : 'bg-outline-var'
+                              user.isOnline ? 'bg-accent' : 'bg-outline-var'
                             }`}
                             title={user.isOnline ? 'Online' : 'Offline'}
                           />
@@ -387,7 +387,7 @@ export default function Network() {
                               {user.role}
                             </span>
                             {user.verifiedSkillCount > 0 && (
-                              <span className="px-2 py-0.5 rounded-full text-[9px] font-syne font-bold uppercase bg-secondary-bright/10 text-secondary-bright border border-secondary-bright/20 flex items-center gap-1">
+                              <span className="px-2 py-0.5 rounded-full text-[9px] font-syne font-bold uppercase bg-accent/10 text-accent border border-accent/20 flex items-center gap-1">
                                 <CheckCircle2 size={10} /> {user.verifiedSkillCount} Verified
                               </span>
                             )}
@@ -415,11 +415,11 @@ export default function Network() {
                                 key={sk.id}
                                 className={`px-2 py-0.5 rounded-xs text-[10px] font-syne flex items-center gap-1 border ${
                                   sk.isVerified
-                                    ? 'bg-secondary-bright/10 border-secondary-bright/30 text-secondary-bright font-bold'
+                                    ? 'bg-accent/10 border-accent/30 text-accent font-bold'
                                     : 'bg-surface-mid border-outline-var/25 text-text-muted'
                                 }`}
                               >
-                                {sk.isVerified && <Star size={9} className="fill-secondary-bright text-secondary-bright" />}
+                                {sk.isVerified && <Star size={9} className="fill-accent text-accent" />}
                                 {sk.name}
                               </span>
                             ))}

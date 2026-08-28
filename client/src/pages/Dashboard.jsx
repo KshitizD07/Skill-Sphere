@@ -53,7 +53,7 @@ const RadarChart = ({ score }) => {
           strokeWidth="2.5" 
           strokeLinejoin="round"
         />
-        <text x={cx} y={cy + 8} textAnchor="middle" fill="#f5f5f4" fontSize="22" fontWeight="800" fontFamily="Syne, sans-serif">
+        <text x={cx} y={cy + 8} textAnchor="middle" fill="#111111" fontSize="22" fontWeight="800" fontFamily="Syne, sans-serif">
           {score}%
         </text>
       </svg>
@@ -323,7 +323,7 @@ export default function Dashboard({ user, onLogout }) {
                   : 'text-text-muted hover:text-text-primary'
               }`}
             >
-              <Brain size={14} /> Diagnostics {analysis && <span className="w-2 h-2 rounded-full bg-secondary-bright animate-ping" />}
+              <Brain size={14} /> Diagnostics {analysis && <span className="w-2 h-2 rounded-full bg-accent animate-ping" />}
             </button>
             <button
               onClick={() => setMobileTab('feed')}
@@ -549,7 +549,7 @@ export default function Dashboard({ user, onLogout }) {
                           return (
                             <span 
                               title={`Verified Score: ${scoreText}`} 
-                              className="text-[10px] text-secondary-bright font-syne uppercase tracking-wider font-bold bg-secondary-bright/10 border border-secondary-bright/30 px-2 py-0.5 rounded flex items-center gap-1"
+                              className="text-[10px] text-accent font-syne uppercase tracking-wider font-bold bg-accent/10 border border-accent/30 px-2 py-0.5 rounded flex items-center gap-1"
                             >
                               🛡️ {scoreText}
                             </span>
@@ -648,7 +648,7 @@ export default function Dashboard({ user, onLogout }) {
                                 </button>
                                 <button
                                   onClick={() => setVerifySkillModal(s.name)}
-                                  className="flex-1 sm:flex-none min-h-[36px] justify-center text-[10px] bg-secondary-bright/10 text-secondary-bright border border-secondary-bright/20 px-3 py-2 rounded-lg hover:bg-secondary-bright hover:text-on-primary transition-all flex items-center gap-1.5 font-syne font-bold tracking-widest uppercase active:scale-95"
+                                  className="flex-1 sm:flex-none min-h-[36px] justify-center text-[10px] bg-accent/10 text-accent border border-accent/20 px-3 py-2 rounded-lg hover:bg-accent hover:text-on-accent transition-all flex items-center gap-1.5 font-syne font-bold tracking-widest uppercase active:scale-95"
                                 >
                                   <ShieldAlert size={12} /> Verify
                                 </button>
@@ -663,7 +663,7 @@ export default function Dashboard({ user, onLogout }) {
                           ))}
                         </div>
                       ) : (
-                        <div className="text-secondary-bright flex items-center gap-2 text-sm font-semibold bg-secondary/10 border border-secondary/20 p-4 rounded-lg">
+                        <div className="text-accent flex items-center gap-2 text-sm font-semibold bg-secondary/10 border border-secondary/20 p-4 rounded-lg">
                           <CheckCircle size={18} /> You meet all technical requirements for this role!
                         </div>
                       )}
@@ -715,7 +715,7 @@ export default function Dashboard({ user, onLogout }) {
                           <div className="flex items-center gap-2 text-[10px] text-text-muted">
                             <div className="w-24 h-1.5 bg-bg-base rounded-full overflow-hidden border border-outline-var/20">
                               <div
-                                className="h-full bg-secondary-bright rounded-full"
+                                className="h-full bg-accent rounded-full"
                                 style={{ width: `${rm.progress || 0}%` }}
                               />
                             </div>
@@ -748,14 +748,14 @@ export default function Dashboard({ user, onLogout }) {
                         <div>
                           {(() => {
                             const labels = {
-                              ACQUIRED_SKILL:  { text: 'Skill Verified',   color: 'text-secondary-bright' },
+                              ACQUIRED_SKILL:  { text: 'Skill Verified',   color: 'text-accent' },
                               DIAGNOSTIC_RUN:  { text: 'Diagnostics Run',  color: 'text-primary' },
                               POST_CREATED:    { text: 'Post Published',   color: 'text-primary' },
                               POST_DELETED:    { text: 'Post Removed',     color: 'text-error' },
                               USER_LOGIN:      { text: 'System Access',    color: 'text-outline' },
                               USER_LOGOUT:     { text: 'Session Ended',    color: 'text-outline' },
                               PROFILE_UPDATED: { text: 'Profile Sync',     color: 'text-secondary' },
-                              ACCOUNT_CREATED: { text: 'Node Created',     color: 'text-secondary-bright' },
+                              ACCOUNT_CREATED: { text: 'Node Created',     color: 'text-accent' },
                             };
                             const l = labels[log.action] || { text: log.action, color: 'text-primary' };
                             return <span className={`${l.color} text-xs font-bold font-syne tracking-wide uppercase`}>{l.text}</span>;

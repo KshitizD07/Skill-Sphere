@@ -248,7 +248,7 @@ export default function SquadManage() {
                             {applicant?.avatar ? (
                               <img src={applicant.avatar} className="w-full h-full object-cover" alt="" />
                             ) : (
-                              <User size={18} className="text-[#656d84]" />
+                              <User size={18} className="text-outline" />
                             )}
                           </div>
                           <div className="min-w-0">
@@ -274,9 +274,9 @@ export default function SquadManage() {
 
                       {/* N.E.X.U.S. Compatibility Match Breakdown */}
                       {rec && (
-                        <div className="bg-secondary-bright/5 border border-secondary-bright/20 rounded-xs p-2.5 space-y-1.5">
+                        <div className="bg-accent/5 border border-accent/20 rounded-xs p-2.5 space-y-1.5">
                           <div className="flex items-center justify-between text-[11px]">
-                            <span className="flex items-center gap-1 text-secondary-bright font-syne font-bold uppercase">
+                            <span className="flex items-center gap-1 text-accent font-syne font-bold uppercase">
                               <Sparkles size={11} /> N.E.X.U.S. Score: {rec.compatibilityScore}%
                             </span>
                           </div>
@@ -284,7 +284,7 @@ export default function SquadManage() {
                             <div className="flex items-center gap-1 flex-wrap text-[10px]">
                               <span className="text-text-muted font-syne">Matched:</span>
                               {rec.matchedSkills.map((sk) => (
-                                <span key={sk} className="px-1.5 py-0.2 bg-secondary-bright/10 text-secondary-bright rounded-xs font-bold">
+                                <span key={sk} className="px-1.5 py-0.2 bg-accent/10 text-accent rounded-xs font-bold">
                                   {sk}
                                 </span>
                               ))}
@@ -340,12 +340,12 @@ export default function SquadManage() {
                     {app.user?.avatar ? (
                       <img src={app.user.avatar} className="w-full h-full object-cover" alt="" />
                     ) : (
-                      <User size={15} className="text-[#656d84]" />
+                      <User size={15} className="text-outline" />
                     )}
                   </div>
                   <div className="flex-1 min-w-0">
                     <h4 className="font-bold text-xs text-text-primary truncate">{app.user?.name}</h4>
-                    <span className="text-[10px] text-secondary-bright font-syne font-bold uppercase">
+                    <span className="text-[10px] text-accent font-syne font-bold uppercase">
                       ✓ Active Member
                     </span>
                   </div>

@@ -19,12 +19,12 @@ import { API_BASE_URL } from '../../config/constants';
 // ── Profile Completeness Bar ─────────────────────────────────────────────────
 function CompletenessBar({ score, checks }) {
   const incomplete = (checks || []).filter((c) => !c.done && c.points > 0);
-  const color = score >= 80 ? 'bg-secondary-bright' : score >= 50 ? 'bg-[#f59e0b]' : 'bg-error';
+  const color = score >= 80 ? 'bg-accent' : score >= 50 ? 'bg-[#f59e0b]' : 'bg-error';
   return (
     <div className="bg-surface border border-outline-var/20 rounded-md p-5 hover:border-primary/15 transition-colors">
       <div className="flex items-center justify-between mb-2">
         <h3 className="font-syne text-[10px] font-bold tracking-[0.12em] uppercase text-outline">Profile Strength</h3>
-        <span className={`font-syne font-black text-sm ${score >= 80 ? 'text-secondary-bright' : score >= 50 ? 'text-[#f59e0b]' : 'text-error'}`}>
+        <span className={`font-syne font-black text-sm ${score >= 80 ? 'text-accent' : score >= 50 ? 'text-[#f59e0b]' : 'text-error'}`}>
           {score}%
         </span>
       </div>
@@ -44,7 +44,7 @@ function CompletenessBar({ score, checks }) {
         </div>
       )}
       {score === 100 && (
-        <p className="text-secondary-bright font-syne font-bold text-[10px] uppercase tracking-wider flex items-center gap-1 mt-1">
+        <p className="text-accent font-syne font-bold text-[10px] uppercase tracking-wider flex items-center gap-1 mt-1">
           <CheckCircle size={12} /> Profile Complete
         </p>
       )}
@@ -371,7 +371,7 @@ export default function MyProfile({ user, onUserUpdate }) {
             </button>
             {formData.avatar && (
               <button onClick={() => setFormData((prev) => ({ ...prev, avatar: '' }))}
-                className="text-[10px] uppercase font-bold tracking-widest text-[#656d84] hover:text-error font-syne transition-colors">
+                className="text-[10px] uppercase font-bold tracking-widest text-outline hover:text-error font-syne transition-colors">
                 Remove
               </button>
             )}
@@ -433,16 +433,16 @@ export default function MyProfile({ user, onUserUpdate }) {
               const isVerified = userSk?.isVerified;
               return (
                 <div key={skill.name} onClick={() => toggleSkill(skill.name)}
-                  className={`p-2.5 text-xs cursor-pointer hover:bg-surface border-b border-outline-var/20 transition-colors flex items-center justify-between ${isSelected ? 'text-secondary-bright bg-surface-mid/50' : 'text-text-muted'}`}>
+                  className={`p-2.5 text-xs cursor-pointer hover:bg-surface border-b border-outline-var/20 transition-colors flex items-center justify-between ${isSelected ? 'text-accent bg-surface-mid/50' : 'text-text-muted'}`}>
                   <div className="flex items-center gap-2">
                     <span>{skill.name}</span>
                     {isVerified && (
-                      <span className="text-[9px] font-bold text-secondary-bright bg-secondary-bright/10 px-1.5 py-0.5 rounded border border-secondary-bright/30">
+                      <span className="text-[9px] font-bold text-accent bg-accent/10 px-1.5 py-0.5 rounded border border-accent/30">
                         🛡️ Verified
                       </span>
                     )}
                   </div>
-                  {isSelected && <span className="font-bold text-secondary-bright">✓</span>}
+                  {isSelected && <span className="font-bold text-accent">✓</span>}
                 </div>
               );
             })}
@@ -454,13 +454,13 @@ export default function MyProfile({ user, onUserUpdate }) {
             const verified = skill?.isVerified;
             const source = skill?.verificationSource;
             return (
-              <span key={skillName} className={`px-2.5 py-1 border text-[10px] font-syne font-bold uppercase tracking-wide flex items-center gap-1 group/skill relative rounded-xs transition-colors ${verified ? 'bg-secondary-bright/8 border-secondary-bright/30 text-secondary-bright' : 'bg-primary/8 border-primary/20 text-primary'}`}>
+              <span key={skillName} className={`px-2.5 py-1 border text-[10px] font-syne font-bold uppercase tracking-wide flex items-center gap-1 group/skill relative rounded-xs transition-colors ${verified ? 'bg-accent/8 border-accent/30 text-accent' : 'bg-primary/8 border-primary/20 text-primary'}`}>
                 {skillName}
-                {verified && (source === 'GITHUB' ? <Github size={9} className="text-secondary-bright" /> : source === 'CREDENTIAL' ? <Award size={9} className="text-secondary-bright" /> : <CheckCircle size={9} className="text-secondary-bright" />)}
+                {verified && (source === 'GITHUB' ? <Github size={9} className="text-accent" /> : source === 'CREDENTIAL' ? <Award size={9} className="text-accent" /> : <CheckCircle size={9} className="text-accent" />)}
                 <X size={9} className="cursor-pointer hover:text-error opacity-0 group-hover/skill:opacity-100 transition-opacity ml-1" onClick={() => toggleSkill(skillName)} />
               </span>
             );
-          }) : <span className="text-[#656d84] text-xs italic font-outfit">No active skill modules.</span>}
+          }) : <span className="text-outline text-xs italic font-outfit">No active skill modules.</span>}
         </div>
       </div>
 
@@ -474,7 +474,7 @@ export default function MyProfile({ user, onUserUpdate }) {
         {mySkillNames.length === 0 ? (
           <div className="text-center py-4 border border-outline-var/20 rounded-xs bg-surface-mid/50">
             <Lock size={16} className="mx-auto text-outline mb-2" />
-            <p className="text-[#656d84] text-[10px] font-syne uppercase tracking-wide">Add skills above to unlock verification</p>
+            <p className="text-outline text-[10px] font-syne uppercase tracking-wide">Add skills above to unlock verification</p>
           </div>
         ) : (
           <div className="space-y-2">
@@ -482,10 +482,10 @@ export default function MyProfile({ user, onUserUpdate }) {
               const skill = mySkillsRaw.find((s) => (s.name || s.skill?.name) === skillName) || { name: skillName };
               const verified = skill?.isVerified;
               return (
-                <div key={skillName} className={`w-full p-2.5 border text-xs font-syne font-medium flex items-center justify-between transition-all rounded-xs ${verified ? 'bg-secondary-bright/5 border-secondary-bright/20 text-secondary-bright' : 'bg-surface-mid border-outline-var/30 text-text-muted'}`}>
-                  <span className="flex items-center gap-2 font-bold">{skillName}{verified && <CheckCircle size={12} className="text-secondary-bright" />}</span>
+                <div key={skillName} className={`w-full p-2.5 border text-xs font-syne font-medium flex items-center justify-between transition-all rounded-xs ${verified ? 'bg-accent/5 border-accent/20 text-accent' : 'bg-surface-mid border-outline-var/30 text-text-muted'}`}>
+                  <span className="flex items-center gap-2 font-bold">{skillName}{verified && <CheckCircle size={12} className="text-accent" />}</span>
                   {verified ? (
-                    <span className="text-[9px] uppercase tracking-[0.1em] font-bold text-secondary-bright px-2 py-0.5 bg-secondary-bright/10 border border-secondary-bright/30 rounded">Verified</span>
+                    <span className="text-[9px] uppercase tracking-[0.1em] font-bold text-accent px-2 py-0.5 bg-accent/10 border border-accent/30 rounded">Verified</span>
                   ) : (
                     <button onClick={() => { setSelectedSkill(skill); setShowVerifier(true); }}
                       className="px-3 py-1 bg-primary/10 hover:bg-primary/20 text-primary border border-primary/20 text-[9px] uppercase font-bold tracking-wider rounded-xs flex items-center gap-1 font-syne transition-colors">
@@ -566,7 +566,7 @@ export default function MyProfile({ user, onUserUpdate }) {
 
       <div className="bg-surface border border-outline-var/20 rounded-md p-6">
         <div className="flex items-center gap-2 mb-4">
-          <TrendingUp size={13} className="text-secondary-bright" />
+          <TrendingUp size={13} className="text-accent" />
           <h3 className="font-syne text-[10px] font-bold tracking-[0.12em] uppercase text-outline">Featured GitHub Repositories</h3>
         </div>
         <RepoSelector />
@@ -605,7 +605,7 @@ export default function MyProfile({ user, onUserUpdate }) {
               <Lock size={14} className="text-primary" /> Operator Privilege Access
             </div>
             {adminStatus.isEscalated && (
-              <span className="px-2 py-0.5 bg-secondary-bright/10 text-secondary-bright border border-secondary-bright/30 text-[9px] font-syne font-bold rounded-full uppercase">
+              <span className="px-2 py-0.5 bg-accent/10 text-accent border border-accent/30 text-[9px] font-syne font-bold rounded-full uppercase">
                 Active Admin
               </span>
             )}
@@ -714,7 +714,7 @@ export default function MyProfile({ user, onUserUpdate }) {
               onClick={() => setActiveDrawer('skills')}
               className="p-3 bg-surface border border-outline-var/30 hover:border-primary/50 text-text-primary rounded-xs flex flex-col items-center gap-1.5 transition active:scale-[0.98]"
             >
-              <Shield size={16} className="text-secondary-bright" /> Skills & Tests
+              <Shield size={16} className="text-accent" /> Skills & Tests
             </button>
             <button
               onClick={() => setActiveDrawer('showcase')}
@@ -777,7 +777,7 @@ export default function MyProfile({ user, onUserUpdate }) {
                 <div className="w-12 h-1 bg-outline-var/40 rounded-full mx-auto absolute top-2 left-1/2 -translate-x-1/2" />
                 <h3 className="font-syne font-bold text-sm text-text-primary uppercase tracking-wider flex items-center gap-2 mt-1">
                   {activeDrawer === 'identity' && <><User size={15} className="text-primary" /> Edit Identity & Bio</>}
-                  {activeDrawer === 'skills' && <><Shield size={15} className="text-secondary-bright" /> Skills & Verifications</>}
+                  {activeDrawer === 'skills' && <><Shield size={15} className="text-accent" /> Skills & Verifications</>}
                   {activeDrawer === 'showcase' && <><Github size={15} className="text-primary" /> Showcase & Connections</>}
                   {activeDrawer === 'settings' && <><Lock size={15} className="text-error" /> Security & Access</>}
                 </h3>

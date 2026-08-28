@@ -226,7 +226,7 @@ export default function AdminDashboard() {
               <div className="bg-surface border border-outline-var/20 rounded-md p-5 space-y-1 shadow-sm">
                 <span className="text-[10px] font-syne font-bold uppercase tracking-wider text-outline">Total Platform Users</span>
                 <div className="text-2xl font-bold font-syne text-text-primary">{stats?.totalUsers ?? '—'}</div>
-                <div className="text-[11px] text-secondary-bright flex items-center gap-1 font-mono">
+                <div className="text-[11px] text-accent flex items-center gap-1 font-mono">
                   +{stats?.newUsersToday ?? 0} today
                 </div>
               </div>
@@ -234,7 +234,7 @@ export default function AdminDashboard() {
               <div className="bg-surface border border-outline-var/20 rounded-md p-5 space-y-1 shadow-sm">
                 <span className="text-[10px] font-syne font-bold uppercase tracking-wider text-outline">Total Global Posts</span>
                 <div className="text-2xl font-bold font-syne text-text-primary">{stats?.totalPosts ?? '—'}</div>
-                <div className="text-[11px] text-secondary-bright flex items-center gap-1 font-mono">
+                <div className="text-[11px] text-accent flex items-center gap-1 font-mono">
                   +{stats?.newPostsToday ?? 0} today
                 </div>
               </div>
@@ -377,14 +377,14 @@ export default function AdminDashboard() {
                           <td className="p-3.5 font-mono text-[11px] text-outline">
                             {u.github ? `@${u.github.replace(/^https?:\/\/github\.com\//, '')}` : '—'}
                           </td>
-                          <td className="p-3.5 font-mono text-[11px] text-secondary-bright font-bold">
+                          <td className="p-3.5 font-mono text-[11px] text-accent font-bold">
                             🛡️ {u.verifiedSkillCount || 0}
                           </td>
                           <td className="p-3.5">
                             <span
                               className={`px-2 py-0.5 rounded-full text-[9px] font-syne font-bold uppercase border ${
                                 u.isActive
-                                  ? 'bg-secondary-bright/10 text-secondary-bright border-secondary-bright/20'
+                                  ? 'bg-accent/10 text-accent border-accent/20'
                                   : 'bg-error/10 text-error border-error/30'
                               }`}
                             >
@@ -400,7 +400,7 @@ export default function AdminDashboard() {
                                   className={`px-2.5 py-1 text-[10px] font-syne font-bold uppercase rounded-xs border transition-colors ${
                                     u.isActive
                                       ? 'border-error/30 text-error hover:bg-error/10'
-                                      : 'border-secondary-bright/30 text-secondary-bright hover:bg-secondary-bright/10'
+                                      : 'border-accent/30 text-accent hover:bg-accent/10'
                                   }`}
                                 >
                                   {u.isActive ? <span className="flex items-center gap-1"><UserX size={11} /> Suspend</span> : <span className="flex items-center gap-1"><UserCheck size={11} /> Unsuspend</span>}
@@ -447,7 +447,7 @@ export default function AdminDashboard() {
 
             {reportsList.length === 0 ? (
               <div className="text-center py-16 bg-surface border border-outline-var/20 rounded-md p-8">
-                <CheckCircle2 size={36} className="mx-auto text-secondary-bright mb-2" />
+                <CheckCircle2 size={36} className="mx-auto text-accent mb-2" />
                 <h3 className="font-syne font-bold text-sm text-text-primary uppercase">No Active Reports</h3>
                 <p className="text-xs text-text-muted mt-1">Platform feed and communications are completely clean.</p>
               </div>
@@ -525,7 +525,7 @@ export default function AdminDashboard() {
                   <span className="text-[10px] font-syne font-bold uppercase tracking-wider text-outline flex items-center gap-1.5">
                     <Database size={13} className="text-primary" /> PostgreSQL Database
                   </span>
-                  <span className="w-2.5 h-2.5 rounded-full bg-secondary-bright animate-pulse" />
+                  <span className="w-2.5 h-2.5 rounded-full bg-accent animate-pulse" />
                 </div>
                 <div className="text-xl font-bold font-syne text-text-primary">
                   {healthData?.checks?.database ? 'Online / Connected' : 'Degraded'}
@@ -538,9 +538,9 @@ export default function AdminDashboard() {
               <div className="bg-surface border border-outline-var/20 rounded-md p-5 space-y-2 shadow-sm">
                 <div className="flex items-center justify-between">
                   <span className="text-[10px] font-syne font-bold uppercase tracking-wider text-outline flex items-center gap-1.5">
-                    <Server size={13} className="text-secondary-bright" /> In-Memory Cache
+                    <Server size={13} className="text-accent" /> In-Memory Cache
                   </span>
-                  <span className="w-2.5 h-2.5 rounded-full bg-secondary-bright animate-pulse" />
+                  <span className="w-2.5 h-2.5 rounded-full bg-accent animate-pulse" />
                 </div>
                 <div className="text-xl font-bold font-syne text-text-primary">Operational</div>
                 <div className="text-[10px] font-mono text-outline">Cluster Status: Ready</div>

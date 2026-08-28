@@ -18,7 +18,7 @@ function ToastItem({ toast, onRemove }) {
   }, [dismiss, toast.duration]);
 
   const configs = {
-    success: { icon: <CheckCircle size={18} />,   classes: "bg-surface border-l-4 border-l-secondary-bright text-secondary-bright" },
+    success: { icon: <CheckCircle size={18} />,   classes: "bg-surface border-l-4 border-l-accent text-accent" },
     error:   { icon: <XCircle size={18} />,       classes: "bg-surface border-l-4 border-l-error text-error" },
     warning: { icon: <AlertTriangle size={18} />, classes: "bg-surface border-l-4 border-l-[#f59e0b] text-[#f59e0b]" },
     info:    { icon: <Info size={18} />,           classes: "bg-surface border-l-4 border-l-primary text-primary" },

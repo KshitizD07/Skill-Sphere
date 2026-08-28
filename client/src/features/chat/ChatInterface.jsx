@@ -451,12 +451,12 @@ export default function ChatInterface() {
                         {conv.otherUser?.avatar ? (
                           <img src={conv.otherUser.avatar} alt="" className="w-full h-full object-cover" />
                         ) : (
-                          <User size={18} className="text-[#656d84]" />
+                          <User size={18} className="text-outline" />
                         )}
                       </div>
                       <span
                         className={`absolute bottom-0 right-0 w-3 h-3 rounded-full border-2 border-surface ${
-                          isOnline ? 'bg-secondary-bright' : 'bg-outline-var'
+                          isOnline ? 'bg-accent' : 'bg-outline-var'
                         }`}
                         title={isOnline ? 'Online' : 'Offline'}
                       />
@@ -558,12 +558,12 @@ export default function ChatInterface() {
                       {activeRecipient.avatar ? (
                         <img src={activeRecipient.avatar} alt="" className="w-full h-full object-cover" />
                       ) : (
-                        <User size={18} className="text-[#656d84]" />
+                        <User size={18} className="text-outline" />
                       )}
                     </div>
                     <span
                       className={`absolute bottom-0 right-0 w-2.5 h-2.5 rounded-full border-2 border-surface ${
-                        onlineUserIds.has(activeRecipient.id) ? 'bg-secondary-bright' : 'bg-outline-var'
+                        onlineUserIds.has(activeRecipient.id) ? 'bg-accent' : 'bg-outline-var'
                       }`}
                     />
                   </div>
@@ -574,7 +574,7 @@ export default function ChatInterface() {
                         {activeRecipient.name}
                       </span>
                       {activeRecipient.role === 'PROFESSIONAL' && (
-                        <span className="px-1.5 py-0.5 bg-secondary-bright/10 text-secondary-bright text-[8px] font-syne font-bold uppercase rounded-xs">
+                        <span className="px-1.5 py-0.5 bg-accent/10 text-accent text-[8px] font-syne font-bold uppercase rounded-xs">
                           Pro
                         </span>
                       )}
@@ -582,7 +582,7 @@ export default function ChatInterface() {
                     <div className="flex items-center gap-1.5 text-[10px] text-outline">
                       <span
                         className={`w-1.5 h-1.5 rounded-full ${
-                          onlineUserIds.has(activeRecipient.id) ? 'bg-secondary-bright animate-pulse' : 'bg-outline-var'
+                          onlineUserIds.has(activeRecipient.id) ? 'bg-accent animate-pulse' : 'bg-outline-var'
                         }`}
                       />
                       <span>{onlineUserIds.has(activeRecipient.id) ? 'Online' : 'Offline'}</span>
@@ -634,7 +634,7 @@ export default function ChatInterface() {
                             {isMe && !isDeleted && (
                               <span title={m.isRead ? 'Read' : 'Sent'}>
                                 {m.isRead ? (
-                                  <CheckCheck size={12} className="text-secondary-bright" />
+                                  <CheckCheck size={12} className="text-accent" />
                                 ) : (
                                   <Check size={12} className="text-outline" />
                                 )}

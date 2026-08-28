@@ -193,7 +193,7 @@ export default function MyApplications() {
               <span className="text-[10px] font-syne font-bold uppercase tracking-wider text-outline">
                 Applications Submitted
               </span>
-              <Target size={16} className="text-secondary-bright" />
+              <Target size={16} className="text-accent" />
             </div>
             <div className="flex items-baseline gap-2 mt-2">
               <span className="text-2xl font-extrabold font-syne text-text-primary">
@@ -331,7 +331,7 @@ function ApplicationsList({ applications, navigate, onWithdraw, actionLoading })
                   </span>
                 )}
                 {app.matchScore != null && (
-                  <span className="text-secondary-bright font-syne font-bold text-[11px]">
+                  <span className="text-accent font-syne font-bold text-[11px]">
                     Compatibility: {app.matchScore * 10}%
                   </span>
                 )}

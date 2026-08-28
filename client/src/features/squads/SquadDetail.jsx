@@ -291,7 +291,7 @@ export default function SquadDetail() {
                   className={`px-2.5 py-0.5 rounded-full text-[10px] font-syne font-bold uppercase border ${
                     isFull
                       ? 'bg-outline-var/10 text-outline border-outline-var/20'
-                      : 'bg-secondary-bright/10 text-secondary-bright border-secondary-bright/20'
+                      : 'bg-accent/10 text-accent border-accent/20'
                   }`}
                 >
                   {isFull ? 'Squad Full' : 'Recruiting Members'}
@@ -352,7 +352,7 @@ export default function SquadDetail() {
                               className={`px-2 py-0.5 rounded-full text-[9px] font-syne font-bold uppercase border ${
                                 isFilled
                                   ? 'bg-outline-var/20 text-outline border-outline-var/30'
-                                  : 'bg-secondary-bright/10 text-secondary-bright border-secondary-bright/20'
+                                  : 'bg-accent/10 text-accent border-accent/20'
                               }`}
                             >
                               {isFilled ? 'Filled' : 'Open'}
@@ -370,7 +370,7 @@ export default function SquadDetail() {
                               </span>
                             )}
                             {slot.requireVerified && (
-                              <span className="flex items-center gap-1 text-secondary-bright text-[11px] font-semibold">
+                              <span className="flex items-center gap-1 text-accent text-[11px] font-semibold">
                                 <CheckCircle2 size={12} /> Verified Skill Required
                               </span>
                             )}
@@ -448,7 +448,7 @@ export default function SquadDetail() {
                   {squad.leader?.avatar ? (
                     <img src={squad.leader.avatar} className="w-full h-full object-cover" alt="" />
                   ) : (
-                    <User size={20} className="text-[#656d84]" />
+                    <User size={20} className="text-outline" />
                   )}
                 </div>
 
@@ -516,7 +516,7 @@ export default function SquadDetail() {
               <div
                 className={`p-3 rounded-xs text-xs border ${
                   qualification.qualifies
-                    ? 'bg-secondary-bright/10 border-secondary-bright/30 text-secondary-bright'
+                    ? 'bg-accent/10 border-accent/30 text-accent'
                     : 'bg-error/10 border-error/30 text-error'
                 }`}
               >

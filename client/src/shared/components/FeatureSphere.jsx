@@ -1,11 +1,11 @@
 import { useRef, useState, useEffect } from 'react';
 
 const features = [
-  { id: 'analysis',   label: 'AI Analysis',    icon: '🧠', color: '#adc6ff', glow: 'rgba(173,198,255,0.35)' },
-  { id: 'swap',       label: 'Mentorship',     icon: '🔗', color: '#89f5e7', glow: 'rgba(137,245,231,0.35)' },
-  { id: 'feed',       label: 'Community',      icon: '📡', color: '#bec6e0', glow: 'rgba(190,198,224,0.30)' },
-  { id: 'nexus',      label: 'N.E.X.U.S.',     icon: '⚡', color: '#6bd8cb', glow: 'rgba(107,216,203,0.35)' },
-  { id: 'verification', label: 'Verification', icon: '🛡️', color: '#adc6ff', glow: 'rgba(173,198,255,0.30)' },
+  { id: 'analysis',   label: 'AI Analysis',    icon: '🧠', color: '#C29F5D', glow: 'rgba(194,159,93,0.30)' },
+  { id: 'swap',       label: 'Mentorship',     icon: '🔗', color: '#6B7F5E', glow: 'rgba(107,127,94,0.30)' },
+  { id: 'feed',       label: 'Community',      icon: '📡', color: '#A88243', glow: 'rgba(168,130,67,0.25)' },
+  { id: 'nexus',      label: 'N.E.X.U.S.',     icon: '⚡', color: '#556B4A', glow: 'rgba(85,107,74,0.30)' },
+  { id: 'verification', label: 'Verification', icon: '🛡️', color: '#C29F5D', glow: 'rgba(194,159,93,0.25)' },
 ];
 
 export default function FeatureSphere({ scrollToSection }) {
@@ -91,7 +91,7 @@ export default function FeatureSphere({ scrollToSection }) {
 
       {/* Central logo */}
       <div className="absolute z-0 select-none pointer-events-none text-center">
-        <div className="text-3xl sm:text-4xl md:text-5xl font-extrabold font-outfit tracking-tighter" style={{ color: '#adc6ff', opacity: 0.9 }}>
+        <div className="text-3xl sm:text-4xl md:text-5xl font-extrabold font-outfit tracking-tighter" style={{ color: '#C29F5D', opacity: 0.9 }}>
           SS
         </div>
         <div className="font-syne text-[7px] sm:text-[8px] font-bold tracking-[0.2em] uppercase text-outline mt-0.5">
@@ -108,7 +108,7 @@ export default function FeatureSphere({ scrollToSection }) {
           style={{
             willChange: 'transform, opacity',
             transform: 'translateZ(0)',
-            background: 'rgba(23, 31, 51, 0.85)',
+            background: 'rgba(26, 25, 24, 0.85)',
             backdropFilter: 'blur(12px)',
             border: `1px solid ${feature.color}30`,
             boxShadow: `0 0 15px ${feature.glow}, inset 0 0 15px ${feature.glow}06`,

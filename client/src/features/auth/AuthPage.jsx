@@ -90,7 +90,7 @@ export default function AuthPage() {
                 onClick={() => handleRoleSelect('PROFESSIONAL')}
                 className={`p-2.5 border rounded-xs font-syne text-[10px] font-bold uppercase tracking-wider flex flex-col items-center gap-1.5 transition ${
                   selectedRole === 'PROFESSIONAL'
-                    ? 'bg-secondary-bright/10 border-secondary-bright text-secondary-bright'
+                    ? 'bg-accent/10 border-accent text-accent'
                     : 'bg-surface-mid/50 border-outline-var/30 text-text-muted hover:text-text-primary'
                 }`}
               >
@@ -111,7 +111,7 @@ export default function AuthPage() {
         )}
 
         {recruiterNotice && isRegister && (
-          <div className="mb-6 p-3 bg-secondary-bright/10 border border-secondary-bright/30 text-secondary-bright text-xs rounded-xs flex items-center gap-2 font-syne uppercase tracking-wider font-bold">
+          <div className="mb-6 p-3 bg-accent/10 border border-accent/30 text-accent text-xs rounded-xs flex items-center gap-2 font-syne uppercase tracking-wider font-bold">
             <span>Recruiter accounts will be available soon! Stay tuned.</span>
           </div>
         )}

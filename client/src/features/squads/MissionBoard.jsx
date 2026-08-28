@@ -323,7 +323,7 @@ function SquadCard({ squad, currentUser }) {
             className={`px-2 py-0.5 rounded-full text-[9px] font-syne font-bold uppercase border ${
               isFull
                 ? 'bg-outline-var/10 text-outline border-outline-var/20'
-                : 'bg-secondary-bright/10 text-secondary-bright border-secondary-bright/20'
+                : 'bg-accent/10 text-accent border-accent/20'
             }`}
           >
             {isFull ? 'Full' : 'Open'}

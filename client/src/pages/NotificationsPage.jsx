@@ -42,7 +42,7 @@ function getNotificationIcon(type) {
     case 'SQUAD_ACCEPTED':
     case 'SQUAD_REJECTED':
     case 'MATCH_RECOMMENDED':
-      return <Users size={16} className="text-secondary-bright" />;
+      return <Users size={16} className="text-accent" />;
     case 'SKILL_VERIFIED':
     case 'SKILL_ENDORSED':
       return <Award size={16} className="text-primary" />;
@@ -280,7 +280,7 @@ export default function NotificationsPage() {
                             {notif.senderAvatar ? (
                               <img src={notif.senderAvatar} className="w-full h-full object-cover" alt="" />
                             ) : (
-                              <User size={18} className="text-[#656d84]" />
+                              <User size={18} className="text-outline" />
                             )}
                           </div>
                           <span className="absolute -bottom-1 -right-1 w-5 h-5 rounded-full bg-surface border border-outline-var/40 flex items-center justify-center shadow-xs">

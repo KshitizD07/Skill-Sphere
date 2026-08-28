@@ -256,13 +256,13 @@ export default function RoadmapPage() {
             <div className="bg-surface-mid border border-outline-var/30 rounded-md p-4 min-w-[240px] space-y-2">
               <div className="flex items-center justify-between text-xs font-syne font-bold">
                 <span className="uppercase tracking-wider text-text-muted flex items-center gap-1.5">
-                  <BookmarkCheck size={14} className="text-secondary-bright" /> Milestone Progress
+                  <BookmarkCheck size={14} className="text-accent" /> Milestone Progress
                 </span>
                 <span className="text-primary">{progress}%</span>
               </div>
               <div className="w-full h-2 bg-bg-base rounded-full overflow-hidden border border-outline-var/20">
                 <div
-                  className="h-full bg-gradient-to-r from-primary to-secondary-bright transition-all duration-500 rounded-full"
+                  className="h-full bg-gradient-to-r from-primary to-accent transition-all duration-500 rounded-full"
                   style={{ width: `${progress}%` }}
                 />
               </div>
@@ -317,7 +317,7 @@ export default function RoadmapPage() {
             {/* Left: Rendered Markdown Curriculum */}
             <div className="lg:col-span-8 bg-surface border border-outline-var/20 rounded-md p-6 md:p-8 space-y-6">
               <div className="flex items-center gap-2 pb-4 border-b border-outline-var/20">
-                <CheckCircle className="text-secondary-bright" size={18} />
+                <CheckCircle className="text-accent" size={18} />
                 <h3 className="font-syne font-bold text-sm uppercase tracking-wider text-text-primary">
                   Structured Curriculum
                 </h3>
@@ -330,7 +330,7 @@ export default function RoadmapPage() {
                       <h1 className="text-xl font-extrabold text-primary font-syne mt-4 mb-2 tracking-tight" {...props} />
                     ),
                     h2: ({ ...props }) => (
-                      <h2 className="text-base font-bold text-secondary-bright font-syne mt-6 mb-2 flex items-center gap-2 border-b border-outline-var/15 pb-2" {...props}>
+                      <h2 className="text-base font-bold text-accent font-syne mt-6 mb-2 flex items-center gap-2 border-b border-outline-var/15 pb-2" {...props}>
                         <Calendar size={15} className="text-primary" /> {props.children}
                       </h2>
                     ),

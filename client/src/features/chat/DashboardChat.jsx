@@ -181,12 +181,12 @@ export default function DashboardChat({ isOpen, onClose }) {
                       <div className="w-10 h-10 rounded-full border border-outline-var/40 overflow-hidden bg-surface-mid shrink-0 flex items-center justify-center">
                         {otherUser.avatar
                           ? <img src={otherUser.avatar} className="w-full h-full object-cover" alt="" />
-                          : <User size={16} className="text-[#656d84]" />}
+                          : <User size={16} className="text-outline" />}
                       </div>
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center justify-between">
                           <p className="text-sm font-bold text-text-primary truncate">{otherUser.name}</p>
-                          {lastMsg && <span className="text-[10px] text-[#656d84] font-syne tracking-widest">{new Date(lastMsg.createdAt).toLocaleDateString()}</span>}
+                          {lastMsg && <span className="text-[10px] text-outline font-syne tracking-widest">{new Date(lastMsg.createdAt).toLocaleDateString()}</span>}
                         </div>
                         {lastMsg && (
                           <p className="text-[11px] text-outline truncate mt-0.5">

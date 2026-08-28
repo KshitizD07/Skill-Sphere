@@ -273,7 +273,7 @@ export default function SkillVerifier({ userId, skillName: initialSkillName, ski
   const getLevelColor = (level) => {
     switch (level?.toLowerCase()) {
       case 'expert':
-        return 'text-[#a855f7] bg-[#a855f7]/10 border-[#a855f7]/30';
+        return 'text-[#8B6E4E] bg-[#8B6E4E]/10 border-[#8B6E4E]/30';
       case 'advanced':
         return 'text-secondary-bright bg-secondary-bright/10 border-secondary-bright/30';
       case 'intermediate':
@@ -309,15 +309,15 @@ export default function SkillVerifier({ userId, skillName: initialSkillName, ski
 
       <button
         onClick={() => handleMethodSelect('batch')}
-        className="w-full p-4 bg-surface-mid/50 border border-outline-var/30 hover:border-secondary-bright/50 rounded-md transition-all flex items-center gap-4 text-left group hover:bg-surface-mid"
+        className="w-full p-4 bg-surface-mid/50 border border-outline-var/30 hover:border-accent/50 rounded-md transition-all flex items-center gap-4 text-left group hover:bg-surface-mid"
       >
-        <div className="p-3 bg-secondary-bright/10 rounded-md group-hover:bg-secondary-bright/20 transition-colors shrink-0">
-          <Sparkles className="w-6 h-6 text-secondary-bright" />
+        <div className="p-3 bg-accent/10 rounded-md group-hover:bg-accent/20 transition-colors shrink-0">
+          <Sparkles className="w-6 h-6 text-accent" />
         </div>
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2">
             <h4 className="text-sm font-bold text-text-primary">Auto-Discovery Batch Scan</h4>
-            <span className="px-1.5 py-0.5 bg-secondary-bright/10 text-secondary-bright border border-secondary-bright/20 text-[9px] font-syne font-bold uppercase rounded-xs">
+            <span className="px-1.5 py-0.5 bg-accent/10 text-accent border border-accent/20 text-[9px] font-syne font-bold uppercase rounded-xs">
               Instant Match
             </span>
           </div>
@@ -325,7 +325,7 @@ export default function SkillVerifier({ userId, skillName: initialSkillName, ski
             Automatically cross-reference all your profile skills against your synced GitHub repositories.
           </p>
         </div>
-        <ArrowRight size={16} className="text-outline group-hover:text-secondary-bright group-hover:translate-x-1 transition-all shrink-0" />
+        <ArrowRight size={16} className="text-outline group-hover:text-accent group-hover:translate-x-1 transition-all shrink-0" />
       </button>
 
       <button
@@ -346,10 +346,10 @@ export default function SkillVerifier({ userId, skillName: initialSkillName, ski
 
       <button
         onClick={() => handleMethodSelect('certificate')}
-        className="w-full p-4 bg-surface-mid/50 border border-outline-var/30 hover:border-secondary-bright/50 rounded-md transition-all flex items-center gap-4 text-left group hover:bg-surface-mid"
+        className="w-full p-4 bg-surface-mid/50 border border-outline-var/30 hover:border-accent/50 rounded-md transition-all flex items-center gap-4 text-left group hover:bg-surface-mid"
       >
-        <div className="p-3 bg-secondary-bright/10 rounded-md group-hover:bg-secondary-bright/20 transition-colors shrink-0">
-          <Award className="w-6 h-6 text-secondary-bright" />
+        <div className="p-3 bg-accent/10 rounded-md group-hover:bg-accent/20 transition-colors shrink-0">
+          <Award className="w-6 h-6 text-accent" />
         </div>
         <div className="flex-1 min-w-0">
           <h4 className="text-sm font-bold text-text-primary">Certificate / Credential Link</h4>
@@ -357,7 +357,7 @@ export default function SkillVerifier({ userId, skillName: initialSkillName, ski
             Attach verified credentials from Credly, AWS, Coursera, or custom certifications.
           </p>
         </div>
-        <ArrowRight size={16} className="text-outline group-hover:text-secondary-bright group-hover:translate-x-1 transition-all shrink-0" />
+        <ArrowRight size={16} className="text-outline group-hover:text-accent group-hover:translate-x-1 transition-all shrink-0" />
       </button>
     </div>
   );
@@ -479,8 +479,8 @@ export default function SkillVerifier({ userId, skillName: initialSkillName, ski
             <span className="text-[10px] text-outline">You can change this visibility setting anytime in profile.</span>
           </div>
         </div>
-        <div className={`w-9 h-5 rounded-full relative transition-colors ${isStealth ? 'bg-[#656d84]/30' : 'bg-[#29a195]/30'}`}>
-          <div className={`absolute top-1 w-3 h-3 rounded-full transition-all ${isStealth ? 'left-5 bg-[#bec6e0]' : 'left-1 bg-secondary-bright'}`} />
+        <div className={`w-9 h-5 rounded-full relative transition-colors ${isStealth ? 'bg-outline/30' : 'bg-accent/30'}`}>
+          <div className={`absolute top-1 w-3 h-3 rounded-full transition-all ${isStealth ? 'left-5 bg-outline-var' : 'left-1 bg-secondary-bright'}`} />
         </div>
       </div>
 
@@ -540,7 +540,7 @@ export default function SkillVerifier({ userId, skillName: initialSkillName, ski
                     ? 'text-secondary-bright bg-secondary-bright/5'
                     : isCurrent
                     ? 'text-primary font-bold bg-primary/10 border border-primary/20'
-                    : 'text-[#656d84]'
+                    : 'text-outline'
                 }`}
               >
                 {isDone ? (
@@ -791,7 +791,7 @@ export default function SkillVerifier({ userId, skillName: initialSkillName, ski
                 <div className="text-[10px] text-outline uppercase tracking-wider">Medium</div>
               </div>
               <div className="p-2 bg-surface rounded-xs">
-                <div className="text-[#ff375f] font-bold">{dsaData.hard}</div>
+                <div className="text-error font-bold">{dsaData.hard}</div>
                 <div className="text-[10px] text-outline uppercase tracking-wider">Hard</div>
               </div>
             </div>

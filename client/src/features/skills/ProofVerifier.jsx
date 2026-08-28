@@ -56,7 +56,7 @@ export default function ProofVerifier({ skillId, skillName, onVerifyComplete }) 
           <div>
             <label className="block font-syne text-[10px] font-bold tracking-[0.12em] uppercase text-outline mb-1.5">Evidence URL</label>
             <div className="flex items-center bg-surface-mid rounded-xs border border-outline-var/40 focus-within:border-secondary-bright/50 transition-colors">
-              <Link className="w-4 h-4 text-[#656d84] ml-3 shrink-0" />
+              <Link className="w-4 h-4 text-outline ml-3 shrink-0" />
               <input
                 type="text"
                 value={proofUrl}
@@ -65,7 +65,7 @@ export default function ProofVerifier({ skillId, skillName, onVerifyComplete }) 
                 className="w-full bg-transparent p-3 text-sm text-text-primary outline-none placeholder-outline-var font-outfit"
               />
             </div>
-            <p className="mt-2 text-[10px] text-[#656d84] leading-tight">
+            <p className="mt-2 text-[10px] text-outline leading-tight">
               Provide a link to your Credly badge, AWS certificate, or portfolio project.
             </p>
           </div>
@@ -90,7 +90,7 @@ export default function ProofVerifier({ skillId, skillName, onVerifyComplete }) 
             Professional evidence attached to <span className="text-text-primary font-semibold">{skillName}</span>
           </p>
           <div className="p-2 bg-surface-mid border border-outline-var/30 rounded-xs">
-            <p className="text-[10px] text-[#656d84] truncate">{proofUrl}</p>
+            <p className="text-[10px] text-outline truncate">{proofUrl}</p>
           </div>
         </div>
       )}

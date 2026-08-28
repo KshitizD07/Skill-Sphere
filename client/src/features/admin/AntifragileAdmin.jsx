@@ -93,8 +93,8 @@ export default function AntifragileAdmin() {
             <ArrowLeft size={18} />
           </button>
           <div className="flex items-center gap-3">
-            <div className="p-2 bg-secondary-bright/10 rounded-xs border border-secondary-bright/20">
-              <Activity className="text-secondary-bright" size={20} />
+            <div className="p-2 bg-accent/10 rounded-xs border border-accent/20">
+              <Activity className="text-accent" size={20} />
             </div>
             <div>
               <h1 className="text-xl font-extrabold text-text-primary tracking-tight">N.E.X.U.S. Engine Control</h1>
@@ -115,7 +115,7 @@ export default function AntifragileAdmin() {
               onClick={() => setActiveTab(tab.id)}
               className={`px-4 py-2 font-syne font-bold text-xs uppercase tracking-wider flex items-center gap-2 border-b-2 transition-all ${
                 activeTab === tab.id
-                  ? 'border-secondary-bright text-secondary-bright'
+                  ? 'border-accent text-accent'
                   : 'border-transparent text-text-muted hover:text-text-primary'
               }`}
             >

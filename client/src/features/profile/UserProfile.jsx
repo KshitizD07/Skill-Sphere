@@ -77,7 +77,7 @@ function Avatar({ src, name, size = 10 }) {
       {src ? (
         <img src={src} className="w-full h-full object-cover" alt={name || 'User avatar'} loading="lazy" decoding="async" />
       ) : (
-        <User size={iconSizeMap[size] || 20} className="text-[#656d84]" />
+        <User size={iconSizeMap[size] || 20} className="text-outline" />
       )}
     </div>
   );
@@ -95,7 +95,7 @@ function RecruiterView({ user }) {
       <div className="absolute top-0 right-0 bg-error/80 text-on-primary px-3 py-1 text-xs font-bold font-syne tracking-wide">RECRUITER_VIEW</div>
       <div className="flex items-start gap-6 mb-8">
         <div className="w-20 h-20 rounded-full border-2 border-error/30 overflow-hidden bg-surface-mid shrink-0">
-          {user.avatar ? <img src={user.avatar} alt="" className="w-full h-full object-cover" /> : <div className="w-full h-full flex items-center justify-center"><User size={32} className="text-[#656d84]" /></div>}
+          {user.avatar ? <img src={user.avatar} alt="" className="w-full h-full object-cover" /> : <div className="w-full h-full flex items-center justify-center"><User size={32} className="text-outline" /></div>}
         </div>
         <div>
           <h2 className="text-2xl font-black text-text-primary font-syne tracking-wide uppercase">{user.name}</h2>
@@ -112,14 +112,14 @@ function RecruiterView({ user }) {
         {verifiedSkills.length > 0 ? (
           <div className="flex flex-wrap gap-2">
             {verifiedSkills.map(s => (
-              <div key={s.id} className="flex items-center gap-2 px-3 py-1 bg-secondary-bright/10 border border-secondary-bright/30 text-secondary text-xs font-syne tracking-wide font-bold">
-                <CheckCircle size={10} className="text-secondary-bright" />
+              <div key={s.id} className="flex items-center gap-2 px-3 py-1 bg-accent/10 border border-accent/30 text-accent text-xs font-syne tracking-wide font-bold">
+                <CheckCircle size={10} className="text-accent" />
                 {s.skill?.name || s.name}
                 {s.calculatedScore && <span className="text-green-500/70">{s.calculatedScore}/10</span>}
               </div>
             ))}
           </div>
-        ) : <p className="text-[#656d84] text-xs font-syne tracking-wide">No verified skills yet</p>}
+        ) : <p className="text-outline text-xs font-syne tracking-wide">No verified skills yet</p>}
       </div>
       {allSkills.length > verifiedSkills.length && (
         <div className="mb-6">
@@ -132,8 +132,8 @@ function RecruiterView({ user }) {
         </div>
       )}
       <div className="mb-6 p-3 bg-surface-mid border border-outline-var/20 flex items-center gap-3">
-        <Clock size={14} className={recentActivity ? 'text-secondary-bright' : 'text-[#656d84]'} />
-        <span className={`text-xs font-syne tracking-wide font-bold ${recentActivity ? 'text-secondary-bright' : 'text-[#656d84]'}`}>
+        <Clock size={14} className={recentActivity ? 'text-accent' : 'text-outline'} />
+        <span className={`text-xs font-syne tracking-wide font-bold ${recentActivity ? 'text-accent' : 'text-outline'}`}>
           {recentActivity ? 'ACTIVE_LAST_30_DAYS' : 'NO_RECENT_ACTIVITY'}
         </span>
       </div>
@@ -181,14 +181,14 @@ function CommentItem({ comment, postId, postOwnerId, currentUser, onDelete, onLi
             <span className="text-text-muted text-xs">{comment.content}</span>
           </div>
           <div className="flex items-center gap-3 mt-1 px-1">
-            <span className="text-[#656d84] text-[10px] font-syne tracking-wide">{timeAgo(comment.createdAt)}</span>
+            <span className="text-outline text-[10px] font-syne tracking-wide">{timeAgo(comment.createdAt)}</span>
             <button type="button" onClick={() => onLike(postId, comment.id)}
-              className={`flex items-center gap-1 text-[10px] font-syne tracking-wide transition ${liked ? 'text-error' : 'text-[#656d84] hover:text-error'}`}>
+              className={`flex items-center gap-1 text-[10px] font-syne tracking-wide transition ${liked ? 'text-error' : 'text-outline hover:text-error'}`}>
               <Heart size={10} fill={liked ? 'currentColor' : 'none'} />
               {comment.likes?.length > 0 && comment.likes.length}
             </button>
             <button type="button" onClick={() => setShowReplyBox(!showReplyBox)}
-              className="text-[10px] font-syne tracking-wide text-[#656d84] hover:text-primary transition flex items-center gap-1">
+              className="text-[10px] font-syne tracking-wide text-outline hover:text-primary transition flex items-center gap-1">
               <CornerDownRight size={10} /> Reply
             </button>
             {(isAuthor || isPostOwner) && (
@@ -205,7 +205,7 @@ function CommentItem({ comment, postId, postOwnerId, currentUser, onDelete, onLi
                 placeholder={`Reply to ${comment.author?.name}...`}
                 className="flex-1 bg-surface-mid border border-outline-var/20 text-text-muted px-3 py-1.5 text-xs focus:border-primary outline-none rounded" />
               <button type="button" onClick={submitReply} className="text-secondary-bright hover:text-text-primary px-2"><Send size={14} /></button>
-              <button type="button" onClick={() => setShowReplyBox(false)} className="text-[#656d84] hover:text-text-primary px-1"><X size={14} /></button>
+              <button type="button" onClick={() => setShowReplyBox(false)} className="text-outline hover:text-text-primary px-1"><X size={14} /></button>
             </div>
           )}
         </div>
@@ -223,9 +223,9 @@ function CommentItem({ comment, postId, postOwnerId, currentUser, onDelete, onLi
                   <span className="text-text-muted text-xs">{reply.content}</span>
                 </div>
                 <div className="flex items-center gap-3 mt-1 px-1">
-                  <span className="text-[#656d84] text-[10px] font-syne tracking-wide">{timeAgo(reply.createdAt)}</span>
+                  <span className="text-outline text-[10px] font-syne tracking-wide">{timeAgo(reply.createdAt)}</span>
                   <button type="button" onClick={() => onLike(postId, reply.id)}
-                    className={`flex items-center gap-1 text-[10px] font-syne tracking-wide transition ${reply.likes?.some(l => l.userId === currentUser.id) ? 'text-error' : 'text-[#656d84] hover:text-error'}`}>
+                    className={`flex items-center gap-1 text-[10px] font-syne tracking-wide transition ${reply.likes?.some(l => l.userId === currentUser.id) ? 'text-error' : 'text-outline hover:text-error'}`}>
                     <Heart size={10} fill={reply.likes?.some(l => l.userId === currentUser.id) ? 'currentColor' : 'none'} />
                     {reply.likes?.length > 0 && reply.likes.length}
                   </button>
@@ -277,15 +277,15 @@ function PostCard({ post, currentUser, _isOwner, onDelete, onLike, onComment, on
           <Avatar src={post.author?.avatar} name={post.author?.name} size={10} />
           <div>
             <div className="text-text-primary font-bold text-sm">{post.author?.name}</div>
-            <div className="text-[#656d84] text-[10px] font-syne tracking-wide">{timeAgo(post.createdAt)}</div>
+            <div className="text-outline text-[10px] font-syne tracking-wide">{timeAgo(post.createdAt)}</div>
           </div>
         </div>
         {isPostOwner && (
           <div className="flex items-center gap-2">
             <button type="button" onClick={() => { setEditing(!editing); setEditContent(post.content); }}
-              className="p-1.5 text-[#656d84] hover:text-primary transition"><Pencil size={14} /></button>
+              className="p-1.5 text-outline hover:text-primary transition"><Pencil size={14} /></button>
             <button type="button" onClick={() => onDelete(post.id)}
-              className="p-1.5 text-[#656d84] hover:text-error transition"><Trash2 size={14} /></button>
+              className="p-1.5 text-outline hover:text-error transition"><Trash2 size={14} /></button>
           </div>
         )}
       </div>
@@ -299,7 +299,7 @@ function PostCard({ post, currentUser, _isOwner, onDelete, onLike, onComment, on
               className="w-full bg-surface border border-outline-var/40 text-text-primary p-3 text-sm font-syne tracking-wide resize-none focus:border-primary outline-none"
               rows={3} maxLength={500} />
             <div className="flex items-center justify-between">
-              <span className={`text-[10px] font-syne tracking-wide ${charCount > 450 ? 'text-error' : 'text-[#656d84]'}`}>{charCount}/500</span>
+              <span className={`text-[10px] font-syne tracking-wide ${charCount > 450 ? 'text-error' : 'text-outline'}`}>{charCount}/500</span>
               <div className="flex gap-2">
                 <button type="button" onClick={() => setEditing(false)} className="px-3 py-1 text-xs font-syne tracking-wide text-outline hover:text-text-primary transition">Cancel</button>
                 <button type="button" onClick={handleEditSave} className="px-3 py-1 text-xs font-syne tracking-wide bg-primary-container text-on-primary hover:bg-secondary-bright transition">Save</button>
@@ -332,7 +332,7 @@ function PostCard({ post, currentUser, _isOwner, onDelete, onLike, onComment, on
       {showComments && (
         <div className="px-4 pb-4 space-y-3 border-t border-gray-900 pt-3 relative z-20 bg-surface-mid">
           {post.comments?.length === 0 && (
-            <p className="text-[#656d84] text-xs font-syne tracking-wide italic text-center py-2">No comments yet. Be first.</p>
+            <p className="text-outline text-xs font-syne tracking-wide italic text-center py-2">No comments yet. Be first.</p>
           )}
           {post.comments?.map(comment => (
             <CommentItem key={comment.id}
@@ -525,7 +525,7 @@ export default function UserProfile() {
             <div className="lg:col-span-4 space-y-6">
               <div className="bg-surface border border-primary/20 p-6 flex flex-col items-center text-center relative">
                 <div className="w-40 h-40 rounded-full border-4 border-black outline outline-2 outline-cyan-500 overflow-hidden mb-6 bg-surface-mid flex items-center justify-center shadow-[0_0_30px_rgba(34,211,238,0.2)]">
-                  {user.avatar ? <img src={user.avatar} alt={user.name || "Profile avatar"} loading="lazy" decoding="async" className="w-full h-full object-cover" /> : <User size={64} className="text-[#656d84]" />}
+                  {user.avatar ? <img src={user.avatar} alt={user.name || "Profile avatar"} loading="lazy" decoding="async" className="w-full h-full object-cover" /> : <User size={64} className="text-outline" />}
                 </div>
                 <h2 className="text-2xl font-black text-text-primary font-syne tracking-wide uppercase tracking-wider">{user.name}</h2>
                 <p className="text-primary font-syne tracking-wide text-sm mt-1">{user.headline || 'No headline'}</p>
@@ -572,7 +572,7 @@ export default function UserProfile() {
                       disabled={followingActionLoading}
                       className={`w-full py-2.5 font-bold tracking-wide text-xs uppercase rounded-xs transition-all flex items-center justify-center gap-2 border shadow-sm ${
                         user.isMutual
-                          ? 'bg-secondary-bright/10 text-secondary-bright border-secondary-bright/30 hover:bg-secondary-bright/20'
+                          ? 'bg-accent/10 text-accent border-accent/30 hover:bg-accent/20'
                           : user.isFollowedByMe
                           ? 'bg-surface-mid text-text-muted border-outline-var/40 hover:border-error hover:text-error'
                           : 'bg-primary text-on-primary border-primary hover:bg-secondary-bright'
@@ -580,7 +580,7 @@ export default function UserProfile() {
                     >
                       {user.isMutual ? (
                         <>
-                          <Users size={14} className="text-secondary-bright" /> Connected ⇄
+                          <Users size={14} className="text-accent" /> Connected ⇄
                         </>
                       ) : user.isFollowedByMe ? (
                         <>
@@ -648,7 +648,7 @@ export default function UserProfile() {
             {/* Right content - posts feed - z-10 to render above profile */}
             <div className="lg:col-span-8 space-y-6 relative z-10">
               <div className="bg-surface border border-outline-var/20 p-6">
-                <h3 className="text-outline font-syne tracking-wide text-xs mb-4 flex items-center gap-2"><Shield size={14} className="text-secondary-bright" /> About</h3>
+                <h3 className="text-outline font-syne tracking-wide text-xs mb-4 flex items-center gap-2"><Shield size={14} className="text-accent" /> About</h3>
                 <p className="text-lg text-text-muted leading-relaxed border-l-2 border-primary/20 pl-4">{user.bio || 'No bio added yet.'}</p>
               </div>
 
@@ -656,12 +656,12 @@ export default function UserProfile() {
                 <h3 className="text-outline font-syne tracking-wide text-xs mb-4 flex items-center gap-2"><Cpu size={14} className="text-error" /> Skills</h3>
                 <div className="flex flex-wrap gap-2">
                   {user.skills?.map(record => (
-                    <span key={record.id} className={`px-3 py-1 border font-syne tracking-wide text-xs font-bold flex items-center gap-1 ${record.isVerified ? 'bg-secondary-bright/10 border-secondary-bright/30 text-secondary' : 'bg-surface-mid border-primary/20 text-primary'}`}>
+                    <span key={record.id} className={`px-3 py-1 border font-syne tracking-wide text-xs font-bold flex items-center gap-1 ${record.isVerified ? 'bg-accent/10 border-accent/30 text-accent' : 'bg-surface-mid border-primary/20 text-primary'}`}>
                       {record.skill?.name || record.name}
                       {record.isVerified && (
-                        record.verificationSource === 'GITHUB' ? <Github size={10} className="text-secondary-bright" /> :
-                        record.verificationSource === 'CREDENTIAL' ? <Award size={10} className="text-secondary-bright" /> :
-                        <CheckCircle size={10} className="text-secondary-bright" />
+                        record.verificationSource === 'GITHUB' ? <Github size={10} className="text-accent" /> :
+                        record.verificationSource === 'CREDENTIAL' ? <Award size={10} className="text-accent" /> :
+                        <CheckCircle size={10} className="text-accent" />
                       )}
                     </span>
                   ))}
@@ -680,7 +680,7 @@ export default function UserProfile() {
                       maxLength={500}
                       className="w-full bg-surface-mid border border-outline-var/20 text-text-primary p-3 focus:border-primary outline-none resize-none h-24 font-syne tracking-wide text-sm" />
                     <div className="flex items-center justify-between mt-1 mb-2">
-                      <span className={`text-[10px] font-syne tracking-wide ${charCount > 450 ? 'text-error' : 'text-[#656d84]'}`}>{charCount}/500</span>
+                      <span className={`text-[10px] font-syne tracking-wide ${charCount > 450 ? 'text-error' : 'text-outline'}`}>{charCount}/500</span>
                     </div>
                     {newPostImage && (
                       <div className="relative mb-3 inline-block">
@@ -708,7 +708,7 @@ export default function UserProfile() {
                 {posts.length === 0 ? (
                   <div className="text-center py-16 border border-dashed border-outline-var/20">
                     <MessageCircle size={40} className="mx-auto text-outline-var mb-3" />
-                    <p className="text-[#656d84] font-syne tracking-wide text-sm">No posts yet.</p>
+                    <p className="text-outline font-syne tracking-wide text-sm">No posts yet.</p>
                     {isOwner && <p className="text-outline-var font-syne tracking-wide text-xs mt-2">Share something with your network above.</p>}
                   </div>
                 ) : (

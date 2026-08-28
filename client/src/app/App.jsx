@@ -34,7 +34,7 @@ import { useToast, ToastContainer } from '../shared/components/Toast';
 // Loading fallback
 const PageLoader = () => (
   <div className="min-h-screen bg-bg-base flex items-center justify-center">
-    <div className="w-12 h-12 border-4 border-primary/20 border-t-[#adc6ff] rounded-full animate-spin" />
+    <div className="w-12 h-12 border-4 border-primary/20 border-t-primary rounded-full animate-spin" />
   </div>
 );
 

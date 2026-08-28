@@ -161,7 +161,7 @@ export default function NexusMatchModal({ isOpen, onClose, squad, slotId, candid
                     return (
                       <>
                         <div className="w-14 h-14 rounded-full bg-surface border border-outline-var/30 flex items-center justify-center overflow-hidden shrink-0">
-                          {user?.avatar ? <img src={user.avatar} className="w-full h-full object-cover" alt="" /> : <User size={24} className="text-[#656d84]" />}
+                          {user?.avatar ? <img src={user.avatar} className="w-full h-full object-cover" alt="" /> : <User size={24} className="text-outline" />}
                         </div>
                         <div className="flex-1 min-w-0 z-10">
                           <h4 className="font-bold text-base text-text-primary truncate">{user?.name || 'Unknown Candidate'}</h4>

@@ -70,6 +70,21 @@ button, a, input, select, textarea {
   -webkit-backdrop-filter: blur(20px);
 }
 
+/* ── Warm Editorial Shadows ── */
+.shadow-warm-sm  { box-shadow: 0 1px 3px rgba(90, 85, 80, 0.06), 0 1px 2px rgba(90, 85, 80, 0.04); }
+.shadow-warm     { box-shadow: 0 4px 12px rgba(90, 85, 80, 0.08), 0 1px 3px rgba(90, 85, 80, 0.05); }
+.shadow-warm-lg  { box-shadow: 0 12px 40px rgba(90, 85, 80, 0.10), 0 4px 12px rgba(90, 85, 80, 0.05); }
+
+/* ── Card gold accent (foil-stamp hover) ── */
+.card-accent {
+  border-top: 2px solid transparent;
+  transition: border-color 0.3s ease, box-shadow 0.3s ease;
+}
+.card-accent:hover {
+  border-top-color: rgba(194, 159, 93, 0.35);
+  box-shadow: 0 4px 16px rgba(90, 85, 80, 0.08), 0 1px 3px rgba(90, 85, 80, 0.05);
+}
+
 /* ── Progress bar ── */
 .progress-track { background: #E4E1D9; border-radius: 9999px; height: 4px; }
 .progress-fill  { background: #C29F5D; border-radius: 9999px; height: 4px; transition: width 0.4s ease; }

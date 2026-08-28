@@ -29,7 +29,7 @@ function Avatar({ src, name, size = 10 }) {
       {src ? (
         <img src={src} loading="lazy" className="w-full h-full object-cover" alt={name || 'Avatar'} />
       ) : (
-        <User size={iconSizeMap[size] || 20} className="text-[#656d84]" />
+        <User size={iconSizeMap[size] || 20} className="text-outline" />
       )}
     </div>
   );
@@ -219,7 +219,7 @@ function PostCard({
                 {post.author?.name}
               </span>
               {post.author?.role === 'PROFESSIONAL' && (
-                <span className="px-1.5 py-0.5 bg-secondary-bright/10 text-secondary-bright text-[9px] font-syne font-bold uppercase rounded-xs">
+                <span className="px-1.5 py-0.5 bg-accent/10 text-accent text-[9px] font-syne font-bold uppercase rounded-xs">
                   Pro
                 </span>
               )}

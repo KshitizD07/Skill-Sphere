@@ -32,6 +32,12 @@ export default {
         'tertiary-container':'#D8D5CD',
         'on-tertiary':       '#1A1A1A',
 
+        // Accent — Warm Sage Green (Status, Success, Social Signals)
+        'accent':            '#6B7F5E', // Sage Green
+        'accent-dim':        '#556B4A', // Deep Sage (hover)
+        'accent-container':  '#E8EDE4', // Light Sage Background
+        'on-accent':         '#FFFFFF',
+
         // Text & Grid Lines
         'text-primary':   '#111111', // Deep Charcoal
         'text-muted':     '#3A3633', // High-contrast Dark Charcoal for muted text
@@ -39,8 +45,12 @@ export default {
         'outline-var':    '#D5D1C8', // Hairline Border Subtler
 
         // Semantic
-        'error':          '#D93838',
-        'error-container':'#FDE8E8',
+        'success':          '#6B7F5E',
+        'success-container':'#E8EDE4',
+        'warning':          '#D4A24C',
+        'warning-container':'#FDF5E6',
+        'error':            '#D93838',
+        'error-container':  '#FDE8E8',
       },
       fontFamily: {
         'outfit': ['Outfit', 'sans-serif'],

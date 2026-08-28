@@ -112,7 +112,7 @@ export default function CollegeSelector({ value, onChange, labelBase, inputBase 
           </button>
         </div>
         <div className="relative group">
-          <Building2 className="absolute left-3 top-3.5 text-[#656d84] group-focus-within:text-primary transition-colors" size={15} />
+          <Building2 className="absolute left-3 top-3.5 text-outline group-focus-within:text-primary transition-colors" size={15} />
           <input
             type="text"
             value={value || ''}
@@ -130,7 +130,7 @@ export default function CollegeSelector({ value, onChange, labelBase, inputBase 
     <div className="relative" ref={containerRef}>
       <label className={labelBase}>Institutional Affiliation <span className="text-error">*</span></label>
       <div className="relative group">
-        <Building2 className="absolute left-3 top-3.5 text-[#656d84] group-focus-within:text-[#d97706] transition-colors" size={15} />
+        <Building2 className="absolute left-3 top-3.5 text-outline group-focus-within:text-[#d97706] transition-colors" size={15} />
         <input
           type="text"
           value={searchVal}

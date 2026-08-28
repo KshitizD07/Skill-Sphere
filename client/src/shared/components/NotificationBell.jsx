@@ -24,7 +24,7 @@ function getNotificationIcon(type) {
     case 'SQUAD_ACCEPTED':
     case 'SQUAD_REJECTED':
     case 'MATCH_RECOMMENDED':
-      return <Users size={13} className="text-secondary-bright" />;
+      return <Users size={13} className="text-accent" />;
     case 'SKILL_VERIFIED':
     case 'SKILL_ENDORSED':
       return <Award size={13} className="text-primary" />;
@@ -251,7 +251,6 @@ export default function NotificationBell() {
               ))
             )}
           </div>
-
           {/* Footer View All Link */}
           <div className="p-2.5 bg-surface-mid/80 border-t border-outline-var/20 text-center shrink-0">
             <button
