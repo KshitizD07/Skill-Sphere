@@ -71,9 +71,30 @@ export default function FeatureSphere({ scrollToSection }) {
     });
   };
 
-  useEffect(() => {
-    return () => { if (mouseRafRef.current) cancelAnimationFrame(mouseRafRef.current); };
-  }, []);
+  const lastTouchRef = useRef(null);
+
+  const handleTouchStart = (e) => {
+    setIsHovering(true);
+    if (e.touches.length === 1) {
+      lastTouchRef.current = { x: e.touches[0].clientX, y: e.touches[0].clientY };
+    }
+  };
+
+  const handleTouchMove = (e) => {
+    if (!lastTouchRef.current || e.touches.length !== 1) return;
+    const touch = e.touches[0];
+    const dx = touch.clientX - lastTouchRef.current.x;
+    const dy = touch.clientY - lastTouchRef.current.y;
+    lastTouchRef.current = { x: touch.clientX, y: touch.clientY };
+
+    rotationRef.current.y += dx * 0.008;
+    rotationRef.current.x -= dy * 0.008;
+  };
+
+  const handleTouchEnd = () => {
+    setIsHovering(false);
+    lastTouchRef.current = null;
+  };
 
   return (
     <div
@@ -81,7 +102,10 @@ export default function FeatureSphere({ scrollToSection }) {
       onMouseEnter={() => setIsHovering(true)}
       onMouseLeave={() => setIsHovering(false)}
       onMouseMove={handleMouseMove}
-      className="relative w-[280px] h-[280px] sm:w-[360px] sm:h-[360px] md:w-[480px] md:h-[480px] flex items-center justify-center max-w-full overflow-hidden"
+      onTouchStart={handleTouchStart}
+      onTouchMove={handleTouchMove}
+      onTouchEnd={handleTouchEnd}
+      className="relative w-[280px] h-[280px] sm:w-[360px] sm:h-[360px] md:w-[480px] md:h-[480px] flex items-center justify-center max-w-full overflow-hidden touch-none"
       style={{ perspective: '1000px' }}
     >
       {/* Central orbit rings */}

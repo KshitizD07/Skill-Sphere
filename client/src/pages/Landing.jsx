@@ -164,7 +164,7 @@ export default function Landing() {
           </p>
           <button
             onClick={() => goAuth('register')}
-            className="inline-flex items-center gap-2 px-6 sm:px-8 py-3.5 sm:py-4 rounded bg-[#f59e0b] text-[#fffbeb] font-['Syne',sans-serif] font-bold text-xs sm:text-sm tracking-widest uppercase hover:bg-[#eab308] hover:text-[#fefce8] transition-all duration-200 active:scale-95 shadow-[0_0_20px_rgba(245,158,11,0.2)]"
+            className="flex items-center justify-center gap-2 w-full sm:w-auto px-6 sm:px-8 py-3.5 sm:py-4 rounded bg-[#f59e0b] text-[#fffbeb] font-['Syne',sans-serif] font-bold text-xs sm:text-sm tracking-widest uppercase hover:bg-[#eab308] hover:text-[#fefce8] transition-all duration-200 active:scale-95 shadow-[0_0_20px_rgba(245,158,11,0.2)] mx-auto"
           >
             <Shield size={18} /> Join the Network
           </button>
@@ -180,7 +180,7 @@ export default function Landing() {
           <p className="text-[#a8a29e] text-base sm:text-xl mb-8 sm:mb-12 max-w-2xl mx-auto">Join a platform built for serious professionals and ambitious students.</p>
           <button
             onClick={() => goAuth('register')}
-            className="inline-flex items-center gap-3 px-8 sm:px-12 py-4 sm:py-5 rounded bg-[#b45309] text-[#f5f5f4] font-['Syne',sans-serif] font-bold text-xs sm:text-sm tracking-widest uppercase hover:brightness-110 transition-all duration-200 active:scale-95 shadow-[0_0_30px_rgba(245,158,11,0.2)]"
+            className="flex items-center justify-center gap-3 w-full sm:w-auto px-8 sm:px-12 py-4 sm:py-5 rounded bg-[#b45309] text-[#f5f5f4] font-['Syne',sans-serif] font-bold text-xs sm:text-sm tracking-widest uppercase hover:brightness-110 transition-all duration-200 active:scale-95 shadow-[0_0_30px_rgba(245,158,11,0.2)] mx-auto"
           >
             Create Your Profile <ArrowRight size={18} />
           </button>
