@@ -2,8 +2,8 @@ import { useEffect, useState, useCallback, useMemo } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import {
   Users, Building2, Shield, Search, ArrowRight, MessageSquare,
-  Sparkles, RefreshCw, CheckCircle2, Star, ExternalLink,
-  X, User, Flame, UserPlus, UserCheck
+  CheckCircle2, Star,
+  X, User, UserPlus, UserCheck
 } from 'lucide-react';
 import NetworkAPI from './networkAPI';
 import ProfileAPI from '../profile/profileAPI';
@@ -39,10 +39,6 @@ export default function Network() {
   const [hasMore, setHasMore] = useState(false);
   const [loadingMore, setLoadingMore] = useState(false);
 
-  // Suggested peers state
-  const [suggestedUsers, setSuggestedUsers] = useState([]);
-  const [loadingSuggested, setLoadingSuggested] = useState(true);
-
   // Popular skill suggestion tags
   const popularSkills = ['React', 'Node.js', 'Python', 'TypeScript', 'Docker', 'PostgreSQL', 'Machine Learning', 'Next.js'];
 
@@ -59,21 +55,6 @@ export default function Network() {
 
     setSearchParams(params, { replace: true });
   }, [searchQuery, roleFilter, skillFilter, verifiedOnly, collegeFilter, isMyCampusOnly, sortOption, setSearchParams]);
-
-  // ── Fetch Suggested Peers ("People You May Know") ─────────────────────────
-  const fetchSuggested = useCallback(async () => {
-    setLoadingSuggested(true);
-    try {
-      const data = await NetworkAPI.getSuggestedUsers();
-      if (Array.isArray(data)) {
-        setSuggestedUsers(data);
-      }
-    } catch (err) {
-      console.error('Failed to load suggestions:', err);
-    } finally {
-      setLoadingSuggested(false);
-    }
-  }, []);
 
   // ── Fetch Directory Users ─────────────────────────────────────────────────
   const fetchUsers = useCallback(async (append = false, cursor = null) => {
@@ -134,10 +115,7 @@ export default function Network() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [searchQuery, roleFilter, skillFilter, collegeFilter, isMyCampusOnly, verifiedOnly, sortOption]);
 
-  // Initial load of suggested peers
-  useEffect(() => {
-    fetchSuggested();
-  }, [fetchSuggested]);
+
 
   // ── Reset Filters ─────────────────────────────────────────────────────────
   const resetFilters = () => {
@@ -192,100 +170,6 @@ export default function Network() {
           </div>
         </div>
 
-        {/* ── SECTION 1: People You May Know (Suggested) ─────────────────── */}
-        <div className="space-y-3">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <Sparkles size={16} className="text-primary animate-pulse" />
-              <h2 className="text-sm font-syne font-bold uppercase tracking-wider text-text-primary">
-                People You May Know
-              </h2>
-            </div>
-            <button
-              onClick={fetchSuggested}
-              disabled={loadingSuggested}
-              className="text-[11px] font-syne font-bold text-outline hover:text-primary transition-colors flex items-center gap-1 uppercase tracking-wider"
-              title="Refresh suggestions"
-            >
-              <RefreshCw size={12} className={loadingSuggested ? 'animate-spin' : ''} /> Refresh
-            </button>
-          </div>
-
-          {loadingSuggested ? (
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-              {[1, 2, 3].map((i) => (
-                <div key={i} className="h-32 bg-surface/60 border border-outline-var/20 rounded-md animate-pulse p-4" />
-              ))}
-            </div>
-          ) : suggestedUsers.length === 0 ? (
-            <div className="bg-surface border border-outline-var/20 rounded-md p-6 text-center text-outline text-xs">
-              Add more skills and your college to receive personalized network suggestions.
-            </div>
-          ) : (
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-              {suggestedUsers.map((user) => (
-                <div
-                  key={user.id}
-                  className="bg-surface border border-outline-var/25 hover:border-primary/40 rounded-md p-4 flex flex-col justify-between transition-all group relative hover:shadow-lg"
-                >
-                  <div className="space-y-3">
-                    <div className="flex items-start gap-3">
-                      {/* Avatar with online dot */}
-                      <div className="relative shrink-0">
-                        <div className="w-10 h-10 rounded-full border border-outline-var/40 overflow-hidden bg-surface-mid flex items-center justify-center">
-                          {user.avatar ? (
-                            <img src={user.avatar} className="w-full h-full object-cover" alt="" />
-                          ) : (
-                            <User size={18} className="text-[#656d84]" />
-                          )}
-                        </div>
-                        <span
-                          className={`absolute bottom-0 right-0 w-2.5 h-2.5 rounded-full border-2 border-surface ${
-                            user.isOnline ? 'bg-secondary-bright' : 'bg-outline-var'
-                          }`}
-                        />
-                      </div>
-
-                      <div className="flex-1 min-w-0">
-                        <div className="flex items-center gap-1.5">
-                          <h3 className="font-bold text-sm text-text-primary truncate group-hover:text-primary transition-colors">
-                            {user.name}
-                          </h3>
-                        </div>
-                        <p className="text-[11px] text-text-muted truncate mt-0.5">
-                          {user.headline || user.role}
-                        </p>
-                      </div>
-                    </div>
-
-                    {/* Match reason chip */}
-                    <div className="px-2 py-1 bg-primary/10 border border-primary/20 rounded-xs text-[10px] text-primary font-syne font-bold truncate flex items-center gap-1">
-                      <Flame size={11} className="shrink-0" />
-                      <span className="truncate">{user.matchReason}</span>
-                    </div>
-                  </div>
-
-                  {/* Action buttons */}
-                  <div className="flex items-center gap-2 mt-3 pt-3 border-t border-outline-var/20">
-                    <button
-                      onClick={() => navigate(`/chat/${user.id}`)}
-                      className="flex-1 py-1.5 bg-primary/10 hover:bg-primary text-primary hover:text-on-primary font-syne font-bold text-[10px] uppercase tracking-wider rounded-xs transition-all flex items-center justify-center gap-1"
-                    >
-                      <MessageSquare size={12} /> Message
-                    </button>
-                    <button
-                      onClick={() => navigate(`/profile/${user.id}`)}
-                      className="px-2.5 py-1.5 bg-surface-mid hover:bg-surface border border-outline-var/30 text-text-muted hover:text-text-primary font-syne font-bold text-[10px] uppercase tracking-wider rounded-xs transition-colors"
-                      title="View Profile"
-                    >
-                      <ExternalLink size={12} />
-                    </button>
-                  </div>
-                </div>
-              ))}
-            </div>
-          )}
-        </div>
 
         {/* ── SECTION 2: Search & Filter Toolbar ─────────────────────────── */}
         <div className="bg-surface border border-outline-var/20 rounded-md p-4 space-y-4 shadow-sm">
