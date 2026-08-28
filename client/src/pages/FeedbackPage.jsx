@@ -69,7 +69,7 @@ export default function FeedbackPage() {
     e.preventDefault();
 
     if (!feedback.trim() || feedback.trim().length < 5) {
-      toast.addToast('Please provide feedback of at least 5 characters.', 'error');
+      toast.error('Please provide feedback of at least 5 characters.');
       return;
     }
 
@@ -89,12 +89,11 @@ export default function FeedbackPage() {
       });
 
       setSubmitted(true);
-      toast.addToast('Feedback sent directly to the development team! Thank you.', 'success');
+      toast.success('Feedback sent directly to the development team! Thank you.');
     } catch (err) {
       console.error(err);
-      toast.addToast(
-        err.response?.data?.message || 'Failed to send feedback. Please try again.',
-        'error'
+      toast.error(
+        err.response?.data?.message || 'Failed to send feedback. Please try again.'
       );
     } finally {
       setSubmitting(false);

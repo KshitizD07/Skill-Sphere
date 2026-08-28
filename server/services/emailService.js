@@ -307,15 +307,30 @@ export async function sendFeedbackEmail({ user, category, rating, feedback, most
           replyTo: user.email,
         })
       );
-      await Promise.allSettled(sendPromises);
-      logger.info('Feedback email delivered successfully to admin inboxes', { fromUser: user.email, targetEmails });
+      const results = await Promise.allSettled(sendPromises);
+      let successCount = 0;
+
+      results.forEach((res, idx) => {
+        if (res.status === 'fulfilled') {
+          successCount++;
+          logger.info(`Feedback email dispatched to ${targetEmails[idx]}`, { messageId: res.value.messageId });
+        } else {
+          logger.error(`Failed to dispatch feedback email to ${targetEmails[idx]}`, { err: res.reason?.message || res.reason });
+        }
+      });
+
+      if (successCount === 0 && targetEmails.length > 0) {
+        const firstErr = results.find((r) => r.status === 'rejected')?.reason?.message || 'SMTP Connection Error';
+        throw new Error(`Email delivery failed: ${firstErr}`);
+      }
+
+      logger.info(`Feedback email delivered successfully (${successCount}/${targetEmails.length} inboxes)`, { fromUser: user.email, targetEmails });
     } else {
       logger.warn('Email service unconfigured: logged feedback in mock mode', { fromUser: user.email, category, rating, feedback });
     }
   } catch (err) {
     logger.error('Failed to send feedback email via SMTP', { err: err.message });
-    // Re-throw so route knows
-    throw ApiError.internal('Failed to deliver feedback email via SMTP transport');
+    throw ApiError.internal(`Email delivery failed: ${err.message}`);
   }
 
   return { success: true };
