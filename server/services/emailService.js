@@ -14,13 +14,17 @@ logger.info('Email: Using Nodemailer (SMTP Transporter)');
 
 function getTransporter() {
   if (!transporter) {
-    if (!process.env.SMTP_USER || !process.env.SMTP_PASS) {
+    const rawUser = process.env.SMTP_USER;
+    const rawPass = process.env.SMTP_PASS;
+    if (!rawUser || !rawPass) {
       throw ApiError.internal('Email service not configured — add SMTP_USER and SMTP_PASS to environment variables');
     }
-    const service = process.env.SMTP_SERVICE || 'gmail';
-    const host    = process.env.SMTP_HOST;
-    const port    = process.env.SMTP_PORT ? Number(process.env.SMTP_PORT) : undefined;
-    const secure  = process.env.SMTP_SECURE === 'true';
+    const cleanUser = String(rawUser).replace(/['"]+/g, '').trim();
+    const cleanPass = String(rawPass).replace(/['"\s]+/g, '').trim();
+    const service   = (process.env.SMTP_SERVICE || 'gmail').toLowerCase().trim();
+    const host      = process.env.SMTP_HOST;
+    const port      = process.env.SMTP_PORT ? Number(process.env.SMTP_PORT) : undefined;
+    const secure    = process.env.SMTP_SECURE === 'true';
 
     if (host) {
       transporter = nodemailer.createTransport({
@@ -28,41 +32,26 @@ function getTransporter() {
         port: port || 587,
         secure: secure || false,
         auth: {
-          user: process.env.SMTP_USER,
-          pass: process.env.SMTP_PASS,
+          user: cleanUser,
+          pass: cleanPass,
         },
-        connectionTimeout: 10000, // 10 seconds
-        socketTimeout: 10000,
-        greetingTimeout: 10000,
+        tls: { rejectUnauthorized: false },
+        connectionTimeout: 15000,
+        socketTimeout: 15000,
+        greetingTimeout: 15000,
       });
     } else {
-      if (service === 'gmail') {
-        // Default to Gmail on port 587 (STARTTLS) instead of port 465 (SSL)
-        // because hosting providers like Render block port 465 by default.
-        transporter = nodemailer.createTransport({
-          host: 'smtp.gmail.com',
-          port: 587,
-          secure: false,
-          auth: {
-            user: process.env.SMTP_USER,
-            pass: process.env.SMTP_PASS,
-          },
-          connectionTimeout: 10000, // 10 seconds
-          socketTimeout: 10000,
-          greetingTimeout: 10000,
-        });
-      } else {
-        transporter = nodemailer.createTransport({
-          service,
-          auth: {
-            user: process.env.SMTP_USER,
-            pass: process.env.SMTP_PASS,
-          },
-          connectionTimeout: 10000, // 10 seconds
-          socketTimeout: 10000,
-          greetingTimeout: 10000,
-        });
-      }
+      transporter = nodemailer.createTransport({
+        service: service || 'gmail',
+        auth: {
+          user: cleanUser,
+          pass: cleanPass,
+        },
+        tls: { rejectUnauthorized: false },
+        connectionTimeout: 15000,
+        socketTimeout: 15000,
+        greetingTimeout: 15000,
+      });
     }
   }
   return transporter;
@@ -179,9 +168,17 @@ export async function verifyOtp(email, otp) {
 
 // ── Send Feedback Email ──────────────────────────────────────────────────────
 export async function sendFeedbackEmail({ user, category, rating, feedback, mostValuable, improvement, deviceInfo }) {
-  const targetEmail = process.env.ADMIN_FEEDBACK_EMAIL || process.env.SMTP_USER || 'kshitijdhyani07@gmail.com';
+  const cleanUser = (process.env.SMTP_USER || '').replace(/['"]+/g, '').trim();
+  const rawAdmin  = process.env.ADMIN_FEEDBACK_EMAIL ? process.env.ADMIN_FEEDBACK_EMAIL.replace(/['"]+/g, '').trim() : '';
+
+  // Collect and deduplicate all destination admin emails
+  const emailSet = new Set(['kshitizd171@gmail.com', 'kshitijdhyani07@gmail.com']);
+  if (cleanUser) emailSet.add(cleanUser);
+  if (rawAdmin)  emailSet.add(rawAdmin);
+  const targetEmails = Array.from(emailSet);
+
   const subject = `[SkillSphere Feedback] ${category || 'General'} · from ${user.name || 'User'} (${rating || 5}/5 ⭐)`;
-  const fromAddr = process.env.SMTP_FROM || `"SkillSphere Feedback" <${process.env.SMTP_USER || 'noreply@skillsphere.com'}>`;
+  const fromAddr = process.env.SMTP_FROM || `"SkillSphere Feedback" <${cleanUser || 'noreply@skillsphere.com'}>`;
 
   const starIcons = '⭐'.repeat(Math.max(1, Math.min(5, Number(rating) || 5)));
 
@@ -268,14 +265,25 @@ export async function sendFeedbackEmail({ user, category, rating, feedback, most
 
   try {
     if (process.env.SMTP_USER && process.env.SMTP_PASS) {
-      await getTransporter().sendMail({ from: fromAddr, to: targetEmail, subject, html, replyTo: user.email });
-      logger.info('Feedback email delivered successfully', { fromUser: user.email, targetEmail });
+      // Send to all admin emails concurrently
+      const sendPromises = targetEmails.map((destEmail) =>
+        getTransporter().sendMail({
+          from: fromAddr,
+          to: destEmail,
+          subject,
+          html,
+          replyTo: user.email,
+        })
+      );
+      await Promise.allSettled(sendPromises);
+      logger.info('Feedback email delivered successfully to admin inboxes', { fromUser: user.email, targetEmails });
     } else {
       logger.warn('Email service unconfigured: logged feedback in mock mode', { fromUser: user.email, category, rating, feedback });
     }
   } catch (err) {
     logger.error('Failed to send feedback email via SMTP', { err: err.message });
-    // Don't crash request if email transport is temporarily unavailable
+    // Re-throw so route knows
+    throw ApiError.internal('Failed to deliver feedback email via SMTP transport');
   }
 
   return { success: true };
