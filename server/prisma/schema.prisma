@@ -617,4 +617,32 @@ model Follow {
   @@index([createdAt(sort: Desc)])
 }
 
+// ─────────────────────────────────────────────────────────────────────────────
+// PLATFORM FEEDBACK & CONTRIBUTOR LEADS
+// ─────────────────────────────────────────────────────────────────────────────
+
+model PlatformFeedback {
+  id                 String   @id @default(uuid())
+  userId             String?
+  userName           String?
+  userEmail          String?
+  userCollege        String?
+  userRole           String?
+  category           String
+  rating             Int      @default(5)
+  feedback           String   @db.Text
+  mostValuable       String?  @db.Text
+  improvement        String?  @db.Text
+  wantsToContribute  Boolean  @default(false)
+  contributorAreas   String[] @default([])
+  contributorContact String?
+  deviceInfo         String?
+  createdAt          DateTime @default(now())
+
+  @@index([createdAt(sort: Desc)])
+  @@index([wantsToContribute])
+  @@index([category])
+}
+
+
 

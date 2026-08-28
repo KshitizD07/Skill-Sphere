@@ -4,13 +4,15 @@ import {
   Shield, Users, Activity, Flag, Cpu,
   Search, Trash2, CheckCircle2,
   AlertTriangle, RefreshCw, UserX, UserCheck,
-  TrendingUp, Database, Server, Clock, Lock
+  TrendingUp, Database, Server, Clock, Lock,
+  HeartHandshake
 } from 'lucide-react';
 import {
   AreaChart, Area, XAxis, YAxis, Tooltip, ResponsiveContainer
 } from 'recharts';
 import AdminAPI from './adminAPI';
 import AntifragileAdmin from './AntifragileAdmin';
+import FeedbackInboxView from './FeedbackInboxView';
 import Navbar from '../../shared/components/Navbar';
 import { useToast, ToastContainer } from '../../shared/components/Toast';
 
@@ -26,7 +28,7 @@ export default function AdminDashboard() {
     }
   }, []);
 
-  const [activeTab, setActiveTab] = useState('overview'); // overview | users | reports | nexus | health
+  const [activeTab, setActiveTab] = useState('overview'); // overview | feedback | users | reports | nexus | health
   const [loading, setLoading] = useState(true);
 
   // Overview states
@@ -48,12 +50,21 @@ export default function AdminDashboard() {
   const [healthData, setHealthData] = useState(null);
 
   // Verify Admin Access Guard
+  const ADMIN_EMAILS = useMemo(() => [
+    'kshitizd171@gmail.com',
+    'kshitizd777@gmail.com',
+    'kshitijdhyani07@gmail.com',
+  ], []);
+
   useEffect(() => {
-    if (currentUser?.role && currentUser.role !== 'ADMIN') {
+    const isAuthorized =
+      currentUser?.role === 'ADMIN' ||
+      (currentUser?.email && ADMIN_EMAILS.includes(currentUser.email.toLowerCase()));
+    if (currentUser?.role && !isAuthorized) {
       toast.error('Access restricted to platform administrators');
       navigate('/dashboard');
     }
-  }, [currentUser, navigate, toast]);
+  }, [currentUser, navigate, toast, ADMIN_EMAILS]);
 
   // Load Overview Data
   const loadStats = useCallback(async () => {
@@ -193,6 +204,7 @@ export default function AdminDashboard() {
         <div className="flex items-center gap-2 border-b border-outline-var/20 overflow-x-auto pb-1">
           {[
             { id: 'overview', label: 'Platform Overview', icon: TrendingUp },
+            { id: 'feedback', label: 'Feedback & Co-Builders', icon: HeartHandshake },
             { id: 'users', label: 'User Governance', icon: Users },
             { id: 'reports', label: 'Moderation Reports', icon: Flag },
             { id: 'nexus', label: 'N.E.X.U.S. AI Engine', icon: Cpu },
@@ -217,6 +229,9 @@ export default function AdminDashboard() {
             </button>
           ))}
         </div>
+
+        {/* ── TAB: FEEDBACK & CO-BUILDERS ── */}
+        {activeTab === 'feedback' && <FeedbackInboxView toast={toast} />}
 
         {/* ── TAB 1: OVERVIEW ── */}
         {activeTab === 'overview' && (
