@@ -1,5 +1,5 @@
 import express from 'express';
-import { authMiddleware } from '../middleware/auth.js';
+import { authenticateToken } from '../middleware/auth.js';
 import { sendFeedbackEmail } from '../services/emailService.js';
 import { PrismaClient } from '@prisma/client';
 import { ApiError } from '../utils/errorHandler.js';
@@ -9,7 +9,7 @@ const router = express.Router();
 const prisma = new PrismaClient();
 
 // POST /api/feedback
-router.post('/', authMiddleware, async (req, res, next) => {
+router.post('/', authenticateToken, async (req, res, next) => {
   try {
     const { category, rating, feedback, mostValuable, improvement, wantsToContribute, contributorAreas, contributorContact, deviceInfo } = req.body;
 
@@ -19,7 +19,7 @@ router.post('/', authMiddleware, async (req, res, next) => {
 
     // Fetch fresh user profile details
     const user = await prisma.user.findUnique({
-      where: { id: req.user.id },
+      where: { id: req.user.userId },
       select: {
         id: true,
         name: true,
