@@ -4,7 +4,7 @@ import API from '../../api';
 import SquadAPI from './squadAPI';
 import {
   Plus, Search, Users, Shield,
-  X, ChevronRight,
+  X, ChevronRight, ChevronDown,
   Clock, Sparkles
 } from 'lucide-react';
 import Navbar from '../../shared/components/Navbar';
@@ -296,6 +296,7 @@ function SquadCard({ squad, currentUser }) {
   const isLeader = squad.leader?.id === currentUser?.id;
   const isFull = squad.currentMembers >= squad.maxMembers;
   const [renderedAt] = useState(() => Date.now());
+  const [expandedRoles, setExpandedRoles] = useState(false);
 
   const eventStyle = EVENT_COLORS[squad.event] || EVENT_COLORS.HACKATHON;
 
@@ -305,6 +306,8 @@ function SquadCard({ squad, currentUser }) {
     const diff = new Date(squad.expiresAt).getTime() - renderedAt;
     return Math.max(0, Math.ceil(diff / (1000 * 60 * 60 * 24)));
   }, [renderedAt, squad.expiresAt]);
+
+  const visibleSlots = expandedRoles ? (squad.slots || []) : (squad.slots || []).slice(0, 2);
 
   return (
     <div className="bg-surface border border-outline-var/20 hover:border-primary/40 rounded-md transition-all group relative overflow-hidden flex flex-col justify-between p-5 hover:shadow-xl">
@@ -340,12 +343,14 @@ function SquadCard({ squad, currentUser }) {
         {/* Slots preview */}
         {squad.slots && squad.slots.length > 0 && (
           <div className="space-y-1.5 pt-2 border-t border-outline-var/15">
-            <span className="text-[10px] font-syne font-bold uppercase tracking-wider text-outline">
-              Roles Needed:
-            </span>
+            <div className="flex items-center justify-between">
+              <span className="text-[10px] font-syne font-bold uppercase tracking-wider text-outline">
+                Roles Needed ({squad.slots.length}):
+              </span>
+            </div>
             <div className="space-y-1">
-              {squad.slots.slice(0, 2).map((slot) => (
-                <div key={slot.id} className="flex items-center justify-between text-xs bg-surface-mid/60 px-2 py-1 rounded-xs border border-outline-var/20">
+              {visibleSlots.map((slot) => (
+                <div key={slot.id} className="flex items-center justify-between text-xs bg-surface-mid/60 px-2.5 py-1.5 rounded-xs border border-outline-var/20">
                   <span className="font-medium text-text-primary text-[11px] truncate">{slot.roleTitle}</span>
                   {slot.requiredSkill && (
                     <span className="text-[10px] text-primary font-syne font-bold truncate">
@@ -355,9 +360,14 @@ function SquadCard({ squad, currentUser }) {
                 </div>
               ))}
               {squad.slots.length > 2 && (
-                <span className="text-[10px] text-outline font-syne block pl-1">
-                  +{squad.slots.length - 2} more roles
-                </span>
+                <button
+                  type="button"
+                  onClick={() => setExpandedRoles(!expandedRoles)}
+                  className="text-[10px] text-primary hover:text-secondary-bright font-syne font-bold flex items-center gap-1 mt-1 pl-1 transition-colors cursor-pointer"
+                >
+                  {expandedRoles ? 'Show less' : `+${squad.slots.length - 2} more roles`}
+                  <ChevronDown size={11} className={`transition-transform duration-200 ${expandedRoles ? 'rotate-180' : ''}`} />
+                </button>
               )}
             </div>
           </div>
@@ -469,12 +479,12 @@ export default function MissionBoard() {
 
       <div className="flex-1 md:ml-64 pt-16 md:pt-0 min-h-screen overflow-y-auto overflow-x-hidden p-4 md:p-8 w-full max-w-7xl mx-auto space-y-8">
         {/* Header */}
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-6 border-b border-outline-var/20">
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-4 border-b border-outline-var/20">
           <div>
             <div className="flex items-center gap-2">
               <Sparkles className="text-primary" size={22} />
               <h1 className="text-2xl font-syne font-extrabold text-text-primary tracking-tight">
-                Mission Board
+                Nexus Mission Board
               </h1>
             </div>
             <p className="text-xs text-text-muted mt-1">
@@ -484,19 +494,29 @@ export default function MissionBoard() {
 
           <div className="flex items-center gap-3">
             <button
-              onClick={() => navigate('/my-squads')}
-              className="px-3.5 py-2 bg-surface hover:bg-surface-mid border border-outline-var/30 text-text-muted hover:text-text-primary font-syne font-bold text-xs uppercase tracking-wider rounded-xs transition-all flex items-center gap-1.5"
-            >
-              <Shield size={14} /> My Applications
-            </button>
-
-            <button
               onClick={() => setShowCreateModal(true)}
-              className="px-4 py-2 bg-primary text-on-primary hover:bg-secondary-bright font-syne font-bold text-xs uppercase tracking-wider rounded-xs transition-all flex items-center gap-1.5 shadow-md shadow-primary/20"
+              className="w-full sm:w-auto px-4 py-2 bg-primary text-on-primary hover:bg-secondary-bright font-syne font-bold text-xs uppercase tracking-wider rounded-xs transition-all flex items-center justify-center gap-1.5 shadow-md shadow-primary/20 cursor-pointer"
             >
               <Plus size={14} /> Create Squad
             </button>
           </div>
+        </div>
+
+        {/* Unified Segmented Navigation */}
+        <div className="flex items-center gap-2 border-b border-outline-var/20 overflow-x-auto">
+          <button
+            className="px-4 py-2.5 font-syne font-bold text-xs uppercase tracking-wider border-b-2 border-primary text-primary bg-primary/5 rounded-t-xs flex items-center gap-2 shrink-0"
+          >
+            <Sparkles size={14} />
+            <span>Mission Feed</span>
+          </button>
+          <button
+            onClick={() => navigate('/my-squads')}
+            className="px-4 py-2.5 font-syne font-bold text-xs uppercase tracking-wider border-b-2 border-transparent text-text-muted hover:text-text-primary hover:border-outline-var/50 transition-colors flex items-center gap-2 shrink-0 cursor-pointer"
+          >
+            <Shield size={14} />
+            <span>My Squads & Applications</span>
+          </button>
         </div>
 
         {/* Filter Bar */}

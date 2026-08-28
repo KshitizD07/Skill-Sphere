@@ -114,6 +114,28 @@ const handleApplicationStatus = asyncHandler(async (req, res) => {
 router.patch('/:id/applications/:appId', authenticateToken, handleApplicationStatus);
 router.put('/:id/applications/:appId', authenticateToken, handleApplicationStatus);
 
+// ── Slot Management (Leader only) ─────────────────────────────────────────────
+router.post('/:id/slots', authenticateToken, asyncHandler(async (req, res) => {
+  const slot = await squadService.addSlot(req.params.id, req.body, req.user.userId);
+  res.status(201).json({ success: true, data: slot });
+}));
+
+router.put('/:id/slots/:slotId', authenticateToken, asyncHandler(async (req, res) => {
+  const slot = await squadService.editSlot(req.params.id, req.params.slotId, req.body, req.user.userId);
+  res.json({ success: true, data: slot });
+}));
+
+router.delete('/:id/slots/:slotId', authenticateToken, asyncHandler(async (req, res) => {
+  const result = await squadService.deleteSlot(req.params.id, req.params.slotId, req.user.userId);
+  res.json(result);
+}));
+
+// ── DELETE /api/squads/applications/:appId — Withdraw / Delete application ─────
+router.delete('/applications/:appId', authenticateToken, asyncHandler(async (req, res) => {
+  const result = await squadService.withdrawApplication(req.params.appId, req.user.userId);
+  res.json(result);
+}));
+
 // ── GET /api/squads/:id/slots/:slotId/recommendations (Leader only) ───────────
 router.get('/:id/slots/:slotId/recommendations', authenticateToken, asyncHandler(async (req, res) => {
   const recommendations = await squadService.getSlotRecommendations(

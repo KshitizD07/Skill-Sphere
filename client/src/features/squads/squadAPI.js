@@ -49,6 +49,14 @@ const SquadAPI = {
   checkQualification: async (squadId, userId) =>
     unwrap(await BaseAPI.get(`/squads/${squadId}/qualify?userId=${userId}`)),
 
+  addSlot: async (squadId, data) => unwrap(await BaseAPI.post(`/squads/${squadId}/slots`, data)),
+
+  editSlot: async (squadId, slotId, data) => unwrap(await BaseAPI.put(`/squads/${squadId}/slots/${slotId}`, data)),
+
+  deleteSlot: async (squadId, slotId) => unwrap(await BaseAPI.delete(`/squads/${squadId}/slots/${slotId}`)),
+
+  withdrawApplication: async (applicationId) => unwrap(await BaseAPI.delete(`/squads/applications/${applicationId}`)),
+
   getSlotRecommendations: async (squadId, slotId) =>
     unwrap(await BaseAPI.get(`/squads/${squadId}/slots/${slotId}/recommendations`)),
 };

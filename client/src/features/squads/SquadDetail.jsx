@@ -4,7 +4,8 @@ import SquadAPI from './squadAPI';
 import {
   ArrowLeft, CheckCircle2,
   AlertCircle, Target, User, Shield,
-  Edit, Trash2, LogOut, X, ExternalLink
+  Edit, Trash2, LogOut, X, ExternalLink,
+  Plus, Pencil
 } from 'lucide-react';
 import Navbar from '../../shared/components/Navbar';
 import { useToast, ToastContainer } from '../../shared/components/Toast';
@@ -31,6 +32,12 @@ export default function SquadDetail() {
   const [submitting, setSubmitting] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
   const [editForm, setEditForm] = useState({ title: '', description: '', event: '' });
+
+  // Slot Management State
+  const [showSlotModal, setShowSlotModal] = useState(false);
+  const [slotEditMode, setSlotEditMode] = useState(false);
+  const [slotForm, setSlotForm] = useState({ id: null, roleTitle: '', roleDescription: '', requiredSkill: '', minScore: 5, requireVerified: false });
+  const [slotSubmitting, setSlotSubmitting] = useState(false);
 
   const loadSquad = useCallback(async () => {
     setLoading(true);
@@ -113,6 +120,58 @@ export default function SquadDetail() {
       loadSquad();
     } catch {
       toast.error('Failed to update squad.');
+    }
+  };
+
+  const handleOpenAddSlot = () => {
+    setSlotEditMode(false);
+    setSlotForm({ id: null, roleTitle: '', roleDescription: '', requiredSkill: '', minScore: 5, requireVerified: false });
+    setShowSlotModal(true);
+  };
+
+  const handleOpenEditSlot = (slot) => {
+    setSlotEditMode(true);
+    setSlotForm({
+      id: slot.id,
+      roleTitle: slot.roleTitle || '',
+      roleDescription: slot.roleDescription || '',
+      requiredSkill: slot.requiredSkill || '',
+      minScore: slot.minScore ?? 5,
+      requireVerified: !!slot.requireVerified,
+    });
+    setShowSlotModal(true);
+  };
+
+  const handleSaveSlot = async () => {
+    if (!slotForm.roleTitle.trim()) {
+      return toast.error('Role Title is required.');
+    }
+    setSlotSubmitting(true);
+    try {
+      if (slotEditMode) {
+        await SquadAPI.editSlot(id, slotForm.id, slotForm);
+        toast.success('Role slot updated successfully!');
+      } else {
+        await SquadAPI.addSlot(id, slotForm);
+        toast.success('Role slot added successfully!');
+      }
+      setShowSlotModal(false);
+      loadSquad();
+    } catch (err) {
+      toast.error(err?.response?.data?.message || err.message || 'Failed to save role slot.');
+    } finally {
+      setSlotSubmitting(false);
+    }
+  };
+
+  const handleDeleteSlot = async (slotId) => {
+    if (!window.confirm('Are you sure you want to remove this role slot? Any pending applications for this slot will be dismissed.')) return;
+    try {
+      await SquadAPI.deleteSlot(id, slotId);
+      toast.success('Role slot deleted.');
+      loadSquad();
+    } catch (err) {
+      toast.error(err?.response?.data?.message || err.message || 'Failed to delete role slot.');
     }
   };
 
@@ -250,86 +309,128 @@ export default function SquadDetail() {
 
             {/* Slots / Roles List */}
             <div className="bg-surface border border-outline-var/20 rounded-md p-6 space-y-4 shadow-sm">
-              <div className="flex items-center justify-between">
+              <div className="flex items-center justify-between flex-wrap gap-2">
                 <div className="flex items-center gap-2">
                   <Target size={18} className="text-primary" />
                   <h3 className="font-syne font-bold text-sm uppercase tracking-wider text-text-primary">
                     Squad Role Slots ({(squad.slots || []).length})
                   </h3>
                 </div>
+
+                {isLeader && (
+                  <button
+                    type="button"
+                    onClick={handleOpenAddSlot}
+                    className="px-3 py-1.5 bg-primary/10 hover:bg-primary text-primary hover:text-on-primary border border-primary/30 font-syne font-bold text-xs uppercase tracking-wider rounded-xs transition-all flex items-center gap-1.5"
+                  >
+                    <Plus size={13} /> Add Role Slot
+                  </button>
+                )}
               </div>
 
               <div className="space-y-3">
-                {(squad.slots || []).map((slot) => {
-                  const isFilled = slot.status === 'FILLED';
-                  const isApplied = userApps.some((a) => a.slotId === slot.id);
+                {(squad.slots || []).length === 0 ? (
+                  <p className="text-outline text-xs italic py-2">No role slots defined for this squad yet.</p>
+                ) : (
+                  (squad.slots || []).map((slot) => {
+                    const isFilled = slot.status === 'FILLED';
+                    const isApplied = userApps.some((a) => a.slotId === slot.id);
 
-                  return (
-                    <div
-                      key={slot.id}
-                      className={`p-4 rounded-md border transition-all flex flex-col md:flex-row md:items-center justify-between gap-4 ${
-                        isFilled
-                          ? 'bg-surface-mid/30 border-outline-var/20 opacity-70'
-                          : 'bg-surface-mid/60 border-outline-var/30 hover:border-primary/40'
-                      }`}
-                    >
-                      <div className="space-y-1">
-                        <div className="flex items-center gap-2">
-                          <h4 className="font-bold text-sm text-text-primary">{slot.roleTitle}</h4>
-                          <span
-                            className={`px-2 py-0.5 rounded-full text-[9px] font-syne font-bold uppercase border ${
-                              isFilled
-                                ? 'bg-outline-var/20 text-outline border-outline-var/30'
-                                : 'bg-secondary-bright/10 text-secondary-bright border-secondary-bright/20'
-                            }`}
-                          >
-                            {isFilled ? 'Filled' : 'Open'}
-                          </span>
+                    return (
+                      <div
+                        key={slot.id}
+                        className={`p-4 rounded-md border transition-all flex flex-col md:flex-row md:items-center justify-between gap-4 ${
+                          isFilled
+                            ? 'bg-surface-mid/30 border-outline-var/20 opacity-70'
+                            : 'bg-surface-mid/60 border-outline-var/30 hover:border-primary/40'
+                        }`}
+                      >
+                        <div className="space-y-1 min-w-0 flex-1">
+                          <div className="flex items-center gap-2 flex-wrap">
+                            <h4 className="font-bold text-sm text-text-primary">{slot.roleTitle}</h4>
+                            <span
+                              className={`px-2 py-0.5 rounded-full text-[9px] font-syne font-bold uppercase border ${
+                                isFilled
+                                  ? 'bg-outline-var/20 text-outline border-outline-var/30'
+                                  : 'bg-secondary-bright/10 text-secondary-bright border-secondary-bright/20'
+                              }`}
+                            >
+                              {isFilled ? 'Filled' : 'Open'}
+                            </span>
+                          </div>
+
+                          {slot.roleDescription && (
+                            <p className="text-xs text-text-muted line-clamp-2">{slot.roleDescription}</p>
+                          )}
+
+                          <div className="flex items-center gap-3 pt-1 text-xs text-text-muted flex-wrap">
+                            {slot.requiredSkill && (
+                              <span className="flex items-center gap-1 text-primary font-semibold text-[11px]">
+                                <Shield size={12} /> Required: {slot.requiredSkill} (≥ {slot.minScore}/10)
+                              </span>
+                            )}
+                            {slot.requireVerified && (
+                              <span className="flex items-center gap-1 text-secondary-bright text-[11px] font-semibold">
+                                <CheckCircle2 size={12} /> Verified Skill Required
+                              </span>
+                            )}
+                          </div>
                         </div>
 
-                        {slot.roleDescription && (
-                          <p className="text-xs text-text-muted line-clamp-2">{slot.roleDescription}</p>
-                        )}
-
-                        <div className="flex items-center gap-3 pt-1 text-xs text-text-muted flex-wrap">
-                          {slot.requiredSkill && (
-                            <span className="flex items-center gap-1 text-primary font-semibold text-[11px]">
-                              <Shield size={12} /> Required: {slot.requiredSkill} (≥ {slot.minScore}/10)
+                        {/* Slot CTA / Leader Actions */}
+                        <div className="flex items-center gap-2 shrink-0">
+                          {isLeader ? (
+                            <div className="flex items-center gap-1.5">
+                              {!isFilled && (
+                                <button
+                                  type="button"
+                                  onClick={() => handleOpenEditSlot(slot)}
+                                  className="p-1.5 bg-surface hover:bg-surface-mid border border-outline-var/30 text-text-muted hover:text-primary rounded-xs transition-colors"
+                                  title="Edit Role Slot"
+                                >
+                                  <Pencil size={13} />
+                                </button>
+                              )}
+                              {!isFilled && (
+                                <button
+                                  type="button"
+                                  onClick={() => handleDeleteSlot(slot.id)}
+                                  className="p-1.5 bg-error/10 hover:bg-error/20 border border-error/30 text-error rounded-xs transition-colors"
+                                  title="Delete Role Slot"
+                                >
+                                  <Trash2 size={13} />
+                                </button>
+                              )}
+                              {isFilled && (
+                                <span className="text-xs text-outline font-syne uppercase tracking-wider font-bold">
+                                  Filled
+                                </span>
+                              )}
+                            </div>
+                          ) : isFilled ? (
+                            <span className="text-xs text-outline font-syne uppercase tracking-wider font-bold">
+                              Slot Filled
                             </span>
-                          )}
-                          {slot.requireVerified && (
-                            <span className="flex items-center gap-1 text-secondary-bright text-[11px] font-semibold">
-                              <CheckCircle2 size={12} /> Verified Skill Required
+                          ) : isApplied ? (
+                            <span className="px-3 py-1.5 bg-primary/10 border border-primary/20 text-primary font-syne font-bold text-xs uppercase tracking-wider rounded-xs">
+                              Applied
                             </span>
+                          ) : (
+                            <button
+                              onClick={() => {
+                                setSelectedSlot(slot.id);
+                                setShowApplyModal(true);
+                              }}
+                              className="px-4 py-2 bg-primary text-on-primary hover:bg-secondary-bright font-syne font-bold text-xs uppercase tracking-wider rounded-xs transition-all"
+                            >
+                              Apply for Role
+                            </button>
                           )}
                         </div>
                       </div>
-
-                      {/* Slot CTA */}
-                      <div>
-                        {isLeader ? null : isFilled ? (
-                          <span className="text-xs text-outline font-syne uppercase tracking-wider font-bold">
-                            Slot Filled
-                          </span>
-                        ) : isApplied ? (
-                          <span className="px-3 py-1.5 bg-primary/10 border border-primary/20 text-primary font-syne font-bold text-xs uppercase tracking-wider rounded-xs">
-                            Applied
-                          </span>
-                        ) : (
-                          <button
-                            onClick={() => {
-                              setSelectedSlot(slot.id);
-                              setShowApplyModal(true);
-                            }}
-                            className="px-4 py-2 bg-primary text-on-primary hover:bg-secondary-bright font-syne font-bold text-xs uppercase tracking-wider rounded-xs transition-all"
-                          >
-                            Apply for Role
-                          </button>
-                        )}
-                      </div>
-                    </div>
-                  );
-                })}
+                    );
+                  })
+                )}
               </div>
             </div>
           </div>
@@ -533,6 +634,112 @@ export default function SquadDetail() {
                 className="flex-1 py-2 bg-primary text-on-primary font-syne font-bold text-xs uppercase tracking-wider rounded-xs hover:bg-secondary-bright transition-all"
               >
                 Save Changes
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ── Add / Edit Role Slot Modal (Leader Only) ────────────────────── */}
+      {showSlotModal && (
+        <div className="fixed inset-0 bg-bg-base/85 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+          <div className="bg-surface border border-outline-var/30 rounded-md max-w-md w-full p-6 relative shadow-2xl space-y-4 font-outfit">
+            <button
+              onClick={() => setShowSlotModal(false)}
+              className="absolute top-4 right-4 text-outline hover:text-text-primary"
+            >
+              <X size={16} />
+            </button>
+
+            <div>
+              <p className="font-syne text-[10px] font-bold tracking-wider uppercase text-primary">Role Architect</p>
+              <h3 className="text-lg font-bold font-syne text-text-primary">
+                {slotEditMode ? 'Edit Role Slot' : 'Add New Role Slot'}
+              </h3>
+            </div>
+
+            <div className="space-y-3">
+              <div>
+                <label className="block font-syne text-[10px] font-bold uppercase tracking-wider text-outline mb-1">
+                  Role Title *
+                </label>
+                <input
+                  value={slotForm.roleTitle}
+                  onChange={(e) => setSlotForm((f) => ({ ...f, roleTitle: e.target.value }))}
+                  placeholder="e.g. Backend Lead, UI/UX Designer"
+                  className="w-full bg-surface-mid border border-outline-var/40 rounded-xs p-2.5 text-xs text-text-primary outline-none focus:border-primary/60"
+                />
+              </div>
+
+              <div>
+                <label className="block font-syne text-[10px] font-bold uppercase tracking-wider text-outline mb-1">
+                  Role Description (Optional)
+                </label>
+                <textarea
+                  value={slotForm.roleDescription}
+                  onChange={(e) => setSlotForm((f) => ({ ...f, roleDescription: e.target.value }))}
+                  rows={2}
+                  placeholder="Key responsibilities and expectations..."
+                  className="w-full bg-surface-mid border border-outline-var/40 rounded-xs p-2 text-xs text-text-primary outline-none focus:border-primary/60 resize-none"
+                />
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div>
+                  <label className="block font-syne text-[10px] font-bold uppercase tracking-wider text-outline mb-1">
+                    Gatekeeper Skill
+                  </label>
+                  <input
+                    value={slotForm.requiredSkill}
+                    onChange={(e) => setSlotForm((f) => ({ ...f, requiredSkill: e.target.value }))}
+                    placeholder="e.g. Python, React"
+                    className="w-full bg-surface-mid border border-outline-var/40 rounded-xs p-2 text-xs text-text-primary outline-none focus:border-primary/60"
+                  />
+                </div>
+
+                <div>
+                  <label className="block font-syne text-[10px] font-bold uppercase tracking-wider text-outline mb-1">
+                    Min Score (0–10)
+                  </label>
+                  <input
+                    type="number"
+                    min={0}
+                    max={10}
+                    value={slotForm.minScore}
+                    onChange={(e) => setSlotForm((f) => ({ ...f, minScore: Number(e.target.value) }))}
+                    className="w-full bg-surface-mid border border-outline-var/40 rounded-xs p-2 text-xs text-text-primary outline-none focus:border-primary/60"
+                  />
+                </div>
+              </div>
+
+              <div className="flex items-center gap-2 pt-1">
+                <label className="flex items-center gap-2 cursor-pointer text-xs text-text-muted select-none">
+                  <input
+                    type="checkbox"
+                    checked={slotForm.requireVerified}
+                    onChange={(e) => setSlotForm((f) => ({ ...f, requireVerified: e.target.checked }))}
+                    className="accent-primary rounded-xs"
+                  />
+                  <span>Require verified skill from applicants</span>
+                </label>
+              </div>
+            </div>
+
+            <div className="flex gap-2 pt-2">
+              <button
+                type="button"
+                onClick={() => setShowSlotModal(false)}
+                className="flex-1 py-2 border border-outline-var/30 text-text-muted font-syne font-bold text-xs uppercase tracking-wider rounded-xs"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={handleSaveSlot}
+                disabled={slotSubmitting}
+                className="flex-1 py-2 bg-primary text-on-primary font-syne font-bold text-xs uppercase tracking-wider rounded-xs hover:bg-secondary-bright transition-all disabled:opacity-50"
+              >
+                {slotSubmitting ? 'Saving...' : slotEditMode ? 'Update Slot' : 'Add Slot'}
               </button>
             </div>
           </div>

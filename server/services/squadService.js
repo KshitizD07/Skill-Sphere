@@ -226,6 +226,91 @@ export async function deleteSquad(squadId, leaderId) {
   return { success: true, message: 'Squad closed' };
 }
 
+// ── Slot Management (Leader only) ─────────────────────────────────────────────
+export async function addSlot(squadId, slotData, leaderId) {
+  const squad = await prisma.squad.findUnique({
+    where: { id: squadId },
+    include: { slots: true },
+  });
+  if (!squad) throw ApiError.notFound('Squad');
+  if (squad.leaderId !== leaderId) throw ApiError.forbidden('Only the squad leader can add roles');
+  if (squad.slots.length >= 10) throw ApiError.badRequest('Maximum 10 slots per squad');
+
+  const slot = await prisma.squadSlot.create({
+    data: {
+      squadId,
+      roleTitle: slotData.roleTitle?.trim() || 'Member',
+      roleDescription: slotData.roleDescription?.trim() || null,
+      preferredSkills: Array.isArray(slotData.preferredSkills) ? slotData.preferredSkills.slice(0, 10) : [],
+      requiredSkill: slotData.requiredSkill?.trim() || null,
+      minScore: Math.min(10, Math.max(0, parseInt(slotData.minScore) || 0)),
+      requireVerified: !!slotData.requireVerified,
+      position: squad.slots.length,
+      status: 'OPEN',
+    },
+  });
+  return slot;
+}
+
+export async function editSlot(squadId, slotId, slotData, leaderId) {
+  const squad = await prisma.squad.findUnique({ where: { id: squadId } });
+  if (!squad) throw ApiError.notFound('Squad');
+  if (squad.leaderId !== leaderId) throw ApiError.forbidden('Only the squad leader can edit roles');
+
+  const existingSlot = await prisma.squadSlot.findUnique({ where: { id: slotId } });
+  if (!existingSlot || existingSlot.squadId !== squadId) throw ApiError.notFound('Role Slot');
+
+  const updatedSlot = await prisma.squadSlot.update({
+    where: { id: slotId },
+    data: {
+      roleTitle: slotData.roleTitle?.trim() || existingSlot.roleTitle,
+      roleDescription: slotData.roleDescription !== undefined ? slotData.roleDescription?.trim() : existingSlot.roleDescription,
+      requiredSkill: slotData.requiredSkill !== undefined ? slotData.requiredSkill?.trim() : existingSlot.requiredSkill,
+      minScore: slotData.minScore !== undefined ? Math.min(10, Math.max(0, parseInt(slotData.minScore) || 0)) : existingSlot.minScore,
+      requireVerified: slotData.requireVerified !== undefined ? !!slotData.requireVerified : existingSlot.requireVerified,
+    },
+  });
+  return updatedSlot;
+}
+
+export async function deleteSlot(squadId, slotId, leaderId) {
+  const squad = await prisma.squad.findUnique({ where: { id: squadId } });
+  if (!squad) throw ApiError.notFound('Squad');
+  if (squad.leaderId !== leaderId) throw ApiError.forbidden('Only the squad leader can delete roles');
+
+  const slot = await prisma.squadSlot.findUnique({ where: { id: slotId } });
+  if (!slot || slot.squadId !== squadId) throw ApiError.notFound('Role Slot');
+  if (slot.status === 'FILLED') {
+    throw ApiError.badRequest('Cannot delete a filled slot. Member must leave or be removed first.');
+  }
+
+  // Delete pending applications for this slot
+  await prisma.squadApplication.deleteMany({
+    where: { slotId, status: 'PENDING' },
+  });
+
+  await prisma.squadSlot.delete({ where: { id: slotId } });
+  return { success: true, message: 'Role slot removed' };
+}
+
+// ── Withdraw / Delete application (Applicant or Leader) ───────────────────────
+export async function withdrawApplication(applicationId, userId) {
+  const app = await prisma.squadApplication.findUnique({
+    where: { id: applicationId },
+    include: { squad: true },
+  });
+  if (!app) throw ApiError.notFound('Application');
+  if (app.userId !== userId && app.squad.leaderId !== userId) {
+    throw ApiError.forbidden('You do not have permission to delete this application');
+  }
+  if (app.status === 'ACCEPTED') {
+    throw ApiError.badRequest('Cannot withdraw an accepted application. Please leave the squad instead.');
+  }
+
+  await prisma.squadApplication.delete({ where: { id: applicationId } });
+  return { success: true, message: 'Application removed' };
+}
+
 // ── Leave squad (Member only) ─────────────────────────────────────────────────
 export async function leaveSquad(squadId, userId) {
   const squad = await prisma.squad.findUnique({ where: { id: squadId } });
