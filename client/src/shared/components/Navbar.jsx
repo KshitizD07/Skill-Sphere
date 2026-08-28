@@ -3,11 +3,13 @@ import { useNavigate, useLocation } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
   Menu, X, BarChart2, Users, Layers, 
-  User, LogOut, LayoutDashboard, MessageSquare, Shield, Search
+  User, LogOut, LayoutDashboard, MessageSquare, Shield, Search,
+  HelpCircle, Sparkles
 } from 'lucide-react';
 import NotificationBell from './NotificationBell';
 import DashboardChat from '../../features/chat/DashboardChat';
 import SearchAPI from '../../features/search/searchAPI';
+import OnboardingGuide from './OnboardingGuide';
 
 const Navbar = ({ user, onLogout }) => {
   const [isOpen, setIsOpen] = useState(false);
@@ -296,7 +298,18 @@ const Navbar = ({ user, onLogout }) => {
           </div>
           
           <div className="flex items-center justify-between mt-3 px-2">
-            <NotificationBell />
+            <div className="flex items-center gap-1.5">
+              <NotificationBell />
+              <button
+                type="button"
+                onClick={() => window.dispatchEvent(new Event('open-ss-guide'))}
+                className="p-1.5 rounded-md hover:bg-surface text-text-muted hover:text-[#6D28D9] transition-colors flex items-center gap-1 text-[11px] font-syne font-bold uppercase tracking-wider cursor-pointer"
+                title="Platform Quick Guide"
+                aria-label="Platform Quick Guide"
+              >
+                <HelpCircle size={16} />
+              </button>
+            </div>
             <button
               onClick={onLogout}
               className="p-2 rounded-md hover:bg-error-container/20 text-text-muted hover:text-error transition-colors"
@@ -350,7 +363,17 @@ const Navbar = ({ user, onLogout }) => {
               ))}
             </div>
             
-            <div className="p-4 border-t border-outline-var/30">
+            <div className="p-4 border-t border-outline-var/30 space-y-2">
+              <button
+                type="button"
+                onClick={() => {
+                  setIsOpen(false);
+                  window.dispatchEvent(new Event('open-ss-guide'));
+                }}
+                className="w-full flex justify-center items-center gap-2 py-2 rounded-xs border border-[#DDD6FE] bg-[#F5F3FF] text-[#6D28D9] font-syne text-xs uppercase tracking-widest font-bold hover:bg-[#EDE9FE] transition-colors"
+              >
+                <Sparkles size={14} /> Quick Guide
+              </button>
               <button onClick={() => { onLogout(); setIsOpen(false); }} className="w-full flex justify-center items-center gap-2 py-2.5 rounded border border-error-container bg-error-container/10 text-error font-syne text-xs uppercase tracking-widest font-bold">
                 <LogOut size={14} /> Logout
               </button>
@@ -361,6 +384,7 @@ const Navbar = ({ user, onLogout }) => {
       </AnimatePresence>
 
       <DashboardChat isOpen={isChatOpen} onClose={() => setIsChatOpen(false)} />
+      <OnboardingGuide />
     </>
   );
 };
