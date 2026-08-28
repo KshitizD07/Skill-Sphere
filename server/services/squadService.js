@@ -196,13 +196,7 @@ export async function deleteSquad(squadId, leaderId) {
     include: { applications: { where: { status: 'PENDING' }, select: { userId: true } } },
   });
   if (!squad) throw ApiError.notFound('Squad');
-  if (squad.leaderId !== leaderId) throw ApiError.forbidden('Only the squad leader can close this squad');
-
-  // Soft-close
-  await prisma.squad.update({
-    where: { id: squadId },
-    data: { status: 'CLOSED' },
-  });
+  if (squad.leaderId !== leaderId) throw ApiError.forbidden('Only the squad leader can delete this squad');
 
   // Notify pending applicants
   for (const app of squad.applications) {
@@ -212,7 +206,7 @@ export async function deleteSquad(squadId, leaderId) {
           userId: app.userId,
           type: 'SQUAD_REJECTED',
           title: 'Squad Closed',
-          message: `The squad "${squad.title}" has been closed by its leader.`,
+          message: `The squad "${squad.title}" has been deleted by its leader.`,
           actionUrl: '/nexus',
         },
       });
@@ -223,7 +217,22 @@ export async function deleteSquad(squadId, leaderId) {
     }
   }
 
-  return { success: true, message: 'Squad closed' };
+  // Delete all applications for this squad
+  await prisma.squadApplication.deleteMany({
+    where: { squadId },
+  });
+
+  // Delete all slots for this squad
+  await prisma.squadSlot.deleteMany({
+    where: { squadId },
+  });
+
+  // Delete squad permanently
+  await prisma.squad.delete({
+    where: { id: squadId },
+  });
+
+  return { success: true, message: 'Squad deleted successfully' };
 }
 
 // ── Slot Management (Leader only) ─────────────────────────────────────────────
@@ -559,7 +568,11 @@ export async function updateApplicationStatus(squadId, applicationId, status, le
 // ── My squads (led or applied to) ────────────────────────────────────────────
 export async function getMySquads(userId) {
   const [led, applied] = await Promise.all([
-    prisma.squad.findMany({ where: { leaderId: userId }, select: SQUAD_SELECT, orderBy: { createdAt: 'desc' } }),
+    prisma.squad.findMany({
+      where: { leaderId: userId, status: { not: 'CLOSED' } },
+      select: SQUAD_SELECT,
+      orderBy: { createdAt: 'desc' },
+    }),
     prisma.squadApplication.findMany({
       where: { userId },
       include: {
