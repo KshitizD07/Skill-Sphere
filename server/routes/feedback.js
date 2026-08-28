@@ -41,8 +41,26 @@ router.post('/', authenticateToken, async (req, res, next) => {
       wantsToContribute: !!wantsToContribute,
     });
 
-    // Send the email directly to developer inbox
-    await sendFeedbackEmail({
+    // 1. Persist feedback directly in database
+    await prisma.activityLog.create({
+      data: {
+        userId: user.id,
+        action: 'FEEDBACK_SUBMITTED',
+        metadata: {
+          category,
+          rating,
+          feedback,
+          mostValuable,
+          improvement,
+          wantsToContribute: !!wantsToContribute,
+          contributorAreas,
+          contributorContact,
+        },
+      },
+    }).catch((err) => logger.warn('Feedback DB log warning:', { err: err.message }));
+
+    // 2. Dispatch email asynchronously
+    sendFeedbackEmail({
       user,
       category: category || 'General Feedback',
       rating: Number(rating) || 5,

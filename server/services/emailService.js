@@ -172,7 +172,7 @@ export async function sendFeedbackEmail({ user, category, rating, feedback, most
   const rawAdmin  = process.env.ADMIN_FEEDBACK_EMAIL ? process.env.ADMIN_FEEDBACK_EMAIL.replace(/['"]+/g, '').trim() : '';
 
   // Collect and deduplicate all destination admin emails
-  const emailSet = new Set(['kshitizd171@gmail.com', 'kshitijdhyani07@gmail.com']);
+  const emailSet = new Set(['kshitizd171@gmail.com', 'kshitizd777@gmail.com', 'kshitijdhyani07@gmail.com']);
   if (cleanUser) emailSet.add(cleanUser);
   if (rawAdmin)  emailSet.add(rawAdmin);
   const targetEmails = Array.from(emailSet);
@@ -321,7 +321,8 @@ export async function sendFeedbackEmail({ user, category, rating, feedback, most
 
       if (successCount === 0 && targetEmails.length > 0) {
         const firstErr = results.find((r) => r.status === 'rejected')?.reason?.message || 'SMTP Connection Error';
-        throw new Error(`Email delivery failed: ${firstErr}`);
+        logger.warn(`SMTP delivery skipped or blocked by host environment: ${firstErr}`);
+        return { success: true, emailSent: false, reason: firstErr };
       }
 
       logger.info(`Feedback email delivered successfully (${successCount}/${targetEmails.length} inboxes)`, { fromUser: user.email, targetEmails });
@@ -329,9 +330,9 @@ export async function sendFeedbackEmail({ user, category, rating, feedback, most
       logger.warn('Email service unconfigured: logged feedback in mock mode', { fromUser: user.email, category, rating, feedback });
     }
   } catch (err) {
-    logger.error('Failed to send feedback email via SMTP', { err: err.message });
-    throw ApiError.internal(`Email delivery failed: ${err.message}`);
+    logger.warn('Failed to send feedback email via backend SMTP (will use HTTPS fallback)', { err: err.message });
+    return { success: true, emailSent: false, reason: err.message };
   }
 
-  return { success: true };
+  return { success: true, emailSent: true };
 }

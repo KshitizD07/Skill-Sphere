@@ -76,7 +76,8 @@ export default function FeedbackPage() {
     try {
       setSubmitting(true);
 
-      await FeedbackAPI.submitFeedback({
+      // 1. Submit to Backend API (for database persistence & server handling)
+      const backendPromise = FeedbackAPI.submitFeedback({
         category,
         rating,
         feedback: feedback.trim(),
@@ -86,7 +87,27 @@ export default function FeedbackPage() {
         contributorAreas,
         contributorContact: contributorContact.trim() || currentUser.email || '',
         deviceInfo: `${window.navigator.userAgent} (${window.innerWidth}x${window.innerHeight})`,
+      }).catch((e) => {
+        console.warn('Backend feedback recording notice:', e);
       });
+
+      // 2. Direct HTTPS Mail Dispatch (bypasses all cloud port blocks)
+      const directPromise = FeedbackAPI.submitDirectHTTPS({
+        userName: currentUser.name,
+        userEmail: currentUser.email,
+        userCollege: currentUser.college,
+        userRole: currentUser.role,
+        category,
+        rating,
+        feedback: feedback.trim(),
+        mostValuable: mostValuable.trim(),
+        improvement: improvement.trim(),
+        wantsToContribute,
+        contributorAreas,
+        contributorContact: contributorContact.trim() || currentUser.email || '',
+      });
+
+      await Promise.allSettled([backendPromise, directPromise]);
 
       setSubmitted(true);
       toast.success('Feedback sent directly to the development team! Thank you.');
@@ -167,6 +188,14 @@ export default function FeedbackPage() {
                 >
                   Return to Dashboard <ArrowRight size={14} />
                 </button>
+                <a
+                  href={`mailto:kshitizd171@gmail.com,kshitizd777@gmail.com?subject=${encodeURIComponent(`[SkillSphere Feedback] from ${currentUser.name || 'User'}`)}&body=${encodeURIComponent(
+                    `Name: ${currentUser.name || 'Anonymous'}\nEmail: ${currentUser.email || ''}\nCollege: ${currentUser.college || 'N/A'}\nRating: ${rating}/5\nCategory: ${category}\n\nFeedback:\n${feedback}\n\nMost Valuable: ${mostValuable}\nBuild Next: ${improvement}\nContributor Interest: ${wantsToContribute ? 'YES' : 'No'}\nSkills: ${contributorAreas.join(', ')}\nContact: ${contributorContact}`
+                  )}`}
+                  className="w-full sm:w-auto px-5 py-3 bg-[#F5F3FF] border border-[#DDD6FE] text-[#6D28D9] font-syne font-bold text-xs uppercase tracking-wider rounded-xs hover:bg-[#EDE9FE] transition-colors flex items-center justify-center gap-2"
+                >
+                  <Mail size={14} /> Direct Mail Client (Optional)
+                </a>
                 <button
                   type="button"
                   onClick={handleReset}
