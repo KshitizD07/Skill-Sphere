@@ -24,6 +24,8 @@ export default function FeedbackInboxView({ toast }) {
       if (res?.success) {
         setFeedbackList(res.data || []);
         if (res.stats) setStats(res.stats);
+      } else if (res?.error) {
+        toast.error(res.message || 'Access restricted to administrator');
       }
     } catch (err) {
       console.error('Failed to load feedback inbox', err);

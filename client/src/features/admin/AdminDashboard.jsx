@@ -53,15 +53,15 @@ export default function AdminDashboard() {
   const ADMIN_EMAILS = useMemo(() => [
     'kshitizd171@gmail.com',
     'kshitizd777@gmail.com',
-    'kshitijdhyani07@gmail.com',
   ], []);
 
   useEffect(() => {
+    const userEmail = (currentUser?.email || '').toLowerCase().trim();
     const isAuthorized =
       currentUser?.role === 'ADMIN' ||
-      (currentUser?.email && ADMIN_EMAILS.includes(currentUser.email.toLowerCase()));
-    if (currentUser?.role && !isAuthorized) {
-      toast.error('Access restricted to platform administrators');
+      (userEmail && ADMIN_EMAILS.includes(userEmail));
+    if (currentUser?.email && !isAuthorized) {
+      toast.error('Access restricted to platform administrator');
       navigate('/dashboard');
     }
   }, [currentUser, navigate, toast, ADMIN_EMAILS]);

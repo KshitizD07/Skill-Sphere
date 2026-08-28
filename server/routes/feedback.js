@@ -10,7 +10,6 @@ const prisma = new PrismaClient();
 const ADMIN_EMAILS = new Set([
   'kshitizd171@gmail.com',
   'kshitizd777@gmail.com',
-  'kshitijdhyani07@gmail.com',
 ]);
 
 // ── POST /api/feedback (Submit User Feedback) ─────────────────────────────────
