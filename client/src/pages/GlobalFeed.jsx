@@ -1,7 +1,7 @@
 import { useEffect, useState, useRef, useCallback } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import {
-  Search, Heart, User, Building2, Image as ImageIcon, X,
+  Heart, User, Building2, Image as ImageIcon, X,
   MessageCircle, Send, CornerDownRight, Trash2, Pencil,
   Share2, Flag, ArrowUp, Loader2, ThumbsUp,
   AlertTriangle, ExternalLink, Users
@@ -9,7 +9,6 @@ import {
 import FeedAPI from '../features/feed/feedAPI';
 import API from '../api';
 import Navbar from '../shared/components/Navbar';
-import ProfileAPI from '../features/profile/profileAPI';
 import { useToast, ToastContainer } from '../shared/components/Toast';
 
 function timeAgo(date) {
@@ -394,8 +393,11 @@ function PostCard({
 
       {/* Image Lightbox */}
       {showImageLightbox && (
-        <div className="fixed inset-0 bg-bg-base/90 backdrop-blur-md z-[500] flex items-center justify-center p-4">
-          <div className="relative max-w-4xl max-h-[90vh]">
+        <div 
+          className="fixed inset-0 bg-bg-base/90 backdrop-blur-md z-[500] flex items-center justify-center p-4 cursor-zoom-out"
+          onClick={() => setShowImageLightbox(false)}
+        >
+          <div className="relative max-w-4xl max-h-[90vh]" onClick={(e) => e.stopPropagation()}>
             <button
               onClick={() => setShowImageLightbox(false)}
               className="absolute -top-10 right-0 p-2 text-white hover:text-error transition-colors"
@@ -424,9 +426,6 @@ export default function GlobalFeed() {
   const [nextCursor, setNextCursor] = useState(null);
   const [hasMore, setHasMore] = useState(true);
   const [loadingMore, setLoadingMore] = useState(false);
-
-  const [searchQuery, setSearchQuery] = useState('');
-  const [searchResults, setSearchResults] = useState([]);
 
   const [newPostContent, setNewPostContent] = useState('');
   const [newPostImage, setNewPostImage] = useState('');
@@ -505,19 +504,7 @@ export default function GlobalFeed() {
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
-  // ── Search handler ────────────────────────────────────────────────────────
-  const handleSearch = async (e) => {
-    const q = e.target.value;
-    setSearchQuery(q);
-    if (q.trim().length > 1) {
-      try {
-        const res = await ProfileAPI.getProfile ? API.get(`/users/search?q=${encodeURIComponent(q)}`) : null;
-        setSearchResults(res?.data?.data || res?.data || []);
-      } catch {
-        setSearchResults([]);
-      }
-    } else setSearchResults([]);
-  };
+
 
   // ── Create Post ───────────────────────────────────────────────────────────
   const handleCreatePost = async () => {
@@ -825,44 +812,7 @@ export default function GlobalFeed() {
       <Navbar user={currentUser} onLogout={handleLogout} />
       <ToastContainer toasts={toast.toasts} removeToast={toast.removeToast} />
 
-      <div className="flex-1 md:ml-64 pt-20 md:pt-0 min-h-screen overflow-y-auto overflow-x-hidden p-6 md:p-10 w-full max-w-[1200px] mx-auto">
-        {/* Member Search Bar */}
-        <div className="mb-6 relative font-outfit">
-          <div className="relative group">
-            <Search className="absolute left-4 top-3.5 text-outline group-focus-within:text-primary transition-colors" size={16} />
-            <input
-              value={searchQuery}
-              onChange={handleSearch}
-              placeholder="Search members or institutions..."
-              className="w-full bg-surface border border-outline-var/30 rounded-xs p-3 pl-11 text-text-primary outline-none focus:border-primary/50 text-sm transition-colors placeholder-outline-var"
-            />
-          </div>
-          {searchResults.length > 0 && (
-            <div className="absolute top-full left-0 w-full bg-surface border border-outline-var/40 rounded-xs z-50 mt-1 shadow-2xl">
-              {searchResults.map((u) => (
-                <div
-                  key={u.id}
-                  onClick={() => {
-                    navigate(`/profile/${u.id}`);
-                    setSearchResults([]);
-                    setSearchQuery('');
-                  }}
-                  className="p-3 border-b border-outline-var/20 hover:bg-surface-mid cursor-pointer flex items-center gap-3 transition-colors"
-                >
-                  <Avatar src={u.avatar} name={u.name} size={8} />
-                  <div>
-                    <div className="text-text-primary font-semibold text-sm">{u.name}</div>
-                    {u.college && (
-                      <div className="text-[10px] text-secondary-bright font-syne flex items-center gap-1">
-                        <Building2 size={10} /> {u.college}
-                      </div>
-                    )}
-                  </div>
-                </div>
-              ))}
-            </div>
-          )}
-        </div>
+      <div className="flex-1 md:ml-64 pt-20 md:pt-0 min-h-screen overflow-y-auto overflow-x-hidden p-4 sm:p-6 md:p-10 w-full max-w-[1200px] mx-auto">
 
         {/* Feed Type Switcher (All vs Following) */}
         <div className="flex items-center gap-2 mb-6 border-b border-outline-var/20 pb-2">
@@ -925,7 +875,7 @@ export default function GlobalFeed() {
                   </div>
                 )}
 
-                <div className="flex gap-2 items-center justify-between border-t border-outline-var/20 pt-3">
+                <div className="flex flex-wrap gap-3 items-center justify-between border-t border-outline-var/20 pt-3">
                   <input ref={postImageRef} type="file" accept="image/*" onChange={handleImageChange} className="hidden" />
                   <button
                     onClick={() => postImageRef.current.click()}
