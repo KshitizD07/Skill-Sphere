@@ -6,7 +6,7 @@ import RoadmapAPI from '../features/roadmap/roadmapAPI';
 import {
   AlertTriangle, CheckCircle,
   Activity, Users, X, Brain, BarChart2, ShieldAlert,
-  BookmarkCheck, ArrowRight, Sparkles, Target
+  ArrowRight
 } from 'lucide-react';
 import Navbar from '../shared/components/Navbar';
 import SEOHead from '../shared/components/SEOHead';

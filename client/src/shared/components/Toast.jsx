@@ -66,6 +66,7 @@ export function ToastContainer({ toasts, removeToast }) {
 // useToast hook — no Provider needed, works in any component
 let _counter = 0;
 
+// eslint-disable-next-line react-refresh/only-export-components
 export function useToast() {
   const [toasts, setToasts] = useState([]);
 

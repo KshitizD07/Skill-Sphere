@@ -1,12 +1,10 @@
 import { useEffect, useState, useMemo, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import API from '../../api';
 import SquadAPI from './squadAPI';
 import {
-  ArrowLeft, Users, Lock, CheckCircle2,
-  AlertCircle, Target, User, Shield, Clock,
-  Edit, Trash2, LogOut, Send, X, ExternalLink,
-  Flame, Sparkles
+  ArrowLeft, CheckCircle2,
+  AlertCircle, Target, User, Shield,
+  Edit, Trash2, LogOut, X, ExternalLink
 } from 'lucide-react';
 import Navbar from '../../shared/components/Navbar';
 import { useToast, ToastContainer } from '../../shared/components/Toast';
@@ -57,7 +55,7 @@ export default function SquadDetail() {
         setSquad(null);
         toast.error(data?.message || 'Failed to load squad details.');
       }
-    } catch (err) {
+    } catch {
       toast.error('Failed to load squad details.');
     } finally {
       setLoading(false);
@@ -102,7 +100,7 @@ export default function SquadDetail() {
       await SquadAPI.deleteSquad(id);
       toast.success('Squad closed successfully.');
       navigate('/nexus');
-    } catch (err) {
+    } catch {
       toast.error('Failed to close squad.');
     }
   };
@@ -113,7 +111,7 @@ export default function SquadDetail() {
       toast.success('Squad updated successfully.');
       setShowEditModal(false);
       loadSquad();
-    } catch (err) {
+    } catch {
       toast.error('Failed to update squad.');
     }
   };
@@ -156,8 +154,8 @@ export default function SquadDetail() {
   const isFull = squad.currentMembers >= squad.maxMembers;
   const userApps = (squad.applications || []).filter((a) => a.userId === currentUser?.id);
   const userAcceptedApp = userApps.find((a) => a.status === 'ACCEPTED');
-  const userPendingApp = userApps.find((a) => a.status === 'PENDING');
-  const isMember = isLeader || !!userAcceptedApp;
+  const _userPendingApp = userApps.find((a) => a.status === 'PENDING');
+  const _isMember = isLeader || !!userAcceptedApp;
 
   return (
     <div className="min-h-screen bg-bg-base text-text-primary font-outfit flex flex-col md:flex-row">

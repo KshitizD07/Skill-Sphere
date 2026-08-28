@@ -1,8 +1,8 @@
 import { useState, useEffect, useCallback } from 'react';
 import {
-  Shield, Github, Award, Check, X, Eye, Lock, ChevronLeft,
+  Shield, Github, Award, Check, Eye, Lock, ChevronLeft,
   Loader2, Sparkles, CheckCircle2, AlertTriangle, ArrowRight,
-  FolderGit2, Code2, RefreshCw, Cpu, Layers, ExternalLink
+  FolderGit2, Code2, RefreshCw, Cpu
 } from 'lucide-react';
 import SkillAPI from './skillAPI';
 import PortfolioAPI from '../portfolio/portfolioAPI';

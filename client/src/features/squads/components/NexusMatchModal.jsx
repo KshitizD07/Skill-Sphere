@@ -52,7 +52,7 @@ export default function NexusMatchModal({ isOpen, onClose, squad, slotId, candid
       } else {
         setError('Application not found for the recommended user.');
       }
-    } catch (err) {
+    } catch {
       setError('Failed to accept recommendation.');
     }
   };
@@ -64,7 +64,7 @@ export default function NexusMatchModal({ isOpen, onClose, squad, slotId, candid
         leaderRating: 2
       });
       onClose();
-    } catch (err) {
+    } catch {
       onClose();
     }
   };

@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import {
   Bell, User, MessageSquare, Users, Award, Heart, CheckCheck,
-  ExternalLink, Sparkles, AlertCircle, ArrowRight
+  Sparkles, ArrowRight
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { io } from 'socket.io-client';

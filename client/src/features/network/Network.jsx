@@ -3,11 +3,10 @@ import { useNavigate, useSearchParams } from 'react-router-dom';
 import {
   Users, Building2, Shield, Search, ArrowRight, MessageSquare,
   Sparkles, RefreshCw, CheckCircle2, Star, ExternalLink,
-  Filter, X, User, Check, Flame, UserPlus, UserCheck
+  X, User, Flame, UserPlus, UserCheck
 } from 'lucide-react';
 import NetworkAPI from './networkAPI';
 import ProfileAPI from '../profile/profileAPI';
-import API from '../../api';
 import Navbar from '../../shared/components/Navbar';
 import { useToast, ToastContainer } from '../../shared/components/Toast';
 
@@ -48,7 +47,7 @@ export default function Network() {
   const popularSkills = ['React', 'Node.js', 'Python', 'TypeScript', 'Docker', 'PostgreSQL', 'Machine Learning', 'Next.js'];
 
   // ── Sync URL Search Params ────────────────────────────────────────────────
-  const updateUrlParams = useCallback(() => {
+  const _updateUrlParams = useCallback(() => {
     const params = {};
     if (searchQuery.trim()) params.q = searchQuery.trim();
     if (roleFilter !== 'ALL') params.role = roleFilter;

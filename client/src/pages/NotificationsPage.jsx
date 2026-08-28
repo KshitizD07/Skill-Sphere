@@ -2,13 +2,13 @@ import { useState, useEffect, useMemo, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
   Bell, CheckCheck, Trash2, User, MessageSquare, Users,
-  Award, Heart, Sparkles, Filter, Check, ArrowLeft, Loader2
+  Award, Heart, Sparkles, Check
 } from 'lucide-react';
 import NotificationAPI from '../features/notifications/notificationAPI';
 import Navbar from '../shared/components/Navbar';
 import { useToast, ToastContainer } from '../shared/components/Toast';
 
-function timeFormat(date) {
+function _timeFormat(date) {
   if (!date) return '';
   const d = new Date(date);
   return d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });

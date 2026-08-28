@@ -1,9 +1,9 @@
 import { useEffect, useState, useRef, useMemo, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import {
-  Send, ArrowLeft, MessageSquare, User, Search, Plus,
-  Check, CheckCheck, Trash2, Smile, X, Circle, ExternalLink,
-  ChevronLeft, Loader2
+  Send, MessageSquare, User, Search, Plus,
+  Check, CheckCheck, Trash2, Smile, X, ExternalLink,
+  ChevronLeft
 } from 'lucide-react';
 import { io } from 'socket.io-client';
 import ChatAPI from './chatAPI';
@@ -26,7 +26,7 @@ function timeAgo(date) {
   return `${Math.floor(s / 86400)}d ago`;
 }
 
-function dateDivider(date) {
+function _dateDivider(date) {
   if (!date) return '';
   const d = new Date(date);
   const today = new Date();
@@ -162,13 +162,13 @@ export default function ChatInterface() {
     });
 
     // Typing listeners
-    socket.on('TYPING_START', ({ conversationId, userId }) => {
+    socket.on('TYPING_START', ({ conversationId: _conversationId, userId }) => {
       if (userId !== currentUser.id) {
         setIsTyping(true);
       }
     });
 
-    socket.on('TYPING_STOP', ({ conversationId, userId }) => {
+    socket.on('TYPING_STOP', ({ conversationId: _conversationId, userId }) => {
       if (userId !== currentUser.id) {
         setIsTyping(false);
       }

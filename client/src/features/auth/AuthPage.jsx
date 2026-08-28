@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useLocation } from 'react-router-dom';
-import { Shield, X, Github, GraduationCap, Briefcase, Building } from 'lucide-react';
+import { X, Github, GraduationCap, Briefcase, Building } from 'lucide-react';
 import { API_BASE_URL } from '../../config/constants';
 
 export default function AuthPage() {

@@ -1,9 +1,9 @@
 import { useEffect, useState, useCallback, useMemo } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import {
-  Search, Users, Layers, MessageSquare, Shield,
-  ArrowRight, CheckCircle2, User, Building2,
-  Clock, Sparkles, AlertCircle, Bookmark, FileText, ChevronRight
+  Search, Users, Layers, MessageSquare,
+  ArrowRight, Building2,
+  Sparkles, AlertCircle, Bookmark, ChevronRight
 } from 'lucide-react';
 import Navbar from '../shared/components/Navbar';
 import SearchAPI from '../features/search/searchAPI';
@@ -56,7 +56,7 @@ export default function SearchPage() {
           posts: res.posts || []
         });
       }
-    } catch (err) {
+    } catch {
       setError('Search query timed out or failed to parse. Please try again.');
     } finally {
       setLoading(false);

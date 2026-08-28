@@ -161,7 +161,7 @@ export default function RoadmapPage() {
         setShareUrl(fullUrl);
         setShowShareModal(true);
       }
-    } catch (err) {
+    } catch {
       toast.error('Failed to create share link.');
     }
   };

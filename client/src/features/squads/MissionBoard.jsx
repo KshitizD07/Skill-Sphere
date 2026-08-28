@@ -3,9 +3,9 @@ import { useNavigate } from 'react-router-dom';
 import API from '../../api';
 import SquadAPI from './squadAPI';
 import {
-  ArrowLeft, Plus, Search, Filter, Users, Shield,
-  Lock, Target, AlertCircle, X, ChevronRight,
-  Clock, Sparkles, CheckCircle2, Flame, ExternalLink
+  Plus, Search, Users, Shield,
+  X, ChevronRight,
+  Clock, Sparkles
 } from 'lucide-react';
 import Navbar from '../../shared/components/Navbar';
 import { useToast, ToastContainer } from '../../shared/components/Toast';
@@ -22,7 +22,7 @@ const EVENT_COLORS = {
 function CreateSquadModal({ onClose, onCreated }) {
   const toast = useToast();
   const [step, setStep] = useState(1);
-  const [allSkills, setAllSkills] = useState([]);
+  const [_allSkills, setAllSkills] = useState([]);
   const [loading, setLoading] = useState(false);
   const [form, setForm] = useState({
     title: '',
@@ -60,7 +60,7 @@ function CreateSquadModal({ onClose, onCreated }) {
     }));
   };
 
-  const togglePreferredSkill = (slotIndex, skillName) => {
+  const _togglePreferredSkill = (slotIndex, skillName) => {
     const current = form.slots[slotIndex].preferredSkills || [];
     const updated = current.includes(skillName)
       ? current.filter((s) => s !== skillName)
@@ -432,7 +432,7 @@ export default function MissionBoard() {
   // Filters
   const [searchQuery, setSearchQuery] = useState('');
   const [eventFilter, setEventFilter] = useState('ALL');
-  const [statusFilter, setStatusFilter] = useState('ALL');
+  const [statusFilter, _setStatusFilter] = useState('ALL');
   const [skillFilter, setSkillFilter] = useState('');
 
   const loadSquads = useCallback(async () => {
@@ -446,7 +446,7 @@ export default function MissionBoard() {
       });
       const list = res?.squads || res?.data || (Array.isArray(res) ? res : []);
       setSquads(list);
-    } catch (err) {
+    } catch {
       toast.error('Failed to load squads.');
     } finally {
       setLoading(false);

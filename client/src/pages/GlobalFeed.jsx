@@ -3,8 +3,8 @@ import { useNavigate, useSearchParams } from 'react-router-dom';
 import {
   Search, Heart, User, Building2, Image as ImageIcon, X,
   MessageCircle, Send, CornerDownRight, Trash2, Pencil,
-  Share2, Flag, ArrowUp, Loader2, ThumbsUp, MoreVertical,
-  AlertTriangle, ExternalLink, ShieldCheck, Users, UserPlus
+  Share2, Flag, ArrowUp, Loader2, ThumbsUp,
+  AlertTriangle, ExternalLink, Users
 } from 'lucide-react';
 import FeedAPI from '../features/feed/feedAPI';
 import API from '../api';
@@ -413,7 +413,7 @@ function PostCard({
 // ── MAIN GLOBAL FEED COMPONENT ───────────────────────────────────────────────
 export default function GlobalFeed() {
   const navigate = useNavigate();
-  const [searchParams] = useSearchParams();
+  const [_searchParams] = useSearchParams();
   const toast = useToast();
 
   const currentUser = JSON.parse(localStorage.getItem('user_data') || '{}');

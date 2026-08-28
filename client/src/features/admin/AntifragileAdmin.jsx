@@ -1,10 +1,10 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Shield, ArrowLeft, Activity, Database, BarChart3, Settings2 } from 'lucide-react';
 import API from '../../api';
 import { useToast, ToastContainer } from '../../shared/components/Toast';
 import {
-  BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid, LineChart, Line
+  BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid
 } from 'recharts';
 
 export default function AntifragileAdmin() {
@@ -17,13 +17,7 @@ export default function AntifragileAdmin() {
   const [decisions, setDecisions] = useState([]);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    if (currentUser.role === 'ADMIN') {
-      fetchData();
-    }
-  }, []);
-
-  const fetchData = async () => {
+  const fetchData = useCallback(async () => {
     setLoading(true);
     try {
       const [stratRes, decRes] = await Promise.all([
@@ -32,12 +26,18 @@ export default function AntifragileAdmin() {
       ]);
       setStrategies(stratRes.data || []);
       setDecisions(decRes.data || []);
-    } catch (err) {
+    } catch {
       toast.error('Failed to load admin data');
     } finally {
       setLoading(false);
     }
-  };
+  }, [toast]);
+
+  useEffect(() => {
+    if (currentUser.role === 'ADMIN') {
+      fetchData();
+    }
+  }, [currentUser.role, fetchData]);
 
   const handleStateChange = async (id, currentState) => {
     const action = currentState === 'SHADOW' ? 'promote' : 'demote';

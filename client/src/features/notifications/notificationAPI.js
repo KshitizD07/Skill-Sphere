@@ -1,7 +1,5 @@
 import BaseAPI from '../../services/BaseAPI';
 
-const unwrap = (res) => (res?.data !== undefined ? res.data : res);
-
 const NotificationAPI = {
   // Get paginated notifications with optional type filter
   getNotifications: async (cursor = null, limit = 20, type = null) => {

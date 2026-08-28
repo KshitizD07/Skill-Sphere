@@ -1,4 +1,4 @@
-import { useEffect, useState, useRef, useCallback } from 'react';
+import { useEffect, useState, useRef, useCallback, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
   ArrowLeft, Camera, User, Plus, CheckCircle,
@@ -141,7 +141,7 @@ export default function MyProfile({ user, onUserUpdate }) {
         toast.info('Session demoted to standard user mode');
         setAdminStatus((prev) => ({ ...prev, isEscalated: false }));
       }
-    } catch (err) {
+    } catch {
       toast.error('Failed to demote session');
     }
   };
@@ -212,7 +212,7 @@ export default function MyProfile({ user, onUserUpdate }) {
       toast.error('GitHub authorization failed. Please try again.');
       window.history.replaceState({}, document.title, window.location.pathname);
     }
-  }, [loadUserData]);
+  }, [loadUserData, toast]);
 
   useEffect(() => {
     if (activeUser?.id) {
@@ -340,8 +340,6 @@ export default function MyProfile({ user, onUserUpdate }) {
   // ── Style tokens ──────────────────────────────────────────────────────────
   const labelBase = 'block font-syne text-[10px] font-bold tracking-[0.12em] uppercase text-outline mb-1.5';
   const inputBase = 'w-full bg-surface-mid border border-outline-var/40 text-text-primary p-3 rounded-xs focus:border-primary/60 outline-none font-outfit text-sm transition-colors placeholder-outline-var';
-
-  const loadUserDataInternal = loadUserData;
 
   // Wrap loadUserData to store initial snapshot for isDirty check
   useEffect(() => {

@@ -3,8 +3,8 @@ import { useNavigate } from 'react-router-dom';
 import {
   Shield, Users, Activity, Flag, Cpu,
   Search, Trash2, CheckCircle2,
-  AlertTriangle, RefreshCw, ChevronRight, UserX, UserCheck,
-  TrendingUp, Layers, Database, Server, Clock, Lock
+  AlertTriangle, RefreshCw, UserX, UserCheck,
+  TrendingUp, Database, Server, Clock, Lock
 } from 'lucide-react';
 import {
   AreaChart, Area, XAxis, YAxis, Tooltip, ResponsiveContainer
@@ -121,8 +121,8 @@ export default function AdminDashboard() {
       const res = await AdminAPI.toggleSuspendUser(userId);
       toast.success(res?.isActive ? 'User account restored to Active' : 'User account suspended');
       loadUsers();
-    } catch (err) {
-      toast.error(err?.message || 'Failed to update user status');
+    } catch {
+      toast.error('Failed to update user status');
     } finally {
       setActionLoading(null);
     }
@@ -136,7 +136,7 @@ export default function AdminDashboard() {
       toast.success(`User ${deleteTargetUser.name} deleted successfully`);
       setDeleteTargetUser(null);
       loadUsers();
-    } catch (err) {
+    } catch {
       toast.error('Failed to delete user account');
     } finally {
       setActionLoading(null);
@@ -150,7 +150,7 @@ export default function AdminDashboard() {
       await AdminAPI.resolveReport(reportId, action);
       toast.success(`Report resolved: ${action}`);
       loadReports();
-    } catch (err) {
+    } catch {
       toast.error('Failed to resolve report');
     } finally {
       setActionLoading(null);

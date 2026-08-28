@@ -1,12 +1,10 @@
 import { useEffect, useState, useMemo, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import API from '../../api';
 import SquadAPI from './squadAPI';
 import {
-  ArrowLeft, CheckCircle2, X,
+  ArrowLeft,
   User, AlertCircle, RefreshCw,
-  Sparkles, ExternalLink, Shield, Target,
-  MessageSquare, Star
+  Sparkles, ExternalLink, Shield
 } from 'lucide-react';
 import Navbar from '../../shared/components/Navbar';
 import { useToast, ToastContainer } from '../../shared/components/Toast';
@@ -43,7 +41,7 @@ export default function SquadManage() {
         setSquad(null);
         toast.error(data?.message || 'Failed to load squad details.');
       }
-    } catch (err) {
+    } catch {
       toast.error('Failed to load squad manage center.');
     } finally {
       setLoading(false);
@@ -132,7 +130,7 @@ export default function SquadManage() {
   const applications = squad.applications || [];
   const pendingApps = applications.filter((a) => a.status === 'PENDING');
   const acceptedApps = applications.filter((a) => a.status === 'ACCEPTED');
-  const rejectedApps = applications.filter((a) => a.status === 'REJECTED');
+  const _rejectedApps = applications.filter((a) => a.status === 'REJECTED');
 
   const filteredPending = selectedSlotId === 'ALL'
     ? pendingApps
