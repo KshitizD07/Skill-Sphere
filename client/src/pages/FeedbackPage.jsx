@@ -76,8 +76,7 @@ export default function FeedbackPage() {
     try {
       setSubmitting(true);
 
-      // 1. Submit to Backend API (for database persistence & server handling)
-      const backendPromise = FeedbackAPI.submitFeedback({
+      await FeedbackAPI.submitFeedback({
         category,
         rating,
         feedback: feedback.trim(),
@@ -87,27 +86,7 @@ export default function FeedbackPage() {
         contributorAreas,
         contributorContact: contributorContact.trim() || currentUser.email || '',
         deviceInfo: `${window.navigator.userAgent} (${window.innerWidth}x${window.innerHeight})`,
-      }).catch((e) => {
-        console.warn('Backend feedback recording notice:', e);
       });
-
-      // 2. Direct HTTPS Mail Dispatch (bypasses all cloud port blocks)
-      const directPromise = FeedbackAPI.submitDirectHTTPS({
-        userName: currentUser.name,
-        userEmail: currentUser.email,
-        userCollege: currentUser.college,
-        userRole: currentUser.role,
-        category,
-        rating,
-        feedback: feedback.trim(),
-        mostValuable: mostValuable.trim(),
-        improvement: improvement.trim(),
-        wantsToContribute,
-        contributorAreas,
-        contributorContact: contributorContact.trim() || currentUser.email || '',
-      });
-
-      await Promise.allSettled([backendPromise, directPromise]);
 
       setSubmitted(true);
       toast.success('Feedback sent directly to the development team! Thank you.');
