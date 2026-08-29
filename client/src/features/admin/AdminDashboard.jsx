@@ -16,17 +16,18 @@ import FeedbackInboxView from './FeedbackInboxView';
 import Navbar from '../../shared/components/Navbar';
 import { useToast, ToastContainer } from '../../shared/components/Toast';
 
-export default function AdminDashboard({ onLogout }) {
+export default function AdminDashboard({ user: propUser, onLogout }) {
   const navigate = useNavigate();
   const toast = useToast();
 
   const currentUser = useMemo(() => {
+    if (propUser && Object.keys(propUser).length > 0) return propUser;
     try {
       return JSON.parse(localStorage.getItem('user_data') || '{}');
     } catch {
       return {};
     }
-  }, []);
+  }, [propUser]);
 
   const [activeTab, setActiveTab] = useState('overview'); // overview | feedback | users | reports | nexus | health
   const [loading, setLoading] = useState(true);
@@ -49,22 +50,13 @@ export default function AdminDashboard({ onLogout }) {
   // Health states
   const [healthData, setHealthData] = useState(null);
 
-  // Verify Admin Access Guard
-  const ADMIN_EMAILS = useMemo(() => [
-    'kshitizd171@gmail.com',
-    'kshitizd777@gmail.com',
-  ], []);
-
+  // Verify Admin Access Guard (Must have active escalated ADMIN role)
   useEffect(() => {
-    const userEmail = (currentUser?.email || '').toLowerCase().trim();
-    const isAuthorized =
-      currentUser?.role === 'ADMIN' ||
-      (userEmail && ADMIN_EMAILS.includes(userEmail));
-    if (currentUser?.email && !isAuthorized) {
+    if (currentUser?.email && currentUser?.role !== 'ADMIN') {
       toast.error('Access restricted to platform administrator');
       navigate('/dashboard');
     }
-  }, [currentUser, navigate, toast, ADMIN_EMAILS]);
+  }, [currentUser?.email, currentUser?.role, navigate, toast]);
 
   // Load Overview Data
   const loadStats = useCallback(async () => {

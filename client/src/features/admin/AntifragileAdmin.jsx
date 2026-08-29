@@ -11,15 +11,7 @@ export default function AntifragileAdmin() {
   const navigate = useNavigate();
   const toast = useToast();
   const currentUser = JSON.parse(localStorage.getItem('user_data') || '{}');
-  
-  const ADMIN_EMAILS = [
-    'kshitizd171@gmail.com',
-    'kshitizd777@gmail.com',
-  ];
-  
-  const isAuthorized =
-    currentUser.role === 'ADMIN' ||
-    (currentUser.email && ADMIN_EMAILS.includes(currentUser.email.toLowerCase().trim()));
+  const isAuthorized = currentUser?.role === 'ADMIN';
 
   const [activeTab, setActiveTab] = useState('strategies');
   const [strategies, setStrategies] = useState([]);

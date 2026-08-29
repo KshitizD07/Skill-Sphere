@@ -46,19 +46,10 @@ export function optionalAuth(req, res, next) {
   next();
 }
 
-const SUPER_ADMIN_EMAILS = new Set([
-  'kshitizd171@gmail.com',
-  'kshitizd777@gmail.com',
-]);
-
 // ── Role guard — use after authenticateToken ──────────────────────────────────
 export function requireRole(...roles) {
   return (req, res, next) => {
     if (!req.user) return next(ApiError.unauthorized());
-    const userEmail = (req.user.email || '').toLowerCase().trim();
-    if (roles.includes('ADMIN') && SUPER_ADMIN_EMAILS.has(userEmail)) {
-      return next();
-    }
     if (!roles.includes(req.user.role)) {
       return next(ApiError.forbidden(`Requires role: ${roles.join(' or ')}`));
     }

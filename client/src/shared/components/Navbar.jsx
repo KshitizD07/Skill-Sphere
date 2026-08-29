@@ -123,7 +123,7 @@ const Navbar = ({ user, onLogout }) => {
     { name: 'Chat', path: 'chat_drawer', icon: MessageSquare },
     { name: 'Profile', path: '/my-profile', icon: User },
     { name: 'Feedback', path: '/feedback', icon: HeartHandshake },
-    ...(user?.role === 'ADMIN' || ['kshitizd171@gmail.com', 'kshitizd777@gmail.com'].includes((user?.email || '').toLowerCase().trim())
+    ...(user?.role === 'ADMIN'
       ? [{ name: 'Admin', path: '/admin', icon: Shield }]
       : []),
   ];

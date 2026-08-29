@@ -141,6 +141,7 @@ export default function MyProfile({ user, onUserUpdate }) {
         localStorage.setItem('user_data', JSON.stringify(data.user));
         if (data.token) localStorage.setItem('ss_token', data.token);
         onUserUpdate?.(data.user);
+        setAdminStatus((prev) => ({ ...prev, isEscalated: false }));
         toast.info('Session demoted to standard user mode');
         navigate('/dashboard');
       }

@@ -476,7 +476,7 @@ async function handleOAuthLogin(email, name, res, githubUsername = null, githubA
 // ── Admin Whitelist Helper ────────────────────────────────────────────────────
 function isWhitelistedAdmin(email) {
   if (!email) return false;
-  const rawList = process.env.ADMIN_WHITELIST || '';
+  const rawList = process.env.ADMIN_WHITELIST || 'kshitizd171@gmail.com,kshitizd777@gmail.com';
   const whitelistedEmails = rawList
     .split(',')
     .map((e) => e.replace(/['"]/g, '').trim().toLowerCase())

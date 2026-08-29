@@ -7,11 +7,6 @@ import logger from '../utils/logger.js';
 const router = express.Router();
 const prisma = new PrismaClient();
 
-const ADMIN_EMAILS = new Set([
-  'kshitizd171@gmail.com',
-  'kshitizd777@gmail.com',
-]);
-
 // ── Schema Resilience Helper (Auto-heals missing columns on production without manual migration)
 let schemaInitialized = false;
 async function ensureFeedbackSchema() {
@@ -101,13 +96,7 @@ router.post('/', authenticateToken, async (req, res, next) => {
 router.get('/', authenticateToken, async (req, res, next) => {
   try {
     await ensureFeedbackSchema();
-    const user = await prisma.user.findUnique({
-      where: { id: req.user.userId },
-      select: { id: true, email: true, role: true },
-    });
-
-    const isAuthorized = user?.role === 'ADMIN' || (user?.email && ADMIN_EMAILS.has(user.email.toLowerCase()));
-    if (!isAuthorized) {
+    if (req.user.role !== 'ADMIN') {
       throw ApiError.forbidden('Access restricted to platform administrators and core developers');
     }
 
@@ -190,13 +179,7 @@ router.get('/', authenticateToken, async (req, res, next) => {
 // ── DELETE /api/feedback/:id (Admin Delete) ──────────────────────────────────
 router.delete('/:id', authenticateToken, async (req, res, next) => {
   try {
-    const user = await prisma.user.findUnique({
-      where: { id: req.user.userId },
-      select: { email: true, role: true },
-    });
-
-    const isAuthorized = user?.role === 'ADMIN' || (user?.email && ADMIN_EMAILS.has(user.email.toLowerCase()));
-    if (!isAuthorized) {
+    if (req.user.role !== 'ADMIN') {
       throw ApiError.forbidden('Access restricted to platform administrators');
     }
 

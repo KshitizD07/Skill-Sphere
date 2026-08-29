@@ -218,12 +218,12 @@ function App() {
         {/* Admin */}
         <Route path="/admin" element={
           <ProtectedRoute user={user} authChecked={authChecked}>
-            <AdminDashboard onLogout={handleLogout} />
+            <AdminDashboard user={user} onLogout={handleLogout} />
           </ProtectedRoute>
         } />
         <Route path="/antifragile-admin" element={
           <ProtectedRoute user={user} authChecked={authChecked}>
-            <AdminDashboard onLogout={handleLogout} />
+            <AdminDashboard user={user} onLogout={handleLogout} />
           </ProtectedRoute>
         } />
 
