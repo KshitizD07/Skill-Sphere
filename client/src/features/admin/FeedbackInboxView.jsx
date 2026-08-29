@@ -1,8 +1,9 @@
 import { useState, useEffect, useCallback } from 'react';
+import { Link } from 'react-router-dom';
 import { 
   HeartHandshake, Star, Trash2, RefreshCw, 
   Sparkles, Mail, Building2, Filter,
-  CheckCircle2
+  CheckCircle2, ExternalLink
 } from 'lucide-react';
 import FeedbackAPI from '../feedback/feedbackAPI';
 
@@ -170,12 +171,55 @@ export default function FeedbackInboxView({ toast }) {
               {/* Card Header: User details + Badges */}
               <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-outline-var/20">
                 <div className="flex items-start sm:items-center gap-3">
-                  <div className="w-10 h-10 rounded-full bg-surface-mid border border-outline-var/40 flex items-center justify-center font-syne font-bold text-sm text-primary shrink-0">
-                    {(item.userName || 'U')[0].toUpperCase()}
-                  </div>
+                  {item.userId ? (
+                    <Link
+                      to={`/profile/${item.userId}`}
+                      title={`View ${item.userName || 'User'}'s Profile`}
+                      className="w-10 h-10 rounded-full bg-surface-mid border border-outline-var/40 overflow-hidden flex items-center justify-center font-syne font-bold text-sm text-primary shrink-0 hover:border-primary transition-all shadow-xs hover:scale-105"
+                    >
+                      {item.userAvatar ? (
+                        <img
+                          src={item.userAvatar}
+                          alt={item.userName || 'Avatar'}
+                          className="w-full h-full object-cover"
+                          onError={(e) => {
+                            e.currentTarget.style.display = 'none';
+                          }}
+                        />
+                      ) : (
+                        <span>{(item.userName || 'U')[0].toUpperCase()}</span>
+                      )}
+                    </Link>
+                  ) : (
+                    <div className="w-10 h-10 rounded-full bg-surface-mid border border-outline-var/40 overflow-hidden flex items-center justify-center font-syne font-bold text-sm text-primary shrink-0">
+                      {item.userAvatar ? (
+                        <img
+                          src={item.userAvatar}
+                          alt={item.userName || 'Avatar'}
+                          className="w-full h-full object-cover"
+                          onError={(e) => {
+                            e.currentTarget.style.display = 'none';
+                          }}
+                        />
+                      ) : (
+                        <span>{(item.userName || 'U')[0].toUpperCase()}</span>
+                      )}
+                    </div>
+                  )}
                   <div>
                     <div className="flex items-center gap-2 flex-wrap">
-                      <h4 className="font-syne font-extrabold text-sm text-text-primary">{item.userName || 'Anonymous'}</h4>
+                      {item.userId ? (
+                        <Link
+                          to={`/profile/${item.userId}`}
+                          className="group font-syne font-extrabold text-sm text-text-primary hover:text-primary transition-colors inline-flex items-center gap-1.5"
+                          title="Open user profile"
+                        >
+                          <span>{item.userName || 'Anonymous'}</span>
+                          <ExternalLink size={11} className="text-outline group-hover:text-primary transition-colors" />
+                        </Link>
+                      ) : (
+                        <h4 className="font-syne font-extrabold text-sm text-text-primary">{item.userName || 'Anonymous'}</h4>
+                      )}
                       <span className="text-[10px] font-syne uppercase px-2 py-0.5 rounded-full bg-surface-mid border border-outline-var/30 text-text-muted">
                         {item.userRole || 'STUDENT'}
                       </span>

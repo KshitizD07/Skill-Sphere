@@ -28,6 +28,7 @@ router.post('/', authenticateToken, async (req, res, next) => {
         id: true,
         name: true,
         email: true,
+        avatar: true,
         college: true,
         role: true,
       },
@@ -51,6 +52,7 @@ router.post('/', authenticateToken, async (req, res, next) => {
         userId: user.id,
         userName: user.name || 'Anonymous',
         userEmail: user.email,
+        userAvatar: user.avatar || null,
         userCollege: user.college || 'Not Specified',
         userRole: user.role || 'STUDENT',
         category: category || 'General Feedback',
@@ -107,9 +109,25 @@ router.get('/', authenticateToken, async (req, res, next) => {
       }),
     ]);
 
+    // Backward-compatibility: Enrich items with current user avatars if missing on historical records
+    const missingAvatarUserIds = [...new Set(items.filter((i) => !i.userAvatar && i.userId).map((i) => i.userId))];
+    let userAvatarMap = {};
+    if (missingAvatarUserIds.length > 0) {
+      const users = await prisma.user.findMany({
+        where: { id: { in: missingAvatarUserIds } },
+        select: { id: true, avatar: true },
+      });
+      userAvatarMap = Object.fromEntries(users.map((u) => [u.id, u.avatar]));
+    }
+
+    const enrichedItems = items.map((item) => ({
+      ...item,
+      userAvatar: item.userAvatar || userAvatarMap[item.userId] || null,
+    }));
+
     return res.status(200).json({
       success: true,
-      data: items,
+      data: enrichedItems,
       stats: {
         totalSubmissions: totalCount,
         contributorLeads: contributorCount,

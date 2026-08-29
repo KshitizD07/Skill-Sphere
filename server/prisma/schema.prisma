@@ -626,6 +626,7 @@ model PlatformFeedback {
   userId             String?
   userName           String?
   userEmail          String?
+  userAvatar         String?  @db.Text
   userCollege        String?
   userRole           String?
   category           String

@@ -13,6 +13,7 @@ import SkillVerifier from '../skills/SkillVerifier';
 import Navbar from '../../shared/components/Navbar';
 import RepoSelector from '../portfolio/RepoSelector';
 import FollowModal from './components/FollowModal';
+import ImageCropModal from '../../shared/components/ImageCropModal';
 import { useToast, ToastContainer } from '../../shared/components/Toast';
 import { API_BASE_URL } from '../../config/constants';
 
@@ -84,6 +85,8 @@ export default function MyProfile({ user, onUserUpdate }) {
   const [deleteConfirmText, setDeleteConfirmText] = useState('');
   const [isDeleting, setIsDeleting] = useState(false);
   const avatarInputRef = useRef(null);
+  const [cropModalOpen, setCropModalOpen] = useState(false);
+  const [tempImageSrc, setTempImageSrc] = useState(null);
 
   // Social Graph state
   const [followerCount, setFollowerCount] = useState(0);
@@ -226,10 +229,21 @@ export default function MyProfile({ user, onUserUpdate }) {
   const handleAvatarFileChange = (e) => {
     const file = e.target.files[0];
     if (!file) return;
-    if (file.size > 2 * 1024 * 1024) { toast.error('Image must be under 2 MB'); return; }
+    if (file.size > 8 * 1024 * 1024) { toast.error('Image must be under 8 MB'); return; }
     const reader = new FileReader();
-    reader.onloadend = () => setFormData((prev) => ({ ...prev, avatar: reader.result }));
+    reader.onloadend = () => {
+      setTempImageSrc(reader.result);
+      setCropModalOpen(true);
+    };
     reader.readAsDataURL(file);
+    // Reset file input value to allow selecting the same file if needed
+    e.target.value = '';
+  };
+
+  const handleCropComplete = (croppedBase64) => {
+    setFormData((prev) => ({ ...prev, avatar: croppedBase64 }));
+    setTempImageSrc(null);
+    toast.success('Photo adjusted! Click "Save Changes" to apply.');
   };
 
   // ── Save profile ──────────────────────────────────────────────────────────
@@ -925,6 +939,17 @@ export default function MyProfile({ user, onUserUpdate }) {
           onFollowChange={loadUserData}
         />
       )}
+
+      {/* Profile Photo Crop Modal */}
+      <ImageCropModal
+        isOpen={cropModalOpen}
+        imageSrc={tempImageSrc}
+        onClose={() => {
+          setCropModalOpen(false);
+          setTempImageSrc(null);
+        }}
+        onCropComplete={handleCropComplete}
+      />
     </div>
   );
 }

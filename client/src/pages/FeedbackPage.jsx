@@ -196,8 +196,12 @@ export default function FeedbackPage() {
               {/* ── 1. Verified User Info Badge ── */}
               <div className="p-4 rounded-lg bg-surface-mid border border-outline-var/25 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                 <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-full bg-surface border border-primary/20 flex items-center justify-center shrink-0">
-                    <User size={18} className="text-primary" />
+                  <div className="w-10 h-10 rounded-full bg-surface border border-primary/20 flex items-center justify-center shrink-0 overflow-hidden">
+                    {currentUser.avatar ? (
+                      <img src={currentUser.avatar} alt={currentUser.name || 'User'} className="w-full h-full object-cover" />
+                    ) : (
+                      <User size={18} className="text-primary" />
+                    )}
                   </div>
                   <div>
                     <div className="flex items-center gap-2">
