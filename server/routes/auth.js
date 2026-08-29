@@ -554,11 +554,17 @@ router.post('/demote', authenticateToken, asyncHandler(async (req, res) => {
   const user = await prisma.user.findUnique({ where: { id: req.user.userId } });
   if (!user) throw ApiError.notFound('User not found');
 
+  // Restore the role the user had before escalating.
+  // req.user.baseRole is embedded in the escalated JWT by /escalate.
+  // Fall back to user.role from DB only when no baseRole is present
+  // (e.g. permanent ADMIN accounts using the inactivity auto-demote path).
+  const restoredRole = req.user.baseRole || user.role;
+
   const standardToken = jwt.sign(
     {
       userId: user.id,
       email: user.email,
-      role: user.role,
+      role: restoredRole,
       isEscalated: false,
     },
     process.env.JWT_SECRET,
@@ -576,7 +582,7 @@ router.post('/demote', authenticateToken, asyncHandler(async (req, res) => {
     token: standardToken,
     user: {
       ...cleanUser,
-      role: user.role,
+      role: restoredRole,
       isEscalated: false,
     },
   });

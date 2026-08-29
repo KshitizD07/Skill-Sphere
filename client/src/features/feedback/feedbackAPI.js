@@ -7,8 +7,8 @@ const FeedbackAPI = {
   },
 
   getFeedbackInbox: async (params = {}) => {
-    const res = await BaseAPI.get('/feedback', { params });
-    return res.data;
+    const res = await BaseAPI.get('/feedback', params);
+    return res;
   },
 
   deleteFeedback: async (id) => {

@@ -139,7 +139,7 @@ export default function MyProfile({ user, onUserUpdate }) {
         if (data.token) localStorage.setItem('ss_token', data.token);
         onUserUpdate?.(data.user);
         toast.info('Session demoted to standard user mode');
-        setAdminStatus((prev) => ({ ...prev, isEscalated: false }));
+        navigate('/dashboard');
       }
     } catch {
       toast.error('Failed to demote session');

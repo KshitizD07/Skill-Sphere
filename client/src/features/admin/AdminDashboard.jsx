@@ -16,7 +16,7 @@ import FeedbackInboxView from './FeedbackInboxView';
 import Navbar from '../../shared/components/Navbar';
 import { useToast, ToastContainer } from '../../shared/components/Toast';
 
-export default function AdminDashboard() {
+export default function AdminDashboard({ onLogout }) {
   const navigate = useNavigate();
   const toast = useToast();
 
@@ -170,7 +170,7 @@ export default function AdminDashboard() {
 
   return (
     <div className="min-h-screen bg-bg-base text-text-primary font-outfit flex flex-col md:flex-row">
-      <Navbar user={currentUser} onLogout={() => {}} />
+      <Navbar user={currentUser} onLogout={onLogout} />
       <ToastContainer toasts={toast.toasts} removeToast={toast.removeToast} />
 
       <div className="flex-1 md:ml-64 pt-16 md:pt-0 min-h-screen overflow-y-auto overflow-x-hidden p-4 md:p-8 w-full max-w-7xl mx-auto space-y-6">
