@@ -4,13 +4,14 @@ import API from '../../api';
 import {
   User, ArrowLeft, Github, Linkedin, Cpu, MessageSquare,
   Shield, Edit3, Building2, Heart, MessageCircle, Send,
-  Image as ImageIcon, Eye, EyeOff, CheckCircle, Clock,
-  ExternalLink, X, Trash2, Pencil, CornerDownRight, Award,
-  UserPlus, UserCheck, Users
+  Image as ImageIcon, EyeOff, CheckCircle,
+  X, Trash2, Pencil, CornerDownRight, Award,
+  UserPlus, UserCheck, Users, Sparkles
 } from 'lucide-react';
 import LeetCodeCard from './LeetCodeCard';
 import GitHubProjectsSummary from '../portfolio/GitHubProjectsSummary';
 import FollowModal from './components/FollowModal';
+import RecruiterDossier from './components/RecruiterDossier';
 import ProfileAPI from './profileAPI';
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
@@ -83,78 +84,7 @@ function Avatar({ src, name, size = 10 }) {
   );
 }
 
-// ── Recruiter View ─────────────────────────────────────────────────────────────
-function RecruiterView({ user }) {
-  const verifiedSkills = user.skills?.filter(s => s.isVerified) || [];
-  const allSkills = user.skills || [];
-  // eslint-disable-next-line
-  const recentActivity = user.activities?.some(a => (Date.now() - new Date(a.createdAt).getTime()) < 30*24*60*60*1000);
 
-  return (
-    <div className="bg-surface border border-error/30 p-8 relative overflow-hidden">
-      <div className="absolute top-0 right-0 bg-error/80 text-on-primary px-3 py-1 text-xs font-bold font-syne tracking-wide">RECRUITER_VIEW</div>
-      <div className="flex items-start gap-6 mb-8">
-        <div className="w-20 h-20 rounded-full border-2 border-error/30 overflow-hidden bg-surface-mid shrink-0">
-          {user.avatar ? <img src={user.avatar} alt="" className="w-full h-full object-cover" /> : <div className="w-full h-full flex items-center justify-center"><User size={32} className="text-outline" /></div>}
-        </div>
-        <div>
-          <h2 className="text-2xl font-black text-text-primary font-syne tracking-wide uppercase">{user.name}</h2>
-          <p className="text-error font-syne tracking-wide text-sm mt-1">{user.headline || 'No headline'}</p>
-          <div className="flex items-center gap-3 mt-2 text-xs font-syne tracking-wide text-outline">
-            {user.college && <span className="flex items-center gap-1"><Building2 size={12} /> {user.college}</span>}
-            <span className="text-outline-var">|</span>
-            <span>{user.role === 'GUEST' ? `GUEST ${user.guestPersona || 'STUDENT'}` : user.role}</span>
-          </div>
-        </div>
-      </div>
-      <div className="mb-6">
-        <h3 className="text-error font-bold font-syne tracking-wide text-sm mb-3 flex items-center gap-2"><CheckCircle size={14} /> TOP_VERIFIED_SKILLS</h3>
-        {verifiedSkills.length > 0 ? (
-          <div className="flex flex-wrap gap-2">
-            {verifiedSkills.map(s => (
-              <div key={s.id} className="flex items-center gap-2 px-3 py-1 bg-accent/10 border border-accent/30 text-accent text-xs font-syne tracking-wide font-bold">
-                <CheckCircle size={10} className="text-accent" />
-                {s.skill?.name || s.name}
-                {s.calculatedScore && <span className="text-green-500/70">{s.calculatedScore}/10</span>}
-              </div>
-            ))}
-          </div>
-        ) : <p className="text-outline text-xs font-syne tracking-wide">No verified skills yet</p>}
-      </div>
-      {allSkills.length > verifiedSkills.length && (
-        <div className="mb-6">
-          <h3 className="text-outline font-bold font-syne tracking-wide text-xs mb-2">DECLARED_SKILLS</h3>
-          <div className="flex flex-wrap gap-2">
-            {allSkills.filter(s => !s.isVerified).map(s => (
-              <span key={s.id} className="px-2 py-1 bg-surface-mid border border-outline-var/40 text-text-muted text-xs font-syne tracking-wide">{s.skill?.name || s.name}</span>
-            ))}
-          </div>
-        </div>
-      )}
-      <div className="mb-6 p-3 bg-surface-mid border border-outline-var/20 flex items-center gap-3">
-        <Clock size={14} className={recentActivity ? 'text-accent' : 'text-outline'} />
-        <span className={`text-xs font-syne tracking-wide font-bold ${recentActivity ? 'text-accent' : 'text-outline'}`}>
-          {recentActivity ? 'ACTIVE_LAST_30_DAYS' : 'NO_RECENT_ACTIVITY'}
-        </span>
-      </div>
-      <div>
-        <h3 className="text-outline font-bold font-syne tracking-wide text-xs mb-3">EVIDENCE_LINKS</h3>
-        <div className="flex flex-wrap gap-3">
-          {user.github && (
-            <a href={getGithubUrl(user.github)} target="_blank" rel="noreferrer" className="flex items-center gap-2 px-3 py-2 bg-surface-mid border border-outline-var/40 hover:border-primary text-text-muted hover:text-text-primary text-xs font-syne tracking-wide transition">
-              <Github size={12} /> GITHUB <ExternalLink size={10} />
-            </a>
-          )}
-          {user.linkedin && (
-            <a href={getLinkedinUrl(user.linkedin)} target="_blank" rel="noreferrer" className="flex items-center gap-2 px-3 py-2 bg-surface-mid border border-outline-var/40 hover:border-blue-400 text-text-muted hover:text-primary-container text-xs font-syne tracking-wide transition">
-              <Linkedin size={12} /> LINKEDIN <ExternalLink size={10} />
-            </a>
-          )}
-        </div>
-      </div>
-    </div>
-  );
-}
 
 // ── Comment component ─────────────────────────────────────────────────────────
 function CommentItem({ comment, postId, postOwnerId, currentUser, onDelete, onLike, onReply }) {
@@ -505,21 +435,28 @@ export default function UserProfile() {
             <ArrowLeft size={20} />
           </button>
           <div className="flex items-center gap-3">
-            <button type="button" onClick={() => setRecruiterMode(!recruiterMode)}
-              className={`flex items-center gap-2 px-4 py-2 border font-bold font-syne tracking-wide text-xs transition ${recruiterMode ? 'bg-error/80 border-error/30 text-on-primary' : 'border-error/30 text-error hover:bg-yellow-500/10'}`}>
-              {recruiterMode ? <EyeOff size={14} /> : <Eye size={14} />}
-              {recruiterMode ? 'STUDENT_VIEW' : 'RECRUITER_VIEW'}
+            <button
+              type="button"
+              onClick={() => setRecruiterMode(!recruiterMode)}
+              className={`flex items-center gap-2 px-3.5 py-1.5 border font-bold font-syne tracking-wider text-xs rounded-xs transition-all shadow-xs cursor-pointer ${
+                recruiterMode
+                  ? 'bg-accent text-bg-base border-accent font-black shadow-accent/20'
+                  : 'bg-surface-mid border-outline-var/40 text-text-primary hover:border-accent/40 hover:text-accent'
+              }`}
+            >
+              {recruiterMode ? <EyeOff size={14} /> : <Sparkles size={14} className="text-accent" />}
+              <span>{recruiterMode ? 'Standard View' : 'Recruiter View'}</span>
             </button>
             {isOwner && (
               <button type="button" onClick={() => navigate('/my-profile')}
-                className="flex items-center gap-2 px-4 py-1 border border-primary/20 text-primary hover:bg-primary hover:text-on-primary transition font-syne tracking-wide text-xs font-bold">
+                className="flex items-center gap-2 px-4 py-1 border border-primary/20 text-primary hover:bg-primary hover:text-on-primary transition font-syne tracking-wide text-xs font-bold rounded-xs cursor-pointer">
                 <Edit3 size={14} /> Edit Profile
               </button>
             )}
           </div>
         </div>
 
-        {recruiterMode ? <RecruiterView user={user} /> : (
+        {recruiterMode ? <RecruiterDossier user={user} isOwner={isOwner} /> : (
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
             {/* Left sidebar - profile card - z-0 to stay behind posts */}
             <div className="lg:col-span-4 space-y-6">
