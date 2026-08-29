@@ -11,6 +11,15 @@ export default function AntifragileAdmin() {
   const navigate = useNavigate();
   const toast = useToast();
   const currentUser = JSON.parse(localStorage.getItem('user_data') || '{}');
+  
+  const ADMIN_EMAILS = [
+    'kshitizd171@gmail.com',
+    'kshitizd777@gmail.com',
+  ];
+  
+  const isAuthorized =
+    currentUser.role === 'ADMIN' ||
+    (currentUser.email && ADMIN_EMAILS.includes(currentUser.email.toLowerCase().trim()));
 
   const [activeTab, setActiveTab] = useState('strategies');
   const [strategies, setStrategies] = useState([]);
@@ -34,10 +43,10 @@ export default function AntifragileAdmin() {
   }, [toast]);
 
   useEffect(() => {
-    if (currentUser.role === 'ADMIN') {
+    if (isAuthorized) {
       fetchData();
     }
-  }, [currentUser.role, fetchData]);
+  }, [isAuthorized, fetchData]);
 
   const handleStateChange = async (id, currentState) => {
     const action = currentState === 'SHADOW' ? 'promote' : 'demote';
@@ -60,7 +69,7 @@ export default function AntifragileAdmin() {
     }
   };
 
-  if (currentUser.role !== 'ADMIN') {
+  if (!isAuthorized) {
     return (
       <div className="min-h-screen bg-bg-base flex items-center justify-center font-outfit">
         <div className="text-center bg-surface border border-error-container/30 rounded-md p-10 max-w-sm w-full">
