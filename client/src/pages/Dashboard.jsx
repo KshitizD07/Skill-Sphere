@@ -296,7 +296,7 @@ export default function Dashboard({ user, onLogout }) {
         
         {/* Top welcome section */}
         <div className="px-6 md:px-10 py-8 border-b border-outline-var/20 bg-surface/30">
-          <h1 className="text-3xl font-extrabold tracking-tight mb-2">Command Center</h1>
+          <h1 className="text-3xl font-extrabold tracking-tight mb-2">Dashboard Overview</h1>
           <p className="text-text-muted text-sm max-w-2xl">
             Evaluate your skill gaps, generate custom roadmaps, and connect with mentors in your target field.
           </p>

@@ -126,11 +126,11 @@ export default function MyApplications() {
               <div className="flex items-center gap-2">
                 <Shield className="text-primary" size={22} />
                 <h1 className="text-2xl font-syne font-extrabold text-text-primary tracking-tight">
-                  Mission Command Log
+                  Team Applications & Activity
                 </h1>
               </div>
               <p className="text-xs text-text-muted mt-0.5">
-                Track your active squad applications, team recruitments, and mission deployments.
+                Track your active team applications, squad recruitments, and project collaborations.
               </p>
             </div>
           </div>

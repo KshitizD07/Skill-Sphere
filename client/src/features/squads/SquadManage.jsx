@@ -153,7 +153,7 @@ export default function SquadManage() {
             </button>
             <div>
               <span className="font-syne text-[10px] font-bold tracking-wider uppercase text-primary">
-                Squad Command Center
+                Squad Management
               </span>
               <h1 className="text-xl font-bold font-syne text-text-primary tracking-tight">
                 Manage Applications — {squad.title}
