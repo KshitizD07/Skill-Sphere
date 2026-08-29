@@ -12,9 +12,29 @@ const ADMIN_EMAILS = new Set([
   'kshitizd777@gmail.com',
 ]);
 
+// ── Schema Resilience Helper (Auto-heals missing columns on production without manual migration)
+let schemaInitialized = false;
+async function ensureFeedbackSchema() {
+  if (schemaInitialized) return;
+  try {
+    await prisma.$executeRawUnsafe(`
+      DO $$
+      BEGIN
+        IF EXISTS (SELECT FROM pg_tables WHERE schemaname = 'public' AND tablename = 'PlatformFeedback') THEN
+          ALTER TABLE "PlatformFeedback" ADD COLUMN IF NOT EXISTS "userAvatar" TEXT;
+        END IF;
+      END $$;
+    `);
+    schemaInitialized = true;
+  } catch (err) {
+    logger.warn('Schema self-healing notice for PlatformFeedback:', err?.message);
+  }
+}
+
 // ── POST /api/feedback (Submit User Feedback) ─────────────────────────────────
 router.post('/', authenticateToken, async (req, res, next) => {
   try {
+    await ensureFeedbackSchema();
     const { category, rating, feedback, mostValuable, improvement, wantsToContribute, contributorAreas, contributorContact, deviceInfo } = req.body;
 
     if (!feedback || typeof feedback !== 'string' || feedback.trim().length < 5) {
@@ -80,6 +100,7 @@ router.post('/', authenticateToken, async (req, res, next) => {
 // ── GET /api/feedback (Admin / Developer Inbox) ──────────────────────────────
 router.get('/', authenticateToken, async (req, res, next) => {
   try {
+    await ensureFeedbackSchema();
     const user = await prisma.user.findUnique({
       where: { id: req.user.userId },
       select: { id: true, email: true, role: true },
@@ -96,28 +117,55 @@ router.get('/', authenticateToken, async (req, res, next) => {
     if (category && category !== 'ALL') where.category = category;
     if (contributorOnly === 'true') where.wantsToContribute = true;
 
-    const [items, totalCount, contributorCount, avgRatingResult] = await Promise.all([
-      prisma.platformFeedback.findMany({
-        where,
-        orderBy: { createdAt: 'desc' },
-        take: Number(limit),
-      }),
-      prisma.platformFeedback.count(),
-      prisma.platformFeedback.count({ where: { wantsToContribute: true } }),
-      prisma.platformFeedback.aggregate({
-        _avg: { rating: true },
-      }),
-    ]);
+    let items = [];
+    let totalCount = 0;
+    let contributorCount = 0;
+    let avgRatingResult = { _avg: { rating: 5.0 } };
+
+    try {
+      [items, totalCount, contributorCount, avgRatingResult] = await Promise.all([
+        prisma.platformFeedback.findMany({
+          where,
+          orderBy: { createdAt: 'desc' },
+          take: Number(limit),
+        }),
+        prisma.platformFeedback.count(),
+        prisma.platformFeedback.count({ where: { wantsToContribute: true } }),
+        prisma.platformFeedback.aggregate({
+          _avg: { rating: true },
+        }),
+      ]);
+    } catch (_queryErr) {
+      // If error occurred (e.g. column missing on un-migrated DB), force-heal and retry once
+      schemaInitialized = false;
+      await ensureFeedbackSchema();
+      [items, totalCount, contributorCount, avgRatingResult] = await Promise.all([
+        prisma.platformFeedback.findMany({
+          where,
+          orderBy: { createdAt: 'desc' },
+          take: Number(limit),
+        }),
+        prisma.platformFeedback.count(),
+        prisma.platformFeedback.count({ where: { wantsToContribute: true } }),
+        prisma.platformFeedback.aggregate({
+          _avg: { rating: true },
+        }),
+      ]);
+    }
 
     // Backward-compatibility: Enrich items with current user avatars if missing on historical records
     const missingAvatarUserIds = [...new Set(items.filter((i) => !i.userAvatar && i.userId).map((i) => i.userId))];
     let userAvatarMap = {};
     if (missingAvatarUserIds.length > 0) {
-      const users = await prisma.user.findMany({
-        where: { id: { in: missingAvatarUserIds } },
-        select: { id: true, avatar: true },
-      });
-      userAvatarMap = Object.fromEntries(users.map((u) => [u.id, u.avatar]));
+      try {
+        const users = await prisma.user.findMany({
+          where: { id: { in: missingAvatarUserIds } },
+          select: { id: true, avatar: true },
+        });
+        userAvatarMap = Object.fromEntries(users.map((u) => [u.id, u.avatar]));
+      } catch {
+        // Fallback silently if user query has any issue
+      }
     }
 
     const enrichedItems = items.map((item) => ({
@@ -131,7 +179,7 @@ router.get('/', authenticateToken, async (req, res, next) => {
       stats: {
         totalSubmissions: totalCount,
         contributorLeads: contributorCount,
-        averageRating: avgRatingResult._avg.rating ? Number(avgRatingResult._avg.rating.toFixed(1)) : 5.0,
+        averageRating: avgRatingResult._avg?.rating ? Number(avgRatingResult._avg.rating.toFixed(1)) : 5.0,
       },
     });
   } catch (err) {

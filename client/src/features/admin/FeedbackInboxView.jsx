@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import { 
   HeartHandshake, Star, Trash2, RefreshCw, 
@@ -15,6 +15,11 @@ export default function FeedbackInboxView({ toast }) {
   const [contributorOnly, setContributorOnly] = useState(false);
   const [deletingId, setDeletingId] = useState(null);
 
+  const toastRef = useRef(toast);
+  useEffect(() => {
+    toastRef.current = toast;
+  });
+
   const loadFeedback = useCallback(async () => {
     try {
       setLoading(true);
@@ -26,15 +31,15 @@ export default function FeedbackInboxView({ toast }) {
         setFeedbackList(res.data || []);
         if (res.stats) setStats(res.stats);
       } else if (res?.error) {
-        toast.error(res.message || 'Access restricted to administrator');
+        toastRef.current?.error(res.message || 'Access restricted to administrator');
       }
     } catch (err) {
       console.error('Failed to load feedback inbox', err);
-      toast.error('Failed to load feedback entries');
+      toastRef.current?.error('Failed to load feedback entries');
     } finally {
       setLoading(false);
     }
-  }, [categoryFilter, contributorOnly, toast]);
+  }, [categoryFilter, contributorOnly]);
 
   useEffect(() => {
     loadFeedback();
@@ -45,12 +50,12 @@ export default function FeedbackInboxView({ toast }) {
     try {
       setDeletingId(id);
       await FeedbackAPI.deleteFeedback(id);
-      toast.success('Feedback deleted successfully');
+      toastRef.current?.success('Feedback deleted successfully');
       setFeedbackList((prev) => prev.filter((item) => item.id !== id));
       setStats((prev) => ({ ...prev, totalSubmissions: Math.max(0, prev.totalSubmissions - 1) }));
     } catch (err) {
       console.error(err);
-      toast.error('Failed to delete feedback');
+      toastRef.current?.error('Failed to delete feedback');
     } finally {
       setDeletingId(null);
     }
