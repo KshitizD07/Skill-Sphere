@@ -135,7 +135,7 @@ export default function Network() {
       <Navbar user={currentUser} onLogout={() => {}} />
       <ToastContainer toasts={toast.toasts} removeToast={toast.removeToast} />
 
-      <div className="flex-1 md:ml-64 pt-16 md:pt-0 min-h-screen overflow-y-auto overflow-x-hidden p-4 md:p-8 w-full max-w-7xl mx-auto space-y-8">
+      <div className="flex-1 md:ml-64 pt-16 md:pt-0 min-h-screen overflow-y-auto overflow-x-hidden p-4 md:p-8 w-full max-w-7xl mx-auto space-y-6">
         {/* ── Header ─────────────────────────────────────────────────────── */}
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-6 border-b border-outline-var/20">
           <div>
