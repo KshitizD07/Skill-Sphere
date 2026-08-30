@@ -15,6 +15,16 @@ const FeedbackAPI = {
     const res = await BaseAPI.delete(`/feedback/${id}`);
     return res.data;
   },
+
+  respondToFeedback: async (id, data) => {
+    const res = await BaseAPI.patch(`/feedback/${id}/respond`, data);
+    return res.data;
+  },
+
+  getMyFeedback: async () => {
+    const res = await BaseAPI.get('/feedback/my');
+    return res.data;
+  },
 };
 
 export default FeedbackAPI;
