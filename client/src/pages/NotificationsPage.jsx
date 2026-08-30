@@ -2,7 +2,7 @@ import { useState, useEffect, useMemo, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
   Bell, CheckCheck, Trash2, User, MessageSquare, Users,
-  Award, Heart, Sparkles, Check
+  Award, Heart, Sparkles, Check, X
 } from 'lucide-react';
 import NotificationAPI from '../features/notifications/notificationAPI';
 import Navbar from '../shared/components/Navbar';
@@ -69,6 +69,7 @@ export default function NotificationsPage() {
 
   const [notifications, setNotifications] = useState([]);
   const [activeTab, setActiveTab] = useState('ALL'); // ALL | UNREAD | SQUAD | SKILL | MESSAGE | SOCIAL
+  const [activeFeedbackModal, setActiveFeedbackModal] = useState(null);
   const [loading, setLoading] = useState(true);
   const [nextCursor, setNextCursor] = useState(null);
   const [hasMore, setHasMore] = useState(false);
@@ -89,39 +90,51 @@ export default function NotificationsPage() {
     else setLoadingMore(true);
 
     try {
-      const res = await NotificationAPI.getNotifications(cursor, 20, tab);
-      const items = res?.data || (Array.isArray(res) ? res : []);
-      if (append) {
-        setNotifications((prev) => [...prev, ...items]);
-      } else {
-        setNotifications(items);
+      const typeFilter = tab === 'ALL' || tab === 'UNREAD' ? null : tab;
+      const res = await NotificationAPI.getNotifications(typeFilter, 20, cursor);
+
+      let items = [];
+      let cursorVal = null;
+      let moreVal = false;
+
+      if (res && res.data) {
+        items = res.data;
+        cursorVal = res.nextCursor;
+        moreVal = !!res.hasMore;
+      } else if (Array.isArray(res)) {
+        items = res;
       }
-      setNextCursor(res?.nextCursor || null);
-      setHasMore(!!res?.hasMore);
+
+      if (tab === 'UNREAD') {
+        items = items.filter((n) => !n.isRead);
+      }
+
+      setNotifications((prev) => (append ? [...prev, ...items] : items));
+      setNextCursor(cursorVal);
+      setHasMore(moreVal);
     } catch (err) {
+      console.error('Fetch notifications error:', err);
       toast.error(err.message || 'Failed to load notifications.');
     } finally {
-      setLoading(false);
-      setLoadingMore(false);
+      if (!append) setLoading(false);
+      else setLoadingMore(false);
     }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [toast]);
 
   useEffect(() => {
     fetchNotifications(activeTab);
   }, [activeTab, fetchNotifications]);
 
-  // ── Mark Single As Read ───────────────────────────────────────────────────
+  // ── Mark Single Notification as Read ───────────────────────────────────────
   const handleMarkAsRead = async (notif, e) => {
     e?.stopPropagation();
-    if (notif.isRead) return;
     try {
       await NotificationAPI.markAsRead(notif.id);
       setNotifications((prev) =>
         prev.map((n) => (n.id === notif.id ? { ...n, isRead: true } : n))
       );
-    } catch {
-      // Ignore
+    } catch (err) {
+      toast.error(err.message || 'Failed to mark as read.');
     }
   };
 
@@ -168,7 +181,11 @@ export default function NotificationsPage() {
         prev.map((n) => (n.id === notif.id ? { ...n, isRead: true } : n))
       );
     }
-    if (notif.actionUrl) {
+    if (notif.type === 'FEEDBACK_RESPONSE') {
+      setActiveFeedbackModal(notif);
+      return;
+    }
+    if (notif.actionUrl && notif.actionUrl !== '/notifications') {
       navigate(notif.actionUrl);
     }
   };
@@ -295,7 +312,7 @@ export default function NotificationsPage() {
                               {timeAgo(notif.createdAt)}
                             </span>
                           </div>
-                          <p className="text-xs text-text-muted leading-relaxed mt-1 break-words">
+                          <p className="text-xs text-text-muted leading-relaxed mt-1 break-words whitespace-pre-wrap">
                             {notif.message}
                           </p>
                         </div>
@@ -341,6 +358,53 @@ export default function NotificationsPage() {
           </div>
         )}
       </div>
+
+      {/* ── Feedback Response Full Reader Modal ── */}
+      {activeFeedbackModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/75 backdrop-blur-xs">
+          <div className="bg-surface border border-outline-var/40 rounded-xl max-w-lg w-full p-6 space-y-4 shadow-2xl animate-in fade-in zoom-in-95 duration-150">
+            <div className="flex items-center justify-between pb-3 border-b border-outline-var/20">
+              <div className="flex items-center gap-2">
+                <div className="w-8 h-8 rounded-full bg-primary/10 border border-primary/20 flex items-center justify-center text-primary">
+                  <Sparkles size={16} />
+                </div>
+                <div>
+                  <h3 className="font-syne font-bold text-sm text-text-primary uppercase tracking-wider">
+                    {activeFeedbackModal.title || 'Official Team Response'}
+                  </h3>
+                  <span className="text-[10px] font-mono text-outline">
+                    {new Date(activeFeedbackModal.createdAt).toLocaleDateString()}
+                  </span>
+                </div>
+              </div>
+              <button
+                onClick={() => setActiveFeedbackModal(null)}
+                className="p-1 rounded-xs hover:bg-surface-mid text-text-muted hover:text-text-primary transition-colors cursor-pointer"
+              >
+                <X size={18} />
+              </button>
+            </div>
+
+            <div className="p-4 bg-surface-mid/80 border border-primary/25 rounded-md space-y-2">
+              <div className="flex items-center gap-1.5 text-primary text-xs font-syne font-bold uppercase tracking-wider">
+                <Sparkles size={13} /> Message from SkillSphere Core Team
+              </div>
+              <div className="text-xs sm:text-sm text-text-primary font-outfit leading-relaxed whitespace-pre-wrap pt-1">
+                {activeFeedbackModal.message}
+              </div>
+            </div>
+
+            <div className="pt-2 flex justify-end">
+              <button
+                onClick={() => setActiveFeedbackModal(null)}
+                className="px-6 py-2 bg-primary text-on-primary font-syne font-bold text-xs uppercase tracking-wider rounded-xs hover:bg-secondary-bright transition-colors cursor-pointer"
+              >
+                Done
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
