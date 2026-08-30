@@ -98,7 +98,10 @@ export default function MyApplications() {
   };
 
   const acceptedCount = (data.applications || []).filter((a) => a.status === 'ACCEPTED').length;
-  const pendingLedCount = (data.led || []).reduce((acc, s) => acc + (s._count?.applications || 0), 0);
+  const pendingLedCount = (data.led || []).reduce(
+    (acc, s) => acc + (Array.isArray(s.applications) ? s.applications.filter((a) => a.status === 'PENDING').length : 0),
+    0
+  );
 
   const tabs = [
     { id: 'applications', label: 'My Applications', count: data.applications?.length || 0 },
@@ -387,7 +390,9 @@ function LedSquadsList({ squads, navigate, onDelete, actionLoading }) {
   return (
     <div className="space-y-3.5">
       {squads.map((squad) => {
-        const pendingCount = squad._count?.applications || 0;
+        const pendingCount = Array.isArray(squad.applications)
+          ? squad.applications.filter((a) => a.status === 'PENDING').length
+          : 0;
         const isDeleting = actionLoading === squad.id;
 
         return (
