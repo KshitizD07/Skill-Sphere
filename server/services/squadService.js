@@ -19,6 +19,7 @@ const SQUAD_SELECT = {
   _count: { select: { applications: true } },
 };
 
+
 // ── Create squad ──────────────────────────────────────────────────────────────
 export async function createSquad({ title, description, event, maxMembers = 4, visibility = 'PUBLIC', expiresAt, slots = [] }, leaderId) {
   if (!title?.trim())       throw ApiError.badRequest('Title is required');
@@ -522,6 +523,64 @@ export async function updateApplicationStatus(squadId, applicationId, status, le
     const updated = await prisma.squad.findUnique({ where: { id: squadId } });
     if (updated.currentMembers >= updated.maxMembers) {
       await prisma.squad.update({ where: { id: squadId }, data: { status: 'FULL' } });
+    }
+
+    // ── Auto-open chat with accepted member ──────────────────────────────────
+    try {
+      // Find or create a 1-on-1 conversation between leader and the new member
+      let conversation = await prisma.conversation.findFirst({
+        where: {
+          AND: [
+            { participants: { some: { id: leaderId } } },
+            { participants: { some: { id: application.userId } } },
+          ],
+        },
+      });
+
+      if (!conversation) {
+        conversation = await prisma.conversation.create({
+          data: {
+            participants: {
+              connect: [{ id: leaderId }, { id: application.userId }],
+            },
+          },
+        });
+      }
+
+      // Seed a welcome message from the leader (system-style content)
+      const slotTitle = application.slotId
+        ? (await prisma.squadSlot.findUnique({ where: { id: application.slotId }, select: { roleTitle: true } }))?.roleTitle
+        : null;
+
+      const welcomeText = slotTitle
+        ? `Hey! You've been selected for the "${slotTitle}" role in **${squad.title}**. Welcome to the team — we'll reach out with next steps soon! 🎉`
+        : `Hey! You've been selected for **${squad.title}**. Welcome to the team — we'll reach out with next steps soon! 🎉`;
+
+      const welcomeMsg = await prisma.message.create({
+        data: {
+          conversationId: conversation.id,
+          senderId:       leaderId,
+          content:        welcomeText,
+          isRead:         false,
+        },
+      });
+
+      // Update conversation updatedAt so it surfaces at the top of chat list
+      await prisma.conversation.update({
+        where: { id: conversation.id },
+        data:  { updatedAt: new Date() },
+      });
+
+      // Push the message over socket if the applicant is online
+      try {
+        const { getIO } = await import('../socket.js');
+        getIO().to(application.userId).emit('NEW_MESSAGE', {
+          conversationId: conversation.id,
+          message: welcomeMsg,
+        });
+      } catch { /* non-blocking */ }
+    } catch (err) {
+      logger.warn('Failed to seed welcome chat message', { err: err.message });
     }
   }
 
