@@ -59,10 +59,11 @@ export default function FeedbackInboxView({ toast }) {
     try {
       setSavingResponseId(id);
       const res = await FeedbackAPI.respondToFeedback(id, { status, adminResponse });
-      if (res?.success) {
+      const updatedItem = res?.data || (res?.id ? res : null);
+      if (res?.success || updatedItem) {
         toastRef.current?.success('Response saved and user notified!');
         setFeedbackList((prev) =>
-          prev.map((item) => (item.id === id ? { ...item, ...res.data } : item))
+          prev.map((item) => (item.id === id ? { ...item, ...(updatedItem || { status, adminResponse }) } : item))
         );
         setRespondingId(null);
       } else {
@@ -328,7 +329,7 @@ export default function FeedbackInboxView({ toast }) {
                           <Star
                             key={s}
                             size={12}
-                            className={s <= item.rating ? 'fill-[#F59E0B] text-[#F59E0B]' : 'text-outline-var'}
+                            className={s <= Number(item.rating) ? 'fill-[#F59E0B] text-[#F59E0B]' : 'text-outline-var'}
                           />
                         ))}
                       </div>
