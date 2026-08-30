@@ -132,6 +132,10 @@ router.post('/register', asyncHandler(async (req, res) => {
 router.post('/login', asyncHandler(async (req, res) => {
   const data = loginSchema.parse(req.body);
 
+  if (data.email === 'official@skillsphere.com' || data.email.startsWith('official@skillsphere.')) {
+    throw ApiError.forbidden('The official platform system account can only be accessed via secure Admin Escalation.');
+  }
+
   const user = await prisma.user.findFirst({
     where:  { email: { equals: data.email, mode: 'insensitive' } },
     select: { id: true, name: true, email: true, password: true, role: true, college: true, avatar: true, headline: true, github: true, guestPersona: true },
