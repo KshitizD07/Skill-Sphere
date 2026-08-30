@@ -43,6 +43,9 @@ const AdminAPI = {
 
   getSystemHealth: async () =>
     unwrap(await BaseAPI.get('/admin/health')),
+
+  switchToOfficial: async (masterPassword) =>
+    unwrap(await BaseAPI.post('/admin/switch-to-official', { masterPassword })),
 };
 
 export default AdminAPI;
