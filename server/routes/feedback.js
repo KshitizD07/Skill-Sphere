@@ -17,6 +17,10 @@ async function ensureFeedbackSchema() {
       BEGIN
         IF EXISTS (SELECT FROM pg_tables WHERE schemaname = 'public' AND tablename = 'PlatformFeedback') THEN
           ALTER TABLE "PlatformFeedback" ADD COLUMN IF NOT EXISTS "userAvatar" TEXT;
+          ALTER TABLE "PlatformFeedback" ADD COLUMN IF NOT EXISTS "status" TEXT DEFAULT 'PENDING';
+          ALTER TABLE "PlatformFeedback" ADD COLUMN IF NOT EXISTS "adminResponse" TEXT;
+          ALTER TABLE "PlatformFeedback" ADD COLUMN IF NOT EXISTS "respondedAt" TIMESTAMP(3);
+          ALTER TABLE "PlatformFeedback" ADD COLUMN IF NOT EXISTS "respondedBy" TEXT;
         END IF;
       END $$;
     `);
@@ -176,18 +180,76 @@ router.get('/', authenticateToken, async (req, res, next) => {
   }
 });
 
-// ── DELETE /api/feedback/:id (Admin Delete) ──────────────────────────────────
-router.delete('/:id', authenticateToken, async (req, res, next) => {
+// ── GET /api/feedback/my (User's own submitted feedback & responses) ─────────
+router.get('/my', authenticateToken, async (req, res, next) => {
   try {
+    await ensureFeedbackSchema();
+    const myFeedback = await prisma.platformFeedback.findMany({
+      where: { userId: req.user.userId },
+      orderBy: { createdAt: 'desc' },
+    });
+    return res.status(200).json({ success: true, data: myFeedback });
+  } catch (err) {
+    next(err);
+  }
+});
+
+// ── PATCH /api/feedback/:id/respond (Admin respond & resolve feedback) ───────
+router.patch('/:id/respond', authenticateToken, async (req, res, next) => {
+  try {
+    await ensureFeedbackSchema();
     if (req.user.role !== 'ADMIN') {
       throw ApiError.forbidden('Access restricted to platform administrators');
     }
 
-    await prisma.platformFeedback.delete({
+    const { status, adminResponse } = req.body;
+    const feedbackRecord = await prisma.platformFeedback.findUnique({
       where: { id: req.params.id },
     });
 
-    return res.status(200).json({ success: true, message: 'Feedback entry deleted' });
+    if (!feedbackRecord) {
+      throw ApiError.notFound('Feedback entry not found');
+    }
+
+    const updated = await prisma.platformFeedback.update({
+      where: { id: req.params.id },
+      data: {
+        status: status || feedbackRecord.status,
+        adminResponse: adminResponse !== undefined ? adminResponse : feedbackRecord.adminResponse,
+        respondedAt: new Date(),
+        respondedBy: req.user.email || 'SkillSphere Core',
+      },
+    });
+
+    // Create in-app notification for the user if userId exists
+    if (feedbackRecord.userId) {
+      try {
+        const notif = await prisma.inAppNotification.create({
+          data: {
+            userId: feedbackRecord.userId,
+            type: 'FEEDBACK_RESPONSE',
+            title: `Feedback Update: ${status || 'Reviewed'}`,
+            message: adminResponse
+              ? `SkillSphere Core Team: "${adminResponse.slice(0, 120)}${adminResponse.length > 120 ? '...' : ''}"`
+              : `Your feedback regarding "${feedbackRecord.category}" was updated to ${status}.`,
+            actionUrl: '/feedback',
+          },
+        });
+
+        try {
+          const { getIO } = await import('../socket.js');
+          getIO().to(feedbackRecord.userId).emit('NOTIFICATION', notif);
+        } catch { /* non-blocking */ }
+      } catch (notifErr) {
+        logger.warn('Failed to dispatch feedback response notification:', notifErr.message);
+      }
+    }
+
+    return res.status(200).json({
+      success: true,
+      message: 'Response recorded and notification sent to user.',
+      data: updated,
+    });
   } catch (err) {
     next(err);
   }
