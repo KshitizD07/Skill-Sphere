@@ -1,4 +1,6 @@
 import express from 'express';
+import bcrypt from 'bcryptjs';
+import jwt from 'jsonwebtoken';
 import { PrismaClient } from '@prisma/client';
 import { asyncHandler, ApiError } from '../utils/errorHandler.js';
 import { authenticateToken, requireRole } from '../middleware/auth.js';
@@ -325,6 +327,66 @@ router.get('/health', authenticateToken, requireRole('ADMIN'), asyncHandler(asyn
   };
 
   res.json({ success: true, data: healthSummary });
+}));
+
+// ── POST /api/admin/switch-to-official — Dual-barrier switch to SkillSphere Official ─
+router.post('/switch-to-official', authenticateToken, requireRole('ADMIN'), asyncHandler(async (req, res) => {
+  const { masterPassword } = req.body;
+  const expectedKey = process.env.OFFICIAL_ACCOUNT_PASSWORD || '#basileusKZ07';
+
+  if (!masterPassword || masterPassword !== expectedKey) {
+    throw ApiError.forbidden('Invalid official master key authorization.');
+  }
+
+  // Ensure official account exists in DB with system attributes
+  let officialUser = await prisma.user.findFirst({
+    where: { email: { equals: 'official@skillsphere.com', mode: 'insensitive' } },
+  });
+
+  if (!officialUser) {
+    const hashedPassword = await bcrypt.hash(expectedKey, 10);
+    officialUser = await prisma.user.create({
+      data: {
+        email: 'official@skillsphere.com',
+        name: 'SkillSphere',
+        password: hashedPassword,
+        role: 'ADMIN',
+        avatar: '/logo.jpg',
+        headline: 'Official Platform Intelligence · Core Engineering & Dispatch',
+        bio: 'The official platform system account for SkillSphere. Managing platform updates, core engineering squads, and network dispatches.',
+        college: 'SkillSphere Core',
+        isActive: true,
+      },
+    });
+  }
+
+  const token = jwt.sign(
+    { userId: officialUser.id, email: officialUser.email, role: officialUser.role },
+    process.env.JWT_SECRET || 'fallback_secret',
+    { expiresIn: '7d' }
+  );
+
+  logger.info('Admin switched session to SkillSphere Official account', {
+    adminId: req.user.userId,
+    officialId: officialUser.id,
+  });
+
+  res.json({
+    success: true,
+    message: 'Switched session to SkillSphere Official account',
+    token,
+    user: {
+      id: officialUser.id,
+      name: officialUser.name,
+      email: officialUser.email,
+      role: officialUser.role,
+      avatar: officialUser.avatar,
+      headline: officialUser.headline,
+      bio: officialUser.bio,
+      college: officialUser.college,
+      isSystemAccount: true,
+    },
+  });
 }));
 
 export default router;
