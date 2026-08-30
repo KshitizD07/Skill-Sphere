@@ -1,4 +1,5 @@
 import 'dotenv/config';
+import bcrypt from 'bcryptjs';
 import { PrismaClient } from '@prisma/client';
 const prisma = new PrismaClient();
 
@@ -75,6 +76,32 @@ const JOB_ROLES = [
       { name: 'Mobile UI/UX', importance: 'Required' },
       { name: 'Firebase', importance: 'Nice to have' },
       { name: 'App Store Deployment', importance: 'Nice to have' },
+    ],
+  },
+  {
+    title: 'Data Analyst',
+    description: 'Transforms raw business data into actionable dashboards, statistical insights, and executive reports.',
+    skills: [
+      { name: 'SQL', importance: 'Required' },
+      { name: 'Excel', importance: 'Required' },
+      { name: 'Power BI', importance: 'Required' },
+      { name: 'Tableau', importance: 'Required' },
+      { name: 'Python', importance: 'Required' },
+      { name: 'Pandas', importance: 'Required' },
+      { name: 'Data Visualization', importance: 'Nice to have' },
+      { name: 'Statistics', importance: 'Nice to have' },
+    ],
+  },
+  {
+    title: 'UI/UX & Product Designer',
+    description: 'Designs intuitive user experiences, design systems, interactive prototypes, and accessible interfaces.',
+    skills: [
+      { name: 'Figma', importance: 'Required' },
+      { name: 'UI/UX Design', importance: 'Required' },
+      { name: 'Wireframing', importance: 'Required' },
+      { name: 'Design Systems', importance: 'Required' },
+      { name: 'User Research', importance: 'Nice to have' },
+      { name: 'Prototyping', importance: 'Nice to have' },
     ],
   },
 ];
@@ -157,6 +184,35 @@ async function main() {
     } });
     console.log('  ✓ SystemConfig initialized');
   }
+
+  // ── Official Platform Account ─────────────────────────────────────────────
+  console.log('\n👑 Seeding SkillSphere Official System Account...');
+  const defaultMasterKey = process.env.OFFICIAL_ACCOUNT_PASSWORD || '#basileusKZ07';
+  const hashedPassword = await bcrypt.hash(defaultMasterKey, 10);
+  await prisma.user.upsert({
+    where:  { email: 'official@skillsphere.com' },
+    update: {
+      name: 'SkillSphere',
+      role: 'ADMIN',
+      avatar: '/logo.jpg',
+      headline: 'Official Platform Intelligence · Core Engineering & Dispatch',
+      bio: 'The official platform system account for SkillSphere. Managing platform updates, core engineering squads, and network dispatches.',
+      college: 'SkillSphere Core',
+      isActive: true,
+    },
+    create: {
+      email: 'official@skillsphere.com',
+      name: 'SkillSphere',
+      password: hashedPassword,
+      role: 'ADMIN',
+      avatar: '/logo.jpg',
+      headline: 'Official Platform Intelligence · Core Engineering & Dispatch',
+      bio: 'The official platform system account for SkillSphere. Managing platform updates, core engineering squads, and network dispatches.',
+      college: 'SkillSphere Core',
+      isActive: true,
+    },
+  });
+  console.log('  ✓ SkillSphere Official account ready (official@skillsphere.com)');
 
   console.log('\n✅ Industry Seed Complete!');
 }
