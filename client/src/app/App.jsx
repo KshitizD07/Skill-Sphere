@@ -97,7 +97,8 @@ function App() {
     const publicPaths = ['/', '/auth', '/my-profile'];
     const path = location.pathname.replace(/\/$/, '') || '/';
     const isPublic = publicPaths.includes(path) || path.startsWith('/roadmap/shared');
-    const hasGithub = user.github && user.github.trim() !== '';
+    const isSystemOrAdmin = user.role === 'ADMIN' || user.role === 'SYSTEM' || user.isSystemAccount || user.email === 'official@skillsphere.com';
+    const hasGithub = (user.github && user.github.trim() !== '') || isSystemOrAdmin;
 
     if (!hasGithub && !isPublic) {
       console.warn('⚠️ Quality Control: GitHub account not linked. Purging account...');
