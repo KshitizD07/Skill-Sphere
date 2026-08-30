@@ -119,7 +119,7 @@ export default function FeedbackPage() {
       <Navbar user={currentUser} onLogout={() => {}} />
       <ToastContainer toasts={toast.toasts} removeToast={toast.removeToast} />
 
-      <main className="flex-1 md:ml-64 pt-20 md:pt-10 pb-16 px-4 sm:px-6 md:px-10 max-w-4xl mx-auto w-full">
+      <main className="flex-1 md:ml-64 pt-16 md:pt-8 pb-16 p-4 md:p-8 max-w-4xl mx-auto w-full">
         {/* ── Page Header ── */}
         <div className="mb-8 text-center md:text-left">
           <div className="flex flex-wrap items-center justify-center md:justify-start gap-2 mb-2.5">
