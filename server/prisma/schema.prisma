@@ -638,9 +638,14 @@ model PlatformFeedback {
   contributorAreas   String[] @default([])
   contributorContact String?
   deviceInfo         String?
+  status             String   @default("PENDING")
+  adminResponse      String?  @db.Text
+  respondedAt        DateTime?
+  respondedBy        String?
   createdAt          DateTime @default(now())
 
   @@index([createdAt(sort: Desc)])
+  @@index([status])
   @@index([wantsToContribute])
   @@index([category])
 }
