@@ -629,7 +629,13 @@ export async function getMySquads(userId) {
   const [led, applied] = await Promise.all([
     prisma.squad.findMany({
       where: { leaderId: userId, status: { not: 'CLOSED' } },
-      select: SQUAD_SELECT,
+      select: {
+        ...SQUAD_SELECT,
+        applications: {
+          where: { status: 'PENDING' },
+          select: { id: true, slotId: true, status: true },
+        },
+      },
       orderBy: { createdAt: 'desc' },
     }),
     prisma.squadApplication.findMany({
