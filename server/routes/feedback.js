@@ -57,11 +57,13 @@ router.post('/', authenticateToken, async (req, res, next) => {
       throw ApiError.notFound('User account not found');
     }
 
+    const parsedRating = Math.min(5, Math.max(1, parseInt(rating, 10) || 5));
+
     logger.info('Saving user feedback to database', {
       userId: user.id,
       email: user.email,
       category: category || 'General',
-      rating: rating || 5,
+      rating: parsedRating,
       wantsToContribute: !!wantsToContribute,
     });
 
@@ -75,7 +77,7 @@ router.post('/', authenticateToken, async (req, res, next) => {
         userCollege: user.college || 'Not Specified',
         userRole: user.role || 'STUDENT',
         category: category || 'General Feedback',
-        rating: Number(rating) || 5,
+        rating: parsedRating,
         feedback: feedback.trim(),
         mostValuable: mostValuable ? String(mostValuable).trim() : '',
         improvement: improvement ? String(improvement).trim() : '',
@@ -229,10 +231,8 @@ router.patch('/:id/respond', authenticateToken, async (req, res, next) => {
             userId: feedbackRecord.userId,
             type: 'FEEDBACK_RESPONSE',
             title: `Feedback Update: ${status || 'Reviewed'}`,
-            message: adminResponse
-              ? `SkillSphere Core Team: "${adminResponse.slice(0, 120)}${adminResponse.length > 120 ? '...' : ''}"`
-              : `Your feedback regarding "${feedbackRecord.category}" was updated to ${status}.`,
-            actionUrl: '/feedback',
+            message: adminResponse || `Your feedback regarding "${feedbackRecord.category}" was marked as ${status}.`,
+            actionUrl: '/notifications',
           },
         });
 
