@@ -4,7 +4,8 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { 
   HeartHandshake, Star, Send, CheckCircle2, 
   Sparkles, Building2, 
-  User, Mail, ArrowRight, RotateCcw
+  User, Mail, ArrowRight, RotateCcw,
+  MessageSquare, Clock, RefreshCw
 } from 'lucide-react';
 import Navbar from '../shared/components/Navbar';
 import SEOHead from '../shared/components/SEOHead';
@@ -47,6 +48,10 @@ export default function FeedbackPage() {
     }
   }, []);
 
+  const [activeTab, setActiveTab] = useState('share');
+  const [myFeedbackList, setMyFeedbackList] = useState([]);
+  const [loadingHistory, setLoadingHistory] = useState(false);
+
   const [category, setCategory] = useState('UI / UX Experience');
   const [rating, setRating] = useState(5);
   const [hoverRating, setHoverRating] = useState(0);
@@ -58,6 +63,27 @@ export default function FeedbackPage() {
   const [contributorContact, setContributorContact] = useState('');
   const [submitting, setSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState(false);
+
+  const loadMyFeedback = async () => {
+    try {
+      setLoadingHistory(true);
+      const res = await FeedbackAPI.getMyFeedback();
+      if (res?.success) {
+        setMyFeedbackList(res.data || []);
+      }
+    } catch (err) {
+      console.error('Failed to load my feedback history', err);
+    } finally {
+      setLoadingHistory(false);
+    }
+  };
+
+  const handleTabSwitch = (t) => {
+    setActiveTab(t);
+    if (t === 'history') {
+      loadMyFeedback();
+    }
+  };
 
   const toggleContributorArea = (area) => {
     setContributorAreas((prev) =>
@@ -139,7 +165,120 @@ export default function FeedbackPage() {
           </p>
         </div>
 
-        {/* ── Main Content Form / Success State ── */}
+        {/* Sub-Tab Switcher */}
+        <div className="flex items-center gap-2 mb-6 border-b border-outline-var/20 pb-2">
+          <button
+            onClick={() => handleTabSwitch('share')}
+            className={`px-4 py-2 font-syne font-bold text-xs uppercase tracking-wider rounded-xs transition-all border ${
+              activeTab === 'share'
+                ? 'bg-primary text-on-primary border-primary shadow-sm shadow-primary/20'
+                : 'bg-surface hover:bg-surface-mid border-outline-var/30 text-text-muted hover:text-text-primary'
+            }`}
+          >
+            Share Feedback
+          </button>
+          <button
+            onClick={() => handleTabSwitch('history')}
+            className={`px-4 py-2 font-syne font-bold text-xs uppercase tracking-wider rounded-xs transition-all border flex items-center gap-1.5 ${
+              activeTab === 'history'
+                ? 'bg-primary text-on-primary border-primary shadow-sm shadow-primary/20'
+                : 'bg-surface hover:bg-surface-mid border-outline-var/30 text-text-muted hover:text-text-primary'
+            }`}
+          >
+            <MessageSquare size={13} />
+            My Submissions & Responses
+          </button>
+        </div>
+
+        {/* ── TAB 2: MY SUBMISSIONS & RESPONSES ── */}
+        {activeTab === 'history' && (
+          <div className="space-y-4">
+            {loadingHistory ? (
+              <div className="p-12 text-center bg-surface border border-outline-var/30 rounded-lg">
+                <RefreshCw size={24} className="animate-spin text-primary mx-auto mb-3" />
+                <p className="text-xs font-syne uppercase tracking-wider text-text-muted">Loading your past feedback...</p>
+              </div>
+            ) : myFeedbackList.length === 0 ? (
+              <div className="p-12 text-center bg-surface border border-outline-var/30 rounded-lg space-y-3">
+                <CheckCircle2 size={32} className="text-accent mx-auto" />
+                <h3 className="font-syne font-bold text-sm text-text-primary">No submissions yet</h3>
+                <p className="text-xs text-text-muted max-w-sm mx-auto">
+                  You haven&apos;t submitted any feedback yet. Share your thoughts using the &quot;Share Feedback&quot; tab!
+                </p>
+                <button
+                  onClick={() => setActiveTab('share')}
+                  className="px-4 py-2 bg-primary text-on-primary font-syne font-bold text-xs uppercase tracking-wider rounded-xs hover:bg-secondary-bright transition-all"
+                >
+                  Submit Your First Feedback
+                </button>
+              </div>
+            ) : (
+              <div className="space-y-4">
+                {myFeedbackList.map((item) => {
+                  const currentStatus = item.status || 'PENDING';
+                  const statusColorMap = {
+                    PENDING: 'bg-amber-500/10 text-amber-500 border-amber-500/30',
+                    UNDER_REVIEW: 'bg-blue-500/10 text-blue-500 border-blue-500/30',
+                    PLANNED: 'bg-purple-500/10 text-purple-500 border-purple-500/30',
+                    SHIPPED: 'bg-emerald-500/10 text-emerald-500 border-emerald-500/30',
+                    DISMISSED: 'bg-gray-500/10 text-gray-400 border-gray-500/30',
+                  };
+
+                  return (
+                    <div
+                      key={item.id}
+                      className="bg-surface border border-outline-var/30 rounded-lg p-5 space-y-3 shadow-warm"
+                    >
+                      <div className="flex flex-wrap items-center justify-between gap-2 pb-2 border-b border-outline-var/20">
+                        <div className="flex items-center gap-2">
+                          <span className="text-[10px] font-syne font-bold uppercase px-2.5 py-0.5 rounded-xs bg-[#F5F3FF] border border-[#DDD6FE] text-[#6D28D9]">
+                            {item.category}
+                          </span>
+                          <span className={`text-[10px] font-syne font-bold uppercase px-2.5 py-0.5 rounded-full border ${statusColorMap[currentStatus] || statusColorMap.PENDING}`}>
+                            {currentStatus.replace('_', ' ')}
+                          </span>
+                        </div>
+                        <span className="text-[10px] font-mono text-outline">
+                          {new Date(item.createdAt).toLocaleDateString()}
+                        </span>
+                      </div>
+
+                      <div className="text-xs text-text-primary leading-relaxed bg-surface-mid/50 p-3 rounded-xs border border-outline-var/20 whitespace-pre-wrap">
+                        {item.feedback}
+                      </div>
+
+                      {/* Official Admin Team Response */}
+                      {item.adminResponse ? (
+                        <div className="p-3.5 bg-primary/10 border border-primary/30 rounded-md space-y-1">
+                          <div className="flex items-center justify-between text-primary font-syne font-bold uppercase text-[10px]">
+                            <span className="flex items-center gap-1.5">
+                              <Sparkles size={12} /> Response from SkillSphere Core Team
+                            </span>
+                            {item.respondedAt && (
+                              <span className="text-outline font-mono text-[9px]">
+                                {new Date(item.respondedAt).toLocaleDateString()}
+                              </span>
+                            )}
+                          </div>
+                          <p className="text-xs text-text-primary leading-relaxed font-outfit pt-1 whitespace-pre-wrap">
+                            {item.adminResponse}
+                          </p>
+                        </div>
+                      ) : (
+                        <p className="text-[11px] text-text-muted italic flex items-center gap-1">
+                          <Clock size={12} className="text-outline" /> Under review by engineering. Responses will appear here.
+                        </p>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* ── TAB 1: SUBMIT FEEDBACK FORM ── */}
+        {activeTab === 'share' && (
         <AnimatePresence mode="wait">
           {submitted ? (
             <motion.div
@@ -432,6 +571,7 @@ export default function FeedbackPage() {
             </motion.form>
           )}
         </AnimatePresence>
+        )}
       </main>
     </div>
   );
