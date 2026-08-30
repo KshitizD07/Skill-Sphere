@@ -229,9 +229,13 @@ const SKILL_FAMILIES = {
   git: ['git', 'github', 'version control', 'git/github'],
   'data structures': ['dsa', 'data structures', 'algorithms', 'data structures and algorithms', 'problem solving'],
   algorithms: ['dsa', 'algorithms', 'data structures', 'data structures and algorithms', 'problem solving'],
-  dsa: ['dsa', 'data structures', 'algorithms', 'data structures and algorithms', 'problem solving'],
   html: ['html', 'html5', 'frontend development', 'web development'],
   css: ['css', 'css3', 'tailwind', 'tailwindcss', 'frontend development'],
+  pandas: ['pandas', 'numpy', 'python', 'data analysis', 'eda', 'data science'],
+  'power bi': ['power bi', 'powerbi', 'dax', 'business intelligence', 'bi', 'tableau', 'data visualization'],
+  tableau: ['tableau', 'power bi', 'business intelligence', 'bi', 'data visualization'],
+  excel: ['excel', 'advanced excel', 'spreadsheets', 'vba', 'google sheets', 'data analysis'],
+  figma: ['figma', 'ui/ux', 'ui/ux design', 'wireframing', 'prototyping', 'design systems', 'product design'],
 };
 
 function normalizeSkillName(name) {
