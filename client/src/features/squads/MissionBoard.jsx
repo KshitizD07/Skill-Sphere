@@ -94,7 +94,7 @@ function CreateSquadModal({ onClose, onCreated }) {
     }
   };
 
-  const labelBase = "block font-syne text-[10px] font-bold tracking-[0.12em] uppercase text-outline mb-1.5";
+  const labelBase = "block font-outfit text-xs font-semibold text-text-muted mb-1.5 tracking-normal";
   const inputBase = "w-full bg-surface-mid border border-outline-var/40 text-text-primary p-3 rounded-xs focus:border-primary/60 outline-none font-outfit text-sm transition-colors placeholder-outline-var";
 
   return (
@@ -350,8 +350,15 @@ function SquadCard({ squad, currentUser }) {
             </div>
             <div className="space-y-1">
               {visibleSlots.map((slot) => (
-                <div key={slot.id} className="flex items-center justify-between text-xs bg-surface-mid/60 px-2.5 py-1.5 rounded-xs border border-outline-var/20">
-                  <span className="font-medium text-text-primary text-[11px] truncate">{slot.roleTitle}</span>
+                <div key={slot.id} className="flex items-center justify-between text-xs bg-surface-mid/60 px-2.5 py-1.5 rounded-xs border border-outline-var/20 gap-2">
+                  <div className="flex items-center gap-1.5 min-w-0">
+                    <span className="font-medium text-text-primary text-[11px] truncate">{slot.roleTitle}</span>
+                    {slot.requireVerified && (
+                      <span className="px-1.5 py-0.5 bg-primary/15 border border-primary/30 text-primary text-[8px] font-syne font-bold uppercase rounded-xs flex items-center gap-0.5 shrink-0" title="Requires Verified Skill Proof">
+                        <Shield size={8} /> Proof-Gated
+                      </span>
+                    )}
+                  </div>
                   {slot.requiredSkill && (
                     <span className="text-[10px] text-primary font-syne font-bold truncate">
                       {slot.requiredSkill}
@@ -477,7 +484,7 @@ export default function MissionBoard() {
       <Navbar user={currentUser} onLogout={() => {}} />
       <ToastContainer toasts={toast.toasts} removeToast={toast.removeToast} />
 
-      <div className="flex-1 md:ml-64 pt-16 md:pt-0 min-h-screen overflow-y-auto overflow-x-hidden p-4 md:p-8 w-full max-w-7xl mx-auto space-y-8">
+      <div className="flex-1 md:ml-64 pt-16 md:pt-0 min-h-screen overflow-y-auto overflow-x-hidden p-4 md:p-8 w-full max-w-7xl mx-auto space-y-6">
         {/* Header */}
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-4 border-b border-outline-var/20">
           <div>
