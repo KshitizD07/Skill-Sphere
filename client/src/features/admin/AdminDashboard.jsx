@@ -5,7 +5,7 @@ import {
   Search, Trash2, CheckCircle2,
   AlertTriangle, RefreshCw, UserX, UserCheck,
   TrendingUp, Database, Server, Clock, Lock,
-  HeartHandshake, Sparkles, KeyRound, X
+  HeartHandshake, Sparkles, KeyRound, X, ArrowLeft
 } from 'lucide-react';
 import {
   AreaChart, Area, XAxis, YAxis, Tooltip, ResponsiveContainer
@@ -21,13 +21,14 @@ export default function AdminDashboard({ user: propUser, onLogout }) {
   const toast = useToast();
 
   const currentUser = useMemo(() => {
-    if (propUser && Object.keys(propUser).length > 0) return propUser;
     try {
-      return JSON.parse(localStorage.getItem('user_data') || '{}');
+      return propUser || JSON.parse(localStorage.getItem('user_data') || '{}');
     } catch {
-      return {};
+      return propUser || {};
     }
   }, [propUser]);
+
+  const isOfficialSession = currentUser?.email === 'official@skillsphere.com' || currentUser?.isSystemAccount;
 
   const [activeTab, setActiveTab] = useState('overview'); // overview | feedback | users | reports | nexus | health
   const [loading, setLoading] = useState(true);
@@ -62,8 +63,14 @@ export default function AdminDashboard({ user: propUser, onLogout }) {
     }
     setIsSwitchingOfficial(true);
     try {
+      const currentToken = localStorage.getItem('ss_token');
+      const currentUserData = localStorage.getItem('user_data');
       const res = await AdminAPI.switchToOfficial(officialPassword.trim());
       if (res && res.token && res.user) {
+        if (currentToken && currentUserData) {
+          localStorage.setItem('ss_previous_admin_token', currentToken);
+          localStorage.setItem('ss_previous_admin_user', currentUserData);
+        }
         localStorage.setItem('ss_token', res.token);
         localStorage.setItem('user_data', JSON.stringify(res.user));
         toast.success('Successfully switched to SkillSphere Official System Account!');
@@ -78,6 +85,24 @@ export default function AdminDashboard({ user: propUser, onLogout }) {
       toast.error(err?.response?.data?.message || err.message || 'Authorization failed.');
     } finally {
       setIsSwitchingOfficial(false);
+    }
+  };
+
+  const handleSwitchBackToPersonal = () => {
+    const prevToken = localStorage.getItem('ss_previous_admin_token');
+    const prevUser = localStorage.getItem('ss_previous_admin_user');
+    if (prevToken && prevUser) {
+      localStorage.setItem('ss_token', prevToken);
+      localStorage.setItem('user_data', prevUser);
+      localStorage.removeItem('ss_previous_admin_token');
+      localStorage.removeItem('ss_previous_admin_user');
+      toast.success('Switched back to your personal account');
+      window.location.replace('/dashboard');
+    } else {
+      toast.info('No cached personal session. Redirecting to login.');
+      localStorage.removeItem('ss_token');
+      localStorage.removeItem('user_data');
+      window.location.replace('/auth');
     }
   };
 
@@ -215,13 +240,29 @@ export default function AdminDashboard({ user: propUser, onLogout }) {
           </div>
 
           <div className="flex items-center gap-2 self-start md:self-auto flex-wrap">
-            <button
-              onClick={() => setShowOfficialModal(true)}
-              className="px-3.5 py-2 bg-primary text-on-primary hover:bg-secondary-bright font-syne font-bold text-xs uppercase tracking-wider rounded-xs flex items-center gap-1.5 shadow-sm transition-all"
-            >
-              <Sparkles size={13} />
-              Switch to SkillSphere Official
-            </button>
+            {isOfficialSession ? (
+              <div className="flex items-center gap-2">
+                <span className="px-2.5 py-1.5 bg-amber-500/10 text-amber-500 border border-amber-500/30 text-[10px] font-syne font-bold uppercase rounded-xs flex items-center gap-1">
+                  <Shield size={11} /> Official Session Active
+                </span>
+                <button
+                  onClick={handleSwitchBackToPersonal}
+                  className="px-3.5 py-2 bg-surface hover:bg-surface-mid border border-outline-var/40 text-text-primary font-syne font-bold text-xs uppercase tracking-wider rounded-xs flex items-center gap-1.5 transition-all shadow-sm cursor-pointer"
+                  title="Exit official account and return to your personal admin account"
+                >
+                  <ArrowLeft size={13} />
+                  Switch to Personal Account
+                </button>
+              </div>
+            ) : (
+              <button
+                onClick={() => setShowOfficialModal(true)}
+                className="px-3.5 py-2 bg-primary text-on-primary hover:bg-secondary-bright font-syne font-bold text-xs uppercase tracking-wider rounded-xs flex items-center gap-1.5 shadow-sm transition-all cursor-pointer"
+              >
+                <Sparkles size={13} />
+                Switch to SkillSphere Official
+              </button>
+            )}
 
             <button
               onClick={refreshActiveTab}
