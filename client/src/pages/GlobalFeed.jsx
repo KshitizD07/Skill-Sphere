@@ -4,7 +4,7 @@ import {
   Heart, User, Building2, Image as ImageIcon, X,
   MessageCircle, Send, CornerDownRight, Trash2, Pencil,
   Share2, Flag, ArrowUp, Loader2, ThumbsUp,
-  AlertTriangle, ExternalLink, Users, MoreVertical
+  AlertTriangle, ExternalLink, Users, MoreVertical, Shield
 } from 'lucide-react';
 import FeedAPI from '../features/feed/feedAPI';
 import API from '../api';
@@ -207,32 +207,38 @@ function PostCard({
     setShowComments(true);
   };
 
-  return (
-    <div className="bg-surface border border-outline-var/20 rounded-md hover:border-secondary/20 transition-colors group relative font-outfit">
-      {/* Header */}
-      <div className="flex items-center justify-between p-4 pb-3">
-        <div className="flex items-center gap-3 cursor-pointer min-w-0 flex-1 mr-2" onClick={() => navigate(`/profile/${post.author?.id}`)}>
-          <Avatar src={post.author?.avatar} name={post.author?.name} size={10} />
-          <div className="min-w-0 flex-1">
-            <div className="flex items-center gap-1.5 flex-wrap">
-              <span className="text-text-primary font-semibold hover:text-primary transition-colors text-sm truncate">
-                {post.author?.name}
-              </span>
-              {post.author?.role === 'PROFESSIONAL' && (
-                <span className="px-1.5 py-0.5 bg-accent/10 text-accent text-[9px] font-syne font-bold uppercase rounded-xs">
-                  Pro
+    const isOfficial = post.author?.email === 'official@skillsphere.com' || post.author?.name === 'SkillSphere' || post.author?.role === 'ADMIN';
+
+    return (
+      <div className={`bg-surface border rounded-md hover:border-secondary/20 transition-colors group relative font-outfit ${isOfficial ? 'border-primary/40 bg-gradient-to-b from-surface to-surface-mid/40 shadow-sm' : 'border-outline-var/20'}`}>
+        {/* Header */}
+        <div className="flex items-center justify-between p-4 pb-3">
+          <div className="flex items-center gap-3 cursor-pointer min-w-0 flex-1 mr-2" onClick={() => navigate(`/profile/${post.author?.id}`)}>
+            <Avatar src={post.author?.avatar} name={post.author?.name} size={10} />
+            <div className="min-w-0 flex-1">
+              <div className="flex items-center gap-1.5 flex-wrap">
+                <span className="text-text-primary font-semibold hover:text-primary transition-colors text-sm truncate">
+                  {post.author?.name}
                 </span>
-              )}
+                {isOfficial ? (
+                  <span className="px-2 py-0.5 bg-primary/15 border border-primary/30 text-primary text-[9px] font-syne font-bold uppercase rounded-xs flex items-center gap-1 shadow-xs">
+                    <Shield size={10} /> Official
+                  </span>
+                ) : post.author?.role === 'PROFESSIONAL' ? (
+                  <span className="px-1.5 py-0.5 bg-accent/10 text-accent text-[9px] font-syne font-bold uppercase rounded-xs">
+                    Pro
+                  </span>
+                ) : null}
+              </div>
+              <div className="flex items-center gap-2 text-[10px] font-syne text-outline truncate">
+                {post.author?.headline && <span className="truncate">{post.author.headline}</span>}
+                {post.author?.college && (
+                  <span className="flex items-center gap-1 shrink-0">
+                    <Building2 size={10} /> {post.author.college}
+                  </span>
+                )}
+              </div>
             </div>
-            <div className="flex items-center gap-2 text-[10px] font-syne text-outline truncate">
-              {post.author?.headline && <span className="truncate">{post.author.headline}</span>}
-              {post.author?.college && (
-                <span className="flex items-center gap-1 shrink-0">
-                  <Building2 size={10} /> {post.author.college}
-                </span>
-              )}
-            </div>
-          </div>
         </div>
 
         {/* 3-Dot Options Dropdown */}
@@ -858,7 +864,7 @@ export default function GlobalFeed() {
       <Navbar user={currentUser} onLogout={handleLogout} />
       <ToastContainer toasts={toast.toasts} removeToast={toast.removeToast} />
 
-      <div className="flex-1 md:ml-64 pt-20 md:pt-0 min-h-screen overflow-y-auto overflow-x-hidden p-4 sm:p-6 md:p-10 w-full max-w-[1200px] mx-auto">
+      <div className="flex-1 md:ml-64 pt-16 md:pt-0 min-h-screen overflow-y-auto overflow-x-hidden p-4 md:p-8 w-full max-w-7xl mx-auto space-y-6">
 
         {/* Feed Type Switcher (All vs Following) */}
         <div className="flex items-center gap-2 mb-6 border-b border-outline-var/20 pb-2">
