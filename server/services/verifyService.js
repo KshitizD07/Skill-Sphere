@@ -222,7 +222,7 @@ export async function verifySkill({ userId, skillName, repoUrl, showLevel = true
              !p.endsWith('-lock.json');
     });
 
-  const validExts = ['.js', '.jsx', '.ts', '.tsx', '.py', '.java', '.go', '.rs', '.cpp', '.c', '.rb', '.swift', '.kt', '.cs', '.php', '.prisma', '.sql', '.vue', '.svelte'];
+  const validExts = ['.js', '.jsx', '.ts', '.tsx', '.py', '.ipynb', '.sql', '.java', '.go', '.rs', '.cpp', '.c', '.rb', '.swift', '.kt', '.cs', '.php', '.prisma', '.vue', '.svelte', '.r', '.dax'];
 
   // Categorized selection
   const pkgFiles = blobs.filter((item) => {
