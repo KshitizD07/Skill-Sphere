@@ -269,45 +269,53 @@ export default function NotificationBell() {
 
       {/* ── Feedback Response Full Reader Modal ── */}
       {activeFeedbackModal && (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/75 backdrop-blur-xs">
-          <div className="bg-surface border border-outline-var/40 rounded-xl max-w-lg w-full p-6 space-y-4 shadow-2xl animate-in fade-in zoom-in-95 duration-150">
-            <div className="flex items-center justify-between pb-3 border-b border-outline-var/20">
-              <div className="flex items-center gap-2">
-                <div className="w-8 h-8 rounded-full bg-primary/10 border border-primary/20 flex items-center justify-center text-primary">
-                  <Sparkles size={16} />
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/80 backdrop-blur-xs overflow-y-auto">
+          <div className="bg-surface border border-outline-var/40 rounded-xl max-w-2xl w-full my-auto p-6 md:p-8 space-y-4 shadow-2xl animate-in fade-in zoom-in-95 duration-150 flex flex-col max-h-[88vh]">
+            <div className="flex items-center justify-between pb-3 border-b border-outline-var/20 shrink-0">
+              <div className="flex items-center gap-3">
+                <div className="w-9 h-9 rounded-full bg-primary/10 border border-primary/25 flex items-center justify-center text-primary shrink-0">
+                  <Sparkles size={18} />
                 </div>
                 <div>
-                  <h3 className="font-syne font-bold text-sm text-text-primary uppercase tracking-wider">
+                  <h3 className="font-syne font-bold text-sm sm:text-base text-text-primary uppercase tracking-wider">
                     {activeFeedbackModal.title || 'Official Team Response'}
                   </h3>
                   <span className="text-[10px] font-mono text-outline">
-                    {new Date(activeFeedbackModal.createdAt).toLocaleDateString()}
+                    {new Date(activeFeedbackModal.createdAt).toLocaleDateString(undefined, {
+                      year: 'numeric', month: 'short', day: 'numeric'
+                    })}
                   </span>
                 </div>
               </div>
               <button
                 onClick={() => setActiveFeedbackModal(null)}
-                className="p-1 rounded-xs hover:bg-surface-mid text-text-muted hover:text-text-primary transition-colors cursor-pointer"
+                className="p-1.5 rounded-xs hover:bg-surface-mid text-text-muted hover:text-text-primary transition-colors cursor-pointer"
+                title="Close"
               >
                 <X size={18} />
               </button>
             </div>
 
-            <div className="p-4 bg-surface-mid/80 border border-primary/25 rounded-md space-y-2">
-              <div className="flex items-center gap-1.5 text-primary text-xs font-syne font-bold uppercase tracking-wider">
-                <Sparkles size={13} /> Message from SkillSphere Core Team
-              </div>
-              <div className="text-xs sm:text-sm text-text-primary font-outfit leading-relaxed whitespace-pre-wrap pt-1">
-                {activeFeedbackModal.message}
+            <div className="flex-1 overflow-y-auto pr-1.5 space-y-3">
+              <div className="p-4 sm:p-5 bg-surface-mid/80 border border-primary/25 rounded-md space-y-2.5">
+                <div className="flex items-center gap-1.5 text-primary text-xs font-syne font-bold uppercase tracking-wider pb-2 border-b border-primary/15">
+                  <Sparkles size={13} /> Message from SkillSphere Core Team
+                </div>
+                <div className="text-xs sm:text-sm text-text-primary font-outfit leading-relaxed whitespace-pre-wrap pt-1">
+                  {activeFeedbackModal.message}
+                </div>
               </div>
             </div>
 
-            <div className="pt-2 flex justify-end">
+            <div className="pt-3 border-t border-outline-var/20 flex items-center justify-between shrink-0">
+              <span className="text-[11px] text-text-muted italic hidden sm:inline">
+                Thank you for helping us shape SkillSphere!
+              </span>
               <button
                 onClick={() => setActiveFeedbackModal(null)}
-                className="px-6 py-2 bg-primary text-on-primary font-syne font-bold text-xs uppercase tracking-wider rounded-xs hover:bg-secondary-bright transition-colors cursor-pointer"
+                className="w-full sm:w-auto px-6 py-2.5 bg-primary text-on-primary font-syne font-bold text-xs uppercase tracking-wider rounded-xs hover:bg-secondary-bright transition-colors cursor-pointer shadow-sm ml-auto"
               >
-                Done
+                Close Response
               </button>
             </div>
           </div>
