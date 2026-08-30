@@ -274,15 +274,44 @@ export default function RoadmapPage() {
           </div>
         </div>
 
-        {/* Loading State */}
+        {/* Loading State & Rich Skeleton */}
         {loading && (
-          <div className="flex flex-col items-center justify-center py-20 space-y-4 bg-surface border border-outline-var/20 rounded-md">
-            <Loader2 className="animate-spin text-primary" size={44} />
-            <div className="text-center space-y-1">
-              <h3 className="font-syne font-bold text-lg text-text-primary">Generating AI Learning GPS...</h3>
-              <p className="text-xs text-text-muted max-w-sm mx-auto">
-                Synthesizing verified background skills, role requirements, and fast-tracking bypassed foundations.
-              </p>
+          <div className="space-y-6">
+            <div className="flex flex-col items-center justify-center py-10 space-y-3 bg-surface border border-primary/20 rounded-md">
+              <Loader2 className="animate-spin text-primary" size={36} />
+              <div className="text-center space-y-1">
+                <h3 className="font-syne font-bold text-base text-text-primary">Generating AI Career GPS...</h3>
+                <p className="text-xs text-text-muted max-w-sm mx-auto">
+                  Personalizing your curriculum based on your verified skills and target role milestones.
+                </p>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 animate-pulse">
+              <div className="lg:col-span-8 bg-surface border border-outline-var/20 rounded-md p-6 space-y-4">
+                <div className="h-6 w-1/3 bg-surface-mid rounded-xs" />
+                <div className="h-4 w-full bg-surface-mid/60 rounded-xs" />
+                <div className="h-4 w-5/6 bg-surface-mid/60 rounded-xs" />
+                <div className="space-y-2 pt-4">
+                  <div className="h-5 w-1/4 bg-primary/20 rounded-xs" />
+                  <div className="h-3 w-4/5 bg-surface-mid/40 rounded-xs" />
+                  <div className="h-3 w-3/4 bg-surface-mid/40 rounded-xs" />
+                </div>
+                <div className="space-y-2 pt-4">
+                  <div className="h-5 w-1/4 bg-primary/20 rounded-xs" />
+                  <div className="h-3 w-4/5 bg-surface-mid/40 rounded-xs" />
+                  <div className="h-3 w-2/3 bg-surface-mid/40 rounded-xs" />
+                </div>
+              </div>
+
+              <div className="lg:col-span-4 space-y-4">
+                <div className="bg-surface border border-outline-var/20 rounded-md p-6 space-y-3">
+                  <div className="h-5 w-1/2 bg-surface-mid rounded-xs" />
+                  <div className="h-10 w-full bg-surface-mid/50 rounded-xs" />
+                  <div className="h-10 w-full bg-surface-mid/50 rounded-xs" />
+                  <div className="h-10 w-full bg-surface-mid/50 rounded-xs" />
+                </div>
+              </div>
             </div>
           </div>
         )}
