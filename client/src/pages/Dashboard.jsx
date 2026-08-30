@@ -65,8 +65,9 @@ const POPULAR_ROLES = [
   'Full Stack Web Developer',
   'Frontend React Developer',
   'Backend Node.js Developer',
+  'Data Analyst',
   'AI / ML Engineer',
-  'DevOps & Cloud Engineer'
+  'DevOps & Cloud Engineer',
 ];
 
 // ─── Dashboard ────────────────────────────────────────────────────────────────
