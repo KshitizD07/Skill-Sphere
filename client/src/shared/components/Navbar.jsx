@@ -4,7 +4,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { 
   Menu, X, BarChart2, Users, Layers, 
   User, LogOut, LayoutDashboard, MessageSquare, Shield, Search,
-  HelpCircle, Sparkles, HeartHandshake
+  HelpCircle, Sparkles, HeartHandshake, ArrowLeft
 } from 'lucide-react';
 import NotificationBell from './NotificationBell';
 import DashboardChat from '../../features/chat/DashboardChat';
@@ -286,6 +286,37 @@ const Navbar = ({ user, onLogout }) => {
 
         {/* Bottom Profile Section */}
         <div className="p-4 border-t border-outline-var/30 bg-surface-mid/30">
+          {(user?.email === 'official@skillsphere.com' || user?.isSystemAccount) && (
+            <div className="mb-3 p-2 bg-primary/10 border border-primary/30 rounded-xs flex items-center justify-between gap-1.5">
+              <div className="flex items-center gap-1.5 min-w-0">
+                <Shield size={11} className="text-primary shrink-0" />
+                <span className="text-[9px] font-syne font-bold uppercase tracking-wider text-primary truncate">
+                  Official Account
+                </span>
+              </div>
+              <button
+                type="button"
+                onClick={() => {
+                  const prevToken = localStorage.getItem('ss_previous_admin_token');
+                  const prevUser = localStorage.getItem('ss_previous_admin_user');
+                  if (prevToken && prevUser) {
+                    localStorage.setItem('ss_token', prevToken);
+                    localStorage.setItem('user_data', prevUser);
+                    localStorage.removeItem('ss_previous_admin_token');
+                    localStorage.removeItem('ss_previous_admin_user');
+                    window.location.replace('/dashboard');
+                  } else {
+                    onLogout();
+                  }
+                }}
+                className="px-2 py-0.5 bg-surface hover:bg-surface-mid text-text-primary text-[9px] font-syne font-bold uppercase rounded-xs border border-outline-var/30 cursor-pointer shrink-0 transition-colors flex items-center gap-1"
+                title="Exit official account and return to your personal admin account"
+              >
+                <ArrowLeft size={10} /> Return
+              </button>
+            </div>
+          )}
+
           <div className="flex items-center gap-3 p-2 rounded-md hover:bg-surface cursor-pointer transition-colors" onClick={() => navigate('/my-profile')}>
             <div className="w-10 h-10 rounded-full bg-surface border border-primary/20 overflow-hidden flex items-center justify-center shrink-0">
               {user?.avatar ? (
@@ -367,6 +398,28 @@ const Navbar = ({ user, onLogout }) => {
             </div>
             
             <div className="p-4 border-t border-outline-var/30 space-y-2">
+              {(user?.email === 'official@skillsphere.com' || user?.isSystemAccount) && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    setIsOpen(false);
+                    const prevToken = localStorage.getItem('ss_previous_admin_token');
+                    const prevUser = localStorage.getItem('ss_previous_admin_user');
+                    if (prevToken && prevUser) {
+                      localStorage.setItem('ss_token', prevToken);
+                      localStorage.setItem('user_data', prevUser);
+                      localStorage.removeItem('ss_previous_admin_token');
+                      localStorage.removeItem('ss_previous_admin_user');
+                      window.location.replace('/dashboard');
+                    } else {
+                      onLogout();
+                    }
+                  }}
+                  className="w-full flex justify-center items-center gap-2 py-2 rounded-xs border border-primary/40 bg-primary/10 text-primary font-syne text-xs uppercase tracking-widest font-bold hover:bg-primary/20 transition-colors"
+                >
+                  <ArrowLeft size={14} /> Return to Personal Account
+                </button>
+              )}
               <button
                 type="button"
                 onClick={() => {
