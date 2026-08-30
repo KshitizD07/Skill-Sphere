@@ -3,7 +3,7 @@ import BaseAPI from '../../services/BaseAPI';
 const FeedbackAPI = {
   submitFeedback: async (feedbackData) => {
     const res = await BaseAPI.post('/feedback', feedbackData);
-    return res.data;
+    return res;
   },
 
   getFeedbackInbox: async (params = {}) => {
@@ -13,17 +13,17 @@ const FeedbackAPI = {
 
   deleteFeedback: async (id) => {
     const res = await BaseAPI.delete(`/feedback/${id}`);
-    return res.data;
+    return res;
   },
 
   respondToFeedback: async (id, data) => {
     const res = await BaseAPI.patch(`/feedback/${id}/respond`, data);
-    return res.data;
+    return res;
   },
 
   getMyFeedback: async () => {
     const res = await BaseAPI.get('/feedback/my');
-    return res.data;
+    return res;
   },
 };
 
