@@ -5,7 +5,7 @@ import {
   Search, Trash2, CheckCircle2,
   AlertTriangle, RefreshCw, UserX, UserCheck,
   TrendingUp, Database, Server, Clock, Lock,
-  HeartHandshake
+  HeartHandshake, Sparkles, KeyRound, X
 } from 'lucide-react';
 import {
   AreaChart, Area, XAxis, YAxis, Tooltip, ResponsiveContainer
@@ -49,6 +49,37 @@ export default function AdminDashboard({ user: propUser, onLogout }) {
 
   // Health states
   const [healthData, setHealthData] = useState(null);
+
+  // SkillSphere Official Account Switcher state
+  const [showOfficialModal, setShowOfficialModal] = useState(false);
+  const [officialPassword, setOfficialPassword] = useState('');
+  const [isSwitchingOfficial, setIsSwitchingOfficial] = useState(false);
+
+  const handleSwitchToOfficial = async (e) => {
+    e.preventDefault();
+    if (!officialPassword.trim()) {
+      return toast.error('Please enter the master authorization key.');
+    }
+    setIsSwitchingOfficial(true);
+    try {
+      const res = await AdminAPI.switchToOfficial(officialPassword.trim());
+      if (res && res.token && res.user) {
+        localStorage.setItem('ss_token', res.token);
+        localStorage.setItem('user_data', JSON.stringify(res.user));
+        toast.success('Successfully switched to SkillSphere Official System Account!');
+        setShowOfficialModal(false);
+        setOfficialPassword('');
+        // Reload to apply official account across all features
+        window.location.replace('/dashboard');
+      } else {
+        toast.error(res?.message || 'Failed to switch to official account.');
+      }
+    } catch (err) {
+      toast.error(err?.response?.data?.message || err.message || 'Authorization failed.');
+    } finally {
+      setIsSwitchingOfficial(false);
+    }
+  };
 
   // Verify Admin Access Guard (Must have active escalated ADMIN role)
   useEffect(() => {
@@ -183,13 +214,23 @@ export default function AdminDashboard({ user: propUser, onLogout }) {
             </p>
           </div>
 
-          <button
-            onClick={refreshActiveTab}
-            className="self-start md:self-auto px-3.5 py-2 bg-surface hover:bg-surface-mid border border-outline-var/30 text-text-muted hover:text-text-primary font-syne font-bold text-xs uppercase tracking-wider rounded-xs flex items-center gap-1.5 transition-colors"
-          >
-            <RefreshCw size={13} className={loading ? 'animate-spin text-primary' : ''} />
-            Refresh Telemetry
-          </button>
+          <div className="flex items-center gap-2 self-start md:self-auto flex-wrap">
+            <button
+              onClick={() => setShowOfficialModal(true)}
+              className="px-3.5 py-2 bg-primary text-on-primary hover:bg-secondary-bright font-syne font-bold text-xs uppercase tracking-wider rounded-xs flex items-center gap-1.5 shadow-sm transition-all"
+            >
+              <Sparkles size={13} />
+              Switch to SkillSphere Official
+            </button>
+
+            <button
+              onClick={refreshActiveTab}
+              className="px-3.5 py-2 bg-surface hover:bg-surface-mid border border-outline-var/30 text-text-muted hover:text-text-primary font-syne font-bold text-xs uppercase tracking-wider rounded-xs flex items-center gap-1.5 transition-colors"
+            >
+              <RefreshCw size={13} className={loading ? 'animate-spin text-primary' : ''} />
+              Refresh Telemetry
+            </button>
+          </div>
         </div>
 
         {/* Tab Navigation */}
@@ -596,6 +637,80 @@ export default function AdminDashboard({ user: propUser, onLogout }) {
                 Confirm Delete
               </button>
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* SkillSphere Official Account Switcher Modal */}
+      {showOfficialModal && (
+        <div className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4 z-50 font-outfit">
+          <div className="bg-surface border border-outline-var/30 p-6 rounded-md max-w-md w-full space-y-4 shadow-2xl relative">
+            <button
+              onClick={() => {
+                setShowOfficialModal(false);
+                setOfficialPassword('');
+              }}
+              className="absolute top-4 right-4 text-outline hover:text-text-primary"
+            >
+              <X size={16} />
+            </button>
+
+            <div className="space-y-1">
+              <span className="font-syne text-[10px] font-bold tracking-wider uppercase text-primary flex items-center gap-1.5">
+                <Sparkles size={12} /> System Escalation
+              </span>
+              <h3 className="text-lg font-bold font-syne text-text-primary">
+                Switch to SkillSphere Official
+              </h3>
+              <p className="text-xs text-text-muted leading-relaxed">
+                Enter the master system authorization key to switch your active session to the verified <strong>SkillSphere</strong> platform account for official squad postings and network updates.
+              </p>
+            </div>
+
+            <form onSubmit={handleSwitchToOfficial} className="space-y-4 pt-1">
+              <div>
+                <label className="block font-syne text-[10px] font-bold uppercase tracking-wider text-outline mb-1">
+                  Master Password Key
+                </label>
+                <div className="relative">
+                  <KeyRound size={14} className="absolute left-3 top-3 text-outline" />
+                  <input
+                    type="password"
+                    value={officialPassword}
+                    onChange={(e) => setOfficialPassword(e.target.value)}
+                    placeholder="Enter official master password..."
+                    className="w-full bg-surface-mid border border-outline-var/40 rounded-xs py-2 pl-9 pr-3 text-xs text-text-primary outline-none focus:border-primary/60"
+                    autoFocus
+                  />
+                </div>
+              </div>
+
+              <div className="p-3 bg-primary/5 border border-primary/20 rounded-xs text-[11px] text-text-muted space-y-1">
+                <p className="font-semibold text-primary">Security Notice:</p>
+                <p>• Logging out from the navbar will immediately exit the official account and return you to standard authentication.</p>
+                <p>• This account is exempted from personal GitHub linking checks.</p>
+              </div>
+
+              <div className="flex items-center gap-2 pt-1">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setShowOfficialModal(false);
+                    setOfficialPassword('');
+                  }}
+                  className="flex-1 py-2.5 border border-outline-var/30 text-text-muted font-syne font-bold text-xs uppercase tracking-wider rounded-xs hover:bg-surface-mid"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  disabled={isSwitchingOfficial}
+                  className="flex-1 py-2.5 bg-primary text-on-primary font-syne font-bold text-xs uppercase tracking-wider rounded-xs hover:bg-secondary-bright transition-all disabled:opacity-50"
+                >
+                  {isSwitchingOfficial ? 'Authorizing...' : 'Switch Session'}
+                </button>
+              </div>
+            </form>
           </div>
         </div>
       )}
