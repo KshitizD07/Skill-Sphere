@@ -5,7 +5,7 @@ import {
   ArrowLeft, CheckCircle2,
   AlertCircle, Target, User, Shield,
   Edit, Trash2, LogOut, X, ExternalLink,
-  Plus, Pencil
+  Plus, Pencil, ChevronDown, ChevronUp, MessageCircle, UserCheck,
 } from 'lucide-react';
 import Navbar from '../../shared/components/Navbar';
 import { useToast, ToastContainer } from '../../shared/components/Toast';
@@ -38,6 +38,8 @@ export default function SquadDetail() {
   const [slotEditMode, setSlotEditMode] = useState(false);
   const [slotForm, setSlotForm] = useState({ id: null, roleTitle: '', roleDescription: '', requiredSkill: '', minScore: 5, requireVerified: false });
   const [slotSubmitting, setSlotSubmitting] = useState(false);
+  const [membersExpanded, setMembersExpanded] = useState(false);
+
 
   const loadSquad = useCallback(async () => {
     setLoading(true);
@@ -211,76 +213,97 @@ export default function SquadDetail() {
 
   const isLeader = squad.leader?.id === currentUser?.id;
   const isFull = squad.currentMembers >= squad.maxMembers;
+
+  // All of the current user's applications for this squad
   const userApps = (squad.applications || []).filter((a) => a.userId === currentUser?.id);
   const userAcceptedApp = userApps.find((a) => a.status === 'ACCEPTED');
-  const _userPendingApp = userApps.find((a) => a.status === 'PENDING');
-  const _isMember = isLeader || !!userAcceptedApp;
+
+  // Per-slot lookup: slotId → application (for this user)
+  const userAppBySlot = {};
+  for (const app of userApps) {
+    if (app.slotId) userAppBySlot[app.slotId] = app;
+  }
+
+  // True if user has any PENDING application in this squad (blocks applying to other slots)
+  const hasPendingApp = userApps.some((a) => a.status === 'PENDING');
+
+  // Accepted members list — everyone with ACCEPTED status (visible in members dropdown)
+  const acceptedMembers = (squad.applications || [])
+    .filter((a) => a.status === 'ACCEPTED')
+    .map((a) => ({
+      user: a.user,
+      roleTitle: a.slot?.roleTitle || 'Member',
+    }));
+
 
   return (
     <div className="min-h-screen bg-bg-base text-text-primary font-outfit flex flex-col md:flex-row">
       <Navbar user={currentUser} onLogout={() => {}} />
       <ToastContainer toasts={toast.toasts} removeToast={toast.removeToast} />
 
-      <div className="flex-1 md:ml-64 pt-16 md:pt-0 min-h-screen overflow-y-auto overflow-x-hidden p-4 md:p-8 w-full max-w-7xl mx-auto space-y-6">
+      <div className="flex-1 md:ml-64 pt-16 md:pt-0 min-h-screen overflow-y-auto overflow-x-hidden p-3 sm:p-5 md:p-8 w-full max-w-7xl mx-auto space-y-5">
         {/* Header Bar */}
-        <div className="flex items-center justify-between pb-4 border-b border-outline-var/20">
-          <div className="flex items-center gap-3">
+        <div className="flex items-start sm:items-center justify-between gap-3 pb-4 border-b border-outline-var/20">
+          <div className="flex items-center gap-3 min-w-0">
             <button
               onClick={() => navigate('/nexus')}
-              className="p-2 border border-outline-var/30 hover:border-primary/40 rounded-xs text-outline hover:text-primary transition-all"
+              className="p-2 border border-outline-var/30 hover:border-primary/40 rounded-xs text-outline hover:text-primary transition-all shrink-0"
             >
               <ArrowLeft size={16} />
             </button>
-            <div>
+            <div className="min-w-0">
               <span className="font-syne text-[10px] font-bold tracking-wider uppercase text-outline">
                 Mission Profile
               </span>
-              <h1 className="text-xl font-bold font-syne text-text-primary tracking-tight">
+              <h1 className="text-base sm:text-xl font-bold font-syne text-text-primary tracking-tight truncate">
                 Squad Briefing
               </h1>
             </div>
           </div>
 
           {/* Action buttons */}
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
             {isLeader ? (
               <>
                 <button
                   onClick={() => setShowEditModal(true)}
-                  className="px-3 py-1.5 bg-surface-mid hover:bg-surface border border-outline-var/30 text-text-primary font-syne font-bold text-xs uppercase tracking-wider rounded-xs flex items-center gap-1.5 transition-colors"
+                  className="p-2 sm:px-3 sm:py-1.5 bg-surface-mid hover:bg-surface border border-outline-var/30 text-text-primary font-syne font-bold text-xs uppercase tracking-wider rounded-xs flex items-center gap-1.5 transition-colors"
+                  title="Edit Squad"
                 >
-                  <Edit size={13} /> Edit
+                  <Edit size={13} />
+                  <span className="hidden sm:inline">Edit</span>
                 </button>
                 <button
                   onClick={() => navigate(`/squad/${squad.id}/manage`)}
-                  className="px-3.5 py-1.5 bg-primary text-on-primary hover:bg-secondary-bright font-syne font-bold text-xs uppercase tracking-wider rounded-xs transition-all flex items-center gap-1.5"
+                  className="px-2.5 sm:px-3.5 py-2 sm:py-1.5 bg-primary text-on-primary hover:bg-secondary-bright font-syne font-bold text-xs uppercase tracking-wider rounded-xs transition-all"
                 >
-                  Manage Applications
+                  <span className="hidden sm:inline">Manage Applications</span>
+                  <span className="sm:hidden">Applications</span>
                 </button>
                 <button
                   onClick={handleCloseSquad}
-                  className="p-1.5 bg-error/10 hover:bg-error/20 border border-error/30 text-error rounded-xs transition-colors"
+                  className="p-2 bg-error/10 hover:bg-error/20 border border-error/30 text-error rounded-xs transition-colors"
                   title="Close Squad"
                 >
-                  <Trash2 size={15} />
+                  <Trash2 size={14} />
                 </button>
               </>
             ) : userAcceptedApp ? (
               <button
                 onClick={handleLeaveSquad}
-                className="px-3.5 py-1.5 bg-error/10 hover:bg-error/20 border border-error/30 text-error font-syne font-bold text-xs uppercase tracking-wider rounded-xs transition-all flex items-center gap-1.5"
+                className="px-3 py-1.5 bg-error/10 hover:bg-error/20 border border-error/30 text-error font-syne font-bold text-xs uppercase tracking-wider rounded-xs transition-all flex items-center gap-1.5"
               >
-                <LogOut size={13} /> Leave Squad
+                <LogOut size={13} /> <span className="hidden sm:inline">Leave Squad</span>
               </button>
             ) : null}
           </div>
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
           {/* Main Info (Left 2 cols) */}
-          <div className="lg:col-span-2 space-y-6">
+          <div className="lg:col-span-2 space-y-5">
             {/* Squad Overview Card */}
-            <div className="bg-surface border border-outline-var/20 rounded-md p-6 space-y-4 shadow-sm">
+            <div className="bg-surface border border-outline-var/20 rounded-md p-4 sm:p-6 space-y-3 shadow-sm">
               <div className="flex items-center gap-2 flex-wrap">
                 {squad.event && (
                   <span className="px-2.5 py-0.5 bg-primary/10 border border-primary/30 text-primary text-[10px] font-syne font-bold uppercase tracking-wider rounded-full">
@@ -298,7 +321,7 @@ export default function SquadDetail() {
                 </span>
               </div>
 
-              <h2 className="text-2xl font-extrabold text-text-primary tracking-tight font-syne leading-snug">
+              <h2 className="text-xl sm:text-2xl font-extrabold text-text-primary tracking-tight font-syne leading-snug">
                 {squad.title}
               </h2>
 
@@ -308,7 +331,7 @@ export default function SquadDetail() {
             </div>
 
             {/* Slots / Roles List */}
-            <div className="bg-surface border border-outline-var/20 rounded-md p-6 space-y-4 shadow-sm">
+            <div className="bg-surface border border-outline-var/20 rounded-md p-4 sm:p-6 space-y-4 shadow-sm">
               <div className="flex items-center justify-between flex-wrap gap-2">
                 <div className="flex items-center gap-2">
                   <Target size={18} className="text-primary" />
@@ -334,98 +357,116 @@ export default function SquadDetail() {
                 ) : (
                   (squad.slots || []).map((slot) => {
                     const isFilled = slot.status === 'FILLED';
-                    const isApplied = userApps.some((a) => a.slotId === slot.id);
+                    const slotApp = userAppBySlot[slot.id];
+                    const slotStatus = slotApp?.status || null;
+
+                    // Applicant can apply if: no accepted membership, no pending app in squad, slot open, not already rejected/applied for this specific slot
+                    const canApply =
+                      !isLeader &&
+                      !isFilled &&
+                      !userAcceptedApp &&
+                      !hasPendingApp &&
+                      slotStatus !== 'REJECTED' &&
+                      slotStatus !== 'ACCEPTED';
 
                     return (
                       <div
                         key={slot.id}
-                        className={`p-4 rounded-md border transition-all flex flex-col md:flex-row md:items-center justify-between gap-4 ${
+                        className={`p-3 sm:p-4 rounded-md border transition-all ${
                           isFilled
                             ? 'bg-surface-mid/30 border-outline-var/20 opacity-70'
                             : 'bg-surface-mid/60 border-outline-var/30 hover:border-primary/40'
                         }`}
                       >
-                        <div className="space-y-1 min-w-0 flex-1">
-                          <div className="flex items-center gap-2 flex-wrap">
-                            <h4 className="font-bold text-sm text-text-primary">{slot.roleTitle}</h4>
-                            <span
-                              className={`px-2 py-0.5 rounded-full text-[9px] font-syne font-bold uppercase border ${
-                                isFilled
-                                  ? 'bg-outline-var/20 text-outline border-outline-var/30'
-                                  : 'bg-accent/10 text-accent border-accent/20'
-                              }`}
-                            >
-                              {isFilled ? 'Filled' : 'Open'}
-                            </span>
-                          </div>
-
-                          {slot.roleDescription && (
-                            <p className="text-xs text-text-muted line-clamp-2">{slot.roleDescription}</p>
-                          )}
-
-                          <div className="flex items-center gap-3 pt-1 text-xs text-text-muted flex-wrap">
-                            {slot.requiredSkill && (
-                              <span className="flex items-center gap-1 text-primary font-semibold text-[11px]">
-                                <Shield size={12} /> Required: {slot.requiredSkill} (≥ {slot.minScore}/10)
+                        <div className="flex items-start justify-between gap-3">
+                          <div className="flex-1 min-w-0 space-y-1.5">
+                            <div className="flex items-center gap-2 flex-wrap">
+                              <h4 className="font-bold text-sm text-text-primary">{slot.roleTitle}</h4>
+                              <span
+                                className={`px-2 py-0.5 rounded-full text-[9px] font-syne font-bold uppercase border ${
+                                  isFilled
+                                    ? 'bg-outline-var/20 text-outline border-outline-var/30'
+                                    : 'bg-accent/10 text-accent border-accent/20'
+                                }`}
+                              >
+                                {isFilled ? 'Filled' : 'Open'}
                               </span>
-                            )}
-                            {slot.requireVerified && (
-                              <span className="flex items-center gap-1 text-accent text-[11px] font-semibold">
-                                <CheckCircle2 size={12} /> Verified Skill Required
-                              </span>
-                            )}
-                          </div>
-                        </div>
+                            </div>
 
-                        {/* Slot CTA / Leader Actions */}
-                        <div className="flex items-center gap-2 shrink-0">
-                          {isLeader ? (
-                            <div className="flex items-center gap-1.5">
-                              {!isFilled && (
-                                <button
-                                  type="button"
-                                  onClick={() => handleOpenEditSlot(slot)}
-                                  className="p-1.5 bg-surface hover:bg-surface-mid border border-outline-var/30 text-text-muted hover:text-primary rounded-xs transition-colors"
-                                  title="Edit Role Slot"
-                                >
-                                  <Pencil size={13} />
-                                </button>
+                            {slot.roleDescription && (
+                              <p className="text-xs text-text-muted line-clamp-2">{slot.roleDescription}</p>
+                            )}
+
+                            <div className="flex items-center gap-3 text-xs text-text-muted flex-wrap">
+                              {slot.requiredSkill && (
+                                <span className="flex items-center gap-1 text-primary font-semibold text-[11px]">
+                                  <Shield size={12} /> Required: {slot.requiredSkill} (≥ {slot.minScore}/10)
+                                </span>
                               )}
-                              {!isFilled && (
-                                <button
-                                  type="button"
-                                  onClick={() => handleDeleteSlot(slot.id)}
-                                  className="p-1.5 bg-error/10 hover:bg-error/20 border border-error/30 text-error rounded-xs transition-colors"
-                                  title="Delete Role Slot"
-                                >
-                                  <Trash2 size={13} />
-                                </button>
-                              )}
-                              {isFilled && (
-                                <span className="text-xs text-outline font-syne uppercase tracking-wider font-bold">
-                                  Filled
+                              {slot.requireVerified && (
+                                <span className="flex items-center gap-1 text-accent text-[11px] font-semibold">
+                                  <CheckCircle2 size={12} /> Verified Required
                                 </span>
                               )}
                             </div>
-                          ) : isFilled ? (
-                            <span className="text-xs text-outline font-syne uppercase tracking-wider font-bold">
-                              Slot Filled
-                            </span>
-                          ) : isApplied ? (
-                            <span className="px-3 py-1.5 bg-primary/10 border border-primary/20 text-primary font-syne font-bold text-xs uppercase tracking-wider rounded-xs">
-                              Applied
-                            </span>
-                          ) : (
-                            <button
-                              onClick={() => {
-                                setSelectedSlot(slot.id);
-                                setShowApplyModal(true);
-                              }}
-                              className="px-4 py-2 bg-primary text-on-primary hover:bg-secondary-bright font-syne font-bold text-xs uppercase tracking-wider rounded-xs transition-all"
-                            >
-                              Apply for Role
-                            </button>
-                          )}
+                          </div>
+
+                          {/* Per-slot CTA */}
+                          <div className="flex items-center gap-2 shrink-0">
+                            {isLeader ? (
+                              <div className="flex items-center gap-1.5">
+                                {!isFilled && (
+                                  <button
+                                    type="button"
+                                    onClick={() => handleOpenEditSlot(slot)}
+                                    className="p-1.5 bg-surface hover:bg-surface-mid border border-outline-var/30 text-text-muted hover:text-primary rounded-xs transition-colors"
+                                    title="Edit Role Slot"
+                                  >
+                                    <Pencil size={13} />
+                                  </button>
+                                )}
+                                {!isFilled && (
+                                  <button
+                                    type="button"
+                                    onClick={() => handleDeleteSlot(slot.id)}
+                                    className="p-1.5 bg-error/10 hover:bg-error/20 border border-error/30 text-error rounded-xs transition-colors"
+                                    title="Delete Role Slot"
+                                  >
+                                    <Trash2 size={13} />
+                                  </button>
+                                )}
+                                {isFilled && (
+                                  <span className="text-xs text-outline font-syne uppercase tracking-wider font-bold">Filled</span>
+                                )}
+                              </div>
+                            ) : isFilled ? (
+                              <span className="text-xs text-outline font-syne uppercase tracking-wider font-bold">Slot Filled</span>
+                            ) : slotStatus === 'ACCEPTED' ? (
+                              <span className="px-2.5 py-1.5 bg-accent/10 border border-accent/20 text-accent font-syne font-bold text-xs uppercase tracking-wider rounded-xs flex items-center gap-1.5">
+                                <CheckCircle2 size={12} /> Member
+                              </span>
+                            ) : slotStatus === 'PENDING' ? (
+                              <span className="px-2.5 py-1.5 bg-primary/10 border border-primary/20 text-primary font-syne font-bold text-xs uppercase tracking-wider rounded-xs">
+                                Applied
+                              </span>
+                            ) : slotStatus === 'REJECTED' ? (
+                              <span className="px-2.5 py-1.5 bg-error/10 border border-error/20 text-error font-syne font-bold text-xs uppercase tracking-wider rounded-xs">
+                                Rejected
+                              </span>
+                            ) : canApply ? (
+                              <button
+                                onClick={() => {
+                                  setSelectedSlot(slot.id);
+                                  setShowApplyModal(true);
+                                }}
+                                className="px-3 sm:px-4 py-2 bg-primary text-on-primary hover:bg-secondary-bright font-syne font-bold text-xs uppercase tracking-wider rounded-xs transition-all whitespace-nowrap"
+                              >
+                                Apply
+                              </button>
+                            ) : hasPendingApp && !slotApp ? (
+                              <span className="text-[10px] text-outline font-syne italic">Pending elsewhere</span>
+                            ) : null}
+                          </div>
                         </div>
                       </div>
                     );
@@ -435,16 +476,16 @@ export default function SquadDetail() {
             </div>
           </div>
 
-          {/* Sidebar / Meta (Right 1 col) */}
-          <div className="space-y-6">
+          {/* Sidebar (Right 1 col) — stacks below main content on mobile */}
+          <div className="space-y-5">
             {/* Squad Leader Card */}
-            <div className="bg-surface border border-outline-var/20 rounded-md p-5 space-y-4 shadow-sm">
+            <div className="bg-surface border border-outline-var/20 rounded-md p-4 sm:p-5 space-y-4 shadow-sm">
               <span className="text-[10px] font-syne font-bold uppercase tracking-wider text-outline">
                 Mission Leader
               </span>
 
               <div className="flex items-center gap-3">
-                <div className="w-12 h-12 rounded-full border border-outline-var/30 overflow-hidden bg-surface-mid flex items-center justify-center shrink-0">
+                <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-full border border-outline-var/30 overflow-hidden bg-surface-mid flex items-center justify-center shrink-0">
                   {squad.leader?.avatar ? (
                     <img src={squad.leader.avatar} className="w-full h-full object-cover" alt="" />
                   ) : (
@@ -464,28 +505,120 @@ export default function SquadDetail() {
                 onClick={() => navigate(`/profile/${squad.leader?.id}`)}
                 className="w-full py-2 bg-surface-mid hover:bg-surface border border-outline-var/30 text-text-muted hover:text-text-primary font-syne font-bold text-xs uppercase tracking-wider rounded-xs transition-colors flex items-center justify-center gap-1"
               >
-                View Leader Profile <ExternalLink size={12} />
+                View Profile <ExternalLink size={12} />
               </button>
             </div>
 
-            {/* Squad Stats Card */}
-            <div className="bg-surface border border-outline-var/20 rounded-md p-5 space-y-3 shadow-sm">
+            {/* Squad Stats + Members Dropdown */}
+            <div className="bg-surface border border-outline-var/20 rounded-md p-4 sm:p-5 space-y-3 shadow-sm">
               <span className="text-[10px] font-syne font-bold uppercase tracking-wider text-outline">
                 Squad Status
               </span>
 
-              <div className="space-y-2 text-xs">
-                <div className="flex items-center justify-between py-1 border-b border-outline-var/15">
-                  <span className="text-text-muted">Members</span>
-                  <span className="font-bold text-text-primary">{squad.currentMembers} / {squad.maxMembers}</span>
-                </div>
+              <div className="space-y-1 text-xs">
+                {/* Members row — expands to show member list */}
+                <button
+                  type="button"
+                  onClick={() => setMembersExpanded((v) => !v)}
+                  className="w-full flex items-center justify-between py-2 border-b border-outline-var/15 hover:text-primary transition-colors"
+                >
+                  <div className="flex items-center gap-1.5 text-text-muted">
+                    <UserCheck size={13} />
+                    <span>Members</span>
+                  </div>
+                  <div className="flex items-center gap-1.5">
+                    <span className="font-bold text-text-primary">
+                      {squad.currentMembers} / {squad.maxMembers}
+                    </span>
+                    {membersExpanded
+                      ? <ChevronUp size={13} className="text-outline" />
+                      : <ChevronDown size={13} className="text-outline" />
+                    }
+                  </div>
+                </button>
 
-                <div className="flex items-center justify-between py-1 border-b border-outline-var/15">
+                {/* Expanded member list */}
+                {membersExpanded && (
+                  <div className="pt-1 pb-1 space-y-1.5">
+                    {/* Leader row */}
+                    <div className="flex items-center justify-between gap-2 py-1.5 px-2 rounded-xs bg-surface-mid/50">
+                      <div className="flex items-center gap-2 min-w-0">
+                        <div className="w-7 h-7 rounded-full border border-outline-var/30 overflow-hidden bg-surface-mid flex items-center justify-center shrink-0">
+                          {squad.leader?.avatar
+                            ? <img src={squad.leader.avatar} className="w-full h-full object-cover" alt="" />
+                            : <User size={12} className="text-outline" />
+                          }
+                        </div>
+                        <div className="min-w-0">
+                          <button
+                            onClick={() => navigate(`/profile/${squad.leader?.id}`)}
+                            className="text-xs font-semibold text-text-primary hover:text-primary truncate block text-left"
+                            style={{ maxWidth: '110px' }}
+                          >
+                            {squad.leader?.name}
+                          </button>
+                          <span className="text-[10px] text-primary font-syne font-bold uppercase">Leader</span>
+                        </div>
+                      </div>
+                      {currentUser?.id !== squad.leader?.id && (
+                        <button
+                          onClick={() => navigate('/chat', { state: { userId: squad.leader?.id } })}
+                          className="p-1.5 text-outline hover:text-primary hover:bg-primary/10 rounded-xs transition-colors shrink-0"
+                          title="Chat with leader"
+                        >
+                          <MessageCircle size={14} />
+                        </button>
+                      )}
+                    </div>
+
+                    {/* Accepted members */}
+                    {acceptedMembers.length === 0 ? (
+                      <p className="text-[11px] text-outline italic px-1 py-1">No members selected yet.</p>
+                    ) : (
+                      acceptedMembers.map((m) => (
+                        <div
+                          key={m.user?.id}
+                          className="flex items-center justify-between gap-2 py-1.5 px-2 rounded-xs bg-surface-mid/50"
+                        >
+                          <div className="flex items-center gap-2 min-w-0">
+                            <div className="w-7 h-7 rounded-full border border-outline-var/30 overflow-hidden bg-surface-mid flex items-center justify-center shrink-0">
+                              {m.user?.avatar
+                                ? <img src={m.user.avatar} className="w-full h-full object-cover" alt="" />
+                                : <User size={12} className="text-outline" />
+                              }
+                            </div>
+                            <div className="min-w-0">
+                              <button
+                                onClick={() => navigate(`/profile/${m.user?.id}`)}
+                                className="text-xs font-semibold text-text-primary hover:text-primary truncate block text-left"
+                                style={{ maxWidth: '110px' }}
+                              >
+                                {m.user?.name}
+                              </button>
+                              <span className="text-[10px] text-outline truncate block">{m.roleTitle}</span>
+                            </div>
+                          </div>
+                          {isLeader && currentUser?.id !== m.user?.id && (
+                            <button
+                              onClick={() => navigate('/chat', { state: { userId: m.user?.id } })}
+                              className="p-1.5 text-outline hover:text-primary hover:bg-primary/10 rounded-xs transition-colors shrink-0"
+                              title={`Chat with ${m.user?.name}`}
+                            >
+                              <MessageCircle size={14} />
+                            </button>
+                          )}
+                        </div>
+                      ))
+                    )}
+                  </div>
+                )}
+
+                <div className="flex items-center justify-between py-2 border-b border-outline-var/15">
                   <span className="text-text-muted">Total Slots</span>
                   <span className="font-bold text-text-primary">{(squad.slots || []).length} Roles</span>
                 </div>
 
-                <div className="flex items-center justify-between py-1 border-b border-outline-var/15">
+                <div className="flex items-center justify-between py-2">
                   <span className="text-text-muted">Applications</span>
                   <span className="font-bold text-text-primary">{(squad.applications || []).length} Received</span>
                 </div>
@@ -495,10 +628,10 @@ export default function SquadDetail() {
         </div>
       </div>
 
-      {/* ── Apply Modal ─────────────────────────────────────────────────── */}
+      {/* ── Apply Modal — bottom-sheet on mobile ──────────────────────────── */}
       {showApplyModal && (
-        <div className="fixed inset-0 bg-bg-base/85 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-          <div className="bg-surface border border-outline-var/30 rounded-md max-w-md w-full p-6 relative shadow-2xl space-y-4">
+        <div className="fixed inset-0 bg-bg-base/85 backdrop-blur-sm z-50 flex items-end sm:items-center justify-center p-0 sm:p-4">
+          <div className="bg-surface border border-outline-var/30 rounded-t-xl sm:rounded-md w-full sm:max-w-md p-5 sm:p-6 relative shadow-2xl space-y-4">
             <button
               onClick={() => setShowApplyModal(false)}
               className="absolute top-4 right-4 text-outline hover:text-text-primary"
@@ -566,8 +699,8 @@ export default function SquadDetail() {
 
       {/* ── Edit Squad Modal (Leader Only) ───────────────────────────────── */}
       {showEditModal && (
-        <div className="fixed inset-0 bg-bg-base/85 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-          <div className="bg-surface border border-outline-var/30 rounded-md max-w-md w-full p-6 relative shadow-2xl space-y-4">
+        <div className="fixed inset-0 bg-bg-base/85 backdrop-blur-sm z-50 flex items-end sm:items-center justify-center p-0 sm:p-4">
+          <div className="bg-surface border border-outline-var/30 rounded-t-xl sm:rounded-md w-full sm:max-w-md p-5 sm:p-6 relative shadow-2xl space-y-4">
             <button
               onClick={() => setShowEditModal(false)}
               className="absolute top-4 right-4 text-outline hover:text-text-primary"
@@ -642,8 +775,8 @@ export default function SquadDetail() {
 
       {/* ── Add / Edit Role Slot Modal (Leader Only) ────────────────────── */}
       {showSlotModal && (
-        <div className="fixed inset-0 bg-bg-base/85 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-          <div className="bg-surface border border-outline-var/30 rounded-md max-w-md w-full p-6 relative shadow-2xl space-y-4 font-outfit">
+        <div className="fixed inset-0 bg-bg-base/85 backdrop-blur-sm z-50 flex items-end sm:items-center justify-center p-0 sm:p-4">
+          <div className="bg-surface border border-outline-var/30 rounded-t-xl sm:rounded-md w-full sm:max-w-md p-5 sm:p-6 relative shadow-2xl space-y-4 font-outfit">
             <button
               onClick={() => setShowSlotModal(false)}
               className="absolute top-4 right-4 text-outline hover:text-text-primary"
