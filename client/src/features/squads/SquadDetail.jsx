@@ -404,8 +404,8 @@ export default function SquadDetail() {
                                 </span>
                               )}
                               {slot.requireVerified && (
-                                <span className="flex items-center gap-1 text-accent text-[11px] font-semibold">
-                                  <CheckCircle2 size={12} /> Verified Required
+                                <span className="flex items-center gap-1 text-primary text-[11px] font-bold px-2 py-0.5 bg-primary/10 border border-primary/30 rounded-xs shadow-[0_0_8px_rgba(245,158,11,0.2)]">
+                                  <Shield size={12} className="text-primary" /> Proof-Gated Verified
                                 </span>
                               )}
                             </div>
