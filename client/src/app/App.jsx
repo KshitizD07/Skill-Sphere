@@ -14,6 +14,7 @@ const NotificationsPage = lazy(() => import('../pages/NotificationsPage'));
 const NotFound = lazy(() => import('../pages/NotFound'));
 const SearchPage = lazy(() => import('../pages/Search'));
 const FeedbackPage = lazy(() => import('../pages/FeedbackPage'));
+const SkillVerifierPage = lazy(() => import('../pages/SkillVerifierPage'));
 
 // Features
 const MyProfile = lazy(() => import('../features/profile/MyProfile'));
@@ -213,7 +214,7 @@ function App() {
         } />
         <Route path="/verify-skill" element={
           <ProtectedRoute user={user} authChecked={authChecked}>
-            <SkillVerifier />
+            <SkillVerifierPage user={user} onLogout={handleLogout} />
           </ProtectedRoute>
         } />
 
