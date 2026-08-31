@@ -3,7 +3,7 @@ import { useNavigate, useLocation } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
   Menu, X, BarChart2, Users, Layers, 
-  User, LogOut, LayoutDashboard, MessageSquare, Shield, Search,
+  User, LogOut, LayoutDashboard, MessageSquare, Shield, ShieldCheck, Search,
   HelpCircle, Sparkles, HeartHandshake, ArrowLeft
 } from 'lucide-react';
 import NotificationBell from './NotificationBell';
@@ -117,14 +117,15 @@ const Navbar = ({ user, onLogout }) => {
 
   const navLinks = [
     { name: 'Dashboard', path: '/dashboard', icon: LayoutDashboard },
-    { name: 'Insights', path: '/grid', icon: BarChart2 },
-    { name: 'Network', path: '/network', icon: Users },
-    { name: 'Teams', path: '/nexus', icon: Layers },
+    { name: 'Community Feed', path: '/grid', icon: BarChart2 },
+    { name: 'Peer Network', path: '/network', icon: Users },
+    { name: 'Squads & Teams', path: '/nexus', icon: Layers },
+    { name: 'Skill Verifier', path: '/verify-skill', icon: ShieldCheck },
     { name: 'Chat', path: 'chat_drawer', icon: MessageSquare },
-    { name: 'Profile', path: '/my-profile', icon: User },
+    { name: 'My Profile', path: '/my-profile', icon: User },
     { name: 'Feedback', path: '/feedback', icon: HeartHandshake },
     ...(user?.role === 'ADMIN'
-      ? [{ name: 'Admin', path: '/admin', icon: Shield }]
+      ? [{ name: 'Admin Console', path: '/admin', icon: Shield }]
       : []),
   ];
 
@@ -261,23 +262,23 @@ const Navbar = ({ user, onLogout }) => {
               <div
                 key={link.path}
                 onClick={() => handleNavigate(link.path)}
-                className={`flex items-center gap-3 px-4 py-3 rounded-md cursor-pointer transition-all duration-200 group ${
+                className={`flex items-center gap-3 px-4 py-2.5 rounded-md cursor-pointer transition-all duration-200 group relative ${
                   active 
                     ? 'bg-primary/10 border border-primary/20 shadow-[0_0_15px_rgba(245,158,11,0.05)]' 
                     : 'hover:bg-surface border border-transparent hover:border-outline-var/30'
                 }`}
               >
                 <link.icon 
-                  size={18} 
-                  className={`transition-colors ${active ? 'text-primary' : 'text-outline group-hover:text-primary-dim'}`} 
+                  size={17} 
+                  className={`transition-colors shrink-0 ${active ? 'text-primary' : 'text-outline group-hover:text-primary-dim'}`} 
                 />
-                <span className={`text-sm font-semibold tracking-wide ${active ? 'text-text-primary' : 'text-text-muted group-hover:text-text-primary'}`}>
+                <span className={`text-xs font-semibold tracking-wide truncate ${active ? 'text-text-primary font-bold' : 'text-text-muted group-hover:text-text-primary'}`}>
                   {link.name}
                 </span>
                 
                 {/* Active Indicator Line */}
                 {active && (
-                  <motion.div layoutId="activeNav" className="absolute left-0 w-1 h-6 bg-primary rounded-r-md" />
+                  <motion.div layoutId="activeNav" className="absolute left-0 w-1 h-5 bg-primary rounded-r-md" />
                 )}
               </div>
             );
@@ -386,18 +387,23 @@ const Navbar = ({ user, onLogout }) => {
             </div>
             
             <div className="flex-1 py-4 px-3 space-y-1 overflow-y-auto">
-              {navLinks.map((link) => (
-                <div
-                  key={link.path}
-                  onClick={() => handleNavigate(link.path)}
-                  className={`flex items-center gap-3 px-4 py-3 rounded-md transition-colors ${
-                    isActive(link.path) ? 'bg-primary/10 text-primary' : 'text-text-muted hover:bg-surface hover:text-text-primary'
-                  }`}
-                >
-                  <link.icon size={20} />
-                  <span className="font-semibold">{link.name}</span>
-                </div>
-              ))}
+              {navLinks.map((link) => {
+                const active = isActive(link.path);
+                return (
+                  <div
+                    key={link.path}
+                    onClick={() => handleNavigate(link.path)}
+                    className={`flex items-center gap-3 px-4 py-3 rounded-md transition-colors cursor-pointer ${
+                      active
+                        ? 'bg-primary/15 text-primary border border-primary/30 font-bold shadow-xs'
+                        : 'text-text-muted hover:bg-surface hover:text-text-primary border border-transparent'
+                    }`}
+                  >
+                    <link.icon size={20} className={active ? 'text-primary' : 'text-outline'} />
+                    <span className="font-semibold">{link.name}</span>
+                  </div>
+                );
+              })}
             </div>
             
             <div className="p-4 border-t border-outline-var/30 space-y-2">
