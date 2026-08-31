@@ -35,8 +35,10 @@ router.post('/skill', authenticateToken, asyncHandler(async (req, res) => {
 // ── POST /api/verify/batch ───────────────────────────────────────────────────
 // Auto-discovery batch verification against linked GitHub repositories
 router.post('/batch', authenticateToken, asyncHandler(async (req, res) => {
+  const { selectedRepoUrls } = req.body || {};
   const result = await verifyService.batchVerifySkills({
     userId: req.user.userId,
+    selectedRepoUrls,
   });
 
   res.json(result);

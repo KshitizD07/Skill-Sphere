@@ -9,6 +9,7 @@ import cache from '../utils/cache.js';
 import logger from '../utils/logger.js';
 import { isUserOnline } from '../socket.js';
 import { sendNotification } from '../utils/notify.js';
+import { normalizeSkillCanonical } from '../utils/skillNormalizer.js';
 
 const router = express.Router();
 const prisma = new PrismaClient();
@@ -364,25 +365,53 @@ router.patch('/me', authenticateToken, asyncHandler(async (req, res) => {
   res.json({ success: true, data: normaliseSkills(user) });
 }));
 
-// ── POST /api/users/me/skills  — bulk replace non-verified skills ─────────────
+// ── POST /api/users/me/skills — bulk sync user profile skills (supports skill removal & canonicalization) ───
 router.post('/me/skills', authenticateToken, asyncHandler(async (req, res) => {
   const { skillIds } = z.object({ skillIds: z.array(z.string()) }).parse(req.body);
+  const normalizedRequested = [...new Set(skillIds.map((s) => normalizeSkillCanonical(s)).filter(Boolean))];
 
-  await prisma.skill.deleteMany({
-    where: { userId: req.user.userId, isVerified: false, verificationUrl: null },
+  // Fetch current skills
+  const existingSkills = await prisma.skill.findMany({
+    where: { userId: req.user.userId },
   });
 
-  if (skillIds.length) {
+  // Identify skills to delete (skills in DB that are no longer in the requested list)
+  const toDelete = existingSkills.filter((s) =>
+    !normalizedRequested.some((reqName) => reqName.toLowerCase() === s.name.toLowerCase())
+  );
+
+  if (toDelete.length > 0) {
+    await prisma.skill.deleteMany({
+      where: { id: { in: toDelete.map((s) => s.id) } },
+    });
+  }
+
+  // Identify new skills to add
+  const existingNamesLower = new Set(
+    existingSkills
+      .filter((s) => !toDelete.some((d) => d.id === s.id))
+      .map((s) => s.name.toLowerCase())
+  );
+
+  const toCreate = normalizedRequested
+    .filter((name) => !existingNamesLower.has(name.toLowerCase()))
+    .map((name) => ({
+      userId: req.user.userId,
+      name,
+      level: 'Beginner',
+      isVerified: false,
+      showLevel: true,
+    }));
+
+  if (toCreate.length > 0) {
     await prisma.skill.createMany({
-      data: skillIds.map((name) => ({
-        userId: req.user.userId, name, level: 'Beginner', isVerified: false, showLevel: true,
-      })),
+      data: toCreate,
       skipDuplicates: true,
     });
   }
 
   await cache.del(`user:profile:${req.user.userId}`);
-  res.json({ success: true, count: skillIds.length });
+  res.json({ success: true, count: normalizedRequested.length });
 }));
 
 // ── PATCH /api/users/me/skills/:id — Add proof URL ───────────────────────────

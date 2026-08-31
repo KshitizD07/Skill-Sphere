@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import {
   ArrowLeft, Camera, User, Plus, CheckCircle,
   X, Shield, Github, Linkedin, Save, Building2,
-  Zap, Award, AlertTriangle, Trash2, ChevronRight, TrendingUp, Lock,
+  Zap, Award, AlertTriangle, Trash2, ChevronRight, TrendingUp, Lock, RefreshCw,
 } from 'lucide-react';
 import ProfileAPI from './profileAPI';
 import SkillAPI from '../skills/skillAPI';
@@ -295,6 +295,25 @@ export default function MyProfile({ user, onUserUpdate }) {
     setShowSkillSelector(false);
   };
 
+  const handleDeleteSkill = async (skill) => {
+    const name = skill.name || skill.skill?.name;
+    if (!name) return;
+    if (!window.confirm(`Are you sure you want to remove '${name}' from your profile? Any verification status will be cleared.`)) {
+      return;
+    }
+    try {
+      if (skill.id) {
+        await SkillAPI.deleteSkill(skill.id);
+      }
+      setMySkillNames((prev) => prev.filter((n) => n.toLowerCase() !== name.toLowerCase()));
+      setMySkillsRaw((prev) => prev.filter((s) => (s.name || s.skill?.name)?.toLowerCase() !== name.toLowerCase()));
+      toast.success(`Removed '${name}' from profile.`);
+      loadUserData();
+    } catch (err) {
+      toast.error(err.message || 'Failed to remove skill.');
+    }
+  };
+
   // ── Logout ────────────────────────────────────────────────────────────────
   const handleLogout = async () => {
     try { await ProfileAPI.logout(); } catch { /* ignore */ }
@@ -511,15 +530,48 @@ export default function MyProfile({ user, onUserUpdate }) {
               const skill = mySkillsRaw.find((s) => (s.name || s.skill?.name) === skillName) || { name: skillName };
               const verified = skill?.isVerified;
               return (
-                <div key={skillName} className={`w-full p-2.5 border text-xs font-syne font-medium flex items-center justify-between transition-all rounded-xs ${verified ? 'bg-accent/5 border-accent/20 text-accent' : 'bg-surface-mid border-outline-var/30 text-text-muted'}`}>
-                  <span className="flex items-center gap-2 font-bold">{skillName}{verified && <CheckCircle size={12} className="text-accent" />}</span>
+                <div key={skillName} className={`w-full p-2.5 border text-xs font-syne font-medium flex items-center justify-between gap-2 transition-all rounded-xs ${verified ? 'bg-accent/5 border-accent/20 text-accent' : 'bg-surface-mid border-outline-var/30 text-text-muted'}`}>
+                  <span className="flex items-center gap-2 font-bold min-w-0 truncate">{skillName}{verified && <CheckCircle size={12} className="text-accent shrink-0" />}</span>
                   {verified ? (
-                    <span className="text-[9px] uppercase tracking-[0.1em] font-bold text-accent px-2 py-0.5 bg-accent/10 border border-accent/30 rounded">Verified</span>
+                    <div className="flex items-center gap-1.5 shrink-0">
+                      <span className="text-[9px] uppercase tracking-[0.1em] font-bold text-accent px-2 py-0.5 bg-accent/10 border border-accent/30 rounded">
+                        {skill.calculatedScore ? `${skill.calculatedScore}/10` : 'Verified'}
+                      </span>
+                      <button
+                        type="button"
+                        onClick={() => { setSelectedSkill(skill); setShowVerifier(true); }}
+                        className="px-2.5 py-1 bg-accent/10 hover:bg-accent/20 text-accent border border-accent/30 text-[9px] uppercase font-bold tracking-wider rounded-xs flex items-center gap-1 font-syne transition-colors cursor-pointer"
+                        title="Re-verify skill"
+                      >
+                        <RefreshCw size={10} /> Re-verify
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => handleDeleteSkill(skill)}
+                        className="p-1 hover:bg-error/15 text-outline hover:text-error border border-transparent hover:border-error/30 rounded-xs transition-colors cursor-pointer"
+                        title="Remove skill from profile"
+                      >
+                        <Trash2 size={12} />
+                      </button>
+                    </div>
                   ) : (
-                    <button onClick={() => { setSelectedSkill(skill); setShowVerifier(true); }}
-                      className="px-3 py-1 bg-primary/10 hover:bg-primary/20 text-primary border border-primary/20 text-[9px] uppercase font-bold tracking-wider rounded-xs flex items-center gap-1 font-syne transition-colors">
-                      <Shield size={10} /> Verify Skill
-                    </button>
+                    <div className="flex items-center gap-1.5 shrink-0">
+                      <button
+                        type="button"
+                        onClick={() => { setSelectedSkill(skill); setShowVerifier(true); }}
+                        className="px-3 py-1 bg-primary/10 hover:bg-primary/20 text-primary border border-primary/20 text-[9px] uppercase font-bold tracking-wider rounded-xs flex items-center gap-1 font-syne transition-colors cursor-pointer"
+                      >
+                        <Shield size={10} /> Verify Skill
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => handleDeleteSkill(skill)}
+                        className="p-1 hover:bg-error/15 text-outline hover:text-error border border-transparent hover:border-error/30 rounded-xs transition-colors cursor-pointer"
+                        title="Remove skill from profile"
+                      >
+                        <Trash2 size={12} />
+                      </button>
+                    </div>
                   )}
                 </div>
               );

@@ -3,6 +3,7 @@ import cache from '../utils/cache.js';
 import { ApiError } from '../utils/errorHandler.js';
 import * as aiService from './aiService.js';
 import logger from '../utils/logger.js';
+import { normalizeSkillCanonical } from '../utils/skillNormalizer.js';
 
 const prisma = new PrismaClient();
 
@@ -49,7 +50,7 @@ export async function getUserSkills(userId) {
  */
 export async function addUserSkill(userId, { name, level = 'Beginner', showLevel = true }) {
   if (!name || !name.trim()) throw ApiError.badRequest('Skill name is required');
-  const skillName = name.trim();
+  const skillName = normalizeSkillCanonical(name);
 
   // Enforce 20 skills limit
   const currentCount = await prisma.skill.count({ where: { userId } });
@@ -339,7 +340,7 @@ export async function updateUserSkills(userId, skillIds) {
 
   const toCreate = skillIds.map((id) => ({
     userId,
-    name: idToName[id] || id,
+    name: normalizeSkillCanonical(idToName[id] || id),
     level: 'Beginner',
     isVerified: false,
     showLevel: true,

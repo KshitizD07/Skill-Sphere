@@ -29,6 +29,8 @@ export default function SkillVerifier({ userId, skillName: initialSkillName, ski
   // Batch auto-discovery state
   const [batchResults, setBatchResults] = useState(null);
   const [isBatchRunning, setIsBatchRunning] = useState(false);
+  const [selectedBatchRepos, setSelectedBatchRepos] = useState([]);
+  const [customRepoInput, setCustomRepoInput] = useState('');
 
   // LeetCode state
   const [lcStep, setLcStep] = useState(1);
@@ -53,6 +55,7 @@ export default function SkillVerifier({ userId, skillName: initialSkillName, ski
       }
       if (reposData.status === 'fulfilled' && Array.isArray(reposData.value)) {
         setUserRepos(reposData.value);
+        setSelectedBatchRepos(reposData.value.map((r) => r.url).filter(Boolean));
       }
     } catch {
       // Non-critical fallback
@@ -157,12 +160,38 @@ export default function SkillVerifier({ userId, skillName: initialSkillName, ski
   };
 
   // ── Auto-Discovery Batch Scan ─────────────────────────────────────────────
+  const handleToggleBatchRepo = (url) => {
+    setSelectedBatchRepos((prev) =>
+      prev.includes(url) ? prev.filter((u) => u !== url) : [...prev, url]
+    );
+  };
+
+  const handleAddCustomBatchRepo = () => {
+    if (!customRepoInput.trim()) return;
+    let url = customRepoInput.trim();
+    if (!url.startsWith('http')) url = `https://${url}`;
+    if (!url.includes('github.com')) {
+      toast.error('Please enter a valid GitHub repository URL');
+      return;
+    }
+    if (!selectedBatchRepos.includes(url)) {
+      setSelectedBatchRepos((prev) => [...prev, url]);
+      toast.success('Added repository to scan pool');
+    }
+    setCustomRepoInput('');
+  };
+
   const handleRunBatchVerify = async () => {
+    if (selectedBatchRepos.length === 0 && userRepos.length === 0) {
+      toast.error('Please select or add at least one GitHub repository to scan.');
+      return;
+    }
+
     setIsBatchRunning(true);
     setStatus('scanning');
     setErrorMsg('');
     try {
-      const res = await SkillAPI.batchVerify();
+      const res = await SkillAPI.batchVerify(selectedBatchRepos);
       if (res.success) {
         setBatchResults(res.results || []);
         setStatus('success');
@@ -670,14 +699,14 @@ export default function SkillVerifier({ userId, skillName: initialSkillName, ski
       <div>
         <h4 className="text-sm font-bold text-text-primary mb-1">Repository Auto-Discovery</h4>
         <p className="text-xs text-text-muted leading-relaxed">
-          SkillSphere scans your linked public GitHub repositories and automatically matches and verifies each unverified skill on your profile.
+          SkillSphere scans your linked GitHub repositories and matches source code against unverified skills on your profile using Gemini AI.
         </p>
       </div>
 
       {userSkills.filter((s) => !s.isVerified).length > 0 ? (
         <div className="p-3 bg-surface-mid border border-outline-var/30 rounded-xs">
           <div className="font-syne text-[10px] uppercase font-bold tracking-widest text-outline mb-2">
-            Unverified Skills Queued for Discovery ({userSkills.filter((s) => !s.isVerified).length}):
+            Target Unverified Skills ({userSkills.filter((s) => !s.isVerified).length}):
           </div>
           <div className="flex flex-wrap gap-1.5">
             {userSkills.filter((s) => !s.isVerified).map((s) => (
@@ -694,24 +723,95 @@ export default function SkillVerifier({ userId, skillName: initialSkillName, ski
         </div>
       )}
 
+      {/* Repository Selection Pool */}
+      <div className="p-3.5 bg-surface border border-outline-var/30 rounded-xs space-y-3">
+        <div className="flex items-center justify-between">
+          <label className="font-syne text-[10px] font-bold tracking-[0.12em] uppercase text-outline flex items-center gap-1.5">
+            <FolderGit2 size={13} className="text-primary" /> Repositories To Scan ({selectedBatchRepos.length} selected)
+          </label>
+        </div>
+
+        {/* List of available/synced repos */}
+        {userRepos.length > 0 ? (
+          <div className="max-h-40 overflow-y-auto space-y-1.5 pr-1">
+            {userRepos.map((repo) => {
+              const isChecked = selectedBatchRepos.includes(repo.url);
+              return (
+                <label
+                  key={repo.id || repo.url}
+                  className={`p-2 border rounded-xs flex items-center justify-between text-xs cursor-pointer transition-colors ${
+                    isChecked
+                      ? 'bg-primary/5 border-primary/30 text-text-primary'
+                      : 'bg-surface-mid/40 border-outline-var/20 text-text-muted hover:border-outline-var/40'
+                  }`}
+                >
+                  <div className="flex items-center gap-2 min-w-0">
+                    <input
+                      type="checkbox"
+                      checked={isChecked}
+                      onChange={() => handleToggleBatchRepo(repo.url)}
+                      className="accent-primary rounded-xs cursor-pointer shrink-0"
+                    />
+                    <span className="font-bold truncate">{repo.repoName || repo.name}</span>
+                    {repo.primaryLanguage && (
+                      <span className="text-[9px] px-1.5 py-0.2 bg-surface border border-outline-var/30 text-outline rounded shrink-0">
+                        {repo.primaryLanguage}
+                      </span>
+                    )}
+                  </div>
+                  {repo.stars > 0 && (
+                    <span className="text-[10px] text-text-muted shrink-0">★ {repo.stars}</span>
+                  )}
+                </label>
+              );
+            })}
+          </div>
+        ) : (
+          <p className="text-xs text-text-muted italic">
+            No synced repositories found in database. You can add specific repository URLs below.
+          </p>
+        )}
+
+        {/* Add custom repo URL */}
+        <div className="pt-2 border-t border-outline-var/20">
+          <div className="flex gap-2">
+            <input
+              type="text"
+              value={customRepoInput}
+              onChange={(e) => setCustomRepoInput(e.target.value)}
+              onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); handleAddCustomBatchRepo(); } }}
+              placeholder="Add GitHub repo (e.g. github.com/user/project)"
+              className="flex-1 bg-surface-mid p-2 text-xs text-text-primary outline-none border border-outline-var/40 rounded-xs placeholder-outline font-outfit"
+            />
+            <button
+              type="button"
+              onClick={handleAddCustomBatchRepo}
+              className="px-3 py-2 bg-surface-mid border border-outline-var/40 hover:border-primary text-text-primary text-xs font-syne font-bold uppercase rounded-xs transition-colors shrink-0"
+            >
+              Add Repo
+            </button>
+          </div>
+        </div>
+      </div>
+
       {batchResults && (
         <div className="space-y-2 mt-4">
           <div className="font-syne text-[10px] uppercase font-bold tracking-widest text-outline">Scan Results:</div>
           {batchResults.map((r, i) => (
             <div
               key={i}
-              className={`p-3 rounded-xs border text-xs flex items-center justify-between ${
+              className={`p-3 rounded-xs border text-xs flex items-center justify-between gap-2 ${
                 r.success
                   ? 'bg-secondary-bright/5 border-secondary-bright/30 text-secondary-bright'
                   : 'bg-surface-mid border-outline-var/30 text-text-muted'
               }`}
             >
-              <div>
+              <div className="min-w-0">
                 <span className="font-bold text-text-primary block">{r.skillName}</span>
-                <span className="text-[10px] text-outline">{r.repoUrl || r.error}</span>
+                <span className="text-[10px] text-outline truncate block">{r.repoUrl || r.error}</span>
               </div>
               {r.success && (
-                <div className="font-syne font-bold text-xs uppercase px-2 py-0.5 bg-secondary-bright/10 rounded-xs border border-secondary-bright/30">
+                <div className="font-syne font-bold text-xs uppercase px-2 py-0.5 bg-secondary-bright/10 rounded-xs border border-secondary-bright/30 shrink-0">
                   {r.score}/10 — {r.level}
                 </div>
               )}
@@ -722,8 +822,8 @@ export default function SkillVerifier({ userId, skillName: initialSkillName, ski
 
       <button
         onClick={handleRunBatchVerify}
-        disabled={isBatchRunning}
-        className="w-full py-3 bg-secondary-bright text-on-primary font-syne font-bold text-xs uppercase tracking-wider rounded-xs hover:opacity-90 disabled:opacity-50 transition flex items-center justify-center gap-2 shadow-lg shadow-secondary-bright/20"
+        disabled={isBatchRunning || (selectedBatchRepos.length === 0 && userRepos.length === 0)}
+        className="w-full py-3 bg-secondary-bright text-on-primary font-syne font-bold text-xs uppercase tracking-wider rounded-xs hover:opacity-90 disabled:opacity-50 transition flex items-center justify-center gap-2 shadow-lg shadow-secondary-bright/20 cursor-pointer"
       >
         {isBatchRunning ? (
           <>

@@ -23,7 +23,7 @@ const SkillAPI = {
   // --- GitHub Skill Verification ---
   verifySkill: async (userId, skillName, repoUrl, showLevel = true, force = false) =>
     BaseAPI.post('/verify/skill', { userId, skillName, repoUrl, showLevel, force }),
-  batchVerify: async () => BaseAPI.post('/verify/batch', {}),
+  batchVerify: async (selectedRepoUrls = []) => unwrap(await BaseAPI.post('/verify/batch', { selectedRepoUrls })),
   checkCooldown: async (skillName) => unwrap(await BaseAPI.get(`/verify/cooldown/${encodeURIComponent(skillName)}`)),
 
   // --- Manual & LeetCode Verification ---

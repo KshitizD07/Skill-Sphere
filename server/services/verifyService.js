@@ -4,6 +4,8 @@ import logger from '../utils/logger.js';
 import { GoogleGenerativeAI } from '@google/generative-ai';
 import { sendNotification } from '../utils/notify.js';
 import cache from '../utils/cache.js';
+import { normalizeSkillCanonical } from '../utils/skillNormalizer.js';
+import { syncUserRepos } from './githubPortfolioService.js';
 
 const prisma = new PrismaClient();
 
@@ -60,7 +62,7 @@ async function fetchFileContent(owner, repo, branch, path) {
  * Checks if a skill has a 7-day cooldown active.
  */
 export async function checkSkillCooldown({ userId, skillName }) {
-  const normalized = LANGUAGE_MAP[skillName.toLowerCase()] || skillName;
+  const normalized = normalizeSkillCanonical(skillName);
   const existing = await prisma.skill.findFirst({
     where: {
       userId,
@@ -112,7 +114,7 @@ export async function verifySkill({ userId, skillName, repoUrl, showLevel = true
   const parsed = parseGitHubUrl(repoUrl);
   if (!parsed) throw ApiError.badRequest('Invalid GitHub repository URL (expected github.com/owner/repo)');
 
-  const normalized = LANGUAGE_MAP[skillName.toLowerCase()] || skillName.trim();
+  const normalized = normalizeSkillCanonical(skillName);
 
   // ── Cooldown Check (7 days) ────────────────────────────────────────────────
   if (!force) {
@@ -301,7 +303,7 @@ export async function verifySkill({ userId, skillName, repoUrl, showLevel = true
   const additionalSkillsList = otherUnverifiedSkills.map((s) => s.name);
 
   const genAI = new GoogleGenerativeAI(process.env.GOOGLE_API_KEY);
-  const aiModel = genAI.getGenerativeModel({ model: 'gemini-2.5-flash' });
+  const aiModel = genAI.getGenerativeModel({ model: process.env.GEMINI_MODEL || 'gemini-1.5-flash' });
 
   const aiPrompt = `You are an impartial, senior technical code auditor evaluating a software engineer's repository.
 
@@ -502,9 +504,9 @@ Output ONLY valid JSON matching this schema with no markdown code blocks:
 }
 
 /**
- * Batch Auto-Discovery: scans user's synced/public repos to verify all unverified profile skills.
+ * Batch Auto-Discovery: scans user's synced/selected repos to verify unverified profile skills.
  */
-export async function batchVerifySkills({ userId }) {
+export async function batchVerifySkills({ userId, selectedRepoUrls = [] }) {
   const unverifiedSkills = await prisma.skill.findMany({
     where: { userId, isVerified: false },
   });
@@ -513,61 +515,89 @@ export async function batchVerifySkills({ userId }) {
     return { success: true, message: 'All profile skills are already verified!', results: [] };
   }
 
-  // Get user's saved GitHub repos
+  // Get user's saved GitHub repos or auto-sync
   let repos = await prisma.gitHubRepo.findMany({
     where: { userId },
     orderBy: { stars: 'desc' },
   });
 
-  if (repos.length === 0) {
-    const user = await prisma.user.findUnique({
-      where: { id: userId },
-      select: { github: true },
-    });
-    if (!user?.github) {
-      throw ApiError.badRequest('Please link your GitHub profile to run batch verification.');
+  if (repos.length === 0 && selectedRepoUrls.length === 0) {
+    try {
+      repos = await syncUserRepos(userId);
+    } catch (syncErr) {
+      logger.warn('Auto-sync repos failed in batch verify', { error: syncErr.message });
     }
   }
 
+  const user = await prisma.user.findUnique({
+    where: { id: userId },
+    select: { github: true },
+  });
+
+  if (!user?.github && repos.length === 0 && selectedRepoUrls.length === 0) {
+    throw ApiError.badRequest('Please link your GitHub profile or provide repositories to run batch verification.');
+  }
+
+  const poolOfRepos = selectedRepoUrls.length > 0
+    ? selectedRepoUrls.map((u) => {
+        const p = parseGitHubUrl(u);
+        return { url: u, repoName: p ? p.repo : '', primaryLanguage: '', techStack: [] };
+      })
+    : repos;
+
   const results = [];
 
-  for (const skill of unverifiedSkills) {
-    const skillNorm = LANGUAGE_MAP[skill.name.toLowerCase()] || skill.name;
-    // Find best matching repo by language or techStack
-    const matchedRepo = repos.find((r) => {
+  for (let i = 0; i < unverifiedSkills.length; i++) {
+    const skill = unverifiedSkills[i];
+    const skillNorm = normalizeSkillCanonical(skill.name);
+
+    // Find best matching repo by language or techStack or name, or fallback to first available
+    let matchedRepoUrl = null;
+    const matched = poolOfRepos.find((r) => {
       const langMatch = r.primaryLanguage && r.primaryLanguage.toLowerCase() === skillNorm.toLowerCase();
       const techMatch = Array.isArray(r.techStack) && r.techStack.some((t) => t.toLowerCase().includes(skillNorm.toLowerCase()));
-      const nameMatch = r.repoName.toLowerCase().includes(skillNorm.toLowerCase());
+      const nameMatch = r.repoName && r.repoName.toLowerCase().includes(skillNorm.toLowerCase());
       return langMatch || techMatch || nameMatch;
     });
 
-    if (matchedRepo && matchedRepo.url) {
+    if (matched) {
+      matchedRepoUrl = matched.url;
+    } else if (poolOfRepos.length > 0) {
+      matchedRepoUrl = poolOfRepos[0].url;
+    }
+
+    if (matchedRepoUrl) {
       try {
+        // Pacing delay (1.2s) between AI evaluation requests to honor free tier limits (15 RPM)
+        if (i > 0) {
+          await new Promise((resolve) => setTimeout(resolve, 1200));
+        }
+
         const verifyRes = await verifySkill({
           userId,
           skillName: skill.name,
-          repoUrl: matchedRepo.url,
+          repoUrl: matchedRepoUrl,
           showLevel: true,
           force: true,
         });
         results.push({
-          skillName: skill.name,
-          repoUrl: matchedRepo.url,
+          skillName: skillNorm,
+          repoUrl: matchedRepoUrl,
           success: true,
           score: verifyRes.score,
           level: verifyRes.level,
         });
       } catch (err) {
         results.push({
-          skillName: skill.name,
-          repoUrl: matchedRepo.url,
+          skillName: skillNorm,
+          repoUrl: matchedRepoUrl,
           success: false,
           error: err.message,
         });
       }
     } else {
       results.push({
-        skillName: skill.name,
+        skillName: skillNorm,
         success: false,
         error: 'No matching repository found for this skill.',
       });
