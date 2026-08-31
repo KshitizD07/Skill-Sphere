@@ -50,10 +50,12 @@ function App() {
   // Enforce 15-minute rolling inactivity demotion for elevated admins
   useAdminInactivityTimer(user, (updatedUser) => setUser(updatedUser), toast);
 
-  // Rehydrate user from httpOnly cookie session on mount
+  // Rehydrate user from session on mount
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
-    if (params.has('token')) {
+    const urlToken = params.get('token');
+    if (urlToken) {
+      localStorage.setItem('ss_token', urlToken);
       window.history.replaceState({}, document.title, window.location.pathname);
     }
 
