@@ -41,26 +41,35 @@ app.use(helmet({
 // ── CORS ─────────────────────────────────────────────────────────────────────
 const allowedOrigins = [
   'https://skill-sphere-v1.vercel.app',
-  'http://localhost:5173'
+  'http://localhost:5173',
+  'http://localhost:3000',
 ];
+
+if (process.env.FRONTEND_URL) {
+  const fe = process.env.FRONTEND_URL.replace(/\/$/, '');
+  if (!allowedOrigins.includes(fe)) allowedOrigins.push(fe);
+}
 
 const rawOrigins = process.env.ALLOWED_ORIGINS;
 if (rawOrigins) {
-  rawOrigins.split(',').forEach(s => allowedOrigins.push(s.trim()));
+  rawOrigins.split(',').forEach(s => {
+    const trimmed = s.trim().replace(/\/$/, '');
+    if (trimmed && !allowedOrigins.includes(trimmed)) allowedOrigins.push(trimmed);
+  });
 }
 
 app.use(cors({
   origin: (origin, cb) => {
     if (!origin) return cb(null, true);
     
-    // Check if origin is in whitelist or is a vercel subdomain of yours
+    // Check if origin is in whitelist or is a valid vercel deployment for SkillSphere
     const isAllowed = allowedOrigins.includes(origin) || 
-                     (origin.includes('vercel.app') && origin.includes('kshitizd07s'));
+                     (origin.endsWith('.vercel.app') && (origin.includes('kshitizd07s') || origin.includes('skill-sphere')));
 
     if (isAllowed) return cb(null, true);
     
-    console.warn(`CORS: origin ${origin} not in whitelist`);
-    return cb(null, true); // Still allow for debugging
+    logger.warn(`CORS: blocked unauthorized origin ${origin}`);
+    return cb(new Error('Cross-Origin Request Blocked by CORS policy'), false);
   },
   credentials: true,
   methods: ['GET', 'POST', 'PATCH', 'PUT', 'DELETE', 'OPTIONS'],
