@@ -37,7 +37,6 @@ router.get('/', authenticateToken, asyncHandler(async (req, res) => {
       select: {
         id: true,
         name: true,
-        email: true,
         avatar: true,
         headline: true,
         college: true,
