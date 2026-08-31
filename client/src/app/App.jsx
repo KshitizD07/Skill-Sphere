@@ -26,6 +26,7 @@ const MyApplications = lazy(() => import('../features/squads/MyApplications'));
 const SkillVerifier = lazy(() => import('../features/skills/SkillVerifier'));
 const Network = lazy(() => import('../features/network/Network'));
 const AdminDashboard = lazy(() => import('../features/admin/AdminDashboard'));
+const AntifragileAdmin = lazy(() => import('../features/admin/AntifragileAdmin'));
 
 // Shared
 import ProtectedRoute from '../shared/components/ProtectedRoute';
@@ -224,7 +225,7 @@ function App() {
         } />
         <Route path="/antifragile-admin" element={
           <ProtectedRoute user={user} authChecked={authChecked}>
-            <AdminDashboard user={user} onLogout={handleLogout} />
+            <AntifragileAdmin user={user} onLogout={handleLogout} />
           </ProtectedRoute>
         } />
 

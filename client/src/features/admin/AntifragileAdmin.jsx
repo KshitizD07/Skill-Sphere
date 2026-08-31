@@ -7,10 +7,16 @@ import {
   BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid
 } from 'recharts';
 
-export default function AntifragileAdmin() {
+export default function AntifragileAdmin({ user, onLogout }) {
   const navigate = useNavigate();
   const toast = useToast();
-  const currentUser = JSON.parse(localStorage.getItem('user_data') || '{}');
+  const currentUser = user || (() => {
+    try {
+      return JSON.parse(localStorage.getItem('user_data') || '{}');
+    } catch {
+      return {};
+    }
+  })();
   const isAuthorized = currentUser?.role === 'ADMIN';
 
   const [activeTab, setActiveTab] = useState('strategies');
