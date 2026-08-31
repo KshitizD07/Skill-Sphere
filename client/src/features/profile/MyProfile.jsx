@@ -83,6 +83,14 @@ export default function MyProfile({ user, onUserUpdate }) {
   const [completeness, setCompleteness] = useState(null);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [deleteConfirmText, setDeleteConfirmText] = useState('');
+
+  const handleBack = () => {
+    if (window.history.length > 2 && window.history.state?.idx > 0) {
+      navigate(-1);
+    } else {
+      navigate('/dashboard');
+    }
+  };
   const [isDeleting, setIsDeleting] = useState(false);
   const avatarInputRef = useRef(null);
   const [cropModalOpen, setCropModalOpen] = useState(false);
@@ -689,7 +697,7 @@ export default function MyProfile({ user, onUserUpdate }) {
         {/* Page Header */}
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <button onClick={() => navigate(-1)} className="p-2 border border-outline-var/40 rounded-xs hover:border-primary/40 text-outline hover:text-primary transition-all">
+            <button onClick={handleBack} className="p-2 border border-outline-var/40 rounded-xs hover:border-primary/40 text-outline hover:text-primary transition-all">
               <ArrowLeft size={16} />
             </button>
             <div>

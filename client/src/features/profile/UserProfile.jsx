@@ -308,8 +308,22 @@ export default function UserProfile() {
   const [charCount, setCharCount]         = useState(0);
   const postImageRef = useRef(null);
 
-  const currentUser = JSON.parse(localStorage.getItem('user_data') || '{}');
+  const currentUser = useMemo(() => {
+    try {
+      return JSON.parse(localStorage.getItem('user_data') || '{}');
+    } catch {
+      return {};
+    }
+  }, []);
   const isOwner     = currentUser.id === id;
+
+  const handleBack = () => {
+    if (window.history.length > 2 && window.history.state?.idx > 0) {
+      navigate(-1);
+    } else {
+      navigate('/network');
+    }
+  };
 
   const fetchPosts = useCallback(() => {
     API.get(`/posts/user/${id}`).then(res => {
@@ -431,7 +445,7 @@ export default function UserProfile() {
     <div className="min-h-screen bg-bg-base text-text-muted font-outfit p-4 md:p-8 relative selection:bg-primary selection:text-on-primary">
       <div className="w-full max-w-[1400px] mx-auto relative z-10">
         <div className="flex items-center justify-between mb-8">
-          <button type="button" onClick={() => navigate(-1)} className="p-2 border border-outline-var/40 hover:border-primary text-outline hover:text-primary transition">
+          <button type="button" onClick={handleBack} className="p-2 border border-outline-var/40 hover:border-primary text-outline hover:text-primary transition">
             <ArrowLeft size={20} />
           </button>
           <div className="flex items-center gap-3">
