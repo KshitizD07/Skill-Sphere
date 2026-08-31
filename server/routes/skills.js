@@ -75,7 +75,8 @@ router.get('/analyze', authenticateToken, asyncHandler(async (req, res) => {
 // ── POST /api/skills/update ──────────────────────────────────────────────────
 router.post('/update', authenticateToken, asyncHandler(async (req, res) => {
   const { userId, skillIds } = req.body;
-  const targetUser = userId || req.user.userId;
+  // Prevent IDOR: Standard users can only update their own skills. Admins can update target users.
+  const targetUser = (req.user.role === 'ADMIN' && userId) ? userId : req.user.userId;
   const result = await skillService.updateUserSkills(targetUser, skillIds || []);
   res.json(result);
 }));
