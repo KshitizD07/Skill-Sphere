@@ -35,11 +35,11 @@ const CONTRIBUTOR_AREAS = [
   'Bug Testing & QA',
 ];
 
-export default function FeedbackPage() {
+export default function FeedbackPage({ user: propUser, onLogout }) {
   const navigate = useNavigate();
   const toast = useToast();
 
-  const currentUser = useMemo(() => {
+  const currentUser = propUser || useMemo(() => {
     try {
       return JSON.parse(localStorage.getItem('user_data') || '{}');
     } catch {
@@ -116,7 +116,7 @@ export default function FeedbackPage() {
         title="Platform Feedback · SkillSphere"
         description="Share your direct feedback with the SkillSphere engineering and design team."
       />
-      <Navbar user={currentUser} onLogout={() => {}} />
+      <Navbar user={currentUser} onLogout={onLogout} />
       <ToastContainer toasts={toast.toasts} removeToast={toast.removeToast} />
 
       <main className="flex-1 md:ml-64 pt-16 md:pt-8 pb-16 p-4 md:p-8 max-w-4xl mx-auto w-full">

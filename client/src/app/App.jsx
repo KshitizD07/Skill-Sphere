@@ -138,47 +138,47 @@ function App() {
         } />
         <Route path="/my-profile" element={
           <ProtectedRoute user={user} authChecked={authChecked}>
-            <MyProfile user={user} onUserUpdate={setUser} />
+            <MyProfile user={user} onUserUpdate={setUser} onLogout={handleLogout} />
           </ProtectedRoute>
         } />
         <Route path="/profile/:id" element={
           <ProtectedRoute user={user} authChecked={authChecked}>
-            <UserProfile />
+            <UserProfile user={user} onLogout={handleLogout} />
           </ProtectedRoute>
         } />
         <Route path="/chat/:id" element={
           <ProtectedRoute user={user} authChecked={authChecked}>
-            <ChatInterface />
+            <ChatInterface user={user} onLogout={handleLogout} />
           </ProtectedRoute>
         } />
         <Route path="/chat" element={
           <ProtectedRoute user={user} authChecked={authChecked}>
-            <ChatInterface />
+            <ChatInterface user={user} onLogout={handleLogout} />
           </ProtectedRoute>
         } />
         <Route path="/notifications" element={
           <ProtectedRoute user={user} authChecked={authChecked}>
-            <NotificationsPage />
+            <NotificationsPage user={user} onLogout={handleLogout} />
           </ProtectedRoute>
         } />
         <Route path="/grid" element={
           <ProtectedRoute user={user} authChecked={authChecked}>
-            <GlobalFeed />
+            <GlobalFeed user={user} onLogout={handleLogout} />
           </ProtectedRoute>
         } />
         <Route path="/network" element={
           <ProtectedRoute user={user} authChecked={authChecked}>
-            <Network />
+            <Network user={user} onLogout={handleLogout} />
           </ProtectedRoute>
         } />
         <Route path="/search" element={
           <ProtectedRoute user={user} authChecked={authChecked}>
-            <SearchPage />
+            <SearchPage user={user} onLogout={handleLogout} />
           </ProtectedRoute>
         } />
         <Route path="/feedback" element={
           <ProtectedRoute user={user} authChecked={authChecked}>
-            <FeedbackPage />
+            <FeedbackPage user={user} onLogout={handleLogout} />
           </ProtectedRoute>
         } />
         <Route path="/roadmap/:skill/:role" element={
@@ -194,22 +194,22 @@ function App() {
         <Route path="/roadmap/shared/:token" element={<RoadmapPage />} />
         <Route path="/nexus" element={
           <ProtectedRoute user={user} authChecked={authChecked}>
-            <MissionBoard />
+            <MissionBoard user={user} onLogout={handleLogout} />
           </ProtectedRoute>
         } />
         <Route path="/squad/:id" element={
           <ProtectedRoute user={user} authChecked={authChecked}>
-            <SquadDetail />
+            <SquadDetail user={user} onLogout={handleLogout} />
           </ProtectedRoute>
         } />
         <Route path="/squad/:id/manage" element={
           <ProtectedRoute user={user} authChecked={authChecked}>
-            <SquadManage />
+            <SquadManage user={user} onLogout={handleLogout} />
           </ProtectedRoute>
         } />
         <Route path="/my-squads" element={
           <ProtectedRoute user={user} authChecked={authChecked}>
-            <MyApplications />
+            <MyApplications user={user} onLogout={handleLogout} />
           </ProtectedRoute>
         } />
         <Route path="/verify-skill" element={

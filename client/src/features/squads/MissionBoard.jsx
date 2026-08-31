@@ -430,11 +430,11 @@ function SquadCard({ squad, currentUser }) {
 }
 
 // ─── Main MissionBoard Page ──────────────────────────────────────────────────
-export default function MissionBoard() {
+export default function MissionBoard({ user: propUser, onLogout }) {
   const navigate = useNavigate();
   const toast = useToast();
 
-  const currentUser = useMemo(() => {
+  const currentUser = propUser || useMemo(() => {
     try {
       return JSON.parse(localStorage.getItem('user_data') || '{}');
     } catch {
@@ -481,7 +481,7 @@ export default function MissionBoard() {
 
   return (
     <div className="min-h-screen bg-bg-base text-text-primary font-outfit flex flex-col md:flex-row">
-      <Navbar user={currentUser} onLogout={() => {}} />
+      <Navbar user={currentUser} onLogout={onLogout} />
       <ToastContainer toasts={toast.toasts} removeToast={toast.removeToast} />
 
       <div className="flex-1 md:ml-64 pt-16 md:pt-0 min-h-screen overflow-y-auto overflow-x-hidden p-4 md:p-8 w-full max-w-7xl mx-auto space-y-6">

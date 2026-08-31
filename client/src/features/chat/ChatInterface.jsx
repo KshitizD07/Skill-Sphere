@@ -37,12 +37,12 @@ function _dateDivider(date) {
   return d.toLocaleDateString([], { month: 'short', day: 'numeric', year: 'numeric' });
 }
 
-export default function ChatInterface() {
+export default function ChatInterface({ user: propUser, onLogout }) {
   const { id: routeRecipientId } = useParams();
   const navigate = useNavigate();
   const toast = useToast();
 
-  const currentUser = useMemo(() => {
+  const currentUser = propUser || useMemo(() => {
     try {
       return JSON.parse(localStorage.getItem('user_data') || '{}');
     } catch {
@@ -379,7 +379,7 @@ export default function ChatInterface() {
 
   return (
     <div className="h-[100dvh] max-h-[100dvh] bg-bg-base text-text-primary font-outfit flex flex-col md:flex-row overflow-hidden">
-      <Navbar user={currentUser} onLogout={() => {}} />
+      <Navbar user={currentUser} onLogout={onLogout} />
       <ToastContainer toasts={toast.toasts} removeToast={toast.removeToast} />
 
       <div className="flex-1 md:ml-64 pt-16 md:pt-0 h-full max-h-full overflow-hidden flex min-h-0">

@@ -55,11 +55,11 @@ function getNotificationIcon(type) {
   }
 }
 
-export default function NotificationsPage() {
+export default function NotificationsPage({ user: propUser, onLogout }) {
   const navigate = useNavigate();
   const toast = useToast();
 
-  const currentUser = useMemo(() => {
+  const currentUser = propUser || useMemo(() => {
     try {
       return JSON.parse(localStorage.getItem('user_data') || '{}');
     } catch {
@@ -203,7 +203,7 @@ export default function NotificationsPage() {
 
   return (
     <div className="min-h-screen bg-bg-base text-text-primary font-outfit flex flex-col md:flex-row">
-      <Navbar user={currentUser} onLogout={() => {}} />
+      <Navbar user={currentUser} onLogout={onLogout} />
       <ToastContainer toasts={toast.toasts} removeToast={toast.removeToast} />
 
       <div className="flex-1 md:ml-64 pt-16 md:pt-0 p-4 md:p-8 max-w-4xl mx-auto w-full space-y-6">
