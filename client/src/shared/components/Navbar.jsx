@@ -143,7 +143,7 @@ const Navbar = ({ user, onLogout }) => {
     <>
       {/* ── Mobile Top Header ── */}
       <div className="md:hidden flex justify-between items-center p-4 bg-bg-base border-b border-outline-var/30 fixed top-0 w-full z-40">
-        <div onClick={() => navigate('/')} className="flex items-center gap-2 cursor-pointer font-syne font-extrabold text-xl text-text-primary tracking-tight">
+        <div onClick={() => navigate('/dashboard')} className="flex items-center gap-2 cursor-pointer font-syne font-extrabold text-xl text-text-primary tracking-tight">
           <img src="/logo.jpg" className="w-6 h-6 rounded-sm object-cover" alt="" />
           Skill<span className="text-primary">Sphere</span>
         </div>
@@ -160,7 +160,7 @@ const Navbar = ({ user, onLogout }) => {
         
         {/* Logo Section */}
         <div 
-          onClick={() => navigate('/')} 
+          onClick={() => navigate('/dashboard')} 
           className="cursor-pointer p-6 border-b border-outline-var/20 flex items-center gap-2"
         >
           <img src="/logo.jpg" className="w-8 h-8 rounded-sm object-cover border border-outline-var/20" alt="SkillSphere Logo" />
@@ -374,7 +374,10 @@ const Navbar = ({ user, onLogout }) => {
               className="fixed inset-y-0 left-0 z-50 md:hidden bg-bg-sidebar border-r border-outline-var/30 flex flex-col w-3/4 max-w-xs shadow-2xl"
             >
             <div className="p-4 border-b border-outline-var/20 flex justify-between items-center">
-               <span className="font-syne font-extrabold text-xl text-text-primary tracking-tight">
+              <span 
+                onClick={() => { setIsOpen(false); navigate('/dashboard'); }}
+                className="font-syne font-extrabold text-xl text-text-primary tracking-tight cursor-pointer"
+              >
                 Skill<span className="text-primary">Sphere</span>
               </span>
               <button onClick={() => setIsOpen(false)} className="text-text-muted hover:text-text-primary">
