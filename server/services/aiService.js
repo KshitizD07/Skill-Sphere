@@ -229,7 +229,7 @@ export async function generateRoadmap({ skill, role, currentScore, existingSkill
     };
   }
 
-  const model = getClient().getGenerativeModel({ model: process.env.GEMINI_MODEL || 'gemini-1.5-flash' });
+  const model = getClient().getGenerativeModel({ model: process.env.GEMINI_MODEL || 'gemini-2.5-flash' });
 
   // Proficiency classification
   let proficiencyText;
@@ -437,7 +437,7 @@ export async function getSharedRoadmap(token) {
 export async function generateRoleRequirements(roleTitle, existingSkills = []) {
   if (!roleTitle?.trim()) throw ApiError.badRequest('Role title is required');
   
-  const model = getClient().getGenerativeModel({ model: process.env.GEMINI_MODEL || 'gemini-1.5-flash' });
+  const model = getClient().getGenerativeModel({ model: process.env.GEMINI_MODEL || 'gemini-2.5-flash' });
   
   const existingSkillsContext = existingSkills.length > 0
     ? `\nHere is a list of standard skills currently defined in our database catalogue: [${existingSkills.join(', ')}]. If any of these standard skills match the role requirements, use their exact names. `
@@ -481,7 +481,7 @@ CRITICAL INSTRUCTIONS FOR SKILL NAMES:
 }
 
 export async function generateDiagnosticReport({ role, currentScore, missingSkills, verifiedSkills }) {
-  const model = getClient().getGenerativeModel({ model: process.env.GEMINI_MODEL || 'gemini-1.5-flash' });
+  const model = getClient().getGenerativeModel({ model: process.env.GEMINI_MODEL || 'gemini-2.5-flash' });
 
   const verifiedList = verifiedSkills.length > 0 ? verifiedSkills.map(s => `${s.name} (${s.calculatedScore}/10)`).join(', ') : 'None';
   const missingList = missingSkills.length > 0 ? missingSkills.map(s => s.name).join(', ') : 'None';

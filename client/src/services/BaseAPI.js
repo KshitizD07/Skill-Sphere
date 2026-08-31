@@ -62,7 +62,7 @@ class BaseAPI {
       case 403: return { error: 'Forbidden', message: 'You do not have permission.' };
       case 404: return { error: 'Not Found', message: 'Resource does not exist.' };
       case 409: return { error: 'Conflict', message };
-      case 500: return { error: 'Server Error', message: 'Something went wrong on the server.' };
+      case 500: return { error: 'Server Error', message: message || 'Something went wrong on the server.' };
       default:  return { error: 'Unknown Error', message };
     }
   }

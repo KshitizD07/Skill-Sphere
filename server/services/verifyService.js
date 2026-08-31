@@ -303,7 +303,7 @@ export async function verifySkill({ userId, skillName, repoUrl, showLevel = true
   const additionalSkillsList = otherUnverifiedSkills.map((s) => s.name);
 
   const genAI = new GoogleGenerativeAI(process.env.GOOGLE_API_KEY);
-  const aiModel = genAI.getGenerativeModel({ model: process.env.GEMINI_MODEL || 'gemini-1.5-flash' });
+  const aiModel = genAI.getGenerativeModel({ model: process.env.GEMINI_MODEL || 'gemini-2.5-flash' });
 
   const aiPrompt = `You are an impartial, senior technical code auditor evaluating a software engineer's repository.
 
@@ -329,7 +329,7 @@ Evaluation Guidelines:
 - If the repository has little or no relevant usage of "${normalized}", assign a realistic low score or 1-3.
 - If any of the OTHER UNVERIFIED CANDIDATE SKILLS have substantial, explicit implementation code in the files, include them in "discoveredSkills".
 
-Output ONLY valid JSON matching this schema with no markdown code blocks:
+Output ONLY valid JSON matching this schema:
 {
   "score": 8,
   "level": "Advanced",
@@ -354,13 +354,12 @@ Output ONLY valid JSON matching this schema with no markdown code blocks:
   try {
     const result = await aiModel.generateContent(aiPrompt);
     let aiText = result.response.text().trim();
-    if (aiText.startsWith('```json')) aiText = aiText.slice(7);
-    if (aiText.startsWith('```')) aiText = aiText.slice(3);
-    if (aiText.endsWith('```')) aiText = aiText.slice(0, -3);
-    aiEvaluation = JSON.parse(aiText.trim());
+    const jsonMatch = aiText.match(/\{[\s\S]*\}/);
+    const cleaned = jsonMatch ? jsonMatch[0] : aiText;
+    aiEvaluation = JSON.parse(cleaned.trim());
   } catch (err) {
     logger.error('Gemini skill verification analysis failed', { error: err.message });
-    throw ApiError.internal('AI evaluation service failed to process code. Please try again.');
+    throw ApiError.internal(`AI evaluation service failed: ${err.message}`);
   }
 
   // Sanitize score & level
