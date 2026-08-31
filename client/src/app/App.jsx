@@ -53,9 +53,7 @@ function App() {
   // Rehydrate user from httpOnly cookie session on mount
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
-    const urlToken = params.get('token');
-    if (urlToken) {
-      localStorage.setItem('ss_token', urlToken);
+    if (params.has('token')) {
       window.history.replaceState({}, document.title, window.location.pathname);
     }
 

@@ -471,9 +471,9 @@ async function handleOAuthLogin(email, name, res, githubUsername = null, githubA
 
   const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:5173';
   if (!user.github || !user.college) {
-    res.redirect(`${frontendUrl}/my-profile?token=${token}`);
+    res.redirect(`${frontendUrl}/my-profile`);
   } else {
-    res.redirect(`${frontendUrl}/dashboard?token=${token}`);
+    res.redirect(`${frontendUrl}/dashboard`);
   }
 }
 
