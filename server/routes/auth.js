@@ -8,6 +8,7 @@ import { asyncHandler, ApiError } from '../utils/errorHandler.js';
 import { authenticateToken } from '../middleware/auth.js';
 import { sendOtp, verifyOtp, sendVerificationEmail, generateAndSaveOtp } from '../services/emailService.js';
 import { syncUserRepos } from '../services/githubPortfolioService.js';
+import { otpLimiter } from '../middleware/rateLimiter.js';
 import cache from '../utils/cache.js';
 
 const router = express.Router();
@@ -72,7 +73,7 @@ function signToken(user) {
 
 // ── POST /api/auth/send-otp ───────────────────────────────────────────────────
 // Step 1 of registration: validate email is whitelisted, send OTP
-router.post('/send-otp', asyncHandler(async (req, res) => {
+router.post('/send-otp', otpLimiter, asyncHandler(async (req, res) => {
   const { email } = req.body;
   if (!email) throw ApiError.badRequest('Email is required');
 
@@ -185,7 +186,7 @@ router.post('/logout', asyncHandler(async (req, res) => {
 
 // ── POST /api/auth/forgot-password ────────────────────────────────────────────
 // Send an OTP to reset the password
-router.post('/forgot-password', asyncHandler(async (req, res) => {
+router.post('/forgot-password', otpLimiter, asyncHandler(async (req, res) => {
   const { email } = req.body;
   if (!email) throw ApiError.badRequest('Email is required');
 

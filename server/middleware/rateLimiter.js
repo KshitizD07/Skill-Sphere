@@ -39,6 +39,15 @@ export const authLimiter = makeLimiter({
   message:       'Too many login attempts. Try again in 15 minutes.',
 });
 
+// 5 OTP requests per 15 minutes per email/IP — prevents email bombing
+export const otpLimiter = makeLimiter({
+  maxAttempts:   5,
+  windowSeconds: 900,
+  prefix:        'otp',
+  keyFn:         (req) => req.body?.email?.toLowerCase().trim() || req.ip || 'anon',
+  message:       'Too many verification code requests. Please wait 15 minutes.',
+});
+
 // 100 requests per user/IP per minute — general API guard
 export const apiLimiter = makeLimiter({
   maxAttempts:   100,
