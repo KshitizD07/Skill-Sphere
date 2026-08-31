@@ -24,7 +24,7 @@ export const asyncHandler = (fn) => (req, res, next) =>
   Promise.resolve(fn(req, res, next)).catch(next);
 
 // ── Global error middleware — must be registered last ────────────────────────
-export function errorMiddleware(err, req, res, next) {
+export function errorMiddleware(err, req, res, _next) {
   const status = err.status || 500;
   const logData = {
     method:  req.method,

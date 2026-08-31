@@ -23,13 +23,14 @@ export default function SearchPage({ user: propUser, onLogout }) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
 
-  const currentUser = propUser || useMemo(() => {
+  const fallbackUser = useMemo(() => {
     try {
       return JSON.parse(localStorage.getItem('user_data') || '{}');
     } catch {
       return {};
     }
   }, []);
+  const currentUser = propUser || fallbackUser;
 
   const loadTrending = useCallback(async () => {
     try {

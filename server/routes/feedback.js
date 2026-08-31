@@ -130,7 +130,7 @@ router.get('/', authenticateToken, async (req, res, next) => {
           _avg: { rating: true },
         }),
       ]);
-    } catch (_queryErr) {
+    } catch {
       // If error occurred (e.g. column missing on un-migrated DB), force-heal and retry once
       schemaInitialized = false;
       await ensureFeedbackSchema();

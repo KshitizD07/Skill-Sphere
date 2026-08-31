@@ -1,9 +1,8 @@
 import express from 'express';
 import { PrismaClient } from '@prisma/client';
-import { asyncHandler, ApiError } from '../utils/errorHandler.js';
+import { asyncHandler } from '../utils/errorHandler.js';
 import { authenticateToken } from '../middleware/auth.js';
 import cache from '../utils/cache.js';
-import logger from '../utils/logger.js';
 
 const router = express.Router();
 const prisma = new PrismaClient();
@@ -114,7 +113,7 @@ router.get('/', authenticateToken, asyncHandler(async (req, res) => {
           LIMIT ${maxLimit}
         `;
         return rawPosts;
-      } catch (err) {
+      } catch {
         // Fallback to standard ILIKE search
         const fallbackList = await prisma.post.findMany({
           where: {

@@ -1,4 +1,3 @@
-import logger from '../../utils/logger.js';
 import { getVerifiedSkillProfile } from '../verifiedSkillProfile.js';
 import { calculateCompatibility } from '../skillCompatibility.js';
 

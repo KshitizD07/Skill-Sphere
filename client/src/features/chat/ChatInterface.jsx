@@ -42,13 +42,14 @@ export default function ChatInterface({ user: propUser, onLogout }) {
   const navigate = useNavigate();
   const toast = useToast();
 
-  const currentUser = propUser || useMemo(() => {
+  const fallbackUser = useMemo(() => {
     try {
       return JSON.parse(localStorage.getItem('user_data') || '{}');
     } catch {
       return {};
     }
   }, []);
+  const currentUser = propUser || fallbackUser;
 
   const [conversations, setConversations] = useState([]);
   const [activeConversation, setActiveConversation] = useState(null);

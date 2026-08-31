@@ -32,8 +32,8 @@ const PROFILE_SELECT = {
   },
 };
 
-// Public profile omits email
-const { email: _email, ...PUBLIC_PROFILE_SELECT } = PROFILE_SELECT;
+const PUBLIC_PROFILE_SELECT = { ...PROFILE_SELECT };
+delete PUBLIC_PROFILE_SELECT.email;
 
 function normaliseSkills(user) {
   if (!user?.skills) return user;

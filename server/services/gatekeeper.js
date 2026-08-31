@@ -1,5 +1,4 @@
 import { PrismaClient } from '@prisma/client';
-import cache from '../utils/cache.js';
 import logger from '../utils/logger.js';
 
 const prisma = new PrismaClient();

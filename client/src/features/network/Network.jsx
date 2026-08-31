@@ -15,13 +15,14 @@ export default function Network({ user: propUser, onLogout }) {
   const [searchParams, setSearchParams] = useSearchParams();
   const toast = useToast();
 
-  const currentUser = propUser || useMemo(() => {
+  const fallbackUser = useMemo(() => {
     try {
       return JSON.parse(localStorage.getItem('user_data') || '{}');
     } catch {
       return {};
     }
   }, []);
+  const currentUser = propUser || fallbackUser;
 
   // Filter & Search states (synced from URL)
   const [searchQuery, setSearchQuery] = useState(searchParams.get('q') || '');

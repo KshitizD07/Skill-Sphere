@@ -24,7 +24,6 @@ const MissionBoard = lazy(() => import('../features/squads/MissionBoard'));
 const SquadDetail = lazy(() => import('../features/squads/SquadDetail'));
 const SquadManage = lazy(() => import('../features/squads/SquadManage'));
 const MyApplications = lazy(() => import('../features/squads/MyApplications'));
-const SkillVerifier = lazy(() => import('../features/skills/SkillVerifier'));
 const Network = lazy(() => import('../features/network/Network'));
 const AdminDashboard = lazy(() => import('../features/admin/AdminDashboard'));
 const AntifragileAdmin = lazy(() => import('../features/admin/AntifragileAdmin'));

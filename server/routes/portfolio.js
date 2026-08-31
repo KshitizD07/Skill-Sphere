@@ -1,7 +1,7 @@
 import express from 'express';
 import { PrismaClient } from '@prisma/client';
 import { z } from 'zod';
-import { asyncHandler, ApiError } from '../utils/errorHandler.js';
+import { asyncHandler } from '../utils/errorHandler.js';
 import { authenticateToken } from '../middleware/auth.js';
 import * as githubPortfolioService from '../services/githubPortfolioService.js';
 import cache from '../utils/cache.js';

@@ -59,13 +59,14 @@ export default function NotificationsPage({ user: propUser, onLogout }) {
   const navigate = useNavigate();
   const toast = useToast();
 
-  const currentUser = propUser || useMemo(() => {
+  const fallbackUser = useMemo(() => {
     try {
       return JSON.parse(localStorage.getItem('user_data') || '{}');
     } catch {
       return {};
     }
   }, []);
+  const currentUser = propUser || fallbackUser;
 
   const [notifications, setNotifications] = useState([]);
   const [activeTab, setActiveTab] = useState('ALL'); // ALL | UNREAD | SQUAD | SKILL | MESSAGE | SOCIAL

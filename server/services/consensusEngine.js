@@ -19,7 +19,7 @@ class ConsensusEngine {
    * Analyses strategy votes and returns a consensus result.
    * Shadow strategy votes are counted but never contribute to consensus.
    */
-  async checkConsensus(strategyVotes, activeStrategies) {
+  async checkConsensus(strategyVotes, _activeStrategies) {
     const config       = await strategyRegistry.getSystemConfig();
     const minConsensus = config.minConsensusStrategies;
 

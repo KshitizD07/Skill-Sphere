@@ -2,7 +2,6 @@ import { PrismaClient } from '@prisma/client';
 import cache from '../utils/cache.js';
 import { ApiError } from '../utils/errorHandler.js';
 import * as aiService from './aiService.js';
-import logger from '../utils/logger.js';
 import { normalizeSkillCanonical } from '../utils/skillNormalizer.js';
 
 const prisma = new PrismaClient();

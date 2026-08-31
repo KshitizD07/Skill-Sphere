@@ -1,6 +1,6 @@
 import express from 'express';
 import { z } from 'zod';
-import { asyncHandler, ApiError } from '../utils/errorHandler.js';
+import { asyncHandler } from '../utils/errorHandler.js';
 import { authenticateToken } from '../middleware/auth.js';
 import * as skillService from '../services/skillService.js';
 import * as activityService from '../services/activityService.js';

@@ -1,7 +1,7 @@
 import express from 'express';
 import { PrismaClient } from '@prisma/client';
 import { z } from 'zod';
-import { asyncHandler, ApiError } from '../utils/errorHandler.js';
+import { asyncHandler } from '../utils/errorHandler.js';
 import { authenticateToken } from '../middleware/auth.js';
 import * as verifyService from '../services/verifyService.js';
 import { verifyLeetCodeSkill, scanLeetCodeProfile } from '../services/leetcodeService.js';
@@ -120,7 +120,7 @@ router.get('/rate-limit', authenticateToken, asyncHandler(async (_req, res) => {
       reset: data.resources?.core?.reset ? new Date(data.resources.core.reset * 1000).toISOString() : new Date().toISOString(),
       status: (data.resources?.core?.remaining || 0) < 10 ? 'low' : 'ok',
     });
-  } catch (err) {
+  } catch {
     res.json({ limit: 60, remaining: 60, reset: new Date().toISOString(), status: 'ok' });
   }
 }));

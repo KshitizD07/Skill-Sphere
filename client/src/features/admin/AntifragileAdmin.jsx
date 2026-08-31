@@ -7,7 +7,7 @@ import {
   BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid
 } from 'recharts';
 
-export default function AntifragileAdmin({ user, onLogout }) {
+export default function AntifragileAdmin({ user, _onLogout }) {
   const navigate = useNavigate();
   const toast = useToast();
   const currentUser = user || (() => {

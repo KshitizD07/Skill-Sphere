@@ -39,13 +39,14 @@ export default function FeedbackPage({ user: propUser, onLogout }) {
   const navigate = useNavigate();
   const toast = useToast();
 
-  const currentUser = propUser || useMemo(() => {
+  const fallbackUser = useMemo(() => {
     try {
       return JSON.parse(localStorage.getItem('user_data') || '{}');
     } catch {
       return {};
     }
   }, []);
+  const currentUser = propUser || fallbackUser;
 
   const [category, setCategory] = useState('UI / UX Experience');
   const [rating, setRating] = useState(5);

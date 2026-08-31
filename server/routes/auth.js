@@ -6,7 +6,7 @@ import { PrismaClient } from '@prisma/client';
 
 import { asyncHandler, ApiError } from '../utils/errorHandler.js';
 import { authenticateToken } from '../middleware/auth.js';
-import { sendOtp, verifyOtp, sendVerificationEmail, generateAndSaveOtp } from '../services/emailService.js';
+import { verifyOtp, sendVerificationEmail, generateAndSaveOtp } from '../services/emailService.js';
 import { syncUserRepos } from '../services/githubPortfolioService.js';
 import { otpLimiter } from '../middleware/rateLimiter.js';
 import cache from '../utils/cache.js';
@@ -150,7 +150,8 @@ router.post('/login', asyncHandler(async (req, res) => {
     data: { userId: user.id, action: 'USER_LOGIN', details: 'Logged in' },
   }).catch(() => {});
 
-  const { password: _, ...safeUser } = user;
+  const safeUser = { ...user };
+  delete safeUser.password;
   const token = signToken(user);
   setTokenCookie(res, token);
 
