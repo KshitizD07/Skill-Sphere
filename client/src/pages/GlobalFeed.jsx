@@ -1,4 +1,4 @@
-import { useEffect, useState, useRef, useCallback } from 'react';
+import { useEffect, useState, useRef, useCallback, useMemo } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import {
   Heart, User, Building2, Image as ImageIcon, X,
@@ -470,7 +470,13 @@ export default function GlobalFeed() {
   const [_searchParams] = useSearchParams();
   const toast = useToast();
 
-  const currentUser = JSON.parse(localStorage.getItem('user_data') || '{}');
+  const currentUser = useMemo(() => {
+    try {
+      return JSON.parse(localStorage.getItem('user_data') || '{}');
+    } catch {
+      return {};
+    }
+  }, []);
 
   const [feedTab, setFeedTab] = useState('all'); // 'all' | 'following'
   const [posts, setPosts] = useState([]);

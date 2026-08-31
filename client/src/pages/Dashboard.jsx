@@ -74,7 +74,13 @@ const POPULAR_ROLES = [
 export default function Dashboard({ user, onLogout }) {
   const navigate = useNavigate();
   const _location = useLocation();
-  const currentUser = user || JSON.parse(localStorage.getItem('user_data') || '{}');
+  const currentUser = user || (() => {
+    try {
+      return JSON.parse(localStorage.getItem('user_data') || '{}');
+    } catch {
+      return {};
+    }
+  })();
 
   const [roles, setRoles] = useState([]);
   const [allSkills, setAllSkills] = useState([]);

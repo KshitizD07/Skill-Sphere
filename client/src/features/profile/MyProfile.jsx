@@ -64,7 +64,13 @@ function CharCount({ current, max }) {
 export default function MyProfile({ user, onUserUpdate }) {
   const navigate = useNavigate();
   const toast = useToast();
-  const activeUser = user || JSON.parse(localStorage.getItem('user_data') || '{}');
+  const activeUser = user || (() => {
+    try {
+      return JSON.parse(localStorage.getItem('user_data') || '{}');
+    } catch {
+      return {};
+    }
+  })();
 
   const [loading, setLoading] = useState(false);
   const [initialLoadDone, setInitialLoadDone] = useState(false);
