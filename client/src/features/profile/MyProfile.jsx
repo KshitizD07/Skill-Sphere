@@ -89,7 +89,7 @@ export default function MyProfile({ user, onUserUpdate }) {
   const [leetcodeInput, setLeetcodeInput] = useState('');
   const [isSyncingLeetcode, setIsSyncingLeetcode] = useState(false);
   const [completeness, setCompleteness] = useState(null);
-  const [showRecruiterPreview, setShowRecruiterPreview] = useState(false);
+  const [recruiterMode, setRecruiterMode] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [deleteConfirmText, setDeleteConfirmText] = useState('');
 
@@ -772,13 +772,16 @@ export default function MyProfile({ user, onUserUpdate }) {
           <div className="flex items-center gap-2">
             <button
               type="button"
-              onClick={() => setShowRecruiterPreview(true)}
-              className="px-3.5 py-2 bg-surface-mid hover:bg-accent/10 border border-outline-var/40 hover:border-accent/40 text-text-primary hover:text-accent font-syne font-bold text-xs uppercase tracking-[0.1em] transition-all flex items-center gap-1.5 rounded-xs cursor-pointer shadow-xs active:scale-[0.98]"
-              title="Preview your live profile through a recruiter's lens"
+              onClick={() => setRecruiterMode(!recruiterMode)}
+              className={`px-3.5 py-2 border font-syne font-bold text-xs uppercase tracking-[0.1em] transition-all flex items-center gap-1.5 rounded-xs cursor-pointer shadow-xs active:scale-[0.98] ${
+                recruiterMode
+                  ? 'bg-accent text-bg-base border-accent font-black shadow-accent/20'
+                  : 'bg-surface-mid border-outline-var/40 text-text-primary hover:border-accent/40 hover:text-accent'
+              }`}
+              title="Toggle in-place view as seen by recruiters and hiring managers"
             >
-              <Sparkles size={13} className="text-accent" />
-              <span className="hidden sm:inline">Recruiter View</span>
-              <span className="sm:hidden">Recruiter</span>
+              {recruiterMode ? <EyeOff size={13} /> : <Sparkles size={13} className="text-accent" />}
+              <span>{recruiterMode ? 'Standard View' : 'Recruiter View'}</span>
             </button>
             <button
               type="button"
@@ -791,77 +794,97 @@ export default function MyProfile({ user, onUserUpdate }) {
           </div>
         </div>
 
-        {/* ── MOBILE READ-ONLY PREVIEW CARD & ACTION CHIPS (< md) ─────────────── */}
-        <div className="block md:hidden space-y-4">
-          <div className="bg-surface border border-outline-var/20 rounded-md p-5 text-center space-y-3 relative">
-            <div className="w-20 h-20 rounded-full border-2 border-outline-var/40 overflow-hidden bg-surface-mid mx-auto flex items-center justify-center shadow-md">
-              {formData.avatar ? <img src={formData.avatar} alt="Avatar" className="w-full h-full object-cover" /> : <User size={32} className="text-outline-var" />}
-            </div>
-            <div>
-              <h2 className="text-lg font-bold text-text-primary">{formData.name || 'User Profile'}</h2>
-              <p className="text-xs text-primary font-syne mt-0.5">{formData.headline || 'No Headline set'}</p>
-              <p className="text-[11px] text-text-muted mt-1">{formData.college || 'No Affiliation selected'}</p>
-            </div>
-            {completeness && <CompletenessBar score={completeness.score} checks={completeness.checks} />}
+        {recruiterMode ? (
+          <div className="pt-2 animate-in fade-in duration-200">
+            <RecruiterDossier
+              user={{
+                ...activeUser,
+                ...formData,
+                skills: mySkillsRaw,
+                leetcodeUsername: leetcodeData?.leetcodeUsername,
+                leetcodeDSAScore: leetcodeData?.leetcodeDSAScore,
+                leetcodeDSALevel: leetcodeData?.leetcodeDSALevel,
+                leetcodeEasy: leetcodeData?.leetcodeEasy,
+                leetcodeMedium: leetcodeData?.leetcodeMedium,
+                leetcodeHard: leetcodeData?.leetcodeHard,
+                leetcodeLanguages: leetcodeData?.leetcodeLanguages,
+              }}
+              isOwner={true}
+            />
           </div>
+        ) : (
+          <>
+            {/* ── MOBILE READ-ONLY PREVIEW CARD & ACTION CHIPS (< md) ─────────────── */}
+            <div className="block md:hidden space-y-4">
+              <div className="bg-surface border border-outline-var/20 rounded-md p-5 text-center space-y-3 relative">
+                <div className="w-20 h-20 rounded-full border-2 border-outline-var/40 overflow-hidden bg-surface-mid mx-auto flex items-center justify-center shadow-md">
+                  {formData.avatar ? <img src={formData.avatar} alt="Avatar" className="w-full h-full object-cover" /> : <User size={32} className="text-outline-var" />}
+                </div>
+                <div>
+                  <h2 className="text-lg font-bold text-text-primary">{formData.name || 'User Profile'}</h2>
+                  <p className="text-xs text-primary font-syne mt-0.5">{formData.headline || 'No Headline set'}</p>
+                  <p className="text-[11px] text-text-muted mt-1">{formData.college || 'No Affiliation selected'}</p>
+                </div>
+                {completeness && <CompletenessBar score={completeness.score} checks={completeness.checks} />}
+              </div>
 
-          {/* Action Chips Grid */}
-          <div className="grid grid-cols-2 gap-2 font-syne text-xs font-bold uppercase tracking-wider">
-            <button
-              onClick={() => setActiveDrawer('identity')}
-              className="p-3 bg-surface border border-outline-var/30 hover:border-primary/50 text-text-primary rounded-xs flex flex-col items-center gap-1.5 transition active:scale-[0.98]"
-            >
-              <User size={16} className="text-primary" /> Edit Identity
-            </button>
-            <button
-              onClick={() => setActiveDrawer('skills')}
-              className="p-3 bg-surface border border-outline-var/30 hover:border-primary/50 text-text-primary rounded-xs flex flex-col items-center gap-1.5 transition active:scale-[0.98]"
-            >
-              <Shield size={16} className="text-accent" /> Skills & Tests
-            </button>
-            <button
-              onClick={() => setActiveDrawer('showcase')}
-              className="p-3 bg-surface border border-outline-var/30 hover:border-primary/50 text-text-primary rounded-xs flex flex-col items-center gap-1.5 transition active:scale-[0.98]"
-            >
-              <Github size={16} className="text-primary" /> Showcase & Links
-            </button>
-            <button
-              onClick={() => setActiveDrawer('settings')}
-              className="p-3 bg-surface border border-outline-var/30 hover:border-primary/50 text-text-primary rounded-xs flex flex-col items-center gap-1.5 transition active:scale-[0.98]"
-            >
-              <Lock size={16} className="text-error" /> Security & Access
-            </button>
-          </div>
-        </div>
+              {/* Action Chips Grid */}
+              <div className="grid grid-cols-2 gap-2 font-syne text-xs font-bold uppercase tracking-wider">
+                <button
+                  onClick={() => setActiveDrawer('identity')}
+                  className="p-3 bg-surface border border-outline-var/30 hover:border-primary/50 text-text-primary rounded-xs flex flex-col items-center gap-1.5 transition active:scale-[0.98]"
+                >
+                  <User size={16} className="text-primary" /> Edit Identity
+                </button>
+                <button
+                  onClick={() => setActiveDrawer('skills')}
+                  className="p-3 bg-surface border border-outline-var/30 hover:border-primary/50 text-text-primary rounded-xs flex flex-col items-center gap-1.5 transition active:scale-[0.98]"
+                >
+                  <Shield size={16} className="text-accent" /> Skills & Tests
+                </button>
+                <button
+                  onClick={() => setActiveDrawer('showcase')}
+                  className="p-3 bg-surface border border-outline-var/30 hover:border-primary/50 text-text-primary rounded-xs flex flex-col items-center gap-1.5 transition active:scale-[0.98]"
+                >
+                  <Github size={16} className="text-primary" /> Showcase & Links
+                </button>
+                <button
+                  onClick={() => setActiveDrawer('settings')}
+                  className="p-3 bg-surface border border-outline-var/30 hover:border-primary/50 text-text-primary rounded-xs flex flex-col items-center gap-1.5 transition active:scale-[0.98]"
+                >
+                  <Lock size={16} className="text-error" /> Security & Access
+                </button>
+              </div>
+            </div>
 
-        {/* ── DESKTOP TABS VIEW (>= md) ────────────────────────────────────────── */}
-        <div className="hidden md:block space-y-6">
-          <div className="flex border-b border-outline-var/30 font-syne text-xs font-bold uppercase tracking-wider gap-1">
-            <button
-              onClick={() => setActiveTab('identity')}
-              className={`px-5 py-3 border-b-2 transition-all flex items-center gap-2 ${activeTab === 'identity' ? 'border-primary text-primary bg-primary/5' : 'border-transparent text-text-muted hover:text-text-primary'}`}
-            >
-              <User size={14} /> Identity & Bio
-            </button>
-            <button
-              onClick={() => setActiveTab('skills')}
-              className={`px-5 py-3 border-b-2 transition-all flex items-center gap-2 ${activeTab === 'skills' ? 'border-primary text-primary bg-primary/5' : 'border-transparent text-text-muted hover:text-text-primary'}`}
-            >
-              <Shield size={14} /> Skills & Verifications
-            </button>
-            <button
-              onClick={() => setActiveTab('showcase')}
-              className={`px-5 py-3 border-b-2 transition-all flex items-center gap-2 ${activeTab === 'showcase' ? 'border-primary text-primary bg-primary/5' : 'border-transparent text-text-muted hover:text-text-primary'}`}
-            >
-              <Github size={14} /> Portfolio & Links
-            </button>
-            <button
-              onClick={() => setActiveTab('settings')}
-              className={`px-5 py-3 border-b-2 transition-all flex items-center gap-2 ${activeTab === 'settings' ? 'border-primary text-primary bg-primary/5' : 'border-transparent text-text-muted hover:text-text-primary'}`}
-            >
-              <Lock size={14} /> Settings & Access
-            </button>
-          </div>
+            {/* ── DESKTOP TABS VIEW (>= md) ────────────────────────────────────────── */}
+            <div className="hidden md:block space-y-6">
+              <div className="flex border-b border-outline-var/30 font-syne text-xs font-bold uppercase tracking-wider gap-1">
+                <button
+                  onClick={() => setActiveTab('identity')}
+                  className={`px-5 py-3 border-b-2 transition-all flex items-center gap-2 ${activeTab === 'identity' ? 'border-primary text-primary bg-primary/5' : 'border-transparent text-text-muted hover:text-text-primary'}`}
+                >
+                  <User size={14} /> Identity & Bio
+                </button>
+                <button
+                  onClick={() => setActiveTab('skills')}
+                  className={`px-5 py-3 border-b-2 transition-all flex items-center gap-2 ${activeTab === 'skills' ? 'border-primary text-primary bg-primary/5' : 'border-transparent text-text-muted hover:text-text-primary'}`}
+                >
+                  <Shield size={14} /> Skills & Verifications
+                </button>
+                <button
+                  onClick={() => setActiveTab('showcase')}
+                  className={`px-5 py-3 border-b-2 transition-all flex items-center gap-2 ${activeTab === 'showcase' ? 'border-primary text-primary bg-primary/5' : 'border-transparent text-text-muted hover:text-text-primary'}`}
+                >
+                  <Github size={14} /> Portfolio & Links
+                </button>
+                <button
+                  onClick={() => setActiveTab('settings')}
+                  className={`px-5 py-3 border-b-2 transition-all flex items-center gap-2 ${activeTab === 'settings' ? 'border-primary text-primary bg-primary/5' : 'border-transparent text-text-muted hover:text-text-primary'}`}
+                >
+                  <Lock size={14} /> Settings & Access
+                </button>
+              </div>
 
           <div>
             {activeTab === 'identity' && renderIdentitySection()}
@@ -909,6 +932,8 @@ export default function MyProfile({ user, onUserUpdate }) {
             </div>
           </div>
         )}
+      </>
+    )}
 
         {/* ── FLOATING DIRTY-STATE SAVE BAR ────────────────────────────────────── */}
         {isDirty && (
@@ -1039,47 +1064,6 @@ export default function MyProfile({ user, onUserUpdate }) {
         }}
         onCropComplete={handleCropComplete}
       />
-
-      {/* Recruiter Dossier Live Preview Modal */}
-      {showRecruiterPreview && (
-        <div className="fixed inset-0 bg-black/80 backdrop-blur-xs z-[400] flex items-center justify-center p-3 sm:p-6 md:p-10 animate-in fade-in duration-200">
-          <div className="bg-bg-base border border-outline-var/30 rounded-2xl w-full max-w-[1300px] max-h-[92dvh] overflow-y-auto p-4 sm:p-6 md:p-8 shadow-2xl relative space-y-4">
-            <div className="flex items-center justify-between pb-3 border-b border-outline-var/20 sticky top-0 bg-bg-base/95 backdrop-blur-sm z-20">
-              <div className="flex items-center gap-2">
-                <span className="px-2 py-0.5 rounded-full text-[10px] font-syne font-black uppercase bg-accent/10 text-accent border border-accent/30">
-                  Live Preview
-                </span>
-                <h2 className="font-syne font-extrabold text-sm uppercase tracking-wider text-text-primary">
-                  Recruiter Dossier View
-                </h2>
-              </div>
-              <button
-                type="button"
-                onClick={() => setShowRecruiterPreview(false)}
-                className="p-1.5 text-text-muted hover:text-text-primary rounded-xs border border-outline-var/30 hover:border-outline-var transition-colors cursor-pointer"
-              >
-                <X size={18} />
-              </button>
-            </div>
-
-            <RecruiterDossier
-              user={{
-                ...activeUser,
-                ...formData,
-                skills: mySkillsRaw,
-                leetcodeUsername: leetcodeData?.leetcodeUsername,
-                leetcodeDSAScore: leetcodeData?.leetcodeDSAScore,
-                leetcodeDSALevel: leetcodeData?.leetcodeDSALevel,
-                leetcodeEasy: leetcodeData?.leetcodeEasy,
-                leetcodeMedium: leetcodeData?.leetcodeMedium,
-                leetcodeHard: leetcodeData?.leetcodeHard,
-                leetcodeLanguages: leetcodeData?.leetcodeLanguages,
-              }}
-              isOwner={true}
-            />
-          </div>
-        </div>
-      )}
     </div>
   );
 }
