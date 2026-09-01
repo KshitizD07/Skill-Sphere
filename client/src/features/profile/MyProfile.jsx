@@ -4,6 +4,7 @@ import {
   ArrowLeft, Camera, User, Plus, CheckCircle,
   X, Shield, Github, Linkedin, Save, Building2,
   Zap, Award, AlertTriangle, Trash2, ChevronRight, TrendingUp, Lock, RefreshCw,
+  Sparkles, Eye
 } from 'lucide-react';
 import ProfileAPI from './profileAPI';
 import SkillAPI from '../skills/skillAPI';
@@ -13,6 +14,7 @@ import SkillVerifier from '../skills/SkillVerifier';
 import Navbar from '../../shared/components/Navbar';
 import RepoSelector from '../portfolio/RepoSelector';
 import FollowModal from './components/FollowModal';
+import RecruiterDossier from './components/RecruiterDossier';
 import ImageCropModal from '../../shared/components/ImageCropModal';
 import { useToast, ToastContainer } from '../../shared/components/Toast';
 import { API_BASE_URL } from '../../config/constants';
@@ -87,6 +89,7 @@ export default function MyProfile({ user, onUserUpdate }) {
   const [leetcodeInput, setLeetcodeInput] = useState('');
   const [isSyncingLeetcode, setIsSyncingLeetcode] = useState(false);
   const [completeness, setCompleteness] = useState(null);
+  const [showRecruiterPreview, setShowRecruiterPreview] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [deleteConfirmText, setDeleteConfirmText] = useState('');
 
@@ -405,6 +408,9 @@ export default function MyProfile({ user, onUserUpdate }) {
   // ── Section Renderers ──────────────────────────────────────────────────────
   const renderIdentitySection = () => (
     <div className="space-y-6">
+      {completeness && (
+        <CompletenessBar score={completeness.score} checks={completeness.checks} />
+      )}
       <div className="bg-surface border border-outline-var/20 rounded-md p-6 flex flex-col md:flex-row items-center gap-6">
         <div className="w-24 h-24 rounded-full border-2 border-outline-var/40 overflow-hidden bg-surface-mid flex items-center justify-center shrink-0 shadow-lg">
           {formData.avatar ? <img src={formData.avatar} alt="Avatar" className="w-full h-full object-cover" /> : <User size={36} className="text-outline-var" />}
@@ -753,9 +759,9 @@ export default function MyProfile({ user, onUserUpdate }) {
         )}
 
         {/* Page Header */}
-        <div className="flex items-center justify-between">
+        <div className="flex items-center justify-between gap-3 flex-wrap">
           <div className="flex items-center gap-3">
-            <button onClick={handleBack} className="p-2 border border-outline-var/40 rounded-xs hover:border-primary/40 text-outline hover:text-primary transition-all">
+            <button onClick={handleBack} className="p-2 border border-outline-var/40 rounded-xs hover:border-primary/40 text-outline hover:text-primary transition-all cursor-pointer">
               <ArrowLeft size={16} />
             </button>
             <div>
@@ -763,10 +769,26 @@ export default function MyProfile({ user, onUserUpdate }) {
               <p className="font-syne text-[10px] tracking-[0.12em] uppercase text-outline hidden md:block">Manage your professional identity and skill network</p>
             </div>
           </div>
-          <button onClick={handleSave} disabled={loading}
-            className="px-4 py-2 bg-primary/10 text-primary border border-primary/20 font-syne font-bold text-xs uppercase tracking-[0.1em] hover:bg-primary hover:text-on-primary transition-all flex items-center gap-2 rounded-xs disabled:opacity-50 active:scale-[0.98]">
-            <Save size={14} /> {loading ? 'Saving...' : 'Save Changes'}
-          </button>
+          <div className="flex items-center gap-2">
+            <button
+              type="button"
+              onClick={() => setShowRecruiterPreview(true)}
+              className="px-3.5 py-2 bg-surface-mid hover:bg-accent/10 border border-outline-var/40 hover:border-accent/40 text-text-primary hover:text-accent font-syne font-bold text-xs uppercase tracking-[0.1em] transition-all flex items-center gap-1.5 rounded-xs cursor-pointer shadow-xs active:scale-[0.98]"
+              title="Preview your live profile through a recruiter's lens"
+            >
+              <Sparkles size={13} className="text-accent" />
+              <span className="hidden sm:inline">Recruiter View</span>
+              <span className="sm:hidden">Recruiter</span>
+            </button>
+            <button
+              type="button"
+              onClick={handleSave}
+              disabled={loading}
+              className="px-4 py-2 bg-primary/10 text-primary border border-primary/20 font-syne font-bold text-xs uppercase tracking-[0.1em] hover:bg-primary hover:text-on-primary transition-all flex items-center gap-2 rounded-xs disabled:opacity-50 active:scale-[0.98] cursor-pointer"
+            >
+              <Save size={14} /> {loading ? 'Saving...' : 'Save Changes'}
+            </button>
+          </div>
         </div>
 
         {/* ── MOBILE READ-ONLY PREVIEW CARD & ACTION CHIPS (< md) ─────────────── */}
@@ -1017,6 +1039,47 @@ export default function MyProfile({ user, onUserUpdate }) {
         }}
         onCropComplete={handleCropComplete}
       />
+
+      {/* Recruiter Dossier Live Preview Modal */}
+      {showRecruiterPreview && (
+        <div className="fixed inset-0 bg-black/80 backdrop-blur-xs z-[400] flex items-center justify-center p-3 sm:p-6 md:p-10 animate-in fade-in duration-200">
+          <div className="bg-bg-base border border-outline-var/30 rounded-2xl w-full max-w-[1300px] max-h-[92dvh] overflow-y-auto p-4 sm:p-6 md:p-8 shadow-2xl relative space-y-4">
+            <div className="flex items-center justify-between pb-3 border-b border-outline-var/20 sticky top-0 bg-bg-base/95 backdrop-blur-sm z-20">
+              <div className="flex items-center gap-2">
+                <span className="px-2 py-0.5 rounded-full text-[10px] font-syne font-black uppercase bg-accent/10 text-accent border border-accent/30">
+                  Live Preview
+                </span>
+                <h2 className="font-syne font-extrabold text-sm uppercase tracking-wider text-text-primary">
+                  Recruiter Dossier View
+                </h2>
+              </div>
+              <button
+                type="button"
+                onClick={() => setShowRecruiterPreview(false)}
+                className="p-1.5 text-text-muted hover:text-text-primary rounded-xs border border-outline-var/30 hover:border-outline-var transition-colors cursor-pointer"
+              >
+                <X size={18} />
+              </button>
+            </div>
+
+            <RecruiterDossier
+              user={{
+                ...activeUser,
+                ...formData,
+                skills: mySkillsRaw,
+                leetcodeUsername: leetcodeData?.leetcodeUsername,
+                leetcodeDSAScore: leetcodeData?.leetcodeDSAScore,
+                leetcodeDSALevel: leetcodeData?.leetcodeDSALevel,
+                leetcodeEasy: leetcodeData?.leetcodeEasy,
+                leetcodeMedium: leetcodeData?.leetcodeMedium,
+                leetcodeHard: leetcodeData?.leetcodeHard,
+                leetcodeLanguages: leetcodeData?.leetcodeLanguages,
+              }}
+              isOwner={true}
+            />
+          </div>
+        </div>
+      )}
     </div>
   );
 }
