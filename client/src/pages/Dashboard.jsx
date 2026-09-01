@@ -185,8 +185,14 @@ export default function Dashboard({ user, onLogout }) {
       return newSkills;
     });
     try {
-      await API.post('/skills/update', { userId: currentUser.id, skillIds: newSkills });
-      fetchData(); // Sync detailed skill verification status
+      const skillNameList = newSkills
+        .map(id => {
+          const found = allSkills.find(s => s.id === id);
+          return found ? found.name : id;
+        })
+        .filter(Boolean);
+      await API.post('/skills/update', { userId: currentUser.id, skillIds: skillNameList });
+      await fetchData(); // Sync detailed skill verification status
     } catch (e) {
       console.error('Failed to sync skills', e);
     }
@@ -210,7 +216,8 @@ export default function Dashboard({ user, onLogout }) {
     setSelectedMissingSkill(skill);
     setLoadingMentors(true);
     try {
-      const res = await API.get(`/skills/mentors/${skill.id}`);
+      const targetSkillName = skill.name || skill.id;
+      const res = await API.get(`/skills/mentors/${encodeURIComponent(targetSkillName)}`);
       setMentors(res.data || []);
     } catch {
       setMentors([]);
@@ -863,10 +870,12 @@ export default function Dashboard({ user, onLogout }) {
                <SkillVerifier 
                  userId={currentUser.id} 
                  skillName={verifySkillModal} 
-                 onVerifyComplete={() => {
-                   fetchData();
-                   if (selectedRole) handleAnalyze();
-                   setTimeout(() => setVerifySkillModal(null), 2000);
+                 onVerifyComplete={async () => {
+                   await fetchData();
+                   if (selectedRole) {
+                     await handleAnalyze(false);
+                   }
+                   setTimeout(() => setVerifySkillModal(null), 1800);
                  }}
                />
             </motion.div>
