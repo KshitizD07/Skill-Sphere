@@ -190,12 +190,48 @@ Moved `<CompletenessBar score={completeness.score} checks={completeness.checks} 
 
 ---
 
+### 3.5 Issue 5: Avatar Dimension Scaling Distortion on Desktop (`UserProfile.jsx`)
+
+#### **What was happening?**
+When a candidate had uploaded a profile photo, the avatar container expanded massively to ~400px+ height across the top card on desktop views, pushing the credentials bento grid far below the fold. Conversely, when no photo was uploaded, the default icon remained small.
+
+#### **Why did it happen?**
+The container applied Tailwind classes `w-18 h-18 sm:w-22 sm:h-22`. In standard Tailwind CSS, `w-18` (72px) and `w-22` (88px) are non-standard utility values. Because the classes were unrecognized, no CSS width/height constraints were rendered on the container, causing the underlying `<img>` element to expand to the image's raw pixel dimensions.
+
+#### **Where was it located?**
+* [client/src/features/profile/UserProfile.jsx:L480-L490](file:///C:/Users/kshit/cs/skillsphere/client/src/features/profile/UserProfile.jsx#L480-L490)
+
+#### **How was it resolved?**
+1. Standardized avatar wrapper and image to explicit, responsive standard Tailwind dimensions: `w-16 h-16 sm:w-20 sm:h-20 shrink-0` (64px mobile, 80px desktop) with `rounded-full overflow-hidden shrink-0`.
+2. Streamlined top card padding to `p-4 sm:p-5 md:p-6` and reduced vertical margins, ensuring **all core credentials (About, Verified Skills Matrix, LeetCode DSA Benchmark, and GitHub Projects Showcase) fit above the fold on standard desktop viewports**.
+
+---
+
+### 3.6 Issue 6: ESLint CI Build Failure on Undefined / Unused `lucide-react` Icons (`MyProfile.jsx`)
+
+#### **What was happening?**
+The frontend GitHub Actions CI pipeline failed during the `npm run lint` step with:
+* `error: 'EyeOff' is not defined (react/jsx-no-undef)`
+* `warning: 'Eye' is defined but never used (no-unused-vars)`
+
+#### **Why did it happen?**
+When implementing the in-place Recruiter View toggle in `MyProfile.jsx`, the JSX component referenced `<EyeOff />` for the `Standard View` button state, but the import statement at the top of the file imported `Eye` instead of `EyeOff`.
+
+#### **Where was it located?**
+* [client/src/features/profile/MyProfile.jsx:L7](file:///C:/Users/kshit/cs/skillsphere/client/src/features/profile/MyProfile.jsx#L7)
+* [client/src/features/profile/MyProfile.jsx:L783](file:///C:/Users/kshit/cs/skillsphere/client/src/features/profile/MyProfile.jsx#L783)
+
+#### **How was it resolved?**
+Updated the `lucide-react` import on line 7 of `MyProfile.jsx` to import `EyeOff` instead of `Eye`. Verified locally with `npm run lint` (`0 errors, 0 warnings`).
+
+---
+
 ## 📊 Summary of Modified Files
 
 | File Path | Changes Made |
 | :--- | :--- |
-| `client/src/features/profile/UserProfile.jsx` | Restructured layout: Compact Hero card + Above-the-fold Credentials Bento Grid + Lower Activity feed; applied dark theme tokens. |
-| `client/src/features/profile/MyProfile.jsx` | Moved `CompletenessBar` to top of Identity step; added in-place `Recruiter View` / `Standard View` whole-page toggle. |
+| `client/src/features/profile/UserProfile.jsx` | Restructured layout: Compact Hero card + Above-the-fold Credentials Bento Grid + Lower Activity feed; fixed avatar dimension scaling; applied dark theme tokens. |
+| `client/src/features/profile/MyProfile.jsx` | Moved `CompletenessBar` to top of Identity step; added in-place `Recruiter View` / `Standard View` whole-page toggle; resolved `EyeOff` ESLint import. |
 | `client/src/features/network/Network.jsx` | Added `(You)` badge on self-card and unified all profile navigation directly to `/profile/:id`. |
 | `server/routes/users.js` | Updated `GET /api/users` query filter to allow user self-discovery in network directory. |
 | `docs/Features_and_improvements/User_Profile_and_Network_Enhancements.md` | Created comprehensive feature & architecture documentation (This file). |
