@@ -471,216 +471,310 @@ export default function UserProfile() {
         </div>
 
         {recruiterMode ? <RecruiterDossier user={user} isOwner={isOwner} /> : (
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
-            {/* Left sidebar - profile card - z-0 to stay behind posts */}
-            <div className="lg:col-span-4 space-y-6">
-              <div className="bg-surface border border-primary/20 p-6 flex flex-col items-center text-center relative">
-                <div className="w-40 h-40 rounded-full border-4 border-black outline outline-2 outline-cyan-500 overflow-hidden mb-6 bg-surface-mid flex items-center justify-center shadow-[0_0_30px_rgba(34,211,238,0.2)]">
-                  {user.avatar ? <img src={user.avatar} alt={user.name || "Profile avatar"} loading="lazy" decoding="async" className="w-full h-full object-cover" /> : <User size={64} className="text-outline" />}
-                </div>
-                <h2 className="text-2xl font-black text-text-primary font-syne tracking-wide uppercase tracking-wider">{user.name}</h2>
-                <p className="text-primary font-syne tracking-wide text-sm mt-1">{user.headline || 'No headline'}</p>
-                <div className="mt-4 px-3 py-1 bg-primary/10 border border-primary/20 rounded text-xs font-bold tracking-widest text-text-primary">
-                  {user.role === 'GUEST' 
-                    ? `Guest · ${user.guestPersona || 'Student'}` 
-                    : user.role === 'PROFESSIONAL' ? 'Working Professional'
-                    : user.role.charAt(0) + user.role.slice(1).toLowerCase()}
-                </div>
-                {/* Social Graph: Followers & Following Stats */}
-                <div className="flex items-center justify-center gap-6 mt-4 pt-4 border-t border-outline-var/20 w-full font-outfit">
-                  <button
-                    type="button"
-                    onClick={() => { setModalTab('followers'); setShowFollowModal(true); }}
-                    className="flex flex-col items-center group cursor-pointer"
-                  >
-                    <span className="font-bold text-base text-text-primary group-hover:text-primary transition-colors">
-                      {user.followerCount || 0}
-                    </span>
-                    <span className="text-[10px] font-syne uppercase tracking-wider text-outline group-hover:text-text-muted">
-                      Followers
-                    </span>
-                  </button>
-                  <div className="w-px h-6 bg-outline-var/20" />
-                  <button
-                    type="button"
-                    onClick={() => { setModalTab('following'); setShowFollowModal(true); }}
-                    className="flex flex-col items-center group cursor-pointer"
-                  >
-                    <span className="font-bold text-base text-text-primary group-hover:text-primary transition-colors">
-                      {user.followingCount || 0}
-                    </span>
-                    <span className="text-[10px] font-syne uppercase tracking-wider text-outline group-hover:text-text-muted">
-                      Following
-                    </span>
-                  </button>
-                </div>
+          <div className="space-y-6">
+            {/* ── 1. COMPACT HERO PROFILE CARD ────────────────────────────────── */}
+            <div className="bg-surface border border-outline-var/30 rounded-xl p-5 md:p-7 shadow-xl relative overflow-hidden">
+              <div className="absolute top-0 right-0 -mr-16 -mt-16 w-64 h-64 bg-gradient-to-bl from-accent/10 via-primary/5 to-transparent rounded-full blur-2xl pointer-events-none" />
 
-                {!isOwner && (
-                  <div className="w-full mt-4 space-y-2 font-syne">
-                    <button
-                      type="button"
-                      onClick={handleFollowToggle}
-                      disabled={followingActionLoading}
-                      className={`w-full py-2.5 font-bold tracking-wide text-xs uppercase rounded-xs transition-all flex items-center justify-center gap-2 border shadow-sm ${
-                        user.isMutual
-                          ? 'bg-accent/10 text-accent border-accent/30 hover:bg-accent/20'
-                          : user.isFollowedByMe
-                          ? 'bg-surface-mid text-text-muted border-outline-var/40 hover:border-error hover:text-error'
-                          : 'bg-primary text-on-primary border-primary hover:bg-secondary-bright'
-                      }`}
-                    >
-                      {user.isMutual ? (
-                        <>
-                          <Users size={14} className="text-accent" /> Connected ⇄
-                        </>
-                      ) : user.isFollowedByMe ? (
-                        <>
-                          <UserCheck size={14} /> Following
-                        </>
+              <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-6 relative z-10">
+                {/* Left: Avatar + Identity */}
+                <div className="flex items-start sm:items-center gap-4 sm:gap-6 flex-1 min-w-0">
+                  <div className="relative shrink-0">
+                    <div className="w-18 h-18 sm:w-22 sm:h-22 rounded-full border-2 border-accent/40 overflow-hidden bg-surface-mid flex items-center justify-center shadow-lg">
+                      {user.avatar ? (
+                        <img src={user.avatar} alt={user.name || "Profile avatar"} loading="lazy" decoding="async" className="w-full h-full object-cover" />
                       ) : (
-                        <>
-                          <UserPlus size={14} /> Follow
-                        </>
+                        <User size={36} className="text-outline" />
                       )}
-                    </button>
-
-                    <button
-                      type="button"
-                      onClick={() => navigate(`/chat/${user.id}`)}
-                      className="w-full py-2.5 bg-surface-mid hover:bg-surface border border-outline-var/30 text-text-primary font-bold transition flex items-center justify-center gap-2 tracking-wide text-xs uppercase rounded-xs"
-                    >
-                      <MessageSquare size={14} /> Send Message
-                    </button>
+                    </div>
+                    <div className="absolute -bottom-1 -right-1 w-5 h-5 rounded-full bg-surface border-2 border-surface flex items-center justify-center shadow-xs" title="SkillSphere Verified">
+                      <Shield size={12} className="text-accent fill-accent/20" />
+                    </div>
                   </div>
-                )}
+
+                  <div className="space-y-1.5 min-w-0">
+                    <div className="flex items-center gap-2.5 flex-wrap">
+                      <h2 className="text-xl sm:text-2xl font-black text-text-primary font-syne tracking-tight truncate">
+                        {user.name}
+                      </h2>
+                      <span className="px-2.5 py-0.5 rounded-full text-[10px] font-syne font-bold uppercase tracking-wider bg-accent/10 border border-accent/30 text-accent">
+                        {user.role === 'GUEST' 
+                          ? `Guest · ${user.guestPersona || 'Student'}` 
+                          : user.role === 'PROFESSIONAL' ? 'Working Professional'
+                          : user.role.charAt(0) + user.role.slice(1).toLowerCase()}
+                      </span>
+                    </div>
+
+                    <p className="text-xs sm:text-sm text-text-muted font-outfit line-clamp-2">
+                      {user.headline || 'Software Engineer • SkillSphere Member'}
+                    </p>
+
+                    <div className="flex items-center gap-3 text-xs text-outline font-syne pt-1 flex-wrap">
+                      {user.college && (
+                        <span className="flex items-center gap-1.5 text-text-muted">
+                          <Building2 size={13} className="text-primary shrink-0" /> {user.college}
+                        </span>
+                      )}
+                      <div className="flex items-center gap-4 text-xs font-outfit">
+                        <button
+                          type="button"
+                          onClick={() => { setModalTab('followers'); setShowFollowModal(true); }}
+                          className="hover:text-primary transition-colors cursor-pointer"
+                        >
+                          <strong className="text-text-primary font-syne">{user.followerCount || 0}</strong> Followers
+                        </button>
+                        <span>•</span>
+                        <button
+                          type="button"
+                          onClick={() => { setModalTab('following'); setShowFollowModal(true); }}
+                          className="hover:text-primary transition-colors cursor-pointer"
+                        >
+                          <strong className="text-text-primary font-syne">{user.followingCount || 0}</strong> Following
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Right: Actions & Social Link Chips */}
+                <div className="w-full md:w-auto flex flex-col sm:flex-row md:flex-col items-stretch sm:items-center md:items-end gap-3 shrink-0">
+                  <div className="flex items-center gap-2 w-full sm:w-auto">
+                    {!isOwner && (
+                      <>
+                        <button
+                          type="button"
+                          onClick={handleFollowToggle}
+                          disabled={followingActionLoading}
+                          className={`flex-1 sm:flex-initial px-4 py-2 font-bold tracking-wide text-xs uppercase rounded-xs transition-all flex items-center justify-center gap-1.5 font-syne border shadow-xs cursor-pointer ${
+                            user.isMutual
+                              ? 'bg-accent/10 text-accent border-accent/30 hover:bg-accent/20'
+                              : user.isFollowedByMe
+                              ? 'bg-surface-mid text-text-muted border-outline-var/40 hover:border-error hover:text-error'
+                              : 'bg-primary text-on-primary border-primary hover:bg-secondary-bright'
+                          }`}
+                        >
+                          {user.isMutual ? (
+                            <>
+                              <Users size={13} className="text-accent" /> Connected ⇄
+                            </>
+                          ) : user.isFollowedByMe ? (
+                            <>
+                              <UserCheck size={13} /> Following
+                            </>
+                          ) : (
+                            <>
+                              <UserPlus size={13} /> Follow
+                            </>
+                          )}
+                        </button>
+
+                        <button
+                          type="button"
+                          onClick={() => navigate(`/chat/${user.id}`)}
+                          className="flex-1 sm:flex-initial px-4 py-2 bg-surface-mid hover:bg-surface border border-outline-var/30 text-text-primary font-syne font-bold transition flex items-center justify-center gap-1.5 tracking-wide text-xs uppercase rounded-xs cursor-pointer"
+                        >
+                          <MessageSquare size={13} /> Message
+                        </button>
+                      </>
+                    )}
+                  </div>
+
+                  {/* Social Profile Links */}
+                  <div className="flex items-center gap-2 flex-wrap">
+                    {user.github && (
+                      <a
+                        href={getGithubUrl(user.github)}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="px-3 py-1.5 bg-surface-mid hover:bg-surface border border-outline-var/40 hover:border-primary text-text-muted hover:text-text-primary text-xs font-syne font-bold uppercase rounded-xs flex items-center gap-1.5 transition-colors"
+                        title="GitHub Profile"
+                      >
+                        <Github size={13} /> GitHub
+                      </a>
+                    )}
+                    {user.linkedin && (
+                      <a
+                        href={getLinkedinUrl(user.linkedin)}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="px-3 py-1.5 bg-surface-mid hover:bg-surface border border-outline-var/40 hover:border-blue-400 text-text-muted hover:text-blue-400 text-xs font-syne font-bold uppercase rounded-xs flex items-center gap-1.5 transition-colors"
+                        title="LinkedIn Profile"
+                      >
+                        <Linkedin size={13} /> LinkedIn
+                      </a>
+                    )}
+                    {user.leetcodeUsername && (
+                      <a
+                        href={`https://leetcode.com/u/${user.leetcodeUsername}/`}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="px-3 py-1.5 bg-surface-mid hover:bg-surface border border-outline-var/40 hover:border-[#f59e0b] text-text-muted hover:text-[#f59e0b] text-xs font-syne font-bold uppercase rounded-xs flex items-center gap-1.5 transition-colors"
+                        title="LeetCode Profile"
+                      >
+                        <Cpu size={13} /> LeetCode
+                      </a>
+                    )}
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* ── 2. CORE CREDENTIALS BENTO GRID (ABOVE THE FOLD) ──────────────── */}
+            <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+              {/* Left Bento Column (About + Skills Matrix - 6 cols) */}
+              <div className="lg:col-span-6 space-y-6">
+                {/* About Card */}
+                <div className="bg-surface border border-outline-var/25 rounded-xl p-5 sm:p-6 shadow-sm space-y-3">
+                  <h3 className="text-outline font-syne font-bold text-xs uppercase tracking-wider flex items-center gap-2">
+                    <Shield size={14} className="text-accent" /> About
+                  </h3>
+                  <p className="text-xs sm:text-sm text-text-muted leading-relaxed whitespace-pre-wrap font-outfit">
+                    {user.bio || 'No bio added yet.'}
+                  </p>
+                </div>
+
+                {/* Verified Skills Matrix Card */}
+                <div className="bg-surface border border-outline-var/25 rounded-xl p-5 sm:p-6 shadow-sm space-y-4">
+                  <div className="flex items-center justify-between">
+                    <h3 className="text-outline font-syne font-bold text-xs uppercase tracking-wider flex items-center gap-2">
+                      <Cpu size={14} className="text-primary" /> Skills & Competencies ({user.skills?.length || 0})
+                    </h3>
+                    <span className="text-[10px] font-syne font-extrabold uppercase tracking-wider text-accent bg-accent/10 border border-accent/30 px-2 py-0.5 rounded-full">
+                      {user.skills?.filter(s => s.isVerified).length || 0} Verified
+                    </span>
+                  </div>
+                  <div className="flex flex-wrap gap-2">
+                    {user.skills?.length > 0 ? (
+                      user.skills.map((record) => (
+                        <span
+                          key={record.id}
+                          className={`px-3 py-1.5 border font-syne text-xs font-bold flex items-center gap-1.5 rounded-xs transition-colors ${
+                            record.isVerified
+                              ? 'bg-accent/10 border-accent/30 text-accent'
+                              : 'bg-surface-mid border-outline-var/30 text-text-muted'
+                          }`}
+                        >
+                          {record.skill?.name || record.name}
+                          {record.isVerified && (
+                            record.verificationSource === 'GITHUB' ? <Github size={11} className="text-accent" /> :
+                            record.verificationSource === 'CREDENTIAL' ? <Award size={11} className="text-accent" /> :
+                            <CheckCircle size={11} className="text-accent" />
+                          )}
+                          {record.calculatedScore && (
+                            <span className="text-[10px] font-mono opacity-80">({record.calculatedScore}/10)</span>
+                          )}
+                        </span>
+                      ))
+                    ) : (
+                      <p className="text-xs text-outline italic">No skills listed yet.</p>
+                    )}
+                  </div>
+                </div>
               </div>
 
-              {user.college && (
-                <div className="bg-surface-mid border border-primary-container/30 p-4 flex items-center gap-4 relative overflow-hidden group">
-                  <div className="absolute inset-0 bg-primary-container/10 group-hover:bg-primary-container/10 transition" />
-                  <div className="p-3 bg-primary-container/10 rounded border border-primary-container/30 text-primary"><Building2 size={24} /></div>
-                  <div>
-                    <div className="text-[10px] font-syne tracking-wide text-outline uppercase tracking-widest">Affiliated Institution</div>
-                    <div className="text-sm font-bold text-text-primary font-syne tracking-wide leading-tight">{user.college}</div>
+              {/* Right Bento Column (LeetCode Benchmark - 6 cols) */}
+              <div className="lg:col-span-6 space-y-6">
+                <LeetCodeCard
+                  leetcode={user}
+                  isOwner={isOwner}
+                  onConnect={() => navigate('/my-profile')}
+                />
+              </div>
+
+              {/* Full Width: Featured GitHub Projects Showcase (12 cols) */}
+              <div className="lg:col-span-12">
+                <GitHubProjectsSummary
+                  userId={id}
+                  userName={user?.name}
+                  isOwner={isOwner}
+                />
+              </div>
+            </div>
+
+            {/* ── 3. SOCIAL ACTIVITY & COMMUNITY POSTS (BELOW THE FOLD) ────────── */}
+            <div className="pt-8 border-t border-outline-var/25 space-y-6">
+              <div className="flex items-center justify-between">
+                <h3 className="text-xl sm:text-2xl font-black text-text-primary font-syne tracking-tight flex items-center gap-2.5">
+                  <div className="w-1.5 h-6 bg-primary rounded-full" /> Activity & Community Posts
+                </h3>
+                <span className="text-xs font-syne font-bold uppercase tracking-wider text-outline">
+                  {posts.length} {posts.length === 1 ? 'Post' : 'Posts'}
+                </span>
+              </div>
+
+              {isOwner && (
+                <div className="bg-surface border border-outline-var/30 rounded-xl p-5 shadow-sm space-y-3">
+                  <textarea
+                    value={newPostContent}
+                    onChange={(e) => { setNewPostContent(e.target.value); setCharCount(e.target.value.length); }}
+                    placeholder="Share an update with your network..."
+                    maxLength={500}
+                    className="w-full bg-surface-mid border border-outline-var/20 rounded-md text-text-primary p-3.5 focus:border-primary/60 outline-none resize-none h-24 font-outfit text-sm"
+                  />
+                  <div className="flex items-center justify-between">
+                    <span className={`text-[10px] font-syne tracking-wide ${charCount > 450 ? 'text-error' : 'text-outline'}`}>
+                      {charCount}/500
+                    </span>
+                  </div>
+                  {newPostImage && (
+                    <div className="relative mb-2 inline-block">
+                      <img src={newPostImage} alt="" className="max-h-40 rounded-md border border-outline-var/40 object-cover" />
+                      <button
+                        type="button"
+                        onClick={() => { setNewPostImage(''); if (postImageRef.current) postImageRef.current.value = ''; }}
+                        className="absolute -top-2 -right-2 p-1 bg-error text-white rounded-full cursor-pointer shadow-md"
+                      >
+                        <X size={12} />
+                      </button>
+                    </div>
+                  )}
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <input ref={postImageRef} type="file" accept="image/*" onChange={handleImageChange} className="hidden" />
+                    <button
+                      type="button"
+                      onClick={() => postImageRef.current.click()}
+                      className="flex items-center gap-2 px-3 py-2 bg-surface-mid border border-outline-var/40 hover:border-primary text-outline hover:text-primary transition-colors text-xs font-syne font-bold uppercase rounded-xs cursor-pointer"
+                    >
+                      <ImageIcon size={14} /> Attach Image
+                    </button>
+                    <div className="flex-1" />
+                    <button
+                      type="button"
+                      onClick={handleCreatePost}
+                      disabled={!newPostContent.trim()}
+                      className="bg-primary hover:bg-secondary-bright text-on-primary font-syne font-bold px-6 py-2 text-xs uppercase tracking-wider rounded-xs disabled:opacity-40 transition-all cursor-pointer shadow-sm"
+                    >
+                      POST
+                    </button>
                   </div>
                 </div>
               )}
 
-              <div className="grid grid-cols-2 gap-2">
-                {user.github && (
-                  <a href={getGithubUrl(user.github)} target="_blank" rel="noreferrer"
-                    className="p-3 bg-surface border border-outline-var/40 hover:border-primary text-text-muted hover:text-text-primary flex items-center justify-center gap-2 transition">
-                    <Github size={16} /> GITHUB
-                  </a>
-                )}
-                {user.linkedin && (
-                  <a href={getLinkedinUrl(user.linkedin)} target="_blank" rel="noreferrer"
-                    className="p-3 bg-surface border border-outline-var/40 hover:border-blue-400 text-text-muted hover:text-primary-container flex items-center justify-center gap-2 transition">
-                    <Linkedin size={16} /> NETWORK
-                  </a>
-                )}
-              </div>
-
-              {/* LeetCode Profile Card */}
-              <LeetCodeCard
-                leetcode={user}
-                isOwner={isOwner}
-                onConnect={() => navigate('/my-profile')}
-              />
-
-              {/* GitHub Projects Showcase Summary */}
-              <GitHubProjectsSummary
-                userId={id}
-                userName={user?.name}
-                isOwner={isOwner}
-              />
-            </div>
-
-            {/* Right content - posts feed - z-10 to render above profile */}
-            <div className="lg:col-span-8 space-y-6 relative z-10">
-              <div className="bg-surface border border-outline-var/20 p-6">
-                <h3 className="text-outline font-syne tracking-wide text-xs mb-4 flex items-center gap-2"><Shield size={14} className="text-accent" /> About</h3>
-                <p className="text-lg text-text-muted leading-relaxed border-l-2 border-primary/20 pl-4">{user.bio || 'No bio added yet.'}</p>
-              </div>
-
-              <div className="bg-surface border border-outline-var/20 p-6">
-                <h3 className="text-outline font-syne tracking-wide text-xs mb-4 flex items-center gap-2"><Cpu size={14} className="text-error" /> Skills</h3>
-                <div className="flex flex-wrap gap-2">
-                  {user.skills?.map(record => (
-                    <span key={record.id} className={`px-3 py-1 border font-syne tracking-wide text-xs font-bold flex items-center gap-1 ${record.isVerified ? 'bg-accent/10 border-accent/30 text-accent' : 'bg-surface-mid border-primary/20 text-primary'}`}>
-                      {record.skill?.name || record.name}
-                      {record.isVerified && (
-                        record.verificationSource === 'GITHUB' ? <Github size={10} className="text-accent" /> :
-                        record.verificationSource === 'CREDENTIAL' ? <Award size={10} className="text-accent" /> :
-                        <CheckCircle size={10} className="text-accent" />
-                      )}
-                    </span>
+              {posts.length === 0 ? (
+                <div className="text-center py-16 bg-surface/30 border border-dashed border-outline-var/30 rounded-xl space-y-2">
+                  <MessageCircle size={36} className="mx-auto text-outline" />
+                  <p className="text-outline font-syne tracking-wide text-sm">No posts published yet.</p>
+                  {isOwner && <p className="text-outline font-outfit text-xs">Share your latest achievements with your network above.</p>}
+                </div>
+              ) : (
+                <div className="space-y-4">
+                  {posts.map((post) => (
+                    <PostCard
+                      key={post.id}
+                      post={post}
+                      currentUser={currentUser}
+                      isOwner={isOwner}
+                      onDelete={handleDeletePost}
+                      onEdit={handleEditPost}
+                      onLike={handleLikePost}
+                      onComment={handleComment}
+                      onLikeComment={handleLikeComment}
+                      onDeleteComment={handleDeleteComment}
+                      onReplyComment={handleComment}
+                    />
                   ))}
-                </div>              </div>
-
-              <div className="pt-8 border-t border-outline-var/20">
-                  <h3 className="text-2xl font-black text-text-primary font-syne tracking-wide mb-6 flex items-center gap-2">
-                    <div className="w-2 h-8 bg-primary" /> Activity
-                  </h3>
-
-                {isOwner && (
-                  <div className="bg-surface border border-outline-var/40 p-4 mb-6">
-                    <textarea value={newPostContent}
-                      onChange={e => { setNewPostContent(e.target.value); setCharCount(e.target.value.length); }}
-                      placeholder="Share an update with your network..."
-                      maxLength={500}
-                      className="w-full bg-surface-mid border border-outline-var/20 text-text-primary p-3 focus:border-primary outline-none resize-none h-24 font-syne tracking-wide text-sm" />
-                    <div className="flex items-center justify-between mt-1 mb-2">
-                      <span className={`text-[10px] font-syne tracking-wide ${charCount > 450 ? 'text-error' : 'text-outline'}`}>{charCount}/500</span>
-                    </div>
-                    {newPostImage && (
-                      <div className="relative mb-3 inline-block">
-                        <img src={newPostImage} alt="" className="max-h-40 rounded border border-outline-var/40 object-cover" />
-                        <button type="button" onClick={() => { setNewPostImage(''); if (postImageRef.current) postImageRef.current.value = ''; }}
-                          className="absolute -top-2 -right-2 p-1 bg-error-container hover:bg-error-container text-text-primary rounded-full"><X size={12} /></button>
-                      </div>
-                    )}
-                    <div className="flex gap-2">
-                      <input ref={postImageRef} type="file" accept="image/*" onChange={handleImageChange} className="hidden" />
-                      <button type="button" onClick={() => postImageRef.current.click()}
-                        className="flex items-center gap-2 px-3 py-2 bg-surface-mid border border-outline-var/40 hover:border-primary text-outline hover:text-primary transition text-xs font-syne tracking-wide">
-                        <ImageIcon size={14} /> Attach Image
-                      </button>
-                      <div className="flex-1" />
-                      <button type="button" onClick={handleCreatePost}
-                        disabled={!newPostContent.trim()}
-                        className="bg-primary-container hover:bg-primary text-on-primary font-bold px-6 py-2 font-syne tracking-wide text-sm disabled:opacity-40">
-                        POST
-                      </button>
-                    </div>
-                  </div>
-                )}
-
-                {posts.length === 0 ? (
-                  <div className="text-center py-16 border border-dashed border-outline-var/20">
-                    <MessageCircle size={40} className="mx-auto text-outline-var mb-3" />
-                    <p className="text-outline font-syne tracking-wide text-sm">No posts yet.</p>
-                    {isOwner && <p className="text-outline-var font-syne tracking-wide text-xs mt-2">Share something with your network above.</p>}
-                  </div>
-                ) : (
-                  <div className="space-y-4">
-                    {posts.map(post => (
-                      <PostCard key={post.id}
-                        post={post}
-                        currentUser={currentUser}
-                        isOwner={isOwner}
-                        onDelete={handleDeletePost}
-                        onEdit={handleEditPost}
-                        onLike={handleLikePost}
-                        onComment={handleComment}
-                        onLikeComment={handleLikeComment}
-                        onDeleteComment={handleDeleteComment}
-                        onReplyComment={handleComment}
-                      />
-                    ))}
-                  </div>
-                )}
-              </div>
+                </div>
+              )}
             </div>
           </div>
         )}
