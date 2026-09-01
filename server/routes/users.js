@@ -368,7 +368,16 @@ router.patch('/me', authenticateToken, asyncHandler(async (req, res) => {
 // ── POST /api/users/me/skills — bulk sync user profile skills (supports skill removal & canonicalization) ───
 router.post('/me/skills', authenticateToken, asyncHandler(async (req, res) => {
   const { skillIds } = z.object({ skillIds: z.array(z.string()) }).parse(req.body);
-  const normalizedRequested = [...new Set(skillIds.map((s) => normalizeSkillCanonical(s)).filter(Boolean))];
+  const normalizedRequested = [...new Set(
+    skillIds
+      .map((s) => {
+        if (!s || typeof s !== 'string') return null;
+        const clean = s.trim();
+        if (/^[0-9a-fA-F-]{36}$/.test(clean) || /^\d+$/.test(clean)) return null;
+        return normalizeSkillCanonical(clean);
+      })
+      .filter(Boolean)
+  )];
 
   // Fetch current skills
   const existingSkills = await prisma.skill.findMany({

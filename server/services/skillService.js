@@ -49,7 +49,11 @@ export async function getUserSkills(userId) {
  */
 export async function addUserSkill(userId, { name, level = 'Beginner', showLevel = true }) {
   if (!name || !name.trim()) throw ApiError.badRequest('Skill name is required');
-  const skillName = normalizeSkillCanonical(name);
+  const clean = name.trim();
+  if (/^[0-9a-fA-F-]{36}$/.test(clean) || /^\d+$/.test(clean)) {
+    throw ApiError.badRequest('Invalid skill name format');
+  }
+  const skillName = normalizeSkillCanonical(clean);
 
   // Enforce 20 skills limit
   const currentCount = await prisma.skill.count({ where: { userId } });
@@ -332,20 +336,33 @@ export async function analyzeSkillGap(userId, roleIdOrName, forceRegenerate = fa
 export async function updateUserSkills(userId, skillIds) {
   await prisma.skill.deleteMany({ where: { userId, isVerified: false, verificationUrl: null } });
 
-  if (skillIds.length === 0) return { count: 0 };
+  if (!Array.isArray(skillIds) || skillIds.length === 0) return { count: 0 };
 
   const catalogue = await getAllSkills();
   const idToName = Object.fromEntries(catalogue.map((s) => [s.id, s.name]));
 
-  const toCreate = skillIds.map((id) => ({
-    userId,
-    name: normalizeSkillCanonical(idToName[id] || id),
-    level: 'Beginner',
-    isVerified: false,
-    showLevel: true,
-  }));
+  const toCreate = skillIds
+    .map((idOrName) => {
+      if (!idOrName || typeof idOrName !== 'string') return null;
+      const clean = idOrName.trim();
+      const resolved = idToName[clean] || clean;
+      // Reject raw UUIDs or pure numeric strings that cannot be mapped to a catalog skill name
+      if (/^[0-9a-fA-F-]{36}$/.test(resolved) || /^\d+$/.test(resolved)) {
+        return null;
+      }
+      return {
+        userId,
+        name: normalizeSkillCanonical(resolved),
+        level: 'Beginner',
+        isVerified: false,
+        showLevel: true,
+      };
+    })
+    .filter(Boolean);
 
-  await prisma.skill.createMany({ data: toCreate, skipDuplicates: true });
+  if (toCreate.length > 0) {
+    await prisma.skill.createMany({ data: toCreate, skipDuplicates: true });
+  }
   await cache.del(`user:profile:${userId}`);
 
   return { count: toCreate.length };
