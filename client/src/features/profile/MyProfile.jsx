@@ -4,7 +4,7 @@ import {
   ArrowLeft, Camera, User, Plus, CheckCircle,
   X, Shield, Github, Linkedin, Save, Building2,
   Zap, Award, AlertTriangle, Trash2, ChevronRight, TrendingUp, Lock, RefreshCw,
-  Sparkles, Eye
+  Sparkles, EyeOff
 } from 'lucide-react';
 import ProfileAPI from './profileAPI';
 import SkillAPI from '../skills/skillAPI';
