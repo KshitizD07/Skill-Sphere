@@ -5,6 +5,7 @@ import { asyncHandler } from '../utils/errorHandler.js';
 import { authenticateToken } from '../middleware/auth.js';
 import * as verifyService from '../services/verifyService.js';
 import { verifyLeetCodeSkill, scanLeetCodeProfile } from '../services/leetcodeService.js';
+import cache from '../utils/cache.js';
 
 const router = express.Router();
 const prisma = new PrismaClient();
@@ -181,6 +182,8 @@ router.post('/leetcode-profile-sync', authenticateToken, asyncHandler(async (req
     data: { userId: req.user.userId, action: 'LEETCODE_CONNECTED', details: `LeetCode profile synced: ${scanResult.username}` },
   });
 
+  await cache.del(`user:profile:${req.user.userId}`);
+
   res.json({ success: true, leetcode: updated });
 }));
 
@@ -227,6 +230,8 @@ router.delete('/leetcode-profile', authenticateToken, asyncHandler(async (req, r
   await prisma.activityLog.create({
     data: { userId: req.user.userId, action: 'LEETCODE_UNLINKED', details: 'LeetCode profile unlinked' },
   });
+
+  await cache.del(`user:profile:${req.user.userId}`);
 
   res.json({ success: true, message: 'LeetCode profile unlinked' });
 }));

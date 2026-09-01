@@ -2,6 +2,7 @@ import { PrismaClient } from '@prisma/client';
 import { ApiError } from '../utils/errorHandler.js';
 import logger from '../utils/logger.js';
 import { sendNotification } from '../utils/notify.js';
+import cache from '../utils/cache.js';
 
 const prisma = new PrismaClient();
 const LEETCODE_GRAPHQL_URL = 'https://leetcode.com/graphql';
@@ -281,6 +282,9 @@ export async function verifyLeetCodeSkill({ userId, skillName, username, showLev
     'Skill Verified',
     `Your LeetCode profile for ${normalizedSkill} was successfully verified. You achieved a score of ${score}/10.`
   );
+
+  // Invalidate profile cache so fresh verified state appears immediately
+  await cache.del(`user:profile:${userId}`);
 
   logger.info('Skill verified via LeetCode', { userId, skill: normalizedSkill, score, username });
 
