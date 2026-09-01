@@ -375,15 +375,20 @@ export default function Network({ user: propUser, onLogout }) {
                         </div>
 
                         <div className="flex-1 min-w-0 pr-2">
-                          <div className="flex items-center justify-between">
+                          <div className="flex items-center justify-between gap-1">
                             <h3 className="font-bold text-base text-text-primary group-hover:text-primary transition-colors truncate">
                               {user.name}
                             </h3>
+                            {user.id === currentUser?.id && (
+                              <span className="px-2 py-0.5 rounded-full text-[9px] font-syne font-black uppercase bg-primary/20 text-primary border border-primary/30 shrink-0">
+                                You
+                              </span>
+                            )}
                           </div>
                           <p className="text-xs text-text-muted line-clamp-1 mt-0.5">
                             {user.headline || 'Member'}
                           </p>
-                          <div className="flex items-center gap-1.5 mt-1">
+                          <div className="flex items-center gap-1.5 mt-1 flex-wrap">
                             <span className={`px-2 py-0.5 rounded-full text-[9px] font-syne font-bold uppercase border ${roleBadgeClass}`}>
                               {user.role}
                             </span>
@@ -431,38 +436,57 @@ export default function Network({ user: propUser, onLogout }) {
 
                     {/* Footer Actions */}
                     <div className="flex items-center gap-2 mt-4 pt-4 border-t border-outline-var/20">
-                      <button
-                        onClick={async () => {
-                          const isCurrentlyFollowing = user.isFollowing;
-                          setUsers(prev => prev.map(u => u.id === user.id ? { ...u, isFollowing: !isCurrentlyFollowing } : u));
-                          try {
-                            if (isCurrentlyFollowing) await ProfileAPI.unfollowUser(user.id);
-                            else await ProfileAPI.followUser(user.id);
-                          } catch {
-                            setUsers(prev => prev.map(u => u.id === user.id ? { ...u, isFollowing: isCurrentlyFollowing } : u));
-                          }
-                        }}
-                        className={`px-3 py-2 border font-syne font-bold text-xs uppercase tracking-wider rounded-xs transition-all flex items-center justify-center gap-1 shrink-0 ${
-                          user.isFollowing
-                            ? 'bg-surface-mid border-outline-var/30 text-text-muted hover:border-error hover:text-error'
-                            : 'bg-primary/15 border-primary/30 text-primary hover:bg-primary hover:text-on-primary'
-                        }`}
-                        title={user.isFollowing ? 'Unfollow' : 'Follow'}
-                      >
-                        {user.isFollowing ? <UserCheck size={13} /> : <UserPlus size={13} />}
-                      </button>
-                      <button
-                        onClick={() => navigate(`/chat/${user.id}`)}
-                        className="flex-1 py-2 bg-primary/10 hover:bg-primary text-primary hover:text-on-primary font-syne font-bold text-xs uppercase tracking-wider rounded-xs transition-all flex items-center justify-center gap-1.5"
-                      >
-                        <MessageSquare size={13} /> Message
-                      </button>
-                      <button
-                        onClick={() => navigate(`/profile/${user.id}`)}
-                        className="px-3.5 py-2 bg-surface-mid hover:bg-surface border border-outline-var/30 text-text-muted hover:text-text-primary font-syne font-bold text-xs uppercase tracking-wider rounded-xs transition-colors flex items-center gap-1"
-                      >
-                        Profile <ArrowRight size={12} />
-                      </button>
+                      {user.id === currentUser?.id ? (
+                        <button
+                          onClick={() => navigate('/my-profile')}
+                          className="w-full py-2 bg-primary/15 hover:bg-primary text-primary hover:text-on-primary font-syne font-bold text-xs uppercase tracking-wider rounded-xs transition-all flex items-center justify-center gap-1.5 cursor-pointer"
+                        >
+                          <User size={13} /> Your Profile (View / Edit)
+                        </button>
+                      ) : (
+                        <>
+                          <button
+                            onClick={async () => {
+                              const isCurrentlyFollowing = user.isFollowing;
+                              setUsers((prev) =>
+                                prev.map((u) =>
+                                  u.id === user.id ? { ...u, isFollowing: !isCurrentlyFollowing } : u
+                                )
+                              );
+                              try {
+                                if (isCurrentlyFollowing) await ProfileAPI.unfollowUser(user.id);
+                                else await ProfileAPI.followUser(user.id);
+                              } catch {
+                                setUsers((prev) =>
+                                  prev.map((u) =>
+                                    u.id === user.id ? { ...u, isFollowing: isCurrentlyFollowing } : u
+                                  )
+                                );
+                              }
+                            }}
+                            className={`px-3 py-2 border font-syne font-bold text-xs uppercase tracking-wider rounded-xs transition-all flex items-center justify-center gap-1 shrink-0 cursor-pointer ${
+                              user.isFollowing
+                                ? 'bg-surface-mid border-outline-var/30 text-text-muted hover:border-error hover:text-error'
+                                : 'bg-primary/15 border-primary/30 text-primary hover:bg-primary hover:text-on-primary'
+                            }`}
+                            title={user.isFollowing ? 'Unfollow' : 'Follow'}
+                          >
+                            {user.isFollowing ? <UserCheck size={13} /> : <UserPlus size={13} />}
+                          </button>
+                          <button
+                            onClick={() => navigate(`/chat/${user.id}`)}
+                            className="flex-1 py-2 bg-primary/10 hover:bg-primary text-primary hover:text-on-primary font-syne font-bold text-xs uppercase tracking-wider rounded-xs transition-all flex items-center justify-center gap-1.5 cursor-pointer"
+                          >
+                            <MessageSquare size={13} /> Message
+                          </button>
+                          <button
+                            onClick={() => navigate(`/profile/${user.id}`)}
+                            className="px-3.5 py-2 bg-surface-mid hover:bg-surface border border-outline-var/30 text-text-muted hover:text-text-primary font-syne font-bold text-xs uppercase tracking-wider rounded-xs transition-colors flex items-center gap-1 cursor-pointer"
+                          >
+                            Profile <ArrowRight size={12} />
+                          </button>
+                        </>
+                      )}
                     </div>
                   </div>
                 );

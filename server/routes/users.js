@@ -63,9 +63,10 @@ router.get('/', authenticateToken, asyncHandler(async (req, res) => {
   const cached = await cache.get(queryFingerprint);
   if (cached) return res.json(cached);
 
-  const where = {
-    id: { not: currentUserId }, // Exclude self
-  };
+  const where = {};
+  if (req.query.excludeSelf === 'true') {
+    where.id = { not: currentUserId };
+  }
 
   if (role && role !== 'ALL') {
     where.role = role;
