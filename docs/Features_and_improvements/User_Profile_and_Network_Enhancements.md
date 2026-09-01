@@ -169,25 +169,24 @@ Moved `<CompletenessBar score={completeness.score} checks={completeness.checks} 
 
 ---
 
-### 3.4 Issue 4: Missing Recruiter View Preview on `MyProfile.jsx` & Self-Exclusion in Network
+### 3.4 Issue 4: In-Place Recruiter View Toggle & Unified Network Profile Routing
 
 #### **What was happening?**
-1. Users had no way to preview how recruiters see their profile (`RecruiterDossier`) while editing `MyProfile.jsx`.
-2. Users could never see their own card or ranking on the Peer Network directory (`/network`).
+1. On `MyProfile.jsx`, clicking Recruiter View opened a modal overlay on top of the page rather than seamlessly transforming the whole page in-place (the way `UserProfile.jsx` functions).
+2. Clicking on the user's own card in the Peer Network directory (`/network`) redirected back to `/my-profile` (edit form) instead of navigating to `/profile/:id` (the public portfolio view where LeetCode & GitHub cards are presented).
 
 #### **Why did it happen?**
-1. `MyProfile.jsx` lacked a preview trigger button.
-2. `server/routes/users.js:L67` hardcoded `where: { id: { not: currentUserId } }`.
+1. `MyProfile.jsx` was wrapping `<RecruiterDossier />` in a fixed-position popup modal instead of conditional in-place page rendering.
+2. `Network.jsx` conditionally routed own card to `/my-profile` while other cards routed to `/profile/:id`.
 
 #### **Where was it located?**
-* [client/src/features/profile/MyProfile.jsx:L755-L775](file:///C:/Users/kshit/cs/skillsphere/client/src/features/profile/MyProfile.jsx#L755-L775)
-* [client/src/features/network/Network.jsx:L375-L465](file:///C:/Users/kshit/cs/skillsphere/client/src/features/network/Network.jsx#L375-L465)
+* [client/src/features/profile/MyProfile.jsx:L770-L860](file:///C:/Users/kshit/cs/skillsphere/client/src/features/profile/MyProfile.jsx#L770-L860)
+* [client/src/features/network/Network.jsx:L360-L450](file:///C:/Users/kshit/cs/skillsphere/client/src/features/network/Network.jsx#L360-L450)
 * [server/routes/users.js:L66-L69](file:///C:/Users/kshit/cs/skillsphere/server/routes/users.js#L66-L69)
 
 #### **How was it resolved?**
-1. **Header Recruiter View Button**: Added a dedicated `👁️ Recruiter View` button beside `Save Changes` in `MyProfile.jsx`, opening a live modal preview of `<RecruiterDossier />`.
-2. **Network Self-Inclusion**: Updated `server/routes/users.js` to only exclude self if `excludeSelf=true`.
-3. **Self-Card Recognition**: Added a `(You)` badge on `Network.jsx` with a `Your Profile (View / Edit)` CTA button.
+1. **In-Place Seamless Toggle on `MyProfile.jsx`**: Converted the `Recruiter View` button into an in-place state toggle (`recruiterMode`). When clicked, the entire page seamlessly switches between the standard editor and the `<RecruiterDossier />`, with the button toggling between `Recruiter View` and `Standard View` (`EyeOff` icon).
+2. **Unified `/profile/:id` Routing across Peer Network**: Updated `Network.jsx` so clicking ANY card, name, or avatar (including your own) consistently routes to `/profile/:id` (`UserProfile.jsx`). Users view their own public portfolio layout exactly as peers and recruiters see it.
 
 ---
 
@@ -196,7 +195,7 @@ Moved `<CompletenessBar score={completeness.score} checks={completeness.checks} 
 | File Path | Changes Made |
 | :--- | :--- |
 | `client/src/features/profile/UserProfile.jsx` | Restructured layout: Compact Hero card + Above-the-fold Credentials Bento Grid + Lower Activity feed; applied dark theme tokens. |
-| `client/src/features/profile/MyProfile.jsx` | Moved `CompletenessBar` to top of Identity step; added `Recruiter View` header button with live preview modal. |
-| `client/src/features/network/Network.jsx` | Added `(You)` badge for current user card and full-width profile edit button. |
+| `client/src/features/profile/MyProfile.jsx` | Moved `CompletenessBar` to top of Identity step; added in-place `Recruiter View` / `Standard View` whole-page toggle. |
+| `client/src/features/network/Network.jsx` | Added `(You)` badge on self-card and unified all profile navigation directly to `/profile/:id`. |
 | `server/routes/users.js` | Updated `GET /api/users` query filter to allow user self-discovery in network directory. |
 | `docs/Features_and_improvements/User_Profile_and_Network_Enhancements.md` | Created comprehensive feature & architecture documentation (This file). |
