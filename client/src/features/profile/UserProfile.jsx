@@ -442,62 +442,62 @@ export default function UserProfile() {
   if (!user)   return <div className="p-10 text-error font-syne tracking-wide bg-bg-base min-h-screen">USER_NOT_FOUND</div>;
 
   return (
-    <div className="min-h-screen bg-bg-base text-text-muted font-outfit p-4 md:p-8 relative selection:bg-primary selection:text-on-primary">
-      <div className="w-full max-w-[1400px] mx-auto relative z-10">
-        <div className="flex items-center justify-between mb-8">
-          <button type="button" onClick={handleBack} className="p-2 border border-outline-var/40 hover:border-primary text-outline hover:text-primary transition">
-            <ArrowLeft size={20} />
+    <div className="min-h-screen bg-bg-base text-text-muted font-outfit p-3 sm:p-5 md:p-8 relative selection:bg-primary selection:text-on-primary">
+      <div className="w-full max-w-[1400px] mx-auto relative z-10 space-y-5">
+        <div className="flex items-center justify-between">
+          <button type="button" onClick={handleBack} className="p-2 border border-outline-var/40 hover:border-primary text-outline hover:text-primary transition rounded-xs cursor-pointer">
+            <ArrowLeft size={18} />
           </button>
           <div className="flex items-center gap-3">
             <button
               type="button"
               onClick={() => setRecruiterMode(!recruiterMode)}
-              className={`flex items-center gap-2 px-3.5 py-1.5 border font-bold font-syne tracking-wider text-xs rounded-xs transition-all shadow-xs cursor-pointer ${
+              className={`flex items-center gap-1.5 px-3.5 py-1.5 border font-bold font-syne tracking-wider text-xs rounded-xs transition-all shadow-xs cursor-pointer ${
                 recruiterMode
                   ? 'bg-accent text-bg-base border-accent font-black shadow-accent/20'
                   : 'bg-surface-mid border-outline-var/40 text-text-primary hover:border-accent/40 hover:text-accent'
               }`}
             >
-              {recruiterMode ? <EyeOff size={14} /> : <Sparkles size={14} className="text-accent" />}
+              {recruiterMode ? <EyeOff size={13} /> : <Sparkles size={13} className="text-accent" />}
               <span>{recruiterMode ? 'Standard View' : 'Recruiter View'}</span>
             </button>
             {isOwner && (
               <button type="button" onClick={() => navigate('/my-profile')}
-                className="flex items-center gap-2 px-4 py-1 border border-primary/20 text-primary hover:bg-primary hover:text-on-primary transition font-syne tracking-wide text-xs font-bold rounded-xs cursor-pointer">
-                <Edit3 size={14} /> Edit Profile
+                className="flex items-center gap-1.5 px-3.5 py-1.5 border border-primary/20 text-primary hover:bg-primary hover:text-on-primary transition font-syne tracking-wide text-xs font-bold rounded-xs cursor-pointer">
+                <Edit3 size={13} /> Edit Profile
               </button>
             )}
           </div>
         </div>
 
         {recruiterMode ? <RecruiterDossier user={user} isOwner={isOwner} /> : (
-          <div className="space-y-6">
+          <div className="space-y-5">
             {/* ── 1. COMPACT HERO PROFILE CARD ────────────────────────────────── */}
-            <div className="bg-surface border border-outline-var/30 rounded-xl p-5 md:p-7 shadow-xl relative overflow-hidden">
+            <div className="bg-surface border border-outline-var/30 rounded-xl p-4 sm:p-5 md:p-6 shadow-xl relative overflow-hidden">
               <div className="absolute top-0 right-0 -mr-16 -mt-16 w-64 h-64 bg-gradient-to-bl from-accent/10 via-primary/5 to-transparent rounded-full blur-2xl pointer-events-none" />
 
-              <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-6 relative z-10">
+              <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-5 relative z-10">
                 {/* Left: Avatar + Identity */}
-                <div className="flex items-start sm:items-center gap-4 sm:gap-6 flex-1 min-w-0">
-                  <div className="relative shrink-0">
-                    <div className="w-18 h-18 sm:w-22 sm:h-22 rounded-full border-2 border-accent/40 overflow-hidden bg-surface-mid flex items-center justify-center shadow-lg">
+                <div className="flex items-center gap-4 sm:gap-5 flex-1 min-w-0">
+                  <div className="relative shrink-0 w-16 h-16 sm:w-20 sm:h-20">
+                    <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-full border-2 border-accent/40 overflow-hidden bg-surface-mid flex items-center justify-center shadow-lg shrink-0">
                       {user.avatar ? (
                         <img src={user.avatar} alt={user.name || "Profile avatar"} loading="lazy" decoding="async" className="w-full h-full object-cover" />
                       ) : (
-                        <User size={36} className="text-outline" />
+                        <User size={32} className="text-outline" />
                       )}
                     </div>
-                    <div className="absolute -bottom-1 -right-1 w-5 h-5 rounded-full bg-surface border-2 border-surface flex items-center justify-center shadow-xs" title="SkillSphere Verified">
-                      <Shield size={12} className="text-accent fill-accent/20" />
+                    <div className="absolute -bottom-0.5 -right-0.5 w-5 h-5 rounded-full bg-surface border-2 border-surface flex items-center justify-center shadow-xs" title="SkillSphere Verified">
+                      <Shield size={11} className="text-accent fill-accent/20" />
                     </div>
                   </div>
 
-                  <div className="space-y-1.5 min-w-0">
+                  <div className="space-y-1 min-w-0 flex-1">
                     <div className="flex items-center gap-2.5 flex-wrap">
-                      <h2 className="text-xl sm:text-2xl font-black text-text-primary font-syne tracking-tight truncate">
+                      <h2 className="text-lg sm:text-xl md:text-2xl font-black text-text-primary font-syne tracking-tight truncate">
                         {user.name}
                       </h2>
-                      <span className="px-2.5 py-0.5 rounded-full text-[10px] font-syne font-bold uppercase tracking-wider bg-accent/10 border border-accent/30 text-accent">
+                      <span className="px-2 py-0.5 rounded-full text-[9px] font-syne font-bold uppercase tracking-wider bg-accent/10 border border-accent/30 text-accent">
                         {user.role === 'GUEST' 
                           ? `Guest · ${user.guestPersona || 'Student'}` 
                           : user.role === 'PROFESSIONAL' ? 'Working Professional'
@@ -505,17 +505,17 @@ export default function UserProfile() {
                       </span>
                     </div>
 
-                    <p className="text-xs sm:text-sm text-text-muted font-outfit line-clamp-2">
+                    <p className="text-xs sm:text-sm text-text-muted font-outfit line-clamp-1">
                       {user.headline || 'Software Engineer • SkillSphere Member'}
                     </p>
 
-                    <div className="flex items-center gap-3 text-xs text-outline font-syne pt-1 flex-wrap">
+                    <div className="flex items-center gap-3 text-xs text-outline font-syne pt-0.5 flex-wrap">
                       {user.college && (
-                        <span className="flex items-center gap-1.5 text-text-muted">
-                          <Building2 size={13} className="text-primary shrink-0" /> {user.college}
+                        <span className="flex items-center gap-1 text-text-muted text-xs">
+                          <Building2 size={12} className="text-primary shrink-0" /> {user.college}
                         </span>
                       )}
-                      <div className="flex items-center gap-4 text-xs font-outfit">
+                      <div className="flex items-center gap-3 text-xs font-outfit">
                         <button
                           type="button"
                           onClick={() => { setModalTab('followers'); setShowFollowModal(true); }}
