@@ -358,8 +358,11 @@ export default function Network({ user: propUser, onLogout }) {
                     <div className="space-y-4">
                       {/* Top Header */}
                       <div className="flex items-start gap-3">
-                        <div className="relative shrink-0">
-                          <div className="w-12 h-12 rounded-full border border-outline-var/40 overflow-hidden bg-surface-mid flex items-center justify-center">
+                        <div
+                          onClick={() => navigate(`/profile/${user.id}`)}
+                          className="relative shrink-0 cursor-pointer"
+                        >
+                          <div className="w-12 h-12 rounded-full border border-outline-var/40 hover:border-primary/50 overflow-hidden bg-surface-mid flex items-center justify-center transition-colors">
                             {user.avatar ? (
                               <img src={user.avatar} className="w-full h-full object-cover" alt="" />
                             ) : (
@@ -376,7 +379,10 @@ export default function Network({ user: propUser, onLogout }) {
 
                         <div className="flex-1 min-w-0 pr-2">
                           <div className="flex items-center justify-between gap-1">
-                            <h3 className="font-bold text-base text-text-primary group-hover:text-primary transition-colors truncate">
+                            <h3
+                              onClick={() => navigate(`/profile/${user.id}`)}
+                              className="font-bold text-base text-text-primary group-hover:text-primary transition-colors truncate cursor-pointer"
+                            >
                               {user.name}
                             </h3>
                             {user.id === currentUser?.id && (
@@ -438,10 +444,10 @@ export default function Network({ user: propUser, onLogout }) {
                     <div className="flex items-center gap-2 mt-4 pt-4 border-t border-outline-var/20">
                       {user.id === currentUser?.id ? (
                         <button
-                          onClick={() => navigate('/my-profile')}
+                          onClick={() => navigate(`/profile/${user.id}`)}
                           className="w-full py-2 bg-primary/15 hover:bg-primary text-primary hover:text-on-primary font-syne font-bold text-xs uppercase tracking-wider rounded-xs transition-all flex items-center justify-center gap-1.5 cursor-pointer"
                         >
-                          <User size={13} /> Your Profile (View / Edit)
+                          <User size={13} /> View Your Profile <ArrowRight size={12} />
                         </button>
                       ) : (
                         <>
