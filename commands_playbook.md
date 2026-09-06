@@ -1,342 +1,27 @@
-# 📋 Master Command Execution Playbook & Technical Deep-Dive
-### *Every Command Run Across Containerization, CI/CD Pipelines, and AWS Cloud Deployment*
+# 📋 Master Command Execution Playbook: End-to-End Chronological Timeline
+### *Every Single Command from Fresh Machine to Production Cloud Deployment (Step-by-Step with Technical Explanations)*
 
 ---
 
-## 📌 Overview
-This document provides an exhaustive, command-by-command reference of **every single command** executed, configured, or required across the three pillars of the SkillSphere deployment:
-1. **Containerization & Docker Orchestration**
-2. **Database Migrations & CI/CD Pipelines**
-3. **Cloud Infrastructure (AWS EC2, Linux Sysadmin & Cost Optimization)**
-
-For each command, you will find:
-- **Where & When it is run** (Local Terminal, EC2 SSH, GitHub Actions Runner, or Container Shell).
-- **The Technical "Why"**: What happens under the hood at the operating system and container engine level.
-- **Consequences of Skipping**: What breaks if you don't run it.
-- **Expected Output & Verification**: How to confirm success.
-
----
-
-# 🐳 Section 1: Containerization & Docker Commands
+## 📌 How This Document is Structured
+Unlike fragmented tutorials, this guide is arranged in the **exact chronological sequence** that an engineer executes from day zero:
+1. **Phase 0:** Local Workstation Pre-Requisites & SSH Security
+2. **Phase 1:** Fresh Linux Server Provisioning & Environment Hardening (Git, Swap, Utilities)
+3. **Phase 2:** Official Docker Engine, Buildx & Docker Compose Installation
+4. **Phase 3:** Codebase Deployment & Environment Variable Configuration
+5. **Phase 4:** Docker Registry Authentication & Image Publishing (Docker Hub)
+6. **Phase 5:** Database Migration Diagnostics & Production Synchronization (The Prisma Post-Mortem)
+7. **Phase 6:** Multi-Container Orchestration, Startup & Live Operational Monitoring
+8. **Phase 7:** Custom Domain DNS, Reverse Proxy & Let's Encrypt SSL/TLS Automation
+9. **Phase 8:** Maintenance, Image Pruning & Zero-Cost (₹0) Shutdown Sequence
 
 ---
 
-### Command 1.1: Build Docker Images Locally
-```bash
-docker compose build
-```
-- **Where it runs**: Local developer machine or remote EC2 terminal (inside `~/Skill-Sphere`).
-- **The Technical "Why"**:
-  - Reads `docker-compose.yml`.
-  - For each service with a `build:` key (`server` and `client`), Docker reads their respective `Dockerfile`s.
-  - Assembles the immutable filesystem layers: base OS (`node:22-alpine` / `nginx:alpine`), installs dependencies (`npm ci`), copies source code, compiles assets (Vite frontend and Prisma client).
-- **Under the Hood**:
-  - Checks the local layer cache. If `package.json` hasn't changed, reuses cached dependency layers.
-  - Tags the resulting images locally.
-- **Consequence of Skipping**: If you modified application code or dependencies and run `docker compose up -d` without building, Docker will run the *stale* previous image.
-- **Verification**: Run `docker images` to see newly created image IDs and timestamps.
+# 🚀 Phase 0: Local Workstation Pre-Requisites & SSH Security
 
----
+*Before touching AWS or running server commands, you must configure local credentials and establish a secure shell connection.*
 
-### Command 1.2: Launch the Multi-Container Application in Detached Mode
-```bash
-docker compose up -d
-```
-- **Where it runs**: Local machine or AWS EC2 instance.
-- **The Technical "Why"**:
-  - Reads `docker-compose.yml` to define the desired state of the system.
-  - Automatically creates the private bridge network (`skillsphere_default`).
-  - Creates and attaches the persistent volume (`postgres_data`).
-  - Evaluates `depends_on` conditions and starts containers in strict order:
-    1. Starts `skillsphere-db` (PostgreSQL) and `skillsphere-redis`.
-    2. Waits for their `healthcheck` commands to pass (`pg_isready` and `redis-cli ping`).
-    3. Starts `skillsphere-server` (executing `npm run db:deploy && npm start`).
-    4. Starts `skillsphere-client` (Nginx reverse proxy on port 80).
-  - The `-d` (detached) flag releases your terminal prompt, running all processes as background daemons.
-- **Consequence of Skipping `-d`**: Your terminal remains attached to the stdout/stderr stream of the containers. If you close your terminal or press `Ctrl+C`, all containers will receive `SIGINT` and shut down immediately.
-- **Verification**:
-  ```bash
-  docker ps
-  ```
-  All 4 containers (`skillsphere-client`, `skillsphere-server`, `skillsphere-db`, `skillsphere-redis`) should show status `Up` with `(healthy)`.
-
----
-
-### Command 1.3: Inspect All Running Containers and Health Status
-```bash
-docker ps
-```
-- **Where it runs**: Host terminal (Local or EC2).
-- **The Technical "Why"**:
-  - Queries the Docker daemon (`dockerd`) through the UNIX domain socket `/var/run/docker.sock`.
-  - Displays: Container ID, Image Name, Command executed, Creation time, Status (e.g., `Up 2 hours (healthy)`), and Port mappings (e.g., `0.0.0.0:80->80/tcp`).
-- **Variations**:
-  ```bash
-  docker ps -a
-  ```
-  The `-a` (all) flag shows **stopped, crashed, or exited** containers. If a container crashes on boot (e.g., exit code 1 or 137), `docker ps` will show nothing, but `docker ps -a` reveals the exact exit status.
-
----
-
-### Command 1.4: Real-Time Container Resource Monitoring
-```bash
-docker stats
-```
-- **Where it runs**: Host terminal (EC2).
-- **The Technical "Why"**:
-  - Reads Linux kernel `cgroups` (control groups) memory and CPU accounting files.
-  - Streams live metrics for every running container:
-    - **CPU %**: Percentage of vCPU consumed.
-    - **MEM USAGE / LIMIT**: Exact megabytes used vs maximum host RAM.
-    - **MEM %**: Percentage of server RAM consumed.
-    - **NET I/O**: Network bandwidth in and out.
-    - **BLOCK I/O**: Disk read and write activity.
-- **Why this was crucial in the chat**: On an AWS `t2.micro` instance with only 1 GB RAM, `docker stats` allows you to verify that PostgreSQL (~45 MB), Redis (~15 MB), Express (~85 MB), and Nginx (~12 MB) fit comfortably within memory limits without risking OOM crashes.
-- **How to Exit**: Press `Ctrl + C`.
-
----
-
-### Command 1.5: Stream Container Logs for Debugging
-```bash
-# Follow all services simultaneously:
-docker compose logs -f
-
-# Follow the backend API server logs specifically:
-docker compose logs -f server
-
-# View the last 100 log lines of PostgreSQL:
-docker compose logs --tail=100 db
-```
-- **Where it runs**: Host terminal (EC2).
-- **The Technical "Why"**:
-  - Attaches to the stdout and stderr streams of the container processes (Node.js, PostgreSQL, Redis, Nginx).
-  - The `-f` (follow) flag keeps the stream open, outputting new logs in real time as HTTP requests or database queries hit the system.
-- **Why this was crucial in the chat**:
-  Running `docker compose logs -f server` revealed the exact error messages:
-  1. `Prisma Error P2022: The column User.guestPersona does not exist in the current database.`
-  2. `CORS: origin http://13.233.25.42 not in whitelist`
-  It also confirmed what was functioning correctly:
-  `Database connected`, `Redis connected`, and `SkillSphere API running`.
-
----
-
-### Command 1.6: Execute an Interactive Shell Inside a Running Container
-```bash
-docker exec -it skillsphere-server sh
-```
-- **Where it runs**: Host terminal (EC2).
-- **The Technical "Why"**:
-  - `docker exec`: Tells the Docker daemon to create a new process inside the existing namespaces of a running container.
-  - `-i` (interactive): Keeps standard input (`stdin`) open.
-  - `-t` (tty): Allocates a pseudo-terminal so you can type commands interactively.
-  - `sh`: Launches the Alpine Linux POSIX shell (`/bin/sh`). (Alpine uses `sh`, not `bash`).
-- **Why you run this**:
-  - Inspect files inside the container: `ls -la /app`
-  - Verify container file permissions and users: `whoami` (returns `node`).
-  - Test internal network connectivity: `ping db` or `nc -zv db 5432`.
-- **How to Exit**: Type `exit` and hit Enter.
-
----
-
-### Command 1.7: Stop the Multi-Container Stack Gracefully
-```bash
-docker compose down
-```
-- **Where it runs**: Host terminal (inside `~/Skill-Sphere` on EC2).
-- **The Technical "Why"**:
-  - Sends a standard Unix `SIGTERM` (terminate) signal to the main process (PID 1) of every container.
-  - Gives containers a 10-second grace period to close active database connections, flush memory buffers to disk, and close network sockets.
-  - If a container does not stop within 10 seconds, sends `SIGKILL`.
-  - Removes the stopped container instances and the bridge network (`skillsphere_default`).
-  - **Preserves all named volumes (`postgres_data`)!**
-- **The Danger Zone (`-v` flag)**:
-  ```bash
-  # ⚠️ NEVER RUN THIS IN PRODUCTION:
-  docker compose down -v
-  ```
-  Adding `-v` (or `--volumes`) tells Docker to delete all named volumes, **permanently erasing your PostgreSQL database!**
-
----
-
-# 🔄 Section 2: Database Migrations & CI/CD Pipeline Commands
-
----
-
-### Command 2.1: Inspect Existing Prisma Migrations in the Repository
-```bash
-ls prisma/migrations
-```
-- **Where it runs**: Terminal inside the `server/` directory.
-- **The Technical "Why"**:
-  - Lists the directories inside `prisma/migrations/`.
-  - Each directory represents a committed database migration timestamped by year, month, day, and name (e.g., `20260516130323_add_user_guest_persona`).
-- **Why this was crucial in the chat**: To verify whether the code change adding `guestPersona` had an associated migration folder committed to Git or if it only existed locally.
-
----
-
-### Command 2.2: Search for the Missing Column Across Migration SQL Files
-```bash
-grep -R "guestPersona" prisma/migrations
-```
-- **Where it runs**: Terminal inside the `server/` directory.
-- **The Technical "Why"**:
-  - `grep`: Global Regular Expression Print search tool.
-  - `-R` (recursive): Searches through all subdirectories and `.sql` files inside `prisma/migrations/`.
-  - `"guestPersona"`: The column name that PostgreSQL reported missing (`Prisma Error P2022`).
-- **Interpretation of Results**:
-  - If output returns: `prisma/migrations/20260516130323_add_user_guest_persona/migration.sql: ALTER TABLE "User" ADD COLUMN "guestPersona" ...`
-    -> The migration **exists**! It just hasn't been applied to the production database yet.
-  - If output returns **nothing**:
-    -> The migration was **never generated**! The developer modified `schema.prisma` or ran `prisma db push` locally, but never created a migration file.
-
----
-
-### Command 2.3: Generate a New Migration in Development
-```bash
-npx prisma migrate dev --name add_user_guest_persona
-```
-- **Where it runs**: **Local development machine only!** (Inside `server/`).
-- **The Technical "Why"**:
-  - Compares your current `schema.prisma` against the existing migration history and local development database.
-  - Detects the schema difference (e.g., added field `guestPersona String?`).
-  - Generates a new timestamped folder: `prisma/migrations/<timestamp>_add_user_guest_persona/migration.sql`.
-  - Applies that SQL script to your local PostgreSQL database.
-  - Records the migration checksum into PostgreSQL's internal `_prisma_migrations` metadata table.
-  - Automatically runs `prisma generate` to update the local TypeScript/JavaScript Prisma Client in `node_modules/@prisma/client`.
-- **Consequence of Skipping**: If you don't run `migrate dev`, no SQL migration file is created. Production will fail to update its schema!
-
----
-
-### Command 2.4: Apply Pending Migrations in Production & CI/CD
-```bash
-npx prisma migrate deploy
-```
-- **Where it runs**: Production server (EC2), inside the container on startup, or in a CI/CD job.
-- **The Technical "Why"**:
-  - Connects to the database specified by `DATABASE_URL`.
-  - Reads the `_prisma_migrations` table in PostgreSQL to find which migrations have already been applied.
-  - Reads the local `prisma/migrations/` directory inside the container image.
-  - Executes **only the pending, unapplied SQL migration files** in strict chronological order.
-  - Marks each executed migration as applied with an exact execution duration and sha256 checksum.
-  - **Never prompts for interactive input** (unlike `migrate dev`, making it completely safe for automated headless scripts).
-- **How SkillSphere automates this**:
-  In `docker-compose.yml`:
-  ```yaml
-  command: sh -c "npm run db:deploy && npm start"
-  ```
-  Where `npm run db:deploy` is defined in `package.json` as `prisma migrate deploy`.
-
----
-
-### Command 2.5: The Anti-Pattern Command (What Caused the Bug)
-```bash
-# ⚠️ FOR PROTOTYPING ONLY - NEVER USE FOR CODE HEADED TO PRODUCTION:
-npx prisma db push
-```
-- **The Technical "Why"**:
-  - Directly forces the current `schema.prisma` onto the database without creating a migration file in `prisma/migrations/`.
-  - Makes local development *feel* like it's working because your local database now has the column.
-- **Why this caused the production crash**:
-  Because no migration file was generated, Git had nothing to commit. When production ran `prisma migrate deploy`, it had no record of the new column, resulting in `Prisma Error P2022`.
-
----
-
-### Command 2.6: Generate Prisma Client Types
-```bash
-npm run db:generate
-# (Which executes: npx prisma generate)
-```
-- **Where it runs**: Inside `server/Dockerfile` during image build, or locally after modifying schema.
-- **The Technical "Why"**:
-  - Reads `schema.prisma`.
-  - Reads your models (`User`, `Skill`, `Course`, `Message`).
-  - Generates tailored TypeScript definition files, validation types, and runtime JavaScript query methods directly into `node_modules/@prisma/client`.
-- **Consequence of Skipping**: Node.js crashes with `TypeError: prisma.user.findFirst is not a function` or TypeScript compiler errors.
-
----
-
-### Command 2.7: Git Version Control Commands for Migrations
-```bash
-# Check modified files and new migration directories
-git status
-
-# Stage the new migration files and schema
-git add prisma/schema.prisma prisma/migrations/
-
-# Commit with a clear semantic message
-git commit -m "fix(db): add missing user guestPersona migration"
-
-# Push to GitHub to trigger CI/CD pipeline
-git push origin main
-```
-- **Where it runs**: Local developer terminal.
-- **The Technical "Why"**: Commits the generated SQL migration file into Git so GitHub Actions and production servers can access it.
-
----
-
-### Command 2.8: CI Test & Lint Commands (Executed on GitHub Runners)
-```bash
-# 1. Clean deterministic dependency installation
-npm ci
-
-# 2. Code quality & syntax validation
-npm run lint
-
-# 3. Automated unit and integration test suite execution
-npm test
-```
-- **Where it runs**: GitHub Actions runner virtual machine (`ubuntu-latest`).
-- **The Technical "Why"**:
-  - `npm ci`: Ensures dependencies match `package-lock.json` with 100% cryptographic parity.
-  - `npm run lint`: ESLint scans for syntax errors, unhandled promises, and illegal imports before code can be packaged into an image.
-  - `npm test`: Runs Jest test suites. If any test fails, GitHub Actions terminates the job immediately with exit code 1 and aborts deployment.
-
----
-
-### Command 2.9: Pull Pre-Built Docker Images from Docker Hub
-```bash
-docker compose pull
-```
-- **Where it runs**: AWS EC2 instance terminal (via automated SSH in GitHub Actions).
-- **The Technical "Why"**:
-  - Connects to Docker Hub registry.
-  - Downloads the latest pre-compiled image layers for `skillsphere-server` and `skillsphere-client`.
-  - Only downloads layers that have changed since the last deployment, minimizing bandwidth and time.
-- **Why this is superior to building on EC2**:
-  Instead of consuming 100% of the EC2 instance's 1 vCPU and 1 GB RAM compiling Vite and installing npm packages (which frequently freezes the server), EC2 simply downloads the finished artifact in 5–10 seconds.
-
----
-
-### Command 2.10: Recreate Containers with Zero Downtime
-```bash
-docker compose up -d --remove-orphans
-```
-- **Where it runs**: AWS EC2 instance terminal.
-- **The Technical "Why"**:
-  - Compares the newly pulled image hashes against the currently running containers.
-  - Only recreates containers whose images have changed (`server` and `client`).
-  - Leaves running dependencies (`db` and `redis`) untouched and running!
-  - `--remove-orphans`: Cleans up any legacy containers defined in previous compose files that are no longer part of the stack.
-
----
-
-### Command 2.11: Prune Dangling Docker Images
-```bash
-docker image prune -f
-```
-- **Where it runs**: AWS EC2 instance terminal.
-- **The Technical "Why"**:
-  - When a new `latest` image is pulled, the old image loses its tag and becomes an untagged "dangling" image (`<none>:<none>`).
-  - `docker image prune -f`: Deletes these orphaned layers immediately without prompting for confirmation.
-- **Consequence of Skipping**: Over several weeks of deployments, orphaned images will consume all 20 GB of your EBS disk volume, causing disk full errors (`No space left on device`).
-
----
-
-# ☁️ Section 3: Cloud Deployment (AWS EC2, Linux Sysadmin & Cost Optimization) Commands
-
----
-
-### Command 3.1: Secure SSH Private Key Permissions
+### Step 0.1: Secure the SSH Private Key Permissions
 #### On Linux / macOS:
 ```bash
 chmod 400 skillsphere-key.pem
@@ -346,235 +31,455 @@ chmod 400 skillsphere-key.pem
 icacls skillsphere-key.pem /inheritance:r
 icacls skillsphere-key.pem /grant:r "$($env:USERNAME):(R)"
 ```
-- **Where it runs**: Local developer workstation.
-- **The Technical "Why"**:
-  - `chmod 400`: Sets file permissions to read-only for the file owner (`4`), and zero permissions for group (`0`) and others (`0`).
-  - OpenSSH clients enforce a strict security policy: if a private key file is readable by any other user or process on your computer, SSH refuses to use it and aborts with:
-    `Permissions 0644 for 'skillsphere-key.pem' are too open. It is required that your private key files are NOT accessible by others.`
+- **Why it's run:** OpenSSH strictly enforces the principle of least privilege. If your private key (`.pem`) is readable by other users or background services on your OS, SSH client intentionally halts and refuses to connect (`Permissions 0644 are too open`).
+- **Technical Mechanism:** `chmod 400` grants read-only permission (`4`) to the file owner and zero permissions (`00`) to group and others. The Windows `icacls` command removes inherited permissions and grants read access exclusively to your active Windows username.
+- **Consequence if skipped:** Any attempt to connect to EC2 fails immediately with `UNPROTECTED PRIVATE KEY FILE! Permission denied (publickey)`.
 
 ---
 
-### Command 3.2: Connect to AWS EC2 via SSH
+### Step 0.2: Connect to the AWS EC2 Instance via SSH
 ```bash
 ssh -i skillsphere-key.pem ubuntu@13.233.25.42
 ```
-- **Where it runs**: Local developer terminal.
-- **The Technical "Why"**:
-  - `ssh`: Secure Shell client application.
-  - `-i skillsphere-key.pem`: Specifies the identity file (RSA private key) for cryptographic authentication.
-  - `ubuntu`: The default administrative username for official Ubuntu AMIs on AWS.
-  - `13.233.25.42`: The Public IPv4 address assigned to your EC2 instance by AWS.
-- **Under the Hood**:
-  - Uses public-key cryptography to perform a handshake against port 22 on the server.
-  - If the Security Group allows port 22 from your IP, and your private key matches the public key in `/home/ubuntu/.ssh/authorized_keys`, you are granted a secure encrypted terminal session.
+- **Why it's run:** Opens an encrypted, remote administrative terminal session into your cloud virtual machine.
+- **Technical Mechanism:**
+  - `-i skillsphere-key.pem`: Uses RSA asymmetric cryptography to authenticate against the server's public key stored in `/home/ubuntu/.ssh/authorized_keys`.
+  - `ubuntu`: The default non-root administrative user for official Ubuntu cloud images.
+  - `13.233.25.42`: The AWS EC2 public IPv4 address.
+- **Under the Hood:** Traffic passes through AWS VPC Security Group Inbound Rule allowing Port 22 (TCP) from your local IP.
 
 ---
 
-### Command 3.3: Update and Upgrade Linux System Packages
+# 🛠️ Phase 1: Fresh Linux Server Provisioning & Environment Hardening
+
+*Once logged into a fresh Ubuntu 24.04/22.04 LTS instance, you must configure the operating system.*
+
+### Step 1.1: Update Package Lists and Upgrade System Packages
 ```bash
 sudo apt update && sudo apt upgrade -y
 ```
-- **Where it runs**: EC2 Ubuntu terminal.
-- **The Technical "Why"**:
-  - `sudo apt update`: Downloads the latest package index lists from Ubuntu's official repositories (synchronizes package names and version numbers).
-  - `&&`: Logical AND operator (only executes the second command if the first succeeds).
-  - `sudo apt upgrade -y`: Installs the newest versions of all currently installed system packages and security patches. The `-y` flag automatically answers "yes" to installation prompts.
-- **Consequence of Skipping**: Leaves the base operating system vulnerable to unpatched Linux kernel exploits.
+- **Why it's run:** Fresh cloud images have outdated package indices and unpatched security vulnerabilities.
+- **Technical Mechanism:**
+  - `sudo apt update`: Downloads the latest package index manifests from Ubuntu's repository mirrors (synchronizes version numbers and dependencies).
+  - `&&`: Guarantees the upgrade only executes if the update completes successfully (exit code 0).
+  - `sudo apt upgrade -y`: Installs the newest security patches and kernel updates. The `-y` flag automatically answers "yes" to prompts.
 
 ---
 
-### Command 3.4: Configure Docker's Official APT Repository & GPG Key
+### Step 1.2: Install Git and Essential System Utilities
 ```bash
-# 1. Install prerequisites
-sudo apt install -y ca-certificates curl gnupg lsb-release
+sudo apt install -y git curl wget ca-certificates gnupg lsb-release htop
+```
+- **Why it's run:** Installs foundational CLI tools needed to download keys, clone repositories, and inspect system performance.
+- **Technical Mechanism:**
+  - `git`: Version control tool required to clone and pull the SkillSphere codebase.
+  - `curl` & `wget`: Command-line HTTP transfer utilities needed to download Docker GPG keys and test web endpoints.
+  - `ca-certificates`: Contains SSL/TLS Root Certificate Authorities so `apt` and `curl` can securely verify HTTPS sites.
+  - `gnupg`: GNU Privacy Guard tool required to decrypt and dearmor official package signing keys.
+  - `lsb-release`: Utility that reports the Ubuntu distribution codename (e.g., `noble`, `jammy`) for automated repository configuration.
+  - `htop`: Real-time interactive CPU, memory, and process monitor.
 
-# 2. Create directory for trusted keyrings
+---
+
+### Step 1.3: Create and Activate 2 GB of Linux SWAP Space
+```bash
+# 1. Allocate a 2GB contiguous empty file on the EBS disk
+sudo fallocate -l 2G /swapfile
+
+# 2. Lock file permissions exclusively to root
+sudo chmod 600 /swapfile
+
+# 3. Format the file as a Linux swap filesystem
+sudo mkswap /swapfile
+
+# 4. Activate the swap file in the running Linux kernel
+sudo swapon /swapfile
+
+# 5. Make the swap configuration permanent across system reboots
+echo '/swapfile none swap sw 0 0' | sudo tee -a /etc/fstab
+
+# 6. Verify that swap is recognized and active
+free -h
+```
+- **Why it's run:** AWS Free Tier `t2.micro` instances have only **1 GB of physical RAM**. Running Node.js, PostgreSQL, Redis, and Nginx simultaneously consumes ~450–600 MB. A temporary memory spike during a database migration or heavy API call will exhaust physical RAM.
+- **Under the Hood:** Without Swap, the Linux kernel invokes the **OOM (Out Of Memory) Killer**, instantly terminating the process with the highest memory score (usually PostgreSQL or Node.js), causing unexpected downtime. Swap allocates 2 GB of the fast EBS SSD as virtual overflow memory, guaranteeing stability.
+
+---
+
+# 🐳 Phase 2: Installing Official Docker Engine, Buildx & Docker Compose
+
+*Never use the outdated `docker.io` package from Ubuntu's default repository. Always install the official, current Docker suite.*
+
+### Step 2.1: Prepare Keyring Directory for Cryptographic Keys
+```bash
 sudo install -m 0755 -d /etc/apt/keyrings
+```
+- **Why it's run:** Modern Debian/Ubuntu systems store third-party package signing keys in `/etc/apt/keyrings` with strict permissions.
+- **Technical Mechanism:** `-m 0755` sets directory permissions so root can read/write/execute, and all other users can read/execute.
 
-# 3. Download and dearmor Docker's official GPG cryptographic key
+---
+
+### Step 2.2: Download and Dearmor Docker's Official GPG Key
+```bash
 curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo gpg --dearmor -o /etc/apt/keyrings/docker.gpg
 sudo chmod a+r /etc/apt/keyrings/docker.gpg
+```
+- **Why it's run:** Ensures that all Docker binaries downloaded by your server are cryptographically signed by Docker Inc. and have not been intercepted or tampered with.
+- **Technical Mechanism:**
+  - `curl -fsSL`: Downloads Docker's ASCII-armored public key (`-f` fail silently on HTTP errors, `-s` silent mode, `-S` show error if fails, `-L` follow redirects).
+  - `gpg --dearmor`: Converts the ASCII key into binary format recognized by the APT package manager and saves it to `/etc/apt/keyrings/docker.gpg`.
+  - `chmod a+r`: Grants read access to all users (`a+r`) so APT can read the keyring.
 
-# 4. Add the Docker repository to APT sources
+---
+
+### Step 2.3: Add Docker's Official Repository to APT Sources
+```bash
 echo \
   "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.gpg] https://download.docker.com/linux/ubuntu \
   $(lsb_release -cs) stable" | sudo tee /etc/apt/sources.list.d/docker.list > /dev/null
+```
+- **Why it's run:** Directs APT to Docker's official distribution servers for your specific CPU architecture (x86_64/amd64) and Ubuntu version.
+- **Technical Mechanism:**
+  - `dpkg --print-architecture`: Dynamically evaluates to `amd64`.
+  - `lsb_release -cs`: Dynamically outputs your Ubuntu version code (e.g. `noble` for 24.04, `jammy` for 22.04).
+  - `sudo tee /etc/apt/sources.list.d/docker.list`: Writes the formatted configuration file into APT sources.
 
-# 5. Install Docker Engine and plugins
+---
+
+### Step 2.4: Install Docker Engine, CLI, Buildx, and Compose Plugin
+```bash
 sudo apt update
 sudo apt install -y docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
 ```
-- **Where it runs**: EC2 Ubuntu terminal.
-- **The Technical "Why"**:
-  - Ubuntu's default repository includes an outdated version of Docker (`docker.io`).
-  - This sequence adds Docker's official vendor repository.
-  - The GPG key guarantees that every downloaded package is cryptographically verified and hasn't been tampered with.
-  - Installs modern Docker Engine along with the official **Docker Compose V2 plugin** (`docker compose` rather than old python `docker-compose`).
+- **Why it's run:** Installs the complete modern Docker virtualization stack.
+- **Component Breakdown:**
+  - `docker-ce`: Docker Community Edition daemon (`dockerd`) that manages containers, networks, and volumes.
+  - `docker-ce-cli`: The terminal client (`docker`) used to issue commands.
+  - `containerd.io`: The industry-standard core container runtime managing the complete container lifecycle.
+  - `docker-buildx-plugin`: Extended build utility powered by Moby BuildKit (supports parallelized builds and multi-platform compilation).
+  - `docker-compose-plugin`: Official V2 Compose implementation (`docker compose`, replacing the old Python-based `docker-compose`).
 
 ---
 
-### Command 3.5: Grant Non-Root Docker Access to the Ubuntu User
+### Step 2.5: Enable Docker Daemon and Grant Non-Root User Permissions
 ```bash
+# 1. Ensure Docker starts automatically on system boot
+sudo systemctl enable --now docker
+
+# 2. Add the 'ubuntu' user to the 'docker' Unix group
 sudo usermod -aG docker ubuntu
 ```
-- **Where it runs**: EC2 Ubuntu terminal.
-- **The Technical "Why"**:
-  - By default, the Docker daemon binds to a Unix socket owned by `root:docker`. Regular users must type `sudo docker`.
-  - `usermod`: Modifies a Linux user account.
-  - `-aG docker`: Appends (`-a`) the user to the supplementary group (`-G`) named `docker`.
-  - `ubuntu`: The target user account.
-- **Required Action After Running**: You must log out (`exit`) and reconnect via SSH for the Linux kernel to refresh your active user group tokens. You can then run all `docker` commands without `sudo`.
-
----
-
-### Command 3.6: Create and Activate 2 GB of Linux SWAP Space
-```bash
-# 1. Allocate a 2 Gigabyte contiguous file
-sudo fallocate -l 2G /swapfile
-
-# 2. Lock permissions to root only
-sudo chmod 600 /swapfile
-
-# 3. Format the file as a Linux swap partition
-sudo mkswap /swapfile
-
-# 4. Activate the swap file in the running kernel
-sudo swapon /swapfile
-
-# 5. Append entry to /etc/fstab to persist across system reboots
-echo '/swapfile none swap sw 0 0' | sudo tee -a /etc/fstab
-
-# 6. Verify swap is active
-free -h
-```
-- **Where it runs**: EC2 Ubuntu terminal.
-- **The Technical "Why"**:
-  - An AWS `t2.micro` has only **1 GB of RAM**. When running Node.js, PostgreSQL, Redis, and Nginx together, memory spikes can instantly consume 100% of physical RAM.
-  - Without Swap space, the Linux kernel invokes the **OOM (Out Of Memory) Killer**, terminating whichever process has the highest memory footprint (usually PostgreSQL or Node.js), causing random downtime.
-  - **Swap Space** dedicates 2 GB of the fast NVMe/SSD EBS volume as virtual overflow memory. When RAM is exhausted, inactive memory pages are swapped to disk, keeping your server 100% stable and crash-free.
-
----
-
-### Command 3.7: Inspect RAM and Swap Utilization
-```bash
-free -h
-```
-- **Where it runs**: EC2 Ubuntu terminal.
-- **The Technical "Why"**:
-  - Queries `/proc/meminfo`.
-  - The `-h` (human-readable) flag formats byte numbers into Megabytes (MiB) and Gigabytes (GiB).
-- **Expected Healthy Output**:
+- **Why it's run:** By default, the Docker daemon socket (`/var/run/docker.sock`) is owned by `root:docker`. Adding `ubuntu` to the `docker` group allows running all Docker commands without typing `sudo`.
+- **Under the Hood:**
+  - `systemctl enable --now`: Creates a systemd symlink ensuring Docker boots on system restart, and immediately starts the service.
+  - `usermod -aG`: Appends (`-a`) the user to the supplementary group (`-G`).
+- **Required Action:** You must refresh your user session. Either run:
+  ```bash
+  newgrp docker
   ```
-                total        used        free      shared  buff/cache   available
-  Mem:          957Mi       350Mi       120Mi       2.0Mi       485Mi       480Mi
-  Swap:         2.0Gi        65Mi       1.93Gi
+  Or disconnect and reconnect to SSH:
+  ```bash
+  exit
+  ssh -i skillsphere-key.pem ubuntu@13.233.25.42
   ```
-  This immediately tells you that you have 480 MiB of RAM available and 1.93 GiB of Swap reserve.
 
 ---
 
-### Command 3.8: Inspect Disk Space Usage on the EBS Volume
+### Step 2.6: Verify Docker Installation
 ```bash
+docker --version
+docker compose version
+docker ps
+```
+- **Why it's run:** Confirms that the Docker daemon is active, Compose V2 is recognized, and you can communicate with `/var/run/docker.sock` without permission errors.
+
+---
+
+# 📦 Phase 3: Codebase Deployment & Environment Configuration
+
+### Step 3.1: Clone the Application Repository
+```bash
+git clone https://github.com/KshitizD07/Skill-Sphere.git ~/Skill-Sphere
+cd ~/Skill-Sphere
+```
+- **Why it's run:** Downloads your application code, Dockerfiles, and `docker-compose.yml` to the EC2 instance's home directory.
+
+---
+
+### Step 3.2: Configure Production Environment Variables (`.env`)
+```bash
+nano server/.env
+```
+Add the production configuration:
+```env
+PORT=5001
+NODE_ENV=production
+
+# Whitelist both EC2 Public IP and your future domain to fix CORS errors
+ALLOWED_ORIGINS=http://13.233.25.42,http://localhost:5173,http://skillsphere.xyz,https://skillsphere.xyz
+
+# Internal Docker bridge network connection strings
+DATABASE_URL=postgresql://postgres:password@db:5432/skillsphere?schema=public
+DIRECT_URL=postgresql://postgres:password@db:5432/skillsphere?schema=public
+REDIS_URL=redis://redis:6379
+
+JWT_SECRET=super_secure_production_secret_key_12345
+```
+- **Why it's run:** Passes secrets, ports, and connection strings securely at runtime.
+- **The CORS Whitelist Fix:** The chat log recorded: `CORS: origin http://13.233.25.42 not in whitelist`. Adding your EC2 public IP to `ALLOWED_ORIGINS` ensures Express returns the HTTP header `Access-Control-Allow-Origin: http://13.233.25.42`, allowing web browsers to process API responses.
+
+---
+
+# 🏷️ Phase 4: Docker Registry Authentication & Image Publishing (Docker Hub)
+
+*Using a container registry eliminates the need to build images directly on the limited resources of an EC2 instance.*
+
+### Step 4.1: Log in to Docker Hub from the CLI
+```bash
+docker login -u your_dockerhub_username
+```
+- **Where it runs:** Local developer machine (or handled automatically in GitHub Actions via `secrets.DOCKERHUB_TOKEN`).
+- **Technical Mechanism:** Prompts for your Docker Hub Personal Access Token (PAT). Authenticates with `https://index.docker.io/v1/` and stores an encrypted auth token in `~/.docker/config.json`.
+- **Consequence if skipped:** Any attempt to push images to Docker Hub fails with `denied: requested access to the resource is denied`.
+
+---
+
+### Step 4.2: Build and Tag Images for the Registry
+```bash
+# Build & tag backend image
+docker build -t yourusername/skillsphere-server:latest -t yourusername/skillsphere-server:v1.0.0 ./server
+
+# Build & tag frontend image with build arguments
+docker build \
+  --build-arg VITE_API_URL=/api \
+  --build-arg VITE_SOCKET_URL=/ \
+  -t yourusername/skillsphere-client:latest \
+  -t yourusername/skillsphere-client:v1.0.0 ./client
+```
+- **Why it's run:** Compiles the application into immutable image layers and tags them with your Docker Hub repository namespace.
+- **Under the Hood:**
+  - Multi-tagging with `:latest` and `:v1.0.0` (or Git commit SHA) ensures immutability.
+  - `--build-arg` bakes the relative proxy paths (`/api`) into the static React JavaScript bundle during the Vite build stage.
+
+---
+
+### Step 4.3: Push Images to Docker Hub
+```bash
+docker push yourusername/skillsphere-server:latest
+docker push yourusername/skillsphere-server:v1.0.0
+docker push yourusername/skillsphere-client:latest
+docker push yourusername/skillsphere-client:v1.0.0
+```
+- **Why it's run:** Uploads compressed filesystem layers to Docker Hub's global content delivery network so cloud servers can download them.
+
+---
+
+# 🔍 Phase 5: Database Migration Diagnostics & Production Synchronization
+
+*This is the exact investigation sequence conducted in the chat to resolve Prisma Error P2022.*
+
+### Step 5.1: Inspect Existing Committed Migrations
+```bash
+ls server/prisma/migrations
+```
+- **Why it's run:** Displays all migration directories tracked in Git.
+- **Chat Context:** Determines whether a migration directory (e.g., `20260516130323_add_user_guest_persona`) exists in the repository.
+
+---
+
+### Step 5.2: Search for the Missing Column Across Migration Files
+```bash
+grep -R "guestPersona" server/prisma/migrations
+```
+- **Why it's run:** Scans all `.sql` files inside the migrations folder for references to `guestPersona`.
+- **Diagnostic Result:**
+  - If output returns `ALTER TABLE "User" ADD COLUMN "guestPersona" ...`, the migration file exists in the repo and only needs to be deployed.
+  - If output is **empty**, the migration was **never generated**. The developer edited `schema.prisma` or ran `prisma db push` locally, leaving production with no record of the column.
+
+---
+
+### Step 5.3: (Local Fix) Generate the Missing Migration File
+```bash
+# Run inside server/ on your LOCAL machine:
+npx prisma migrate dev --name add_user_guest_persona
+```
+- **Why it's run:** Inspects local changes in `schema.prisma`, generates a timestamped `.sql` migration file, records it in local PostgreSQL, and regenerates Prisma Client types.
+
+---
+
+### Step 5.4: (Local Fix) Commit and Push Migration to GitHub
+```bash
+git add server/prisma/schema.prisma server/prisma/migrations/
+git commit -m "fix(db): add missing user guestPersona migration"
+git push origin main
+```
+- **Why it's run:** Pushes the migration SQL file to the remote repository so it can be deployed to production.
+
+---
+
+### Step 5.5: Pull Updated Migrations onto EC2
+```bash
+cd ~/Skill-Sphere
+git pull origin main
+```
+- **Why it's run:** Updates the EC2 local repository with the new migration files.
+
+---
+
+### Step 5.6: Apply Pending Migrations to Production Database
+```bash
+# Executed automatically on container boot, or manually via:
+docker exec -it skillsphere-server npx prisma migrate deploy
+```
+- **Why it's run:** Reads PostgreSQL's `_prisma_migrations` table, finds all pending `.sql` files, and applies them sequentially without prompting.
+- **Under the Hood:** Executes `ALTER TABLE "User" ADD COLUMN "guestPersona" TEXT;`. PostgreSQL now has the column, completely resolving Error `P2022`!
+
+---
+
+# 🚢 Phase 6: Multi-Container Orchestration, Startup & Monitoring
+
+### Step 6.1: Pull Pre-Built Images from Docker Hub
+```bash
+docker compose pull
+```
+- **Why it's run:** Downloads pre-compiled images from Docker Hub directly to EC2.
+- **Why this matters:** Avoids compiling code on EC2, keeping memory and CPU usage near zero and preventing server crashes.
+
+---
+
+### Step 6.2: Launch Application Stack in Detached Mode
+```bash
+docker compose up -d
+```
+- **Why it's run:** Creates the network, attaches the `postgres_data` volume, runs database healthchecks, executes `npm run db:deploy`, and boots Express and Nginx in the background.
+
+---
+
+### Step 6.3: Verify All Containers are Running and Healthy
+```bash
+docker ps
+```
+- **Expected Output:**
+  ```
+  CONTAINER ID   IMAGE                 STATUS                   PORTS
+  1a2b3c4d5e6f   skillsphere-client    Up 5 minutes             0.0.0.0:80->80/tcp
+  2b3c4d5e6f7a   skillsphere-server    Up 5 minutes             0.0.0.0:5001->5001/tcp
+  3c4d5e6f7a8b   postgres:16-alpine    Up 5 minutes (healthy)   0.0.0.0:5432->5432/tcp
+  4d5e6f7a8b9c   redis:7-alpine        Up 5 minutes (healthy)   0.0.0.0:6379->6379/tcp
+  ```
+
+---
+
+### Step 6.4: Monitor Real-Time System and Container Logs
+```bash
+# Follow live server logs (confirms "Database connected", "SkillSphere API running")
+docker compose logs -f server
+
+# Stream live container CPU and RAM consumption
+docker stats
+
+# Check overall host memory and Swap usage
+free -h
+
+# Check available disk storage on the EBS volume
 df -h
 ```
-- **Where it runs**: EC2 Ubuntu terminal.
-- **The Technical "Why"**:
-  - `df`: Disk Free.
-  - Reports filesystem disk space usage for all mounted block devices.
-  - Look for the root mount point `/` (e.g., `/dev/root` or `/dev/xvda1`):
-    ```
-    Filesystem      Size  Used Avail Use% Mounted on
-    /dev/root        20G  6.8G   13G  35% /
-    ```
-  - Tells you immediately how much of your 20 GB EBS disk is consumed by Docker images, logs, and database records.
 
 ---
 
-### Command 3.9: Interactive Process Viewer & CPU Load Monitor
+# 🔒 Phase 7: Custom Domain DNS, Reverse Proxy & Let's Encrypt SSL/TLS
+
+*Convert `http://13.233.25.42` into `https://skillsphere.xyz` with an automated SSL certificate.*
+
+### Step 7.1: Verify DNS Propagation from the Server
 ```bash
-htop
+# Confirm your domain points to your EC2 IP
+dig +short skillsphere.xyz
+# or
+nslookup skillsphere.xyz
 ```
-- **Where it runs**: EC2 Ubuntu terminal.
-- **The Technical "Why"**:
-  - Advanced ncurses-based real-time process monitor.
-  - Visualizes:
-    - Current load on vCPU core 0.
-    - Exact breakdown of RAM (green = used, blue = buffers, orange = cached).
-    - Swap usage meter.
-    - Every running PID, user, memory %, CPU %, and command string.
-- **How to Exit**: Press `q` or `F10`.
+- **Why it's run:** Confirms that your domain registrar's DNS A-Record has propagated to `13.233.25.42` before requesting an SSL certificate.
 
 ---
 
-### Command 3.10: View Systemd Service Logs for the Docker Daemon
+### Step 7.2: Install Certbot and the Nginx Automated Plugin
 ```bash
-sudo journalctl -u docker.service -n 50 --no-pager
-```
-- **Where it runs**: EC2 Ubuntu terminal.
-- **The Technical "Why"**:
-  - `journalctl`: Queries the systemd system journal.
-  - `-u docker.service`: Filters exclusively for events generated by the Docker background daemon.
-  - `-n 50`: Shows the most recent 50 lines.
-  - `--no-pager`: Outputs directly to the terminal without opening `less` or `more`.
-- **When to use**: If Docker refuses to start, or if a container crashes due to an engine-level error (e.g., storage driver failure or network interface conflict).
-
----
-
-### Command 3.11: Install Free SSL Certificate with Let's Encrypt & Certbot
-```bash
-# 1. Install Certbot and the Nginx automated plugin
 sudo apt install -y certbot python3-certbot-nginx
+```
+- **Why it's run:** Installs the Electronic Frontier Foundation’s official tool for automating Let's Encrypt certificates.
 
-# 2. Request certificate, complete challenge, and auto-configure Nginx
+---
+
+### Step 7.3: Request Certificate & Automatically Configure Nginx for HTTPS
+```bash
 sudo certbot --nginx -d skillsphere.xyz -d www.skillsphere.xyz
 ```
-- **Where it runs**: EC2 Ubuntu terminal (after pointing domain DNS A-records to EC2 IP).
-- **The Technical "Why"**:
-  - Connects to the Let's Encrypt ACME API.
-  - Performs an automated HTTP-01 challenge verifying you own the domain.
-  - Generates a 2048-bit RSA private key and signed public SSL/TLS certificate.
-  - Automatically updates `/etc/nginx/conf.d/` with SSL cipher configurations and enables Port 443.
-  - Installs a systemd timer that automatically checks and renews certificates before expiration.
+- **Why it's run:** 
+  - Solves an automated ACME cryptographic challenge over Port 80 proving domain ownership.
+  - Generates an RSA private key and public SSL certificate in `/etc/letsencrypt/live/skillsphere.xyz/`.
+  - Configures Nginx with modern SSL ciphers, sets up Port 443 listening, and enables automatic 301 HTTP-to-HTTPS redirects.
 
 ---
 
-### Command 3.12: Gracefully Shut Down the EC2 Server (Zero-Cost Operation)
+### Step 7.4: Verify Automatic SSL Renewal Timer
 ```bash
-# Step 1: Cleanly shut down containers
+# 1. Inspect the systemd timer status
+sudo systemctl status certbot.timer
+
+# 2. Perform a simulated test renewal
+sudo certbot renew --dry-run
+```
+- **Why it's run:** Let's Encrypt certificates expire every 90 days. Certbot installs a background systemd timer that checks twice daily and automatically renews any certificate within 30 days of expiry. The dry run verifies this automated process works properly.
+
+---
+
+# 💰 Phase 8: Maintenance & Zero-Cost (₹0) Shutdown Sequence
+
+*Leaving infrastructure running needlessly costs money. Follow this sequence when finishing an interview or development session.*
+
+### Step 8.1: Clean Up Dangling Docker Images
+```bash
+docker image prune -f
+```
+- **Why it's run:** Removes untagged image layers (`<none>:<none>`) created when pulling updated builds, freeing up EBS disk space.
+
+---
+
+### Step 8.2: Stop Containers Gracefully
+```bash
 cd ~/Skill-Sphere
 docker compose down
+```
+- **Why it's run:** Sends `SIGTERM` to containers, allowing PostgreSQL and Node to flush buffers and close connections cleanly.
+- **Volume Safety:** Removes containers and networks, but **keeps `postgres_data` intact** on disk.
 
-# Step 2: Power off the server
+---
+
+### Step 8.3: Verify All Containers are Stopped
+```bash
+docker ps
+```
+- **Expected Output:** Empty list (no running containers).
+
+---
+
+### Step 8.4: Shut Down the Cloud Virtual Machine
+```bash
 sudo shutdown now
 # or
 sudo poweroff
 ```
-- **Where it runs**: EC2 Ubuntu terminal.
-- **The Technical "Why"**:
-  - `docker compose down`: Flushes all database caches to the EBS volume and unmounts networks cleanly.
-  - `sudo shutdown now`: Sends ACPI power-off signal to the virtual machine.
-  - Broadcasts shutdown messages to all logged-in terminals, unmounts all filesystems safely, and transitions the EC2 instance state in AWS from **Running** to **Stopped**.
-- **The Financial Impact**:
-  - Compute charges immediately halt (**₹0 / hour**).
-  - Your EBS volume, database data, and Docker images remain stored on disk.
-  - You can boot it back up in 45 seconds before any interview by clicking **Start Instance** in the AWS Console!
+- **Why it's run:**
+  - Powers off the EC2 instance.
+  - Changes state in AWS Console from **Running** to **Stopped**.
+  - **Halts all compute billing immediately (₹0 / hour).**
+  - **Preserves all data:** The EBS volume, database contents, Git repository, and Docker images remain stored on disk.
+- **Before an Interview:** Open the AWS Console, click **Start Instance**, wait 45 seconds, SSH in, run `docker compose up -d`, and the entire platform is live.
 
 ---
 
-## 🎯 Quick Master Reference Table
-
-| Category | Command | When to Run | Primary Purpose |
-| :--- | :--- | :--- | :--- |
-| **Docker** | `docker compose up -d` | Deploy/Start | Boots all 4 containers in background with healthchecks |
-| **Docker** | `docker compose down` | Shutdown | Gracefully stops containers; **preserves database volume** |
-| **Docker** | `docker ps` | Health Check | Verifies running containers, ports, and health status |
-| **Docker** | `docker compose logs -f server` | Debugging | Streams backend logs in real-time (Prisma, CORS, Express) |
-| **Docker** | `docker stats` | Monitoring | Live CPU, RAM, and network usage per container |
-| **Prisma** | `npx prisma migrate dev` | **Local Only** | Creates new `.sql` migration file and updates schema |
-| **Prisma** | `npx prisma migrate deploy` | **Prod Only** | Applies pending migration files to production database |
-| **Prisma** | `grep -R "col" prisma/migrations` | Verification | Confirms whether a column migration exists in Git |
-| **Linux/AWS** | `ssh -i key.pem ubuntu@IP` | Remote Access | Secure shell connection to EC2 |
-| **Linux/AWS** | `free -h` & `df -h` | Monitoring | Inspects available RAM/Swap and EBS disk space |
-| **Linux/AWS** | `sudo fallocate -l 2G /swapfile` | Setup | Configures 2GB Swap to prevent low-memory crashes |
-| **Linux/AWS** | `docker image prune -f` | Maintenance | Cleans dangling images to save EBS disk space |
-| **Linux/AWS** | `sudo shutdown now` | Cost Control | Halts EC2 instance cleanly to ensure **₹0 compute billing** |
+## 🧭 Complete Lifecycle Navigation
+- [**`commands_playbook.md`**](file:///C:/Users/kshit/cs/skillsphere/commands_playbook.md) — Master Chronological Command Playbook (This document).
+- [**`containerization.md`**](file:///C:/Users/kshit/cs/skillsphere/containerization.md) — Dockerfiles, Multi-Stage Builds, Nginx Reverse Proxy, and Compose Networking.
+- [**`pipeline.md`**](file:///C:/Users/kshit/cs/skillsphere/pipeline.md) — GitHub Actions CI/CD, Docker Hub Automation, and Prisma Migration Mechanics.
+- [**`cloud_deployment.md`**](file:///C:/Users/kshit/cs/skillsphere/cloud_deployment.md) — AWS Architecture, Security Groups, EBS Storage, and Interview Defense.
