@@ -20,57 +20,66 @@ SkillSphere utilizes a decoupled client-server architecture designed for high av
 
 ```mermaid
 graph TB
-    subgraph Client ["Client Tier (React 19 SPA)"]
+    subgraph Client ["Client Tier (React 19 SPA — Vite + FSD)"]
         direction TB
-        UI["User Interface (Vite + FSD)"]
+        UI["User Interface (13 Feature Slices)"]
         WS_C["Socket.io Client"]
-        HTTP_C["Axios Client"]
+        HTTP_C["Axios Client (withCredentials)"]
     end
 
-    subgraph API ["Server Tier (Node.js & Express)"]
+    subgraph API ["Server Tier (Node.js 22 & Express)"]
         direction TB
-        GATE["API Gateway & Router"]
-        WS_S["Socket.io Server"]
-        CRON["cron Engine"]
+        GATE["API Gateway & 15 Route Modules"]
+        WS_S["Socket.io Server (User Rooms)"]
+        CRON["node-cron (4 Active Jobs)"]
         
         subgraph SVC ["Service Layer"]
             AUTH_S["Auth Service"]
             NEXUS_S["N.E.X.U.S. Engine"]
             VERIFY_S["Verification Service"]
+            LEET_S["LeetCode Service"]
+            PORT_S["Portfolio Service"]
             AI_S["AI Service"]
+            SQUAD_S["Squad Service"]
+            SEARCH_S["Search Service"]
+            FEEDBACK_S["Feedback Service"]
         end
     end
 
     subgraph DATA ["Storage Tier"]
-        DB[(PostgreSQL Database)]
-        CACHE[(Redis / Cache)]
+        DB[(PostgreSQL 16 Database — 28 Models)]
+        CACHE[(Redis / Memory Cache)]
     end
 
     subgraph EXT ["External Services"]
-        GH["GitHub API"]
+        GH["GitHub REST API"]
         GEMINI["Gemini 2.5 Flash API"]
-        SMTP["SMTP / Email Server"]
+        LEET["LeetCode GraphQL API"]
+        SMTP["Resend / SMTP Email"]
     end
 
     %% Client communication
     UI --> HTTP_C
     UI --> WS_C
-    HTTP_C <-->|HTTPS REST| GATE
-    WS_C <-->|WS Bidirectional| WS_S
+    HTTP_C <-->|HTTPS REST + Cookies| GATE
+    WS_C <-->|WSS Bidirectional| WS_S
 
     %% Internal routing
     GATE --> SVC
     WS_S --> SVC
-    CRON -->|Daily Background Jobs| DB
+    CRON -->|Scheduled Maintenance & Evolution| DB
+    CRON --> CACHE
 
     %% Service dependencies
     SVC <-->|Prisma ORM| DB
-    SVC <-->|Get/Set Cache| CACHE
+    SVC <-->|Get/Set Cache (TTL 5m)| CACHE
     
     %% External integrations
-    VERIFY_S -->|Fetch Repos| GH
-    VERIFY_S -->|Analyze Code| GEMINI
-    AI_S -->|Prompt Engineering| GEMINI
+    VERIFY_S -->|Fetch Repos & Git Trees| GH
+    VERIFY_S -->|AST Code Audit| GEMINI
+    LEET_S -->|DSA Submission Stats| LEET
+    PORT_S -->|Sync & Showcase| GH
+    AI_S -->|Career Roadmaps| GEMINI
     AUTH_S -->|Dispatch OTP| SMTP
 ```
 
@@ -108,22 +117,25 @@ sequenceDiagram
     actor User
     participant Client as Client Application
     participant API as Server (Verify Service)
-    participant GH as GitHub API
+    participant GH as GitHub REST API
     participant AI as Gemini 2.5 Flash API
     participant DB as PostgreSQL Database
+    participant Cache as Redis / Memory Cache
 
-    User->>Client: Submit Repo URL & Skill
-    Client->>API: POST /api/verify/skill
-    API->>API: Verify User Context & Session
-    API->>GH: Fetch Repo File Tree & Metadata
+    User->>Client: Submit Repo URL & Skill Name
+    Client->>API: POST /api/verify/skill { skillName, repoUrl }
+    API->>API: Verify Ownership, Anti-Cheat (Reject forks/archived)
+    API->>GH: Fetch Recursive Git Tree (/git/trees/{branch}?recursive=1)
     GH-->>API: Return Source Tree & File Paths
-    API->>API: Filter Top 3 Source Code Files (max 3000 chars each)
-    API->>AI: Send Prompt with Source Code Files & Skill
-    Note over AI: Evaluate structure, complexity,<br/>and design patterns.
-    AI-->>API: Return Score (1-10) & Reasoning JSON
-    API->>DB: Upsert Verified Skill & Score
+    API->>API: Sample up to 8 Categorized Files (~3,500 chars each across 5 pools)
+    API->>API: Wrap code in <user_repository_code> (Prompt Injection Guard)
+    API->>AI: Send Audit Prompt + Code + Unverified Profile Skills
+    Note over AI: Evaluate structure, complexity,<br/>patterns & auto-discover secondary skills
+    AI-->>API: Return JSON { score: 1-10, level, reasoning, discoveredSkills }
+    API->>DB: Upsert Primary & Discovered Skills (isVerified=true)
+    API->>Cache: Invalidate User Profile Cache (TTL 5m)
     API->>Client: Send Execution Outcome Response
-    Client->>User: Display Verification Result
+    Client->>User: Render Verified Score Ring, Level Badge & Evidence
 ```
 
 ---
@@ -181,19 +193,41 @@ SkillSphere accesses PostgreSQL via the Prisma Client.
 ### 6.1 Data Model Diagram
 ```mermaid
 erDiagram
-    User ||--o{ Skill : has
-    User ||--o{ Squad : leads
-    User ||--o{ SquadMember : belongs_to
-    User ||--o{ Post : creates
-    User ||--o{ MatchDecision : selected_in
+    User ||--o{ Skill : "possesses"
+    User ||--o{ GitHubRepo : "syncs"
+    User ||--o{ Post : "creates"
+    User ||--o{ Like : "gives"
+    User ||--o{ Comment : "writes"
+    User ||--o{ CommentLike : "likes comment"
+    User ||--o{ Squad : "leads"
+    User ||--o{ SquadApplication : "submits"
+    User ||--o{ MatchDecision : "selected in"
+    User ||--o{ Roadmap : "generates"
+    User ||--o{ InAppNotification : "receives"
+    User ||--o{ ActivityLog : "logs action"
+    User ||--o{ ContentReport : "submits report"
+    User ||--o{ Follow : "follows / followed by"
+    User }o--o{ Conversation : "participates in"
+    User ||--o{ Message : "sends"
+
+    Squad ||--|{ SquadSlot : "contains"
+    Squad ||--o{ SquadApplication : "receives"
+    Squad ||--o{ MatchDecision : "triggers"
+    SquadSlot ||--o{ SquadApplication : "targeted by"
     
-    Squad ||--|{ SquadSlot : contains
-    SquadSlot ||--o{ SquadApplication : has
-    
-    MatchDecision ||--|| MatchOutcome : has_outcome
-    
-    Conversation ||--|{ Message : contains
-    Conversation }|--|{ User : has_participants
+    MatchDecision ||--o| MatchOutcome : "has outcome"
+    MatchDecision ||--o| SquadApplication : "links to"
+    MatchStrategy ||--o{ MatchDecision : "votes in"
+    MatchStrategy ||--o{ StrategyPerformance : "tracked by"
+    MatchStrategy ||--o{ StrategyPromotion : "logs evolution"
+
+    Post ||--o{ Like : "has"
+    Post ||--o{ Comment : "has"
+    Comment ||--o{ Comment : "replies to"
+    Comment ||--o{ CommentLike : "receives likes"
+
+    Conversation ||--|{ Message : "contains"
+    JobRole ||--|{ JobRoleSkill : "requires"
 ```
 
 ### 6.2 Key Operational Interactions

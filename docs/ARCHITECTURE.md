@@ -29,28 +29,31 @@
 
 ## 5.1 High-Level System Architecture
 
-SkillSphere is a **decoupled, full-stack platform** running a React 19 SPA on Vercel against a Node.js/Express API deployed on Railway. A WebSocket layer runs co-located with the HTTP server. All persistent state lives in a managed PostgreSQL database, with Redis serving as an optional cache and rate-limit store.
+SkillSphere is a **decoupled, full-stack platform** supporting dual deployment topologies (Vercel/Railway PaaS split-host or AWS EC2 containerized Docker Compose with Nginx). A WebSocket layer runs co-located with the Express HTTP server. All persistent state lives in a managed PostgreSQL database (via Prisma ORM), with Redis/in-memory cache serving as an acceleration and rate-limit store.
 
 ```mermaid
 graph TB
-    subgraph CLIENT["🖥️  Client Tier  —  Vercel"]
+    subgraph CLIENT["🖥️  Client Tier  —  Vercel / Nginx"]
         direction TB
         BROWSER["React 19 SPA\nVite + Feature-Sliced Design"]
         WS_CLIENT["Socket.io-client\nWebSocket Connection"]
     end
 
-    subgraph SERVER["⚙️  Server Tier  —  Railway"]
+    subgraph SERVER["⚙️  Server Tier  —  Railway / AWS EC2"]
         direction TB
         HTTP["Express.js HTTP Server\nPort :5001"]
         WS_SERVER["Socket.io Server\nBidirectional Events"]
-        CRON["node-cron\nBackground Job Scheduler"]
+        CRON["node-cron Scheduler\n4 Active Cron Jobs"]
 
         subgraph SERVICES["Business Logic Layer"]
-            AUTH_SVC["Auth Service\nJWT · OTP · Bcrypt"]
+            AUTH_SVC["Auth Service\nJWT · OTP · Bcrypt · Guest"]
             MATCH_SVC["Match Orchestrator\nN.E.X.U.S. Engine"]
             AI_SVC["AI Service\nGemini 2.5 Flash"]
-            VERIFY_SVC["Verify Service\nGitHub · Gemini"]
-            SQUAD_SVC["Squad Service\nGatekeeper"]
+            VERIFY_SVC["Verify Service\nGitHub · LeetCode · Gemini"]
+            PORT_SVC["Portfolio Service\nGitHub Sync & Showcase"]
+            SQUAD_SVC["Squad Service\nGatekeeper & Slots"]
+            SEARCH_SVC["Search Service\nRanker & tsvector"]
+            FEEDBACK_SVC["Feedback Service\nInbox & Contributor Leads"]
             SKILL_SVC["Skill Service"]
             EMAIL_SVC["Email Service\nResend · SMTP"]
         end
@@ -59,24 +62,25 @@ graph TB
             HELMET["Helmet\nSecurity Headers"]
             CORS_MW["CORS Whitelist"]
             GZIP["Gzip Compression"]
-            RATELIMIT["Rate Limiter\nRedis-backed"]
-            AUTH_MW["JWT Auth Guard"]
+            RATELIMIT["Rate Limiters\nGlobal · Auth · AI · Verify · Sync"]
+            AUTH_MW["JWT Auth Guard (httpOnly)"]
             ZOD["Zod Schema Validator"]
         end
     end
 
     subgraph DATA["🗄️  Data Tier"]
-        POSTGRES[("PostgreSQL 15\nPrisma ORM")]
-        REDIS[("Redis\nCache · Rate Limits")]
+        POSTGRES[("PostgreSQL 16\nPrisma ORM (28 Models)")]
+        REDIS[("Redis / Cache\nCache · Rate Limits")]
     end
 
     subgraph EXTERNAL["🌐  External APIs"]
         GEMINI["Google Gemini\n2.5 Flash"]
-        GITHUB_API["GitHub REST API\nRepo · Language Analysis"]
+        GITHUB_API["GitHub REST API\nRepo · Git Trees · Languages"]
+        LEETCODE_API["LeetCode GraphQL\nDSA Problem Stats"]
         RESEND["Resend / SMTP\nTransactional Email"]
     end
 
-    BROWSER -- "REST  HTTPS + Gzip" --> HTTP
+    BROWSER -- "REST  HTTPS + Cookies" --> HTTP
     WS_CLIENT -- "WSS  Persistent" --> WS_SERVER
     HTTP --> MIDDLEWARE --> SERVICES
     WS_SERVER --> SERVICES
@@ -86,6 +90,8 @@ graph TB
     AI_SVC --> GEMINI
     VERIFY_SVC --> GITHUB_API
     VERIFY_SVC --> GEMINI
+    VERIFY_SVC --> LEETCODE_API
+    PORT_SVC --> GITHUB_API
     EMAIL_SVC --> RESEND
 ```
 
@@ -97,27 +103,31 @@ The backend follows a **layered, service-oriented design**. Routes are thin cont
 
 ```mermaid
 graph TB
-    subgraph ENTRY["Entry Point — index.js"]
-        BOOT["Startup Validation\nRequired ENV check"]
-        MWARE["Middleware Mount\nHelmet · CORS · Gzip · Morgan"]
-        ROUTE_MOUNT["Route Registration\n11 Route Modules"]
+    subgraph ENTRY["Entry Point Lifecycle — server.js & app.js"]
+        BOOT["server.js\nRequired ENV check · DB test · PM2 signal"]
+        APP_CONF["app.js\nHelmet · CORS · Gzip · Cookie & Body Parser"]
+        ROUTE_MOUNT["Route Registration\n15 Route Modules"]
         SOCKET_INIT["Socket.io Init\n socket.js"]
-        JOB_INIT["Cron Scheduler\n setupJobs()"]
-        HEALTH["/health\nDB + Cache probe"]
+        JOB_INIT["Cron Scheduler\n setupJobs() & startSelfPing()"]
+        HEALTH["/health & /ping\nDB + Cache probe"]
     end
 
-    subgraph ROUTES["Routes Layer — /routes/*.js"]
-        R_AUTH["auth.js\nPOST /auth/*"]
-        R_USERS["users.js\nGET|PUT /users/*"]
-        R_SKILLS["skills.js\n/skills"]
-        R_VERIFY["verify.js\n/verify"]
-        R_SQUADS["squads.js\n/squads"]
-        R_POSTS["posts.js\n/posts"]
-        R_AI["ai.js\n/ai/roadmap"]
-        R_CHAT["chat.js\n/chat"]
-        R_NOTIF["notifications.js\n/notifications"]
-        R_ANTI["antifragile.js\n/antifragile"]
-        R_ACT["activity.js\n/activity"]
+    subgraph ROUTES["Routes Layer — /routes/*.js (15 Modules)"]
+        R_AUTH["auth.js\n/api/auth"]
+        R_USERS["users.js\n/api/users"]
+        R_SKILLS["skills.js\n/api/skills"]
+        R_VERIFY["verify.js\n/api/verify"]
+        R_SQUADS["squads.js\n/api/squads"]
+        R_POSTS["posts.js\n/api/posts"]
+        R_ACT["activity.js\n/api/activity"]
+        R_AI["ai.js\n/api/ai"]
+        R_CHAT["chat.js\n/api/chat"]
+        R_NOTIF["notifications.js\n/api/notifications"]
+        R_ANTI["antifragile.js\n/api/antifragile"]
+        R_PORT["portfolio.js\n/api/portfolio"]
+        R_ADMIN["admin.js\n/api/admin"]
+        R_SEARCH["search.js\n/api/search"]
+        R_FEED["feedback.js\n/api/feedback"]
     end
 
     subgraph SVC["Services Layer — /services/*.js"]
@@ -128,6 +138,8 @@ graph TB
         SVC_LOG["decisionLogger.js\nlogDecision()"]
         SVC_GATE["gatekeeper.js\ncheckEligibility()"]
         SVC_VERIFY["verifyService.js\nverifySkill()"]
+        SVC_LEET["leetcodeService.js\nverifyLeetCodeSkill()"]
+        SVC_PORT["githubPortfolioService.js\nsyncUserRepos()"]
         SVC_SQUAD["squadService.js\ncreateFindJoin()"]
         SVC_SKILL["skillService.js"]
         SVC_EMAIL["emailService.js\nsendOtp()"]
@@ -140,19 +152,28 @@ graph TB
         end
     end
 
+    subgraph JOBS["Scheduled Jobs — /jobs/*.js"]
+        J_SQUAD["squadMaintenance.js\nDaily 00:00 UTC"]
+        J_PRUNE["userPruning.js\nDaily 01:00 UTC"]
+        J_EVOLVE["strategyEvolution.js\nWeekly Sunday"]
+        J_PING["keepAlive.js\nEvery 10 mins"]
+    end
+
     subgraph UTILS["Utilities — /utils/*.js"]
         CACHE["cache.js\nRedis or MemoryStore"]
         LOGGER["logger.js\nWinston + Daily-Rotate"]
         ERR["errorHandler.js\nApiError · asyncHandler"]
-        NOTIFY["notify.js\nIn-app notification push"]
     end
 
     subgraph MW["Middleware — /middleware/*.js"]
-        AUTH_MID["auth.js\nauthenticateToken()"]
+        AUTH_MID["auth.js\nauthenticateToken() · requireRole()"]
         RATE_MID["rateLimiter.js\nmakeLimiter() factory"]
+        VAL_MID["validate.js"]
     end
 
-    ENTRY --> ROUTES
+    BOOT --> APP_CONF --> ROUTE_MOUNT --> ROUTES
+    BOOT --> SOCKET_INIT
+    BOOT --> JOB_INIT --> JOBS
     ROUTES --> MW
     ROUTES --> SVC
     SVC_MATCH --> SVC_CONSENSUS
@@ -163,6 +184,8 @@ graph TB
     MW --> CACHE
     SVC --> LOGGER
     SVC --> ERR
+    JOBS --> SVC
+    JOBS --> CACHE
 ```
 
 ---
@@ -179,44 +202,55 @@ graph TB
     end
 
     subgraph APP["src/app/"]
-        APP_JSX["App.jsx\nReact Router v6\nRoute-level lazy loading"]
-        PROVIDERS["Providers\nAuthContext · SocketContext"]
+        APP_JSX["App.jsx\nReact Router v6\n18 Protected/Public Routes · Lazy Loaded"]
+        PROVIDERS["Providers\nAuthContext · SocketContext · Toast"]
     end
 
-    subgraph FEATURES["src/features/  —  Feature-Sliced Modules"]
-        F_AUTH["auth/\nLogin · Register\nForgot · OTP forms"]
-        F_PROFILE["profile/\nProfile view · Edit\nSkill badges"]
-        F_SKILLS["skills/\nSkill cards · Verify flow\nGitHub repo submit"]
-        F_SQUADS["squads/\nMission Board · Squad detail\nApply modal · Slot cards"]
-        F_CHAT["chat/\nDM drawer\nSocket.io consumer"]
-        F_NETWORK["network/\nUser directory\nFilter · Search"]
-        F_ADMIN["admin/\nN.E.X.U.S. dashboard\nStrategy management"]
+    subgraph FEATURES["src/features/  —  13 Feature-Sliced Modules"]
+        F_AUTH["auth/\nAuthPage · Login · Register · OTP"]
+        F_PROFILE["profile/\nMyProfile · UserProfile · LeetCodeCard · RecruiterDossier"]
+        F_SKILLS["skills/\nSkillVerifier · SkillCard · BatchVerifierModal"]
+        F_SQUADS["squads/\nMissionBoard · SquadDetail · SquadManage · MyApplications"]
+        F_PORT["portfolio/\nGitHubProjectsSummary · ProjectSelectionModal"]
+        F_CHAT["chat/\nChatInterface · MessageList · Socket consumer"]
+        F_FEED["feed/\nFeedCard · CreatePostModal · CommentSection"]
+        F_NETWORK["network/\nNetwork · UserCard · FilterBar"]
+        F_SEARCH["search/\nSearchOverlay · SearchResultItem"]
+        F_FEEDBACK["feedback/\nFeedbackModal · FeedbackDrawer"]
+        F_NOTIF["notifications/\nNotificationItem · NotificationBell"]
+        F_ROADMAP["roadmap/\nRoadmapView · RoadmapGenerator"]
+        F_ADMIN["admin/\nAdminDashboard · AntifragileAdmin · StrategyControls"]
     end
 
     subgraph PAGES["src/pages/  —  Route Pages"]
-        PG_LAND["LandingPage.jsx\nHero · 3D Feature Sphere"]
-        PG_DASH["Dashboard.jsx\nSkill gap · AI roadmap"]
-        PG_FEED["GlobalFeed.jsx\nPosts · Likes · Comments"]
-        PG_PROF["MyProfile.jsx"]
-        PG_NET["Network.jsx"]
-        PG_MISS["MissionBoard.jsx"]
+        PG_LAND["Landing.jsx"]
+        PG_DASH["Dashboard.jsx"]
+        PG_FEED["GlobalFeed.jsx"]
+        PG_ROAD["Roadmap.jsx"]
+        PG_NOTIF["NotificationsPage.jsx"]
+        PG_SEARCH["Search.jsx"]
+        PG_FEEDBACK["FeedbackPage.jsx"]
+        PG_VERIFY["SkillVerifierPage.jsx"]
+        PG_CHAT["ChatInterface.jsx"]
+        PG_404["NotFound.jsx"]
     end
 
     subgraph SHARED["src/shared/  —  Cross-cutting"]
-        NAVBAR["Navbar.jsx\nResponsive · Hamburger\nNexus Portal animation"]
-        PROTECTED["ProtectedRoute.jsx"]
-        UI_COMP["Common UI Components\nButtons · Modals · Loaders"]
+        NAVBAR["Navbar.jsx\nResponsive · Nexus Portal animation"]
+        PROTECTED["ProtectedRoute.jsx\nSession & GitHub Account Quality Gate"]
+        UI_COMP["Common UI Components\nButtons · Modals · Loaders · Toast"]
     end
 
-    subgraph SERVICES["src/services/  —  API Calls"]
+    subgraph SERVICES["src/services/  —  API Services"]
         AUTH_API["authService.js"]
         USER_API["userService.js"]
         SQUAD_API["squadService.js"]
         FEED_API["feedService.js"]
+        AI_API["aiService.js"]
     end
 
     subgraph CONFIG["src/config/"]
-        SOCKET_CFG["socket.js\nSocket.io-client setup"]
+        SOCKET_CFG["socket.js\nSocket.io-client connection singleton"]
     end
 
     MAIN --> APP_JSX
@@ -233,7 +267,7 @@ graph TB
 
 ## 5.4 Database Architecture
 
-PostgreSQL 15 managed via **Prisma ORM**. The schema is partitioned into five logical domains: Identity, Skills, Social Feed, Squad/Mission System, and the Antifragile Matching Engine.
+PostgreSQL 16 managed via **Prisma ORM**. The schema contains **28 models** partitioned across eight logical domains: Core Identity, Skills & GitHub Repositories, Career Roadmaps, Social Feed & Moderation, Squad/Mission System, Antifragile Matching Engine (N.E.X.U.S.), Chat & Messaging, and Community Feedback.
 
 ```mermaid
 erDiagram
@@ -243,11 +277,20 @@ erDiagram
         string  password
         string  name
         enum    role
-        string  github
+        string  guestPersona
         string  college
         string  headline
         string  bio
         string  avatar
+        string  github
+        string  linkedin
+        string  leetcodeUsername
+        int     leetcodeDSAScore
+        string  leetcodeDSALevel
+        int     leetcodeTotalPoints
+        json    leetcodeLanguages
+        datetime leetcodeSyncedAt
+        boolean isActive
         datetime createdAt
     }
 
@@ -260,7 +303,37 @@ erDiagram
         string  verificationUrl
         enum    verificationSource
         int     calculatedScore
+        boolean showLevel
         datetime verifiedAt
+    }
+
+    GITHUBREPO {
+        uuid     id              PK
+        uuid     userId          FK
+        string   repoName
+        string   fullName
+        string   primaryLanguage
+        string[] techStack
+        int      stars
+        int      forks
+        string   url
+        enum     repoType
+        boolean  isSelected
+        int      mergedPrs
+        datetime repoUpdatedAt
+    }
+
+    ROADMAP {
+        uuid     id             PK
+        uuid     userId         FK
+        string   targetRole
+        string   targetSkill
+        string   content
+        string[] completedItems
+        float    progress
+        string   shareToken     UK
+        datetime generatedAt
+        datetime updatedAt
     }
 
     JOBROLE {
@@ -296,6 +369,34 @@ erDiagram
         uuid     userId   FK
         string   content
         uuid     parentId FK
+        datetime createdAt
+    }
+
+    COMMENTLIKE {
+        uuid     id        PK
+        uuid     commentId FK
+        uuid     userId    FK
+        datetime createdAt
+    }
+
+    CONTENTREPORT {
+        uuid     id              PK
+        uuid     reporterId      FK
+        uuid     targetUserId
+        uuid     targetPostId
+        uuid     targetCommentId
+        string   reason
+        enum     status
+        string   resolution
+        datetime reportedAt
+    }
+
+    ACTIVITYLOG {
+        uuid     id        PK
+        uuid     userId    FK
+        string   action
+        string   details
+        datetime createdAt
     }
 
     SQUAD {
@@ -315,24 +416,32 @@ erDiagram
         uuid     id              PK
         uuid     squadId         FK
         string   roleTitle
+        string   roleDescription
+        string[] preferredSkills
         string   requiredSkill
         int      minScore
         boolean  requireVerified
         enum     status
+        string   filledBy
     }
 
     SQUADAPPLICATION {
-        uuid     id        PK
-        uuid     squadId   FK
-        uuid     userId    FK
-        uuid     slotId    FK
+        uuid     id              PK
+        uuid     squadId         FK
+        uuid     userId          FK
+        uuid     slotId          FK
+        string   message
         enum     status
         int      matchScore
+        uuid     matchDecisionId FK
+        datetime appliedAt
     }
 
     MATCHSTRATEGY {
         uuid     id             PK
         string   name           UK
+        string   displayName
+        string   description
         enum     state
         enum     influenceLevel
         int      totalDecisions
@@ -345,8 +454,10 @@ erDiagram
         uuid     id               PK
         uuid     squadId          FK
         uuid     selectedUserId   FK
+        string[] alternativesShown
         boolean  wasConsensus
         boolean  wasRandom
+        int      consensusCount
         json     strategyVotes
         json     activeStrategies
     }
@@ -355,6 +466,7 @@ erDiagram
         uuid     id             PK
         uuid     decisionId     FK
         boolean  accepted
+        datetime acceptedAt
         int      timeToDecision
         boolean  retention30d
         boolean  retention60d
@@ -366,9 +478,29 @@ erDiagram
         uuid     id             PK
         uuid     strategyId     FK
         datetime windowStart
+        datetime windowEnd
         float    acceptanceRate
         float    retention30dRate
         int      rankInWindow
+    }
+
+    STRATEGYPROMOTION {
+        uuid     id          PK
+        uuid     strategyId  FK
+        enum     fromState
+        enum     toState
+        string   reason
+        json     metrics
+        datetime triggeredAt
+    }
+
+    SYSTEMCONFIG {
+        uuid     id                     PK
+        int      maxActiveStrategies
+        int      maxShadowStrategies
+        float    minRandomnessRate
+        int      minConsensusStrategies
+        int      influenceDecayDays
     }
 
     CONVERSATION {
@@ -382,16 +514,19 @@ erDiagram
         uuid     senderId       FK
         string   content
         boolean  isRead
+        datetime createdAt
     }
 
     INAPPNOTIFICATION {
-        uuid     id        PK
-        uuid     userId    FK
+        uuid     id           PK
+        uuid     userId       FK
         string   type
         string   title
         string   message
         boolean  isRead
         string   actionUrl
+        string   senderAvatar
+        datetime createdAt
     }
 
     ALLOWEDEMAIL {
@@ -407,28 +542,59 @@ erDiagram
         boolean  used
     }
 
-    USER         ||--o{ SKILL                : "possesses"
-    USER         ||--o{ POST                 : "creates"
-    USER         ||--o{ LIKE                 : "gives"
-    USER         ||--o{ COMMENT              : "writes"
-    USER         ||--o{ SQUAD                : "leads"
-    USER         ||--o{ SQUADAPPLICATION     : "submits"
-    USER         ||--o{ MATCHDECISION        : "selected by"
-    USER         ||--o{ MESSAGE              : "sends"
-    USER         }o--o{ CONVERSATION         : "participates in"
-    USER         ||--o{ INAPPNOTIFICATION    : "receives"
-    POST         ||--o{ LIKE                 : "has"
-    POST         ||--o{ COMMENT              : "has"
-    COMMENT      ||--o{ COMMENT              : "replies to"
-    SQUAD        ||--|{ SQUADSLOT            : "has"
-    SQUAD        ||--o{ SQUADAPPLICATION     : "receives"
-    SQUAD        ||--o{ MATCHDECISION        : "triggers"
-    SQUADSLOT    ||--o{ SQUADAPPLICATION     : "targeted by"
-    MATCHDECISION ||--o| MATCHOUTCOME        : "produces"
-    MATCHSTRATEGY ||--o{ MATCHDECISION       : "votes in"
-    MATCHSTRATEGY ||--o{ STRATEGYPERFORMANCE : "tracked by"
-    JOBROLE      ||--|{ JOBROLESKILL         : "requires"
-    CONVERSATION ||--|{ MESSAGE              : "contains"
+    FOLLOW {
+        uuid     id          PK
+        uuid     followerId  FK
+        uuid     followingId FK
+        datetime createdAt
+    }
+
+    PLATFORMFEEDBACK {
+        uuid     id                 PK
+        uuid     userId
+        string   userName
+        string   userEmail
+        string   category
+        int      rating
+        string   feedback
+        boolean  wantsToContribute
+        string[] contributorAreas
+        string   status
+        string   adminResponse
+        datetime createdAt
+    }
+
+    USER             ||--o{ SKILL                : "possesses"
+    USER             ||--o{ GITHUBREPO           : "syncs"
+    USER             ||--o{ POST                 : "creates"
+    USER             ||--o{ LIKE                 : "gives"
+    USER             ||--o{ COMMENT              : "writes"
+    USER             ||--o{ COMMENTLIKE          : "likes comment"
+    USER             ||--o{ CONTENTREPORT        : "files report"
+    USER             ||--o{ ACTIVITYLOG          : "generates"
+    USER             ||--o{ SQUAD                : "leads"
+    USER             ||--o{ SQUADAPPLICATION     : "submits"
+    USER             ||--o{ MATCHDECISION        : "selected by"
+    USER             ||--o{ ROADMAP              : "generates"
+    USER             ||--o{ MESSAGE              : "sends"
+    USER             }o--o{ CONVERSATION         : "participates in"
+    USER             ||--o{ INAPPNOTIFICATION    : "receives"
+    USER             ||--o{ FOLLOW               : "follows / followed by"
+    POST             ||--o{ LIKE                 : "has"
+    POST             ||--o{ COMMENT              : "has"
+    COMMENT          ||--o{ COMMENT              : "replies to"
+    COMMENT          ||--o{ COMMENTLIKE          : "receives likes"
+    SQUAD            ||--|{ SQUADSLOT            : "has"
+    SQUAD            ||--o{ SQUADAPPLICATION     : "receives"
+    SQUAD            ||--o{ MATCHDECISION        : "triggers"
+    SQUADSLOT        ||--o{ SQUADAPPLICATION     : "targeted by"
+    MATCHDECISION    ||--o| MATCHOUTCOME         : "produces"
+    MATCHDECISION    ||--o| SQUADAPPLICATION     : "links"
+    MATCHSTRATEGY    ||--o{ MATCHDECISION        : "votes in"
+    MATCHSTRATEGY    ||--o{ STRATEGYPERFORMANCE  : "tracked by"
+    MATCHSTRATEGY    ||--o{ STRATEGYPROMOTION    : "audits changes"
+    JOBROLE          ||--|{ JOBROLESKILL         : "requires"
+    CONVERSATION     ||--|{ MESSAGE              : "contains"
 ```
 
 ---
@@ -579,41 +745,49 @@ flowchart TD
 
 ## 5.7 Data Flow
 
-This diagram traces how data travels through the system for the five primary platform operations: authentication, squad application, feed post, skill verification, and AI roadmap generation.
+This diagram traces how data travels through the system for the primary platform operations: authentication & guest access, squad recruitment, feed discussions, GitHub AI code audit, LeetCode DSA verification, portfolio showcase synchronization, AI career roadmap generation, and unified search.
 
 ```mermaid
 flowchart LR
     subgraph INPUT["User Actions"]
-        A1["Register or Login"]
+        A1["Register / Login / Guest Mode"]
         A2["Apply to Squad"]
-        A3["Post to Feed"]
-        A4["Verify Skill via GitHub"]
-        A5["Request AI Roadmap"]
+        A3["Post to Feed / Threaded Comment"]
+        A4["Verify Skill via GitHub Repo"]
+        A5["Sync LeetCode DSA Profile"]
+        A6["Sync & Select Showcase Repos"]
+        A7["Request AI Career Roadmap"]
+        A8["Unified Multi-Entity Search"]
     end
 
     subgraph PROCESSING["Processing Layer"]
         direction TB
-        P1["Auth Service\nOTP validate then JWT mint"]
-        P2["Gatekeeper Service\n6-phase eligibility check"]
-        P2B["Match Orchestrator\nParallel strategy execution"]
-        P3["Feed Controller\nPrisma CRUD"]
-        P4["Verify Service\nGitHub API then Gemini score"]
-        P5["AI Service\nGemini personalized prompt"]
+        P1["Auth Service\nOTP validate · JWT mint · Guest"]
+        P2["Gatekeeper & Match Orchestrator\nParallel strategy execution"]
+        P3["Feed Service\nPrisma CRUD · Likes · Replies"]
+        P4["Verify Service\n8-File categorized AST · Gemini score"]
+        P5["LeetCode Service\nGraphQL fetch · DSA point formula"]
+        P6["Portfolio Service\nGitHub repos sync · Top 3+3 showcase"]
+        P7["AI Service\nGemini 2.5 Flash roadmap & progress"]
+        P8["Search Service\ntsvector query & relevance ranker"]
     end
 
-    subgraph STORAGE["Storage Layer"]
+    subgraph STORAGE["Storage Tier"]
         direction TB
-        DB1[("PostgreSQL\nUser Skill Post")]
-        DB2[("PostgreSQL\nSquad Application Decision")]
-        DB3[("Redis or Memory\nRate limit counters")]
+        DB1[("PostgreSQL\nUser · Skill · Post · Feedback")]
+        DB2[("PostgreSQL\nSquad · Application · Decision")]
+        DB3[("Redis / Cache\nRate limit counters & search cache")]
     end
 
     subgraph OUTPUT["Responses"]
         O1["JWT Cookie plus User JSON"]
-        O2["Match result Decision ID Alternatives"]
-        O3["Post object plus Activity log"]
-        O4["Skill score 0-10 plus Notification"]
-        O5["Markdown Roadmap text"]
+        O2["Match Decision & Recommended Candidate"]
+        O3["Post / Comment Object plus Activity Log"]
+        O4["Skill Score (1-10) plus Level Badge"]
+        O5["LeetCode DSA Score & Language Counts"]
+        O6["Curated Showcase Repos (Max 6)"]
+        O7["Interactive Markdown Roadmap"]
+        O8["Ranked Users, Squads & Posts JSON"]
     end
 
     subgraph REALTIME["Real-Time Side-Effects"]
@@ -622,14 +796,17 @@ flowchart LR
     end
 
     A1 --> P1 --> DB1 --> O1
-    A2 --> P2 --> P2B --> DB2 --> O2
-    P2B --> RT1 & RT2
+    A2 --> P2 --> DB2 --> O2
+    P2 --> RT1 & RT2
     A3 --> P3 --> DB1 --> O3
     A4 --> P4 --> DB1 --> O4
-    O4 --> RT1
-    A5 --> P5 --> O5
-    P2 --> DB3
+    O4 --> RT1 & RT2
+    A5 --> P5 --> DB1 --> O5
+    A6 --> P6 --> DB1 --> O6
+    A7 --> P7 --> DB1 --> O7
+    A8 --> P8 --> DB3 & DB1 --> O8
     P1 --> DB3
+    P4 --> DB3
 ```
 
 ---
@@ -708,50 +885,58 @@ flowchart TD
 
 ---
 
-## 5.9 AI Roadmap Architecture
+## 5.9 AI Roadmap & Verification Architecture
 
-The AI Roadmap feature pipelines user skill data and target role selection into a **context-aware Gemini 2.5 Flash prompt**, returning a structured personalised Markdown learning plan. Skill verification also uses Gemini for repository code analysis.
+The AI Roadmap feature pipelines user skill data and target role selection into a **context-aware Gemini 2.5 Flash prompt**, returning a structured personalised Markdown learning plan with interactive milestone tracking. Skill verification uses multi-source validation: GitHub categorized AST inspection with prompt injection defense, and LeetCode algorithmic problem evaluation.
 
 ```mermaid
 flowchart TD
     subgraph TRIGGER["Entry Points"]
-        T1["Dashboard: User selects target role and skill"]
-        T2["Verify: User submits GitHub repo URL"]
+        T1["Dashboard: Target role & skill selection"]
+        T2["Verify: Submit public GitHub repo URL"]
+        T3["LeetCode: Submit LeetCode username"]
     end
 
     subgraph ROADMAP["AI Roadmap Flow — aiService.js"]
         R1["POST /api/ai/roadmap\naiLimiter 20 req per hr"]
-        R2["Load user existing skills from DB"]
-        R3["Classify proficiency level\n0=Beginner 1-4=Beginner\n5-7=Intermediate 8-10=Advanced"]
-        R4["Build context instruction\nExisting skills as analogies\nSkip redundant basics"]
-        R5["Build personalized prompt\nTarget skill + role + score context"]
-        R6["Call Gemini 2.5 Flash"]
-        R7["Return Markdown roadmap\nWeeks 1-2 3-4 5-8 plus Resources"]
+        R2["Load user existing skills & calculate gap"]
+        R3["Classify proficiency level\n0=Beginner · 1-4=Beginner\n5-7=Intermediate · 8-10=Advanced"]
+        R4["Build context instruction\nAnalogy mapping from existing skills"]
+        R5["Call Gemini 2.5 Flash\nStructured Markdown with milestones"]
+        R6["Persist Roadmap record\nProgress tracking & shareToken"]
     end
 
-    subgraph VERIFY_AI["AI Skill Verification Flow — verifyService.js"]
-        V1["POST /api/verify\nverifyLimiter 20 req per hr"]
-        V2["Parse and validate GitHub URL\nReject forks and 404s"]
-        V3["GitHub API: fetch repo metadata and file tree"]
-        V4["Filter source files\n.js .ts .py .java .go .rs\nExclude test and node_modules"]
-        V5["Fetch top 3 file contents\nraw.githubusercontent.com\nup to 3000 chars each"]
-        V6["Build scoring prompt\nArchitecture paradigms efficiency complexity"]
-        V7["Call Gemini 2.5 Flash\nExpect JSON score and reasoning"]
-        V8["Parse response\nClamp score 1-10\nMap to level label"]
-        V9["Upsert Skill record\nverificationSource GITHUB"]
-        V10["Push in-app notification\nand ActivityLog entry"]
+    subgraph VERIFY_GH["GitHub Deep Code Audit — verifyService.js"]
+        V1["POST /api/verify/skill\nverifyLimiter 20 req per hr"]
+        V2["Anti-Cheat & Ownership Validation\nReject forks & archived repos"]
+        V3["GitHub API: Fetch recursive git tree"]
+        V4["Categorized Multi-File Sampling (Max 8 files, ~3500 chars)\n• Manifests (Max 2) · Backend (Max 3)\n• Frontend (Max 3) · Schemas (Max 2)\n• General Source (Max 4)"]
+        V5["Prompt Injection Defense\nWrap in <user_repository_code> tags\nStrict system instruction to ignore inner text"]
+        V6["Call Gemini 2.5 Flash\nJSON score (1-10), level & qualitative evidence"]
+        V7["Multi-Skill Auto-Discovery\nScan repo for secondary profile skills"]
+        V8["Upsert Skill (isVerified=true) & Invalidate Cache"]
+    end
+
+    subgraph VERIFY_LC["LeetCode Verification — leetcodeService.js"]
+        L1["POST /api/verify/leetcode-profile-sync"]
+        L2["Fetch stats from LeetCode GraphQL"]
+        L3["DSA Points Formula:\n(Easy*1) + (Medium*3) + (Hard*5)"]
+        L4["Map to score 1-10 & language breakdown"]
+        L5["Update User leetcodeDSAScore & points"]
     end
 
     subgraph EXTERNAL["External Services"]
         GEMINI_API["Google Generative AI\ngemini-2.5-flash"]
-        GH_API["GitHub REST API\nrepos and git trees"]
+        GH_API["GitHub REST API\nrepos, git trees, contents"]
+        LC_API["LeetCode GraphQL API"]
     end
 
-    T1 --> R1 --> R2 --> R3 --> R4 --> R5 --> R6
-    R6 --> GEMINI_API --> R7
-    T2 --> V1 --> V2 --> V3
-    V3 --> GH_API --> V4 --> V5 --> V6 --> V7
-    V7 --> GEMINI_API --> V8 --> V9 --> V10
+    T1 --> R1 --> R2 --> R3 --> R4 --> R5
+    R5 --> GEMINI_API --> R6
+    T2 --> V1 --> V2 --> V3 --> V4 --> V5 --> V6
+    V6 --> GEMINI_API --> V7 --> V8
+    V3 --> GH_API
+    T3 --> L1 --> L2 --> LC_API --> L3 --> L4 --> L5
 ```
 
 ---
@@ -883,41 +1068,51 @@ graph TB
 
 ## 5.12 Background Jobs
 
-SkillSphere uses **node-cron** for scheduled maintenance. All jobs run in-process alongside the main server. A dedicated worker process is planned for v3.0.
+SkillSphere uses **node-cron** for scheduled maintenance and self-healing automation. All 4 background jobs run in-process alongside the main server, initialized on startup via `setupJobs()` in `server/jobs/squadMaintenance.js`.
 
 ```mermaid
 flowchart TD
-    subgraph SCHEDULER["node-cron Scheduler — setupJobs()"]
-        BOOT["Server start — setupJobs() called once"]
+    subgraph SCHEDULER["node-cron Scheduler — setupJobs() in server.js"]
+        BOOT["Server boot: setupJobs() & startSelfPing()"]
         CRON1["Cron: 0 0 * * *\nDaily at 00:00 UTC"]
+        CRON2["Cron: 0 1 * * *\nDaily at 01:00 UTC + Startup"]
+        CRON3["Cron: 0 0 * * 0\nWeekly Sunday 00:00 UTC"]
+        CRON4["Cron: */10 * * * *\nEvery 10 min + 5m ping"]
     end
 
-    subgraph JOB1["Job 1 — expireStaleSquads()"]
-        E1["SELECT squads WHERE\nstatus = OPEN AND expiresAt < NOW()"]
-        E2["UPDATE status = ARCHIVED\nbatch via updateMany()"]
-        E3["Winston log count archived"]
+    subgraph JOB1["Job 1 — squadMaintenance.js"]
+        E1["expireStaleSquads():\nUPDATE status=ARCHIVED WHERE expiresAt < NOW()"]
+        F1["closeFulfilledSquads():\nUPDATE status=FULL WHERE currentMembers >= maxMembers"]
     end
 
-    subgraph JOB2["Job 2 — closeFulfilledSquads()"]
-        F1["SELECT all OPEN squads\ncurrentMembers and maxMembers"]
-        F2{"currentMembers >= maxMembers?"}
-        F3["Collect IDs to close"]
-        F4["UPDATE status = FULL via updateMany()"]
-        F5["Winston log count closed"]
+    subgraph JOB2["Job 2 — userPruning.js"]
+        U1["pruneUnlinkedAccounts():\nFind users WHERE github IS NULL/empty AND createdAt < (NOW() - 24h)"]
+        U2["DELETE stale unverified accounts"]
     end
 
-    subgraph FUTURE["Planned Future Jobs"]
-        PJ1["Strategy Evolution Job\nWeekly: recalculate StrategyPerformance\nPromote or demote strategies"]
-        PJ2["GitHub Account Prune Job\nDaily: find users missing github\nfield after N days"]
-        PJ3["MatchOutcome Updater\nWeekly: update retention30d\nfor accepted applications"]
+    subgraph JOB3["Job 3 — strategyEvolution.js"]
+        EV1["Fetch 30d MatchDecisions & MatchOutcomes"]
+        EV2["Calculate acceptanceRate & retention30dRate"]
+        EV3["Create StrategyPerformance records & update ranks"]
+        EV4["Auto-Promote SHADOW (>70% acc, >60% ret) to ACTIVE"]
+        EV5["Auto-Demote ACTIVE (<40% acc) to SHADOW"]
+        EV6["Re-weight influenceLevel (Top=HIGH, Bottom=LOW)"]
     end
 
-    BOOT --> CRON1
-    CRON1 --> JOB1 & JOB2
-    E1 --> E2 --> E3
-    F1 --> F2
-    F2 -- "Yes" --> F3 --> F4 --> F5
-    F2 -- "No" --> F5
+    subgraph JOB4["Job 4 — keepAlive.js & startSelfPing"]
+        P1["HTTP GET /ping\nPrevents cold starts on PaaS free-tiers"]
+    end
+
+    subgraph FUTURE["Planned v3.0 Scalability"]
+        PJ1["Worker Process Separation via BullMQ on Redis"]
+        PJ2["Dedicated Queue Node for Gemini AI Tasks"]
+    end
+
+    BOOT --> CRON1 & CRON2 & CRON3 & CRON4
+    CRON1 --> JOB1
+    CRON2 --> JOB2
+    CRON3 --> JOB3
+    CRON4 --> JOB4
     CRON1 -.->|"Planned v3.0"| FUTURE
 ```
 
