@@ -16,10 +16,11 @@
 | 5.3 | [Frontend Architecture](#53-frontend-architecture) |
 | 5.4 | [Database Architecture](#54-database-architecture) |
 | 5.5 | [Authentication Flow](#55-authentication-flow) |
+| 5.5.1 | [Quality Control & Account Purge Lifecycle](#551-proof-of-work-quality-control--account-purge-lifecycle) |
 | 5.6 | [Request Processing Flow](#56-request-processing-flow) |
 | 5.7 | [Data Flow](#57-data-flow) |
 | 5.8 | [N.E.X.U.S. Engine Architecture](#58-nexus-engine-architecture) |
-| 5.9 | [AI Roadmap Architecture](#59-ai-roadmap-architecture) |
+| 5.9 | [AI Roadmap & Verification Architecture](#59-ai-roadmap--verification-architecture) |
 | 5.10 | [Real-Time Communication](#510-real-time-communication) |
 | 5.11 | [Deployment Architecture](#511-deployment-architecture) |
 | 5.12 | [Background Jobs](#512-background-jobs) |
@@ -670,6 +671,54 @@ sequenceDiagram
         Auth->>Auth: clearTokenCookie — force re-login
         Auth-->>Client: 200 success
     end
+
+    rect rgb(30, 50, 60)
+        Note over User,DB: GUEST EXPLORATION LOGIN
+        User->>Client: Clicks "Explore as Student / Professional"
+        Client->>Auth: POST /api/auth/guest { role: "STUDENT" | "PROFESSIONAL" }
+        Auth->>DB: Find or create seeded guest persona user
+        Auth->>Auth: jwt.sign payload with 24h expiration
+        Auth-->>Client: Set-Cookie ss_token + 200 user object
+    end
+```
+
+### 5.5.1 Proof-of-Work Quality Control & Account Purge Lifecycle
+
+SkillSphere enforces an uncompromising **Proof-of-Work Quality Gate**: accounts that do not link a valid GitHub account are restricted from accessing protected platform routes and automatically purged. This prevents ghost profiles and ensures all network participants possess verifiable engineering artifacts.
+
+```mermaid
+sequenceDiagram
+    autonumber
+    actor User
+    participant Browser as React Client (App.jsx)
+    participant API as Express API (/api/users/me)
+    participant Cron as Cron Job (userPruning.js)
+    participant DB as PostgreSQL
+
+    rect rgb(60, 30, 30)
+        Note over User,DB: PATHWAY A — REAL-TIME ROUTE PURGE INTERCEPTOR
+        User->>Browser: Navigates to protected route (/dashboard, /nexus, /grid)
+        Browser->>Browser: Evaluates Gate: hasGithub || isSystemOrAdmin
+        alt GitHub account NOT linked (github == null / empty)
+            Browser->>Browser: Warns: Quality Control: GitHub account not linked
+            Browser->>API: DELETE /api/users/me (Hard delete request)
+            API->>DB: prisma.user.delete({ where: { id: req.user.userId } })
+            DB-->>API: User record and cascade relations purged
+            API-->>Browser: 200 OK
+            Browser->>Browser: Wipe localStorage (user_data, ss_token)
+            Browser->>User: Redirect to /auth?reason=github_required
+        else GitHub account linked
+            Browser->>User: Renders protected page
+        end
+    end
+
+    rect rgb(50, 40, 20)
+        Note over Cron,DB: PATHWAY B — SCHEDULED BACKGROUND SWEEPER
+        Cron->>Cron: Scheduled at 01:00 UTC daily & on startup
+        Cron->>DB: DELETE FROM "User" WHERE (github IS NULL OR github = '') AND createdAt < (NOW() - 24h)
+        DB-->>Cron: Returns count of pruned accounts
+        Cron->>Cron: Winston logs: "removed accounts missing GitHub link"
+    end
 ```
 
 ---
@@ -881,7 +930,7 @@ flowchart TD
 
 ### Visual Overview
 
-![N.E.X.U.S. Engine Architecture Diagram](C:\Users\kshit\.gemini\antigravity-cli\brain\e8e30b91-a3f8-43ef-8aec-1930e161a4de\nexus_engine_architecture_1784868453174.jpg)
+![N.E.X.U.S. Engine Architecture Diagram](./assets/nexus_engine_architecture.jpg)
 
 ---
 
@@ -1000,7 +1049,11 @@ sequenceDiagram
 
 ## 5.11 Deployment Architecture
 
-SkillSphere's production topology follows a **split-host** deployment: the React SPA is deployed to **Vercel** (global CDN edge), and the Node.js API runs on **Railway** with PM2 cluster mode across all available CPU cores.
+SkillSphere supports **two production deployment topologies**: a managed **PaaS Split-Host** configuration (ideal for continuous frontend CD and serverless scaling) and a self-hosted **Containerized IaaS** configuration on AWS EC2 using Docker Compose (ideal for total systems control, cost containment, and engineering portfolio demonstrations).
+
+### 5.11.1 Topology A: Managed PaaS Split-Host (Vercel + Railway)
+
+In this configuration, the React SPA is deployed to **Vercel** (global CDN edge), and the Node.js API runs on **Railway** with PM2 cluster mode across available CPU cores.
 
 ```mermaid
 graph TB
@@ -1008,7 +1061,7 @@ graph TB
         USER_BROWSER["User Browser"]
     end
 
-    subgraph VERCEL["Vercel — Frontend CDN"]
+    subgraph VERCEL["Vercel — Frontend CDN Edge"]
         EDGE["Global Edge Network\nStatic asset delivery"]
         SPA["React 19 SPA\nVite production build\nRoute-level code splitting\nLazy image loading"]
     end
@@ -1024,8 +1077,8 @@ graph TB
         HEALTH_EP["/health endpoint\nDB and cache readiness probe\n200 OK or 503 degraded"]
     end
 
-    subgraph DB_TIER["Data Tier"]
-        PG[("PostgreSQL 15\nManaged e.g. Supabase\nDATABASE_URL + DIRECT_URL")]
+    subgraph DB_TIER["Managed Data Tier"]
+        PG[("PostgreSQL 16\nManaged e.g. Supabase\nDATABASE_URL + DIRECT_URL")]
         REDIS_PROD[("Redis — Optional\ne.g. Upstash\nRate limits and session cache")]
     end
 
@@ -1033,6 +1086,7 @@ graph TB
         RESEND_PROD["Resend\nTransactional OTP email"]
         GEMINI_PROD["Google Gemini 2.5 Flash\nRoadmap and verification"]
         GITHUB_PROD["GitHub REST API\nSkill verification"]
+        LEETCODE_PROD["LeetCode GraphQL\nDSA scoring"]
     end
 
     USER_BROWSER -- "HTTPS" --> VERCEL
@@ -1045,8 +1099,63 @@ graph TB
     W1 & W2 & WN --> RESEND_PROD
     W1 & W2 & WN --> GEMINI_PROD
     W1 & W2 & WN --> GITHUB_PROD
+    W1 & W2 & WN --> LEETCODE_PROD
     HEALTH_EP --> PG
 ```
+
+### 5.11.2 Topology B: Containerized IaaS (AWS EC2 + Docker Compose + Nginx)
+
+In this configuration (detailed in [`cloud_deployment.md`](file:///C:/Users/kshit/cs/skillsphere/cloud_deployment.md) and [`containerization.md`](file:///C:/Users/kshit/cs/skillsphere/containerization.md)), the entire application stack runs inside an isolated Docker bridge network on an **AWS EC2 `t2.micro`** instance (1 vCPU, 1 GB RAM, Ubuntu 24.04 LTS) backed by an Elastic Block Store (EBS) persistent volume and a 2 GB Linux Swap file.
+
+```mermaid
+flowchart TD
+    User(("🌐 End User Browser\nhttp://<EC2-Public-IP>"))
+
+    subgraph AWSCloud ["Amazon Web Services (AWS) — ap-south-1 (Mumbai)"]
+        subgraph VPC ["Virtual Private Cloud (VPC)"]
+            subgraph SecurityGroup ["Security Group Firewall"]
+                Port22["Port 22 (SSH) — Restricted to Admin IP"]
+                Port80["Port 80 (HTTP) — Open to World"]
+                Port443["Port 443 (HTTPS) — Open to World"]
+            end
+
+            subgraph EC2Instance ["AWS EC2 Instance: t2.micro (1 vCPU, 1GB RAM)"]
+                OS["Ubuntu 24.04 LTS + Docker Engine"]
+                SWAP["2 GB Linux Swap File\n(Guards against OOM crashes)"]
+
+                subgraph BridgeNetwork ["Docker Bridge Network (docker_default)"]
+                    Nginx["skillsphere-client (:80)\nNginx Reverse Proxy · Serves SPA"]
+                    Express["skillsphere-server (:5001)\nNode.js 22 Express · WebSockets"]
+                    DB_CONT[("skillsphere-db (:5432)\nPostgreSQL 16 Alpine")]
+                    REDIS_CONT[("skillsphere-redis (:6379)\nRedis 7 Alpine")]
+                end
+            end
+
+            EBS[("💾 Amazon EBS Volume (gp3, 30 GiB)\nPersists OS + Docker Images + postgres_data")]
+        end
+    end
+
+    User -->|HTTP Requests| Port80
+    Port80 --> Nginx
+    Nginx -->|Static Assets /| Nginx
+    Nginx -->|Proxy /api/*| Express
+    Nginx -->|Proxy /socket.io/*| Express
+    Express -->|Internal TCP| DB_CONT
+    Express -->|Internal TCP| REDIS_CONT
+    DB_CONT -.->|Named Volume: postgres_data| EBS
+```
+
+### 5.11.3 Topology Comparison Matrix
+
+| Architectural Feature | Topology A: PaaS (Vercel + Railway) | Topology B: IaaS (AWS EC2 + Docker Compose) |
+|:---|:---|:---|
+| **Target Audience** | Rapid feature prototyping, global edge CDN | Systems engineering interviews, cost predictability |
+| **Reverse Proxy** | Managed by Vercel & Railway routers | Custom Nginx reverse proxy container (`client/nginx.conf`) |
+| **CORS Constraint** | Requires cross-origin cookies (`SameSite=None`) | Same-origin proxy on port 80 bypasses CORS entirely |
+| **Database Host** | Managed PostgreSQL (Supabase / Neon) | Containerized PostgreSQL 16 Alpine mounted on EBS |
+| **Cache & Queue** | Managed Redis (Upstash) / In-memory fallback | Containerized Redis 7 Alpine on bridge network |
+| **Resource Overhead** | Managed serverless instances | Hard-limited to 1 vCPU, 1 GB RAM + 2 GB Swap file |
+| **Monthly Cost** | Free tiers / usage-based | **₹0 / month** under AWS Free Tier (750h EC2 + 30GB EBS) |
 
 ### Environment Variables Reference
 
