@@ -4,16 +4,15 @@ import API from '../../api';
 import SquadAPI from './squadAPI';
 import {
   ArrowLeft, Users, Shield, CheckCircle, XCircle,
-  Clock, Target, ChevronRight, RefreshCw, Trash2,
-  Sparkles
+  Clock, Target, ChevronRight, RefreshCw, Trash2
 } from 'lucide-react';
 import Navbar from '../../shared/components/Navbar';
 import { useToast, ToastContainer } from '../../shared/components/Toast';
 
 const STATUS_CONFIG = {
-  PENDING:  { label: 'PENDING',  icon: Clock,       bg: 'bg-primary/10', border: 'border-primary/20', text: 'text-primary' },
-  ACCEPTED: { label: 'ACCEPTED', icon: CheckCircle, bg: 'bg-emerald-500/10', border: 'border-emerald-500/20', text: 'text-emerald-400' },
-  REJECTED: { label: 'REJECTED', icon: XCircle,     bg: 'bg-error/10', border: 'border-error/20', text: 'text-error' },
+  PENDING:  { label: 'Pending',  icon: Clock,       bg: 'bg-primary/10', border: 'border-primary/25', text: 'text-primary' },
+  ACCEPTED: { label: 'Accepted', icon: CheckCircle, bg: 'bg-accent/10', border: 'border-accent/25', text: 'text-accent' },
+  REJECTED: { label: 'Rejected', icon: XCircle,     bg: 'bg-error/10', border: 'border-error/25', text: 'text-error' },
 };
 
 export default function MyApplications() {
@@ -120,64 +119,61 @@ export default function MyApplications() {
           <div className="flex items-center gap-3">
             <button
               onClick={() => navigate('/nexus')}
-              className="p-2 border border-outline-var/30 hover:border-primary/40 rounded-xs text-outline hover:text-primary transition-all"
+              className="p-2 border border-outline-var/30 hover:border-primary/40 rounded-lg text-outline hover:text-primary transition-all"
               title="Back to Mission Board"
             >
               <ArrowLeft size={16} />
             </button>
             <div>
-              <div className="flex items-center gap-2">
-                <Shield className="text-primary" size={22} />
-                <h1 className="text-2xl font-syne font-extrabold text-text-primary tracking-tight">
-                  Team Applications & Activity
-                </h1>
-              </div>
+              <h1 className="text-2xl font-bold font-syne text-text-primary tracking-tight">
+                Team Applications & Activity
+              </h1>
               <p className="text-xs text-text-muted mt-0.5">
                 Track your active team applications, squad recruitments, and project collaborations.
               </p>
             </div>
           </div>
 
-          <div className="flex items-center gap-2 self-start md:self-auto">
+          <div className="flex items-center gap-2.5 self-start md:self-auto">
             <button
               onClick={loadData}
               disabled={loading}
-              className="px-3.5 py-2 bg-surface hover:bg-surface-mid border border-outline-var/30 text-text-muted hover:text-text-primary font-syne font-bold text-xs uppercase tracking-wider rounded-xs transition-all flex items-center gap-1.5"
+              className="px-3.5 py-2 bg-surface hover:bg-surface-mid border border-outline-var/30 text-text-muted hover:text-text-primary font-outfit font-semibold text-xs rounded-lg transition-colors flex items-center gap-1.5"
             >
               <RefreshCw size={13} className={loading ? 'animate-spin' : ''} />
               <span>Refresh</span>
             </button>
             <button
               onClick={() => navigate('/nexus')}
-              className="px-4 py-2 bg-primary text-on-primary hover:bg-secondary-bright font-syne font-bold text-xs uppercase tracking-wider rounded-xs transition-all flex items-center gap-1.5 shadow-md shadow-primary/20"
+              className="px-4 py-2 bg-primary text-on-primary hover:bg-primary-dim font-outfit font-semibold text-xs rounded-lg transition-colors"
             >
-              <Sparkles size={13} /> Mission Feed
+              Mission Feed
             </button>
           </div>
         </div>
 
         {/* ── Summary Metrics Bar ─────────────────────────────────────────── */}
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3.5">
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
           <div
             onClick={() => setActiveTab('led')}
-            className={`p-4 rounded-md border transition-all cursor-pointer ${
+            className={`p-5 rounded-xl border transition-all cursor-pointer shadow-sm ${
               activeTab === 'led'
-                ? 'bg-surface-mid border-primary/50 shadow-md'
-                : 'bg-surface border-outline-var/20 hover:border-outline-var/40'
+                ? 'bg-surface-mid border-primary/50'
+                : 'bg-surface border-outline-var/25 hover:border-outline-var/40'
             }`}
           >
             <div className="flex items-center justify-between">
-              <span className="text-[10px] font-syne font-bold uppercase tracking-wider text-outline">
+              <span className="text-xs font-outfit font-semibold uppercase tracking-wider text-text-muted">
                 Teams I Lead
               </span>
               <Users size={16} className="text-primary" />
             </div>
-            <div className="flex items-baseline gap-2 mt-2">
-              <span className="text-2xl font-extrabold font-syne text-text-primary">
+            <div className="flex items-baseline gap-2.5 mt-2">
+              <span className="text-2xl font-bold font-syne text-text-primary">
                 {data.led?.length || 0}
               </span>
               {pendingLedCount > 0 && (
-                <span className="text-[10px] text-primary font-syne font-bold bg-primary/10 px-1.5 py-0.5 rounded-xs border border-primary/25 animate-pulse">
+                <span className="text-xs font-outfit font-medium text-primary bg-primary/10 px-2 py-0.5 rounded-md border border-primary/25">
                   {pendingLedCount} Pending Review
                 </span>
               )}
@@ -186,37 +182,37 @@ export default function MyApplications() {
 
           <div
             onClick={() => setActiveTab('applications')}
-            className={`p-4 rounded-md border transition-all cursor-pointer ${
+            className={`p-5 rounded-xl border transition-all cursor-pointer shadow-sm ${
               activeTab === 'applications'
-                ? 'bg-surface-mid border-primary/50 shadow-md'
-                : 'bg-surface border-outline-var/20 hover:border-outline-var/40'
+                ? 'bg-surface-mid border-primary/50'
+                : 'bg-surface border-outline-var/25 hover:border-outline-var/40'
             }`}
           >
             <div className="flex items-center justify-between">
-              <span className="text-[10px] font-syne font-bold uppercase tracking-wider text-outline">
+              <span className="text-xs font-outfit font-semibold uppercase tracking-wider text-text-muted">
                 Applications Submitted
               </span>
               <Target size={16} className="text-accent" />
             </div>
             <div className="flex items-baseline gap-2 mt-2">
-              <span className="text-2xl font-extrabold font-syne text-text-primary">
+              <span className="text-2xl font-bold font-syne text-text-primary">
                 {data.applications?.length || 0}
               </span>
             </div>
           </div>
 
-          <div className="p-4 rounded-md border bg-surface border-outline-var/20">
+          <div className="p-5 rounded-xl border bg-surface border-outline-var/25 shadow-sm">
             <div className="flex items-center justify-between">
-              <span className="text-[10px] font-syne font-bold uppercase tracking-wider text-outline">
+              <span className="text-xs font-outfit font-semibold uppercase tracking-wider text-text-muted">
                 Accepted Roles
               </span>
-              <CheckCircle size={16} className="text-emerald-400" />
+              <CheckCircle size={16} className="text-accent" />
             </div>
-            <div className="flex items-baseline gap-2 mt-2">
-              <span className="text-2xl font-extrabold font-syne text-text-primary">
+            <div className="flex items-baseline gap-2.5 mt-2">
+              <span className="text-2xl font-bold font-syne text-text-primary">
                 {acceptedCount}
               </span>
-              <span className="text-[10px] text-text-muted font-syne">
+              <span className="text-xs text-text-muted font-outfit">
                 active deployments
               </span>
             </div>
@@ -229,15 +225,15 @@ export default function MyApplications() {
             <button
               key={tab.id}
               onClick={() => setActiveTab(tab.id)}
-              className={`px-4 py-2.5 font-syne font-bold text-xs uppercase tracking-wider transition-all border-b-2 shrink-0 flex items-center gap-2 ${
+              className={`px-4 py-2.5 font-outfit font-semibold text-xs uppercase tracking-wider transition-all border-b-2 shrink-0 flex items-center gap-2 ${
                 activeTab === tab.id
-                  ? 'border-primary text-primary bg-primary/5 rounded-t-xs'
+                  ? 'border-primary text-primary bg-primary/5'
                   : 'border-transparent text-text-muted hover:text-text-primary hover:border-outline-var/50'
               }`}
             >
               <span>{tab.label}</span>
               <span
-                className={`text-[10px] font-mono px-1.5 py-0.2 rounded-xs ${
+                className={`text-xs font-mono px-2 py-0.5 rounded-md ${
                   activeTab === tab.id ? 'bg-primary/20 text-primary' : 'bg-surface-mid text-text-muted'
                 }`}
               >
@@ -280,7 +276,7 @@ export default function MyApplications() {
 function ApplicationsList({ applications, navigate, onWithdraw, actionLoading }) {
   if (applications.length === 0) {
     return (
-      <div className="text-center py-16 bg-surface border border-dashed border-outline-var/30 rounded-md p-6">
+      <div className="text-center py-16 bg-surface border border-dashed border-outline-var/30 rounded-xl p-6">
         <Target size={38} className="mx-auto text-outline-var mb-3 opacity-60" />
         <h3 className="text-base text-text-primary font-bold tracking-tight">No Active Applications</h3>
         <p className="text-text-muted text-xs mt-1 max-w-sm mx-auto">
@@ -288,7 +284,7 @@ function ApplicationsList({ applications, navigate, onWithdraw, actionLoading })
         </p>
         <button
           onClick={() => navigate('/nexus')}
-          className="mt-5 px-5 py-2 bg-primary text-on-primary font-syne font-bold text-xs uppercase tracking-wider rounded-xs hover:bg-secondary-bright transition-all"
+          className="mt-5 px-5 py-2.5 bg-primary text-on-primary font-outfit font-semibold text-xs rounded-lg hover:bg-primary-dim transition-colors"
         >
           Browse Mission Board
         </button>
@@ -307,7 +303,7 @@ function ApplicationsList({ applications, navigate, onWithdraw, actionLoading })
           <div
             key={app.id}
             onClick={() => navigate(`/squad/${app.squadId}`)}
-            className="bg-surface border border-outline-var/25 hover:border-primary/40 p-4 md:p-5 rounded-md cursor-pointer hover:bg-surface-mid transition-all group relative shadow-sm flex flex-col sm:flex-row sm:items-center justify-between gap-4"
+            className="bg-surface border border-outline-var/25 hover:border-primary/40 p-5 rounded-xl cursor-pointer hover:bg-surface-mid transition-all group relative shadow-sm flex flex-col sm:flex-row sm:items-center justify-between gap-4"
           >
             <div className="min-w-0 flex-1 space-y-2">
               <div className="flex flex-wrap items-center gap-2.5">
@@ -315,13 +311,13 @@ function ApplicationsList({ applications, navigate, onWithdraw, actionLoading })
                   {app.squad?.title || 'Squad Mission'}
                 </h3>
                 <span
-                  className={`px-2 py-0.5 text-[9px] font-syne font-bold uppercase tracking-wider rounded-xs border flex items-center gap-1 ${cfg.bg} ${cfg.border} ${cfg.text}`}
+                  className={`px-2.5 py-0.5 text-xs font-outfit font-medium rounded-md border flex items-center gap-1.5 ${cfg.bg} ${cfg.border} ${cfg.text}`}
                 >
-                  <Icon size={10} />
+                  <Icon size={12} />
                   <span>{cfg.label}</span>
                 </span>
                 {app.squad?.event && (
-                  <span className="bg-surface-mid border border-outline-var/30 px-1.5 py-0.5 text-[9px] font-syne font-bold uppercase tracking-wider text-text-muted rounded-xs">
+                  <span className="bg-surface-mid border border-outline-var/25 px-2 py-0.5 text-xs font-outfit font-medium text-text-muted rounded-md">
                     {app.squad.event}
                   </span>
                 )}
@@ -329,16 +325,16 @@ function ApplicationsList({ applications, navigate, onWithdraw, actionLoading })
 
               <div className="flex flex-wrap items-center gap-x-4 gap-y-1.5 text-xs text-text-muted">
                 {app.slot && (
-                  <span className="text-primary font-semibold">
+                  <span className="text-primary font-medium">
                     Target Role: {app.slot.roleTitle}
                   </span>
                 )}
                 {app.matchScore != null && (
-                  <span className="text-accent font-syne font-bold text-[11px]">
+                  <span className="text-accent font-outfit font-medium text-xs">
                     Compatibility: {app.matchScore * 10}%
                   </span>
                 )}
-                <span className="text-outline">
+                <span className="text-text-muted">
                   Applied {new Date(app.appliedAt).toLocaleDateString()}
                 </span>
               </div>
@@ -350,10 +346,10 @@ function ApplicationsList({ applications, navigate, onWithdraw, actionLoading })
                   type="button"
                   disabled={isWithdrawing}
                   onClick={(e) => onWithdraw(e, app.id)}
-                  className="px-3 py-1.5 bg-error/10 hover:bg-error/20 border border-error/30 text-error font-syne font-bold text-[10px] uppercase tracking-wider rounded-xs transition-colors flex items-center gap-1 disabled:opacity-50"
+                  className="px-3 py-1.5 bg-error/10 hover:bg-error/20 border border-error/30 text-error font-outfit font-semibold text-xs rounded-lg transition-colors flex items-center gap-1.5 disabled:opacity-50"
                   title="Withdraw and delete this application"
                 >
-                  <Trash2 size={12} />
+                  <Trash2 size={13} />
                   <span>{isWithdrawing ? 'Removing...' : 'Withdraw'}</span>
                 </button>
               )}
@@ -371,7 +367,7 @@ function ApplicationsList({ applications, navigate, onWithdraw, actionLoading })
 function LedSquadsList({ squads, navigate, onDelete, actionLoading }) {
   if (squads.length === 0) {
     return (
-      <div className="text-center py-16 bg-surface border border-dashed border-outline-var/30 rounded-md p-6">
+      <div className="text-center py-16 bg-surface border border-dashed border-outline-var/30 rounded-xl p-6">
         <Users size={38} className="mx-auto text-outline-var mb-3 opacity-60" />
         <h3 className="text-base text-text-primary font-bold tracking-tight">No Led Squads</h3>
         <p className="text-text-muted text-xs mt-1 max-w-sm mx-auto">
@@ -379,7 +375,7 @@ function LedSquadsList({ squads, navigate, onDelete, actionLoading }) {
         </p>
         <button
           onClick={() => navigate('/nexus')}
-          className="mt-5 px-5 py-2 bg-primary text-on-primary font-syne font-bold text-xs uppercase tracking-wider rounded-xs hover:bg-secondary-bright transition-all"
+          className="mt-5 px-5 py-2.5 bg-primary text-on-primary font-outfit font-semibold text-xs rounded-lg hover:bg-primary-dim transition-colors"
         >
           Create a Squad
         </button>
@@ -399,7 +395,7 @@ function LedSquadsList({ squads, navigate, onDelete, actionLoading }) {
           <div
             key={squad.id}
             onClick={() => navigate(`/squad/${squad.id}/manage`)}
-            className="bg-surface border border-outline-var/25 hover:border-primary/40 p-4 md:p-5 rounded-md cursor-pointer hover:bg-surface-mid transition-all group relative shadow-sm flex flex-col sm:flex-row sm:items-center justify-between gap-4"
+            className="bg-surface border border-outline-var/25 hover:border-primary/40 p-5 rounded-xl cursor-pointer hover:bg-surface-mid transition-all group relative shadow-sm flex flex-col sm:flex-row sm:items-center justify-between gap-4"
           >
             <div className="min-w-0 flex-1 space-y-2">
               <div className="flex flex-wrap items-center gap-2.5">
@@ -407,32 +403,32 @@ function LedSquadsList({ squads, navigate, onDelete, actionLoading }) {
                   {squad.title}
                 </h3>
                 <span
-                  className={`px-2 py-0.5 text-[9px] font-syne font-bold uppercase tracking-wider rounded-xs border ${
+                  className={`px-2.5 py-0.5 text-xs font-outfit font-medium rounded-md border ${
                     squad.status === 'OPEN'
-                      ? 'bg-emerald-500/10 border-emerald-500/20 text-emerald-400'
+                      ? 'bg-accent/10 border-accent/25 text-accent'
                       : squad.status === 'FULL'
-                      ? 'bg-primary/10 border-primary/20 text-primary'
-                      : 'bg-surface-mid border-outline-var/30 text-text-muted'
+                      ? 'bg-primary/10 border-primary/25 text-primary'
+                      : 'bg-surface-mid border-outline-var/25 text-text-muted'
                   }`}
                 >
                   {squad.status}
                 </span>
                 {squad.event && (
-                  <span className="bg-surface-mid border border-outline-var/30 px-1.5 py-0.5 text-[9px] font-syne font-bold uppercase tracking-wider text-text-muted rounded-xs">
+                  <span className="bg-surface-mid border border-outline-var/25 px-2 py-0.5 text-xs font-outfit font-medium text-text-muted rounded-md">
                     {squad.event}
                   </span>
                 )}
               </div>
 
               <div className="flex flex-wrap items-center gap-x-4 gap-y-1.5 text-xs text-text-muted">
-                <span className="flex items-center gap-1 font-medium text-text-primary">
-                  <Users size={12} className="text-primary" />
+                <span className="flex items-center gap-1.5 font-medium text-text-primary">
+                  <Users size={14} className="text-primary" />
                   <span>
                     {squad.currentMembers}/{squad.maxMembers} members
                   </span>
                 </span>
                 {pendingCount > 0 && (
-                  <span className="text-primary font-bold bg-primary/10 px-2 py-0.5 rounded-xs border border-primary/25 text-[10px] font-syne uppercase tracking-wider animate-pulse">
+                  <span className="text-primary font-medium bg-primary/10 px-2 py-0.5 rounded-md border border-primary/25 text-xs font-outfit">
                     {pendingCount} Pending Review
                   </span>
                 )}
@@ -449,7 +445,7 @@ function LedSquadsList({ squads, navigate, onDelete, actionLoading }) {
                   e.stopPropagation();
                   navigate(`/squad/${squad.id}`);
                 }}
-                className="px-3 py-1.5 bg-surface-mid hover:bg-surface border border-outline-var/30 text-text-muted hover:text-text-primary font-syne font-bold text-[10px] uppercase tracking-wider rounded-xs transition-colors"
+                className="px-3 py-1.5 bg-surface hover:bg-surface-mid border border-outline-var/30 text-text-muted hover:text-text-primary font-outfit font-semibold text-xs rounded-lg transition-colors"
                 title="View Squad Briefing"
               >
                 Briefing
@@ -461,7 +457,7 @@ function LedSquadsList({ squads, navigate, onDelete, actionLoading }) {
                   e.stopPropagation();
                   navigate(`/squad/${squad.id}/manage`);
                 }}
-                className="px-3 py-1.5 bg-primary/15 hover:bg-primary text-primary hover:text-on-primary font-syne font-bold text-[10px] uppercase tracking-wider rounded-xs transition-all"
+                className="px-3.5 py-1.5 bg-primary/10 hover:bg-primary text-primary hover:text-on-primary border border-primary/25 font-outfit font-semibold text-xs rounded-lg transition-colors"
                 title="Manage Candidates"
               >
                 Manage
@@ -471,10 +467,10 @@ function LedSquadsList({ squads, navigate, onDelete, actionLoading }) {
                 type="button"
                 disabled={isDeleting}
                 onClick={(e) => onDelete(e, squad.id)}
-                className="p-1.5 bg-error/10 hover:bg-error/20 border border-error/30 text-error rounded-xs transition-colors disabled:opacity-50"
+                className="p-2 bg-error/10 hover:bg-error/20 border border-error/30 text-error rounded-lg transition-colors disabled:opacity-50"
                 title="Close Squad"
               >
-                <Trash2 size={13} />
+                <Trash2 size={14} />
               </button>
 
               <div className="p-1 text-outline group-hover:text-primary transition-colors">
