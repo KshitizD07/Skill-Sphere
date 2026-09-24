@@ -173,7 +173,7 @@ export default function Network({ user: propUser, onLogout }) {
 
 
         {/* ── SECTION 2: Search & Filter Toolbar ─────────────────────────── */}
-        <div className="bg-surface border border-outline-var/20 rounded-md p-4 space-y-4 shadow-sm">
+        <div className="bg-surface border border-outline-var/60 rounded-md p-4 space-y-4 shadow-[0_1px_3px_rgba(0,0,0,0.04)]">
           <div className="grid grid-cols-1 md:grid-cols-12 gap-3">
             {/* Search Input */}
             <div className="md:col-span-6 relative">
@@ -182,7 +182,7 @@ export default function Network({ user: propUser, onLogout }) {
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 placeholder="Search by name, headline, skill, or campus..."
-                className="w-full bg-surface-mid border border-outline-var/30 rounded-xs py-2 pl-10 pr-4 text-xs text-text-primary outline-none focus:border-primary/50 placeholder-outline-var transition-colors font-outfit"
+                className="w-full bg-surface-mid/80 border border-outline-var/40 rounded-xs py-2 pl-10 pr-4 text-xs text-text-primary outline-none focus:border-secondary/60 focus:bg-surface placeholder-text-muted/60 transition-all font-outfit"
               />
             </div>
 
@@ -192,7 +192,7 @@ export default function Network({ user: propUser, onLogout }) {
                 value={skillFilter}
                 onChange={(e) => setSkillFilter(e.target.value)}
                 placeholder="Filter by skill (e.g. React)..."
-                className="w-full bg-surface-mid border border-outline-var/30 rounded-xs py-2 px-3 text-xs text-text-primary outline-none focus:border-primary/50 placeholder-outline-var font-outfit"
+                className="w-full bg-surface-mid/80 border border-outline-var/40 rounded-xs py-2 px-3 text-xs text-text-primary outline-none focus:border-secondary/60 focus:bg-surface placeholder-text-muted/60 transition-all font-outfit"
               />
             </div>
 
@@ -201,7 +201,7 @@ export default function Network({ user: propUser, onLogout }) {
               <select
                 value={sortOption}
                 onChange={(e) => setSortOption(e.target.value)}
-                className="w-full bg-surface-mid border border-outline-var/30 rounded-xs py-2 px-3 text-xs text-text-primary outline-none focus:border-primary/50 font-outfit cursor-pointer"
+                className="w-full bg-surface-mid/80 border border-outline-var/40 rounded-xs py-2 px-3 text-xs text-text-primary outline-none focus:border-secondary/60 focus:bg-surface font-outfit cursor-pointer transition-all"
               >
                 <option value="newest">Sort: Newest Members</option>
                 <option value="most_skills">Sort: Most Verified Skills</option>
@@ -211,7 +211,7 @@ export default function Network({ user: propUser, onLogout }) {
           </div>
 
           {/* Quick Filter Pills */}
-          <div className="flex flex-wrap items-center justify-between gap-3 pt-2 border-t border-outline-var/15">
+          <div className="flex flex-wrap items-center justify-between gap-3 pt-2 border-t border-outline-var/30">
             {/* Role Pills */}
             <div className="flex items-center gap-1.5 flex-wrap">
               <span className="text-[10px] font-syne font-bold uppercase tracking-wider text-outline mr-1">
@@ -221,10 +221,10 @@ export default function Network({ user: propUser, onLogout }) {
                 <button
                   key={r}
                   onClick={() => setRoleFilter(r)}
-                  className={`px-3 py-1 rounded-xs font-syne text-[10px] font-bold uppercase tracking-wider transition-colors ${
+                  className={`px-3 py-1 rounded-xs font-syne text-[10px] font-bold uppercase tracking-wider transition-colors cursor-pointer ${
                     roleFilter === r
-                      ? 'bg-primary text-on-primary'
-                      : 'bg-surface-mid text-text-muted hover:text-text-primary border border-outline-var/30'
+                      ? 'bg-secondary text-on-secondary shadow-xs'
+                      : 'bg-surface text-text-muted hover:text-text-primary border border-outline-var/40'
                   }`}
                 >
                   {r === 'ALL' ? 'All Roles' : r === 'STUDENT' ? 'Students' : r === 'PROFESSIONAL' ? 'Pros' : 'Recruiters'}
@@ -235,10 +235,10 @@ export default function Network({ user: propUser, onLogout }) {
             {/* Verified Only Toggle */}
             <button
               onClick={() => setVerifiedOnly(!verifiedOnly)}
-              className={`flex items-center gap-1.5 px-3 py-1 rounded-xs font-syne text-[10px] font-bold uppercase tracking-wider border transition-all ${
+              className={`flex items-center gap-1.5 px-3 py-1 rounded-xs font-syne text-[10px] font-bold uppercase tracking-wider border transition-all cursor-pointer ${
                 verifiedOnly
-                  ? 'bg-accent/10 border-accent text-accent'
-                  : 'bg-surface-mid border-outline-var/30 text-outline hover:text-text-primary'
+                  ? 'bg-accent/10 border-accent/40 text-accent font-bold shadow-xs'
+                  : 'bg-surface border border-outline-var/40 text-text-muted hover:text-text-primary'
               }`}
             >
               <CheckCircle2 size={12} className={verifiedOnly ? 'text-accent' : 'text-outline'} />
@@ -353,7 +353,7 @@ export default function Network({ user: propUser, onLogout }) {
                 return (
                   <div
                     key={user.id}
-                    className="bg-surface border border-outline-var/20 hover:border-primary/40 rounded-md p-5 flex flex-col justify-between transition-all group relative hover:shadow-xl"
+                    className="bg-surface border border-outline-var/60 hover:border-outline-var/90 rounded-md p-5 flex flex-col justify-between transition-all group relative shadow-[0_1px_3px_rgba(0,0,0,0.04)] hover:shadow-md"
                   >
                     <div className="space-y-4">
                       {/* Top Header */}
@@ -362,7 +362,7 @@ export default function Network({ user: propUser, onLogout }) {
                           onClick={() => navigate(`/profile/${user.id}`)}
                           className="relative shrink-0 cursor-pointer"
                         >
-                          <div className="w-12 h-12 rounded-full border border-outline-var/40 hover:border-primary/50 overflow-hidden bg-surface-mid flex items-center justify-center transition-colors">
+                          <div className="w-12 h-12 rounded-full border border-outline-var/60 hover:border-primary/50 overflow-hidden bg-surface-mid flex items-center justify-center transition-colors">
                             {user.avatar ? (
                               <img src={user.avatar} className="w-full h-full object-cover" alt="" />
                             ) : (
@@ -386,7 +386,7 @@ export default function Network({ user: propUser, onLogout }) {
                               {user.name}
                             </h3>
                             {user.id === currentUser?.id && (
-                              <span className="px-2 py-0.5 rounded-full text-[9px] font-syne font-black uppercase bg-primary/20 text-primary border border-primary/30 shrink-0">
+                              <span className="px-2 py-0.5 rounded-xs text-[9px] font-syne font-bold uppercase bg-primary/20 text-primary border border-primary/30 shrink-0">
                                 You
                               </span>
                             )}
@@ -395,11 +395,11 @@ export default function Network({ user: propUser, onLogout }) {
                             {user.headline || 'Member'}
                           </p>
                           <div className="flex items-center gap-1.5 mt-1 flex-wrap">
-                            <span className={`px-2 py-0.5 rounded-full text-[9px] font-syne font-bold uppercase border ${roleBadgeClass}`}>
+                            <span className={`px-2 py-0.5 rounded-xs text-[9px] font-syne font-bold uppercase border ${roleBadgeClass}`}>
                               {user.role}
                             </span>
                             {user.verifiedSkillCount > 0 && (
-                              <span className="px-2 py-0.5 rounded-full text-[9px] font-syne font-bold uppercase bg-accent/10 text-accent border border-accent/20 flex items-center gap-1">
+                              <span className="px-2 py-0.5 rounded-xs text-[9px] font-syne font-bold uppercase bg-accent/15 text-accent border border-accent/30 flex items-center gap-1">
                                 <CheckCircle2 size={10} /> {user.verifiedSkillCount} Verified
                               </span>
                             )}
@@ -409,7 +409,7 @@ export default function Network({ user: propUser, onLogout }) {
 
                       {/* College badge */}
                       {user.college && (
-                        <div className="flex items-center gap-2 text-xs text-text-muted bg-surface-mid/80 p-2 rounded-xs border border-outline-var/20">
+                        <div className="flex items-center gap-2 text-xs text-text-primary bg-surface-mid/80 p-2 rounded-xs border border-outline-var/30">
                           <Building2 size={13} className="text-primary shrink-0" />
                           <span className="truncate">{user.college}</span>
                         </div>
@@ -428,7 +428,7 @@ export default function Network({ user: propUser, onLogout }) {
                                 className={`px-2 py-0.5 rounded-xs text-[10px] font-syne flex items-center gap-1 border ${
                                   sk.isVerified
                                     ? 'bg-accent/10 border-accent/30 text-accent font-bold'
-                                    : 'bg-surface-mid border-outline-var/25 text-text-muted'
+                                    : 'bg-surface-mid border-outline-var/30 text-text-primary font-medium'
                                 }`}
                               >
                                 {sk.isVerified && <Star size={9} className="fill-accent text-accent" />}
@@ -441,11 +441,11 @@ export default function Network({ user: propUser, onLogout }) {
                     </div>
 
                     {/* Footer Actions */}
-                    <div className="flex items-center gap-2 mt-4 pt-4 border-t border-outline-var/20">
+                    <div className="flex items-center gap-2 mt-4 pt-4 border-t border-outline-var/30">
                       {user.id === currentUser?.id ? (
                         <button
                           onClick={() => navigate(`/profile/${user.id}`)}
-                          className="w-full py-2 bg-primary/15 hover:bg-primary text-primary hover:text-on-primary font-syne font-bold text-xs uppercase tracking-wider rounded-xs transition-all flex items-center justify-center gap-1.5 cursor-pointer"
+                          className="w-full py-2 bg-secondary text-white hover:bg-secondary-bright font-syne font-bold text-xs uppercase tracking-wider rounded-xs transition-all flex items-center justify-center gap-1.5 cursor-pointer shadow-xs"
                         >
                           <User size={13} /> View Your Profile <ArrowRight size={12} />
                         </button>
@@ -470,10 +470,10 @@ export default function Network({ user: propUser, onLogout }) {
                                 );
                               }
                             }}
-                            className={`px-3 py-2 border font-syne font-bold text-xs uppercase tracking-wider rounded-xs transition-all flex items-center justify-center gap-1 shrink-0 cursor-pointer ${
+                            className={`px-3 py-2 border font-syne font-bold text-xs uppercase tracking-wider rounded-xs transition-all flex items-center justify-center gap-1 shrink-0 cursor-pointer shadow-xs ${
                               user.isFollowing
-                                ? 'bg-surface-mid border-outline-var/30 text-text-muted hover:border-error hover:text-error'
-                                : 'bg-primary/15 border-primary/30 text-primary hover:bg-primary hover:text-on-primary'
+                                ? 'bg-surface border-outline-var/40 text-text-muted hover:border-error hover:text-error'
+                                : 'bg-secondary text-white border-secondary hover:bg-secondary-bright'
                             }`}
                             title={user.isFollowing ? 'Unfollow' : 'Follow'}
                           >
@@ -481,13 +481,13 @@ export default function Network({ user: propUser, onLogout }) {
                           </button>
                           <button
                             onClick={() => navigate(`/chat/${user.id}`)}
-                            className="flex-1 py-2 bg-primary/10 hover:bg-primary text-primary hover:text-on-primary font-syne font-bold text-xs uppercase tracking-wider rounded-xs transition-all flex items-center justify-center gap-1.5 cursor-pointer"
+                            className="flex-1 py-2 bg-surface-mid hover:bg-surface border border-outline-var/40 text-text-primary font-syne font-bold text-xs uppercase tracking-wider rounded-xs transition-all flex items-center justify-center gap-1.5 cursor-pointer"
                           >
-                            <MessageSquare size={13} /> Message
+                            <MessageSquare size={13} className="text-primary" /> Message
                           </button>
                           <button
                             onClick={() => navigate(`/profile/${user.id}`)}
-                            className="px-3.5 py-2 bg-surface-mid hover:bg-surface border border-outline-var/30 text-text-muted hover:text-text-primary font-syne font-bold text-xs uppercase tracking-wider rounded-xs transition-colors flex items-center gap-1 cursor-pointer"
+                            className="px-3.5 py-2 bg-surface hover:bg-surface-mid border border-outline-var/40 text-text-primary font-syne font-bold text-xs uppercase tracking-wider rounded-xs transition-colors flex items-center gap-1 cursor-pointer"
                           >
                             Profile <ArrowRight size={12} />
                           </button>
