@@ -144,21 +144,23 @@ export default function SquadManage({ user: propUser, onLogout }) {
 
       <div className="flex-1 md:ml-64 pt-16 md:pt-0 min-h-screen overflow-y-auto overflow-x-hidden p-4 md:p-8 w-full max-w-7xl mx-auto space-y-6">
         {/* Top Header */}
-        <div className="flex items-center justify-between pb-4 border-b border-outline-var/20">
+        <div className="flex flex-col md:flex-row md:items-baseline justify-between gap-4 pb-4 border-b-2 border-secondary">
           <div className="flex items-center gap-3">
             <button
               onClick={() => navigate(`/squad/${squad.id}`)}
-              className="p-2 border border-outline-var/30 hover:border-primary/40 rounded-lg text-outline hover:text-primary transition-all"
+              className="p-1.5 border border-outline-var/40 hover:border-primary/50 rounded-xs text-outline hover:text-primary transition-colors cursor-pointer"
               title="Back to Squad Briefing"
             >
-              <ArrowLeft size={16} />
+              <ArrowLeft size={14} />
             </button>
             <div>
-              <span className="font-outfit text-xs font-semibold text-text-muted">
-                Squad Management
-              </span>
+              <div className="flex items-center gap-2 mb-1">
+                <span className="font-mono text-[10px] tracking-[0.08em] uppercase text-outline/60">
+                  Squad Leadership · Candidate Review
+                </span>
+              </div>
               <h1 className="text-xl font-bold font-syne text-text-primary tracking-tight">
-                Manage Applications — {squad.title}
+                Candidate Management — {squad.title}
               </h1>
             </div>
           </div>
@@ -166,24 +168,24 @@ export default function SquadManage({ user: propUser, onLogout }) {
           <button
             onClick={loadRecommendations}
             disabled={loadingRecs}
-            className="px-3.5 py-2 bg-surface hover:bg-surface-mid border border-outline-var/30 text-text-muted hover:text-text-primary font-outfit font-semibold text-xs rounded-lg flex items-center gap-1.5 transition-colors"
+            className="px-3 py-1.5 bg-surface hover:bg-surface-mid border border-outline-var/40 text-text-muted hover:text-text-primary font-mono text-[11px] uppercase tracking-wider rounded-xs flex items-center gap-1.5 transition-colors cursor-pointer"
           >
-            <RefreshCw size={12} className={loadingRecs ? 'animate-spin' : ''} />
-            Recalculate Matches
+            <RefreshCw size={11} className={loadingRecs ? 'animate-spin' : ''} />
+            <span>Recalculate Matches</span>
           </button>
         </div>
 
         {/* Slot Tabs Filter */}
-        <div className="flex items-center gap-2 flex-wrap pb-2">
-          <span className="text-xs font-outfit font-semibold text-text-muted mr-1">
-            Filter by Slot:
+        <div className="flex items-center gap-1.5 flex-wrap pb-2 border-b border-outline-var/20">
+          <span className="font-mono text-[10px] uppercase tracking-wider text-outline/60 mr-1">
+            Filter:
           </span>
           <button
             onClick={() => setSelectedSlotId('ALL')}
-            className={`px-3 py-1.5 rounded-lg font-outfit text-xs font-medium transition-colors ${
+            className={`px-2.5 py-1 rounded-xs font-mono text-[10px] uppercase tracking-wider transition-colors cursor-pointer ${
               selectedSlotId === 'ALL'
-                ? 'bg-primary text-on-primary'
-                : 'bg-surface border border-outline-var/25 text-text-muted hover:text-text-primary'
+                ? 'bg-primary text-on-primary font-semibold'
+                : 'bg-surface-mid border border-outline-var/30 text-text-muted hover:text-text-primary'
             }`}
           >
             All Roles ({pendingApps.length})
@@ -194,10 +196,10 @@ export default function SquadManage({ user: propUser, onLogout }) {
               <button
                 key={slot.id}
                 onClick={() => setSelectedSlotId(slot.id)}
-                className={`px-3 py-1.5 rounded-lg font-outfit text-xs font-medium transition-colors ${
+                className={`px-2.5 py-1 rounded-xs font-mono text-[10px] uppercase tracking-wider transition-colors cursor-pointer ${
                   selectedSlotId === slot.id
-                    ? 'bg-primary text-on-primary'
-                    : 'bg-surface border border-outline-var/25 text-text-muted hover:text-text-primary'
+                    ? 'bg-primary text-on-primary font-semibold'
+                    : 'bg-surface-mid border border-outline-var/30 text-text-muted hover:text-text-primary'
                 }`}
               >
                 {slot.roleTitle} ({count})
@@ -209,13 +211,13 @@ export default function SquadManage({ user: propUser, onLogout }) {
         {/* Pending Applications List */}
         <div className="space-y-4">
           <div className="flex items-center justify-between">
-            <h2 className="text-base font-syne font-bold text-text-primary">
+            <h2 className="font-mono text-xs uppercase tracking-wider text-outline/70 font-semibold">
               Pending Candidates ({filteredPending.length})
             </h2>
             {selectedSlotId !== 'ALL' && filteredPending.length > 0 && (
               <button
                 onClick={() => setNexusModalOpen(true)}
-                className="px-3.5 py-2 bg-accent text-on-primary hover:bg-accent/90 font-outfit font-semibold text-xs rounded-lg flex items-center gap-1.5 transition-colors"
+                className="px-3 py-1.5 bg-accent text-on-primary hover:bg-accent/90 font-mono text-[11px] uppercase tracking-wider rounded-xs flex items-center gap-1.5 transition-colors cursor-pointer"
               >
                 <span>Automated Match Analysis</span>
               </button>
@@ -223,10 +225,10 @@ export default function SquadManage({ user: propUser, onLogout }) {
           </div>
 
           {filteredPending.length === 0 ? (
-            <div className="text-center py-16 bg-surface border border-dashed border-outline-var/30 rounded-xl p-6">
-              <Shield size={38} className="mx-auto text-outline-var mb-2 opacity-40" />
-              <h3 className="text-base font-bold text-text-primary">No Pending Applications</h3>
-              <p className="text-xs text-text-muted mt-1">
+            <div className="text-center py-16 bg-surface border border-dashed border-outline-var/30 rounded-xs p-6">
+              <Shield size={32} className="mx-auto text-outline-var mb-2 opacity-40" />
+              <h3 className="text-base font-bold text-text-primary font-syne">No Pending Candidates</h3>
+              <p className="text-xs text-text-muted mt-1 font-outfit">
                 New candidate applications will appear here as developers apply.
               </p>
             </div>
@@ -240,29 +242,29 @@ export default function SquadManage({ user: propUser, onLogout }) {
                 return (
                   <div
                     key={app.id}
-                    className="bg-surface border border-outline-var/25 hover:border-primary/40 rounded-xl p-5 flex flex-col justify-between transition-all space-y-4 shadow-sm"
+                    className="bg-surface border border-outline-var/30 hover:border-primary/50 rounded-xs p-4 flex flex-col justify-between transition-colors space-y-4"
                   >
                     <div className="space-y-3">
                       {/* Top Header */}
-                      <div className="flex items-start justify-between gap-3">
+                      <div className="flex items-start justify-between gap-3 border-b border-outline-var/20 pb-2.5">
                         <div className="flex items-center gap-3">
-                          <div className="w-11 h-11 rounded-full border border-outline-var/30 overflow-hidden bg-surface-mid flex items-center justify-center shrink-0">
+                          <div className="w-9 h-9 rounded-xs border border-outline-var/30 overflow-hidden bg-surface-mid flex items-center justify-center shrink-0 font-mono text-xs text-primary font-semibold">
                             {applicant?.avatar ? (
                               <img src={applicant.avatar} className="w-full h-full object-cover" alt="" />
                             ) : (
-                              <User size={18} className="text-outline" />
+                              applicant?.name?.charAt(0) || 'U'
                             )}
                           </div>
                           <div className="min-w-0">
-                            <h3 className="font-semibold text-sm text-text-primary truncate">{applicant?.name}</h3>
-                            <p className="text-xs text-text-muted truncate">
+                            <h3 className="font-semibold text-sm text-text-primary truncate font-outfit">{applicant?.name}</h3>
+                            <p className="font-mono text-[10px] text-text-muted uppercase tracking-wider truncate">
                               {applicant?.headline || applicant?.college || 'Applicant'}
                             </p>
                           </div>
                         </div>
 
                         {/* Applied Role Badge */}
-                        <span className="px-2.5 py-0.5 bg-primary/10 border border-primary/20 text-primary rounded-md text-xs font-outfit font-medium truncate max-w-[140px]">
+                        <span className="px-1.5 py-0.2 bg-primary/10 border border-primary/20 text-primary rounded-xs font-mono text-[9px] uppercase tracking-wider truncate max-w-[140px]">
                           {slot?.roleTitle || 'Member'}
                         </span>
                       </div>
@@ -297,26 +299,26 @@ export default function SquadManage({ user: propUser, onLogout }) {
                     </div>
 
                     {/* Action buttons */}
-                    <div className="flex items-center gap-2 pt-3 border-t border-outline-var/15">
+                    <div className="flex items-center gap-2 pt-3 border-t border-outline-var/20">
                       <button
                         onClick={() => navigate(`/profile/${applicant?.id}`)}
-                        className="px-3 py-1.5 bg-surface hover:bg-surface-mid border border-outline-var/30 text-text-muted hover:text-text-primary text-xs font-outfit font-semibold rounded-lg transition-colors flex items-center gap-1"
+                        className="px-2.5 py-1 bg-surface hover:bg-surface-mid border border-outline-var/40 text-text-muted hover:text-text-primary text-[10px] font-mono uppercase tracking-wider rounded-xs transition-colors flex items-center gap-1 cursor-pointer"
                       >
-                        Profile <ExternalLink size={12} />
+                        Profile <ExternalLink size={10} />
                       </button>
 
                       <div className="flex-1 flex items-center justify-end gap-2">
                         <button
                           onClick={() => handleAction(app.id, 'REJECTED')}
                           disabled={actionLoading === app.id}
-                          className="px-3 py-1.5 bg-error/10 hover:bg-error/20 border border-error/30 text-error text-xs font-outfit font-semibold rounded-lg transition-colors disabled:opacity-50"
+                          className="px-2.5 py-1 bg-error/10 hover:bg-error/20 border border-error/30 text-error text-[10px] font-mono uppercase tracking-wider rounded-xs transition-colors disabled:opacity-50 cursor-pointer"
                         >
                           Reject
                         </button>
                         <button
                           onClick={() => handleAction(app.id, 'ACCEPTED')}
                           disabled={actionLoading === app.id}
-                          className="px-4 py-1.5 bg-primary text-on-primary hover:bg-primary-dim text-xs font-outfit font-semibold rounded-lg transition-colors disabled:opacity-50"
+                          className="px-3 py-1 bg-primary text-on-primary hover:bg-primary-dim text-[10px] font-mono uppercase tracking-wider rounded-xs transition-colors disabled:opacity-50 cursor-pointer"
                         >
                           {actionLoading === app.id ? 'Processing...' : 'Accept Candidate'}
                         </button>
@@ -331,24 +333,24 @@ export default function SquadManage({ user: propUser, onLogout }) {
 
         {/* Accepted Squad Members Section */}
         {acceptedApps.length > 0 && (
-          <div className="space-y-3 pt-4 border-t border-outline-var/20">
-            <h2 className="text-base font-syne font-bold text-text-primary">
-              Accepted Squad Roster ({acceptedApps.length})
+          <div className="space-y-3 pt-4 border-t-2 border-secondary">
+            <h2 className="font-mono text-xs uppercase tracking-wider text-outline/70 font-semibold">
+              02 · Accepted Squad Roster ({acceptedApps.length})
             </h2>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-3.5">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
               {acceptedApps.map((app) => (
-                <div key={app.id} className="bg-surface border border-outline-var/25 rounded-xl p-3.5 flex items-center gap-3 shadow-sm">
-                  <div className="w-10 h-10 rounded-full bg-surface-mid overflow-hidden border border-outline-var/30 shrink-0 flex items-center justify-center">
+                <div key={app.id} className="bg-surface border border-outline-var/30 rounded-xs p-3 flex items-center gap-3 transition-colors hover:border-primary/40">
+                  <div className="w-8 h-8 rounded-xs bg-surface-mid overflow-hidden border border-outline-var/30 shrink-0 flex items-center justify-center font-mono text-xs font-semibold text-primary">
                     {app.user?.avatar ? (
                       <img src={app.user.avatar} className="w-full h-full object-cover" alt="" />
                     ) : (
-                      <User size={15} className="text-outline" />
+                      app.user?.name?.charAt(0) || 'U'
                     )}
                   </div>
                   <div className="flex-1 min-w-0">
-                    <h4 className="font-semibold text-xs text-text-primary truncate">{app.user?.name}</h4>
-                    <span className="text-xs text-accent font-outfit font-medium">
-                      ✓ Active Member
+                    <h4 className="font-semibold text-xs text-text-primary truncate font-outfit">{app.user?.name}</h4>
+                    <span className="font-mono text-[9px] uppercase tracking-wider text-accent border border-accent/20 px-1 py-0.2 rounded-xs">
+                      Active Member
                     </span>
                   </div>
                 </div>
