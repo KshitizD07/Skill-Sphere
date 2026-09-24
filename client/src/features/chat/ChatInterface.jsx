@@ -386,19 +386,19 @@ export default function ChatInterface({ user: propUser, onLogout }) {
       <div className="flex-1 md:ml-64 pt-16 md:pt-0 h-full max-h-full overflow-hidden flex min-h-0">
         {/* ── LEFT PANE: Conversations List ───────────────────────────────── */}
         <div
-          className={`w-full md:w-80 lg:w-96 bg-surface border-r border-outline-var/30 flex flex-col h-full min-h-0 shrink-0 ${
+          className={`w-full md:w-80 lg:w-96 bg-surface border-r border-outline-var/60 flex flex-col h-full min-h-0 shrink-0 ${
             mobileView === 'chat' ? 'hidden md:flex' : 'flex'
           }`}
         >
           {/* Header */}
-          <div className="p-4 border-b border-outline-var/20 flex items-center justify-between">
+          <div className="p-4 border-b border-outline-var/40 flex items-center justify-between">
             <div className="flex items-center gap-2">
               <MessageSquare size={18} className="text-primary" />
-              <h2 className="font-syne font-extrabold text-base tracking-tight text-text-primary">Messages</h2>
+              <h2 className="font-syne font-bold text-base tracking-tight text-text-primary">Messages</h2>
             </div>
             <button
               onClick={() => setShowNewChatModal(true)}
-              className="p-1.5 bg-primary/10 hover:bg-primary text-primary hover:text-on-primary border border-primary/20 rounded-xs transition-all flex items-center gap-1 text-xs font-syne font-bold uppercase tracking-wider"
+              className="px-2.5 py-1.5 bg-secondary hover:bg-secondary-bright text-white font-semibold rounded-xs transition-colors flex items-center gap-1 text-xs cursor-pointer shadow-xs"
               title="New Message"
             >
               <Plus size={14} /> New Chat
@@ -406,14 +406,14 @@ export default function ChatInterface({ user: propUser, onLogout }) {
           </div>
 
           {/* Search Bar */}
-          <div className="p-3 border-b border-outline-var/20">
+          <div className="p-3 border-b border-outline-var/30">
             <div className="relative">
               <Search size={14} className="absolute left-3 top-2.5 text-outline" />
               <input
                 value={searchFilter}
                 onChange={(e) => setSearchFilter(e.target.value)}
                 placeholder="Search conversations..."
-                className="w-full bg-surface-mid border border-outline-var/30 rounded-xs py-1.5 pl-8 pr-3 text-xs text-text-primary outline-none focus:border-primary/50 placeholder-outline-var font-outfit"
+                className="w-full bg-surface-mid/80 border border-outline-var/40 rounded-xs py-1.5 pl-8 pr-3 text-xs text-text-primary outline-none focus:border-secondary/60 focus:bg-surface placeholder-text-muted/60 font-outfit transition-all"
               />
             </div>
           </div>
@@ -426,7 +426,7 @@ export default function ChatInterface({ user: propUser, onLogout }) {
                 <p className="text-xs font-syne uppercase tracking-wider">No active conversations</p>
                 <button
                   onClick={() => setShowNewChatModal(true)}
-                  className="mt-3 text-primary text-xs font-bold hover:underline"
+                  className="mt-3 text-primary text-xs font-bold hover:underline cursor-pointer"
                 >
                   Start a conversation
                 </button>
@@ -440,15 +440,15 @@ export default function ChatInterface({ user: propUser, onLogout }) {
                   <div
                     key={conv.id}
                     onClick={() => selectConversation(conv)}
-                    className={`flex items-center gap-3 p-3 rounded-xs cursor-pointer transition-all border ${
+                    className={`flex items-center gap-3 p-3 rounded-md cursor-pointer transition-all border ${
                       isSelected
-                        ? 'bg-primary/10 border-primary/30'
-                        : 'bg-surface-mid/40 hover:bg-surface-mid border-outline-var/20 hover:border-outline-var/40'
+                        ? 'bg-surface-mid border-outline-var/80 shadow-xs'
+                        : 'bg-surface hover:bg-surface-mid/60 border-transparent hover:border-outline-var/40'
                     }`}
                   >
                     {/* Avatar with live online dot */}
                     <div className="relative shrink-0">
-                      <div className="w-10 h-10 rounded-full border border-outline-var/40 overflow-hidden bg-surface-mid flex items-center justify-center">
+                      <div className="w-10 h-10 rounded-full border border-outline-var/60 overflow-hidden bg-surface-mid flex items-center justify-center">
                         {conv.otherUser?.avatar ? (
                           <img src={conv.otherUser.avatar} alt="" className="w-full h-full object-cover" />
                         ) : (
@@ -465,7 +465,7 @@ export default function ChatInterface({ user: propUser, onLogout }) {
 
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center justify-between">
-                        <span className="font-semibold text-sm text-text-primary truncate">
+                        <span className="font-bold text-sm text-text-primary truncate">
                           {conv.otherUser?.name || 'User'}
                         </span>
                         {conv.lastMessage?.createdAt && (
@@ -481,7 +481,7 @@ export default function ChatInterface({ user: propUser, onLogout }) {
                             : 'No messages yet'}
                         </p>
                         {conv.unreadCount > 0 && (
-                          <span className="ml-2 px-1.5 py-0.5 bg-primary text-on-primary font-syne font-bold text-[10px] rounded-full shrink-0">
+                          <span className="ml-2 px-2 py-0.5 bg-secondary text-white font-syne font-bold text-[10px] rounded-full shrink-0">
                             {conv.unreadCount}
                           </span>
                         )}
@@ -541,7 +541,7 @@ export default function ChatInterface({ user: propUser, onLogout }) {
           ) : activeRecipient ? (
             <>
               {/* Thread Header */}
-              <div className="p-3.5 bg-surface border-b border-outline-var/20 flex items-center justify-between shrink-0 shadow-sm">
+              <div className="p-3.5 bg-surface border-b border-outline-var/60 flex items-center justify-between shrink-0 shadow-[0_1px_3px_rgba(0,0,0,0.04)]">
                 <div className="flex items-center gap-3">
                   <button
                     onClick={() => {
@@ -555,7 +555,7 @@ export default function ChatInterface({ user: propUser, onLogout }) {
                   </button>
 
                   <div className="relative">
-                    <div className="w-10 h-10 rounded-full border border-outline-var/40 overflow-hidden bg-surface-mid flex items-center justify-center">
+                    <div className="w-10 h-10 rounded-full border border-outline-var/60 overflow-hidden bg-surface-mid flex items-center justify-center">
                       {activeRecipient.avatar ? (
                         <img src={activeRecipient.avatar} alt="" className="w-full h-full object-cover" />
                       ) : (
@@ -571,11 +571,11 @@ export default function ChatInterface({ user: propUser, onLogout }) {
 
                   <div>
                     <div className="flex items-center gap-2">
-                      <span className="font-extrabold text-sm text-text-primary tracking-tight">
+                      <span className="font-bold text-sm text-text-primary tracking-tight">
                         {activeRecipient.name}
                       </span>
                       {activeRecipient.role === 'PROFESSIONAL' && (
-                        <span className="px-1.5 py-0.5 bg-accent/10 text-accent text-[8px] font-syne font-bold uppercase rounded-xs">
+                        <span className="px-1.5 py-0.5 bg-accent/10 border border-accent/30 text-accent text-[8px] font-syne font-bold uppercase rounded-xs">
                           Pro
                         </span>
                       )}
@@ -594,7 +594,7 @@ export default function ChatInterface({ user: propUser, onLogout }) {
 
                 <button
                   onClick={() => navigate(`/profile/${activeRecipient.id}`)}
-                  className="px-3 py-1.5 bg-surface-mid border border-outline-var/30 hover:border-primary/40 text-text-primary text-xs font-syne font-bold uppercase tracking-wider rounded-xs transition-colors flex items-center gap-1.5"
+                  className="px-3 py-1.5 bg-surface hover:bg-surface-mid border border-outline-var/40 text-text-primary text-xs font-semibold rounded-xs transition-colors flex items-center gap-1.5 cursor-pointer"
                 >
                   <ExternalLink size={12} /> Profile
                 </button>
@@ -621,10 +621,10 @@ export default function ChatInterface({ user: propUser, onLogout }) {
                           <div
                             className={`p-3 rounded-md text-sm leading-relaxed relative ${
                               isDeleted
-                                ? 'bg-surface-mid/60 border border-outline-var/20 text-outline italic text-xs'
+                                ? 'bg-surface-mid/60 border border-outline-var/30 text-outline italic text-xs'
                                 : isMe
-                                ? 'bg-primary text-on-primary rounded-br-none shadow-sm'
-                                : 'bg-surface border border-outline-var/25 text-text-primary rounded-bl-none shadow-sm'
+                                ? 'bg-secondary text-white rounded-br-none shadow-xs'
+                                : 'bg-surface border border-outline-var/60 text-text-primary rounded-bl-none shadow-xs'
                             }`}
                           >
                             <p className="whitespace-pre-wrap break-words">{m.content}</p>
@@ -673,10 +673,10 @@ export default function ChatInterface({ user: propUser, onLogout }) {
               </div>
 
               {/* Compose Bar */}
-              <div className="p-3 bg-surface border-t border-outline-var/20 shrink-0 relative mt-auto pb-safe">
+              <div className="p-3.5 bg-surface border-t border-outline-var/60 shrink-0 relative mt-auto pb-safe">
                 {/* Quick emoji drawer */}
                 {showEmojiPicker && (
-                  <div className="absolute bottom-full left-3 mb-2 p-2 bg-surface border border-outline-var/30 rounded-md shadow-2xl flex gap-1.5 z-20">
+                  <div className="absolute bottom-full left-3 mb-2 p-2 bg-surface border border-outline-var/40 rounded-md shadow-2xl flex gap-1.5 z-20">
                     {quickEmojis.map((emoji) => (
                       <button
                         key={emoji}
@@ -685,7 +685,7 @@ export default function ChatInterface({ user: propUser, onLogout }) {
                           setMsgInput((prev) => prev + emoji);
                           setShowEmojiPicker(false);
                         }}
-                        className="text-lg hover:scale-125 transition-transform p-1"
+                        className="text-lg hover:scale-125 transition-transform p-1 cursor-pointer"
                       >
                         {emoji}
                       </button>
@@ -697,7 +697,7 @@ export default function ChatInterface({ user: propUser, onLogout }) {
                   <button
                     type="button"
                     onClick={() => setShowEmojiPicker(!showEmojiPicker)}
-                    className="p-2.5 text-outline hover:text-primary transition-colors rounded-xs border border-outline-var/30 bg-surface-mid"
+                    className="p-2.5 text-text-muted hover:text-text-primary transition-colors rounded-xs border border-outline-var/40 bg-surface-mid cursor-pointer"
                     title="Quick Reactions"
                   >
                     <Smile size={18} />
@@ -715,13 +715,13 @@ export default function ChatInterface({ user: propUser, onLogout }) {
                     placeholder={`Message ${activeRecipient.name}...`}
                     rows={1}
                     maxLength={2000}
-                    className="flex-1 bg-surface-mid border border-outline-var/30 focus:border-primary/60 text-text-primary p-2.5 rounded-xs text-sm outline-none resize-none max-h-32 placeholder-outline-var font-outfit"
+                    className="flex-1 bg-surface-mid/80 border border-outline-var/40 focus:border-secondary/60 focus:bg-surface text-text-primary p-2.5 rounded-xs text-sm outline-none resize-none max-h-32 placeholder-text-muted/60 font-outfit transition-all"
                   />
 
                   <button
                     type="submit"
                     disabled={!msgInput.trim()}
-                    className="p-2.5 bg-primary text-on-primary rounded-xs hover:bg-secondary-bright disabled:opacity-40 transition-all font-syne font-bold text-xs uppercase flex items-center justify-center shrink-0"
+                    className="p-2.5 bg-secondary text-white rounded-xs hover:bg-secondary-bright disabled:opacity-40 transition-all font-semibold text-xs uppercase flex items-center justify-center shrink-0 cursor-pointer shadow-xs"
                     title="Send Message"
                   >
                     <Send size={16} />
@@ -732,13 +732,13 @@ export default function ChatInterface({ user: propUser, onLogout }) {
           ) : (
             <div className="flex-1 flex flex-col items-center justify-center p-8 text-center text-outline">
               <MessageSquare size={48} className="text-primary opacity-30 mb-3" />
-              <h3 className="text-base font-extrabold text-text-primary tracking-tight">Select a Conversation</h3>
+              <h3 className="text-base font-bold text-text-primary tracking-tight">Select a Conversation</h3>
               <p className="text-xs text-text-muted mt-1 max-w-xs leading-relaxed">
                 Choose an existing chat from the left panel or start a new conversation with a network member.
               </p>
               <button
                 onClick={() => setShowNewChatModal(true)}
-                className="mt-4 px-4 py-2 bg-primary text-on-primary font-syne font-bold text-xs uppercase tracking-wider rounded-xs hover:bg-secondary-bright transition-all"
+                className="mt-4 px-4 py-2 bg-secondary text-white font-semibold text-xs uppercase tracking-wider rounded-xs hover:bg-secondary-bright transition-all cursor-pointer shadow-xs"
               >
                 Start New Message
               </button>
