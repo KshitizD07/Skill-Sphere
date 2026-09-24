@@ -22,33 +22,37 @@ import { API_BASE_URL } from '../../config/constants';
 // ── Profile Completeness Bar ─────────────────────────────────────────────────
 function CompletenessBar({ score, checks }) {
   const incomplete = (checks || []).filter((c) => !c.done && c.points > 0);
-  const color = score >= 80 ? 'bg-accent' : score >= 50 ? 'bg-[#f59e0b]' : 'bg-error';
   return (
-    <div className="bg-surface border border-outline-var/20 rounded-md p-5 hover:border-primary/15 transition-colors">
+    <div className="bg-surface border border-outline-var/60 rounded-md p-5 shadow-[0_1px_3px_rgba(0,0,0,0.04)] font-outfit">
       <div className="flex items-center justify-between mb-2">
-        <h3 className="font-syne text-[10px] font-bold tracking-[0.12em] uppercase text-outline">Profile Strength</h3>
-        <span className={`font-syne font-black text-sm ${score >= 80 ? 'text-accent' : score >= 50 ? 'text-[#f59e0b]' : 'text-error'}`}>
-          {score}%
-        </span>
+        <h3 className="font-syne text-[10px] font-bold tracking-[0.12em] uppercase text-text-primary">Profile Completion</h3>
+        <div className="flex items-center gap-1.5">
+          <span className="font-syne font-black text-sm text-text-primary">
+            {score}%
+          </span>
+          <span className="px-2 py-0.5 bg-accent/15 border border-accent/30 text-accent font-syne font-bold text-[9px] uppercase rounded-xs">
+            {score >= 80 ? 'Complete' : score >= 50 ? 'In Progress' : 'Needs Info'}
+          </span>
+        </div>
       </div>
-      <div className="w-full h-1.5 bg-surface-mid rounded-full overflow-hidden mb-4">
-        <div className={`h-full rounded-full transition-all duration-700 ${color}`} style={{ width: `${score}%` }} />
+      <div className="w-full h-2 bg-surface-mid/80 rounded-xs border border-outline-var/30 overflow-hidden mb-3">
+        <div className="h-full bg-secondary transition-all duration-700 rounded-xs" style={{ width: `${score}%` }} />
       </div>
       {incomplete.length > 0 && (
-        <div className="space-y-1.5">
-          <p className="font-syne text-[9px] uppercase tracking-widest text-outline mb-2">Next steps</p>
+        <div className="space-y-1.5 pt-2 border-t border-outline-var/30">
+          <p className="font-syne text-[9px] uppercase tracking-widest text-outline mb-1.5 font-bold">Suggested next steps</p>
           {incomplete.slice(0, 3).map((c) => (
-            <div key={c.key} className="flex items-center gap-2 text-[11px] text-text-muted font-outfit">
-              <ChevronRight size={10} className="text-outline shrink-0" />
+            <div key={c.key} className="flex items-center gap-2 text-xs text-text-muted font-outfit py-0.5">
+              <ChevronRight size={12} className="text-primary shrink-0" />
               <span>{c.label}</span>
-              <span className="ml-auto font-syne font-bold text-[9px] text-outline">+{c.points}pts</span>
+              <span className="ml-auto font-syne font-bold text-[9px] text-accent bg-accent/10 px-1.5 py-0.5 rounded-xs border border-accent/20">+{c.points} pts</span>
             </div>
           ))}
         </div>
       )}
       {score === 100 && (
         <p className="text-accent font-syne font-bold text-[10px] uppercase tracking-wider flex items-center gap-1 mt-1">
-          <CheckCircle size={12} /> Profile Complete
+          <CheckCircle size={12} /> Profile Fully Certified
         </p>
       )}
     </div>

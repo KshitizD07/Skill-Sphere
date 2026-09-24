@@ -473,14 +473,12 @@ export default function UserProfile() {
         {recruiterMode ? <RecruiterDossier user={user} isOwner={isOwner} /> : (
           <div className="space-y-5">
             {/* ── 1. COMPACT HERO PROFILE CARD ────────────────────────────────── */}
-            <div className="bg-surface border border-outline-var/30 rounded-xl p-4 sm:p-5 md:p-6 shadow-xl relative overflow-hidden">
-              <div className="absolute top-0 right-0 -mr-16 -mt-16 w-64 h-64 bg-gradient-to-bl from-accent/10 via-primary/5 to-transparent rounded-full blur-2xl pointer-events-none" />
-
+            <div className="bg-surface border border-outline-var/60 rounded-md p-5 sm:p-6 shadow-[0_1px_3px_rgba(0,0,0,0.04)] relative">
               <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-5 relative z-10">
                 {/* Left: Avatar + Identity */}
                 <div className="flex items-center gap-4 sm:gap-5 flex-1 min-w-0">
                   <div className="relative shrink-0 w-16 h-16 sm:w-20 sm:h-20">
-                    <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-full border-2 border-accent/40 overflow-hidden bg-surface-mid flex items-center justify-center shadow-lg shrink-0">
+                    <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-full border-2 border-outline-var/60 overflow-hidden bg-surface-mid flex items-center justify-center shadow-sm shrink-0">
                       {user.avatar ? (
                         <img src={user.avatar} alt={user.name || "Profile avatar"} loading="lazy" decoding="async" className="w-full h-full object-cover" />
                       ) : (
