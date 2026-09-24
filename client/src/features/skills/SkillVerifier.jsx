@@ -314,89 +314,83 @@ export default function SkillVerifier({ userId, skillName: initialSkillName, ski
 
   // ── RENDER: Method Selection Screen ───────────────────────────────────────
   const renderInitialView = () => (
-    <div className="space-y-3 font-outfit">
+    <div className="space-y-2.5 font-outfit">
       <button
         onClick={() => handleMethodSelect('github')}
-        className="w-full p-4 bg-surface-mid/50 border border-outline-var/30 hover:border-primary/50 rounded-md transition-all flex items-center gap-4 text-left group hover:bg-surface-mid"
+        className="w-full p-4 bg-surface border border-outline-var/30 hover:border-primary/50 rounded-lg transition-all flex items-center gap-3.5 text-left group hover:bg-surface-mid/40 shadow-xs"
       >
-        <div className="p-3 bg-primary/10 rounded-md group-hover:bg-primary/20 transition-colors shrink-0">
-          <Github className="w-6 h-6 text-primary" />
+        <div className="p-2.5 bg-surface-mid rounded-md group-hover:bg-primary/10 transition-colors shrink-0 text-text-primary group-hover:text-primary">
+          <Github className="w-5 h-5" />
         </div>
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2">
-            <h4 className="text-sm font-bold text-text-primary">GitHub Repository Audit</h4>
-            <span className="px-1.5 py-0.5 bg-primary/10 text-primary border border-primary/20 text-[9px] font-syne font-bold uppercase rounded-xs">
-              AI Powered
-            </span>
+            <h4 className="text-sm font-semibold text-text-primary">GitHub Repository Audit</h4>
           </div>
-          <p className="text-xs text-outline mt-0.5">
-            Submit a repository URL. Gemini AI evaluates architecture, complexity, and code quality (Score 1–10).
+          <p className="text-xs text-text-muted mt-0.5 leading-relaxed font-outfit">
+            Gemini AI evaluates repository architecture, complexity, and code quality (1–10).
           </p>
         </div>
-        <ArrowRight size={16} className="text-outline group-hover:text-primary group-hover:translate-x-1 transition-all shrink-0" />
+        <ArrowRight size={15} className="text-text-muted group-hover:text-primary group-hover:translate-x-0.5 transition-all shrink-0" />
       </button>
 
       <button
         onClick={() => handleMethodSelect('batch')}
-        className="w-full p-4 bg-surface-mid/50 border border-outline-var/30 hover:border-accent/50 rounded-md transition-all flex items-center gap-4 text-left group hover:bg-surface-mid"
+        className="w-full p-4 bg-surface border border-outline-var/30 hover:border-accent/50 rounded-lg transition-all flex items-center gap-3.5 text-left group hover:bg-surface-mid/40 shadow-xs"
       >
-        <div className="p-3 bg-accent/10 rounded-md group-hover:bg-accent/20 transition-colors shrink-0">
-          <Sparkles className="w-6 h-6 text-accent" />
+        <div className="p-2.5 bg-surface-mid rounded-md group-hover:bg-accent/10 transition-colors shrink-0 text-text-primary group-hover:text-accent">
+          <Sparkles className="w-5 h-5" />
         </div>
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2">
-            <h4 className="text-sm font-bold text-text-primary">Auto-Discovery Batch Scan</h4>
-            <span className="px-1.5 py-0.5 bg-accent/10 text-accent border border-accent/20 text-[9px] font-syne font-bold uppercase rounded-xs">
-              Instant Match
-            </span>
+            <h4 className="text-sm font-semibold text-text-primary">Auto-Discovery Batch Scan</h4>
           </div>
-          <p className="text-xs text-outline mt-0.5">
-            Automatically cross-reference all your profile skills against your synced GitHub repositories.
+          <p className="text-xs text-text-muted mt-0.5 leading-relaxed font-outfit">
+            Cross-reference all profile skills against your synced GitHub repositories.
           </p>
         </div>
-        <ArrowRight size={16} className="text-outline group-hover:text-accent group-hover:translate-x-1 transition-all shrink-0" />
+        <ArrowRight size={15} className="text-text-muted group-hover:text-accent group-hover:translate-x-0.5 transition-all shrink-0" />
       </button>
 
       <button
         onClick={() => handleMethodSelect('leetcode')}
-        className="w-full p-4 bg-surface-mid/50 border border-outline-var/30 hover:border-[#ffa116]/50 rounded-md transition-all flex items-center gap-4 text-left group hover:bg-surface-mid"
+        className="w-full p-4 bg-surface border border-outline-var/30 hover:border-outline-var/60 rounded-lg transition-all flex items-center gap-3.5 text-left group hover:bg-surface-mid/40 shadow-xs"
       >
-        <div className="p-3 bg-[#ffa116]/10 rounded-md group-hover:bg-[#ffa116]/20 transition-colors shrink-0">
-          <div className="font-bold text-xl text-[#ffa116] leading-none">LC</div>
+        <div className="p-2.5 bg-surface-mid rounded-md transition-colors shrink-0 text-text-primary">
+          <div className="font-bold text-base leading-none">LC</div>
         </div>
         <div className="flex-1 min-w-0">
-          <h4 className="text-sm font-bold text-text-primary">LeetCode Profile Stats</h4>
-          <p className="text-xs text-outline mt-0.5">
+          <h4 className="text-sm font-semibold text-text-primary">LeetCode Profile Stats</h4>
+          <p className="text-xs text-text-muted mt-0.5 leading-relaxed font-outfit">
             Verify DSA and algorithmic problem-solving scores directly from your LeetCode profile.
           </p>
         </div>
-        <ArrowRight size={16} className="text-outline group-hover:text-[#ffa116] group-hover:translate-x-1 transition-all shrink-0" />
+        <ArrowRight size={15} className="text-text-muted group-hover:text-text-primary group-hover:translate-x-0.5 transition-all shrink-0" />
       </button>
 
       <button
         onClick={() => handleMethodSelect('certificate')}
-        className="w-full p-4 bg-surface-mid/50 border border-outline-var/30 hover:border-accent/50 rounded-md transition-all flex items-center gap-4 text-left group hover:bg-surface-mid"
+        className="w-full p-4 bg-surface border border-outline-var/30 hover:border-outline-var/60 rounded-lg transition-all flex items-center gap-3.5 text-left group hover:bg-surface-mid/40 shadow-xs"
       >
-        <div className="p-3 bg-accent/10 rounded-md group-hover:bg-accent/20 transition-colors shrink-0">
-          <Award className="w-6 h-6 text-accent" />
+        <div className="p-2.5 bg-surface-mid rounded-md transition-colors shrink-0 text-text-primary">
+          <Award className="w-5 h-5 text-text-muted" />
         </div>
         <div className="flex-1 min-w-0">
-          <h4 className="text-sm font-bold text-text-primary">Certificate / Credential Link</h4>
-          <p className="text-xs text-outline mt-0.5">
+          <h4 className="text-sm font-semibold text-text-primary">Certificate / Credential Link</h4>
+          <p className="text-xs text-text-muted mt-0.5 leading-relaxed font-outfit">
             Attach verified credentials from Credly, AWS, Coursera, or custom certifications.
           </p>
         </div>
-        <ArrowRight size={16} className="text-outline group-hover:text-accent group-hover:translate-x-1 transition-all shrink-0" />
+        <ArrowRight size={15} className="text-text-muted group-hover:text-text-primary group-hover:translate-x-0.5 transition-all shrink-0" />
       </button>
     </div>
   );
 
   // ── RENDER: GitHub Verification Form ──────────────────────────────────────
   const renderGithub = () => (
-    <div className="space-y-5 font-outfit">
+    <div className="space-y-4 font-outfit">
       {/* Skill Selector */}
       <div>
-        <label className="block font-syne text-[10px] font-bold tracking-[0.12em] uppercase text-outline mb-1.5">
+        <label className="block font-outfit text-xs font-semibold text-text-muted mb-1.5">
           Target Skill to Verify
         </label>
         <div className="flex gap-2">
@@ -405,12 +399,12 @@ export default function SkillVerifier({ userId, skillName: initialSkillName, ski
             value={skillName}
             onChange={(e) => setSkillName(e.target.value)}
             placeholder="e.g. React, Node.js, Python, TypeScript"
-            className="flex-1 bg-surface-mid border border-outline-var/40 focus:border-primary/60 text-text-primary p-3 rounded-xs text-sm outline-none placeholder-outline-var"
+            className="flex-1 bg-surface-mid border border-outline-var/40 focus:border-primary/60 text-text-primary p-3 rounded-lg text-sm outline-none placeholder-outline-var font-outfit"
           />
         </div>
         {userSkills.length > 0 && (
-          <div className="flex flex-wrap gap-1.5 mt-2">
-            <span className="text-[10px] text-outline font-syne uppercase self-center mr-1">Your Skills:</span>
+          <div className="flex flex-wrap items-center gap-1.5 mt-2">
+            <span className="text-xs text-text-muted font-outfit mr-1">Your Skills:</span>
             {userSkills.slice(0, 6).map((s) => (
               <button
                 key={s.name}
@@ -419,10 +413,10 @@ export default function SkillVerifier({ userId, skillName: initialSkillName, ski
                   setSkillName(s.name);
                   setSkillId(s.id);
                 }}
-                className={`px-2 py-0.5 text-[10px] font-syne font-bold uppercase rounded-xs border transition-colors ${
+                className={`px-2.5 py-1 text-xs font-outfit font-medium rounded-md border transition-colors ${
                   skillName.toLowerCase() === s.name.toLowerCase()
                     ? 'bg-primary text-on-primary border-primary'
-                    : 'bg-surface-mid text-text-muted border-outline-var/30 hover:border-primary/40'
+                    : 'bg-surface text-text-muted border-outline-var/30 hover:border-outline-var/60 hover:text-text-primary'
                 }`}
               >
                 {s.name} {s.isVerified && '✓'}
@@ -434,22 +428,21 @@ export default function SkillVerifier({ userId, skillName: initialSkillName, ski
 
       {/* Cooldown Alert */}
       {cooldownData?.hasCooldown && (
-        <div className="p-3.5 bg-[#f59e0b]/10 border border-[#f59e0b]/30 rounded-xs flex items-start gap-3">
-          <AlertTriangle className="w-5 h-5 text-[#f59e0b] shrink-0 mt-0.5" />
-          <div className="text-xs text-text-muted leading-relaxed">
-            <p className="font-bold text-text-primary mb-0.5">Re-verification Cooldown Active</p>
+        <div className="p-3 bg-surface-mid border border-outline-var/40 rounded-lg flex items-start gap-2.5">
+          <div className="text-xs text-text-muted leading-relaxed font-outfit">
+            <p className="font-semibold text-text-primary mb-0.5">Re-verification Cooldown Active</p>
             <p>
-              This skill was verified recently (Score: {cooldownData.currentScore}/10). Standard re-verification is available in{' '}
-              <strong className="text-[#f59e0b]">{cooldownData.daysRemaining} day(s)</strong>.
+              This skill was verified recently (Score: {cooldownData.currentScore}/10). Re-verification opens in{' '}
+              <strong>{cooldownData.daysRemaining} day(s)</strong>.
             </p>
-            <label className="flex items-center gap-2 mt-2 cursor-pointer text-[11px] text-text-primary font-semibold">
+            <label className="flex items-center gap-2 mt-2 cursor-pointer text-xs text-text-primary font-medium">
               <input
                 type="checkbox"
                 checked={forceReverify}
                 onChange={(e) => setForceReverify(e.target.checked)}
                 className="rounded text-primary focus:ring-0"
               />
-              Override cooldown for major code changes
+              Override cooldown for major repository updates
             </label>
           </div>
         </div>
@@ -457,36 +450,36 @@ export default function SkillVerifier({ userId, skillName: initialSkillName, ski
 
       {/* Repository URL Input */}
       <div>
-        <label className="block font-syne text-[10px] font-bold tracking-[0.12em] uppercase text-outline mb-1.5">
+        <label className="block font-outfit text-xs font-semibold text-text-muted mb-1.5">
           Public GitHub Repository URL
         </label>
-        <div className="flex items-center bg-surface-mid rounded-xs border border-outline-var/40 focus-within:border-primary/60 transition-colors">
-          <Github className="w-4 h-4 text-outline ml-3 shrink-0" />
+        <div className="flex items-center bg-surface-mid rounded-lg border border-outline-var/40 focus-within:border-primary/60 transition-colors">
+          <Github className="w-4 h-4 text-text-muted ml-3 shrink-0" />
           <input
             type="text"
             value={inputValue}
             onChange={(e) => setInputValue(e.target.value)}
             placeholder="https://github.com/username/repository-name"
-            className="w-full bg-transparent p-3 text-sm text-text-primary outline-none placeholder-outline-var"
+            className="w-full bg-transparent p-3 text-sm text-text-primary outline-none placeholder-outline-var font-outfit"
           />
         </div>
         {/* Quick repository suggestions */}
         {userRepos.length > 0 && (
           <div className="mt-2">
-            <span className="text-[10px] text-outline font-syne uppercase block mb-1">Synced Repositories:</span>
+            <span className="text-xs text-text-muted font-outfit block mb-1">Synced Repositories:</span>
             <div className="flex flex-wrap gap-1.5">
               {userRepos.slice(0, 4).map((r) => (
                 <button
                   key={r.id || r.repoName}
                   type="button"
                   onClick={() => setInputValue(r.url)}
-                  className={`px-2 py-1 text-[10px] font-mono rounded-xs border transition-colors flex items-center gap-1 ${
+                  className={`px-2.5 py-1 text-xs font-outfit rounded-md border transition-colors flex items-center gap-1.5 ${
                     inputValue === r.url
-                      ? 'bg-primary/10 text-primary border-primary/40'
-                      : 'bg-surface-mid text-text-muted border-outline-var/30 hover:border-outline-var/60'
+                      ? 'bg-primary/10 text-primary border-primary/40 font-medium'
+                      : 'bg-surface text-text-muted border-outline-var/30 hover:border-outline-var/60 hover:text-text-primary'
                   }`}
                 >
-                  <FolderGit2 size={10} /> {r.repoName}
+                  <FolderGit2 size={11} /> {r.repoName}
                 </button>
               ))}
             </div>
@@ -497,19 +490,19 @@ export default function SkillVerifier({ userId, skillName: initialSkillName, ski
       {/* Stealth Toggle */}
       <div
         onClick={() => setIsStealth(!isStealth)}
-        className="flex items-center justify-between p-3.5 bg-surface-mid/60 rounded-xs cursor-pointer hover:bg-surface-mid border border-outline-var/20 hover:border-outline-var/40 transition-all"
+        className="flex items-center justify-between p-3 bg-surface-mid/40 rounded-lg cursor-pointer hover:bg-surface-mid border border-outline-var/25 hover:border-outline-var/40 transition-all"
       >
         <div className="flex items-center gap-2.5">
-          {isStealth ? <Lock className="w-4 h-4 text-[#bec6e0]" /> : <Eye className="w-4 h-4 text-secondary-bright" />}
+          {isStealth ? <Lock className="w-4 h-4 text-text-muted" /> : <Eye className="w-4 h-4 text-primary" />}
           <div>
-            <span className="text-xs font-semibold text-text-primary block">
-              {isStealth ? 'Private Score (Only checkmark badge shown)' : 'Public Score (Numerical score visible)'}
+            <span className="text-xs font-semibold text-text-primary block font-outfit">
+              {isStealth ? 'Private Score (Checkmark badge only)' : 'Public Score (Numerical score visible)'}
             </span>
-            <span className="text-[10px] text-outline">You can change this visibility setting anytime in profile.</span>
+            <span className="text-xs text-text-muted font-outfit">Can be modified anytime in your profile settings.</span>
           </div>
         </div>
-        <div className={`w-9 h-5 rounded-full relative transition-colors ${isStealth ? 'bg-outline/30' : 'bg-accent/30'}`}>
-          <div className={`absolute top-1 w-3 h-3 rounded-full transition-all ${isStealth ? 'left-5 bg-outline-var' : 'left-1 bg-secondary-bright'}`} />
+        <div className={`w-8 h-4.5 rounded-full relative transition-colors ${isStealth ? 'bg-outline-var/50' : 'bg-primary/40'}`}>
+          <div className={`absolute top-0.5 w-3.5 h-3.5 rounded-full transition-all ${isStealth ? 'left-4 bg-outline-var' : 'left-0.5 bg-primary'}`} />
         </div>
       </div>
 
@@ -517,7 +510,7 @@ export default function SkillVerifier({ userId, skillName: initialSkillName, ski
       <button
         onClick={handleVerifyGithub}
         disabled={loading || !inputValue || !skillName || (cooldownData?.hasCooldown && !forceReverify)}
-        className="w-full py-3 rounded-xs font-syne font-bold text-xs tracking-[0.1em] uppercase flex items-center justify-center gap-2 transition-all active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed bg-primary text-on-primary hover:bg-secondary-bright shadow-lg shadow-primary/20"
+        className="w-full py-3 rounded-lg font-outfit font-semibold text-sm flex items-center justify-center gap-2 transition-all active:scale-[0.99] disabled:opacity-50 disabled:cursor-not-allowed bg-primary hover:bg-primary-dim text-on-primary shadow-xs"
       >
         {loading ? (
           <>
@@ -525,7 +518,7 @@ export default function SkillVerifier({ userId, skillName: initialSkillName, ski
           </>
         ) : (
           <>
-            <Shield size={14} /> Start AI Skill Audit
+            Start AI Skill Audit
           </>
         )}
       </button>
@@ -595,59 +588,52 @@ export default function SkillVerifier({ userId, skillName: initialSkillName, ski
     const levelText = res?.level || 'Intermediate';
 
     return (
-      <div className="space-y-5 font-outfit py-2">
-        <div className="text-center">
-          <div className="w-16 h-16 bg-secondary-bright/10 rounded-full flex items-center justify-center mx-auto mb-3 border border-secondary-bright/30">
-            <CheckCircle2 className="w-8 h-8 text-secondary-bright" />
-          </div>
-          <div className="inline-block px-2.5 py-0.5 rounded-xs border text-[10px] font-syne font-bold uppercase tracking-wider mb-1.5 bg-secondary-bright/10 text-secondary-bright border-secondary-bright/30">
-            Verification Verified ✓
-          </div>
-          <h3 className="text-xl font-extrabold text-text-primary tracking-tight">
-            {skillName} <span className="text-outline font-normal">Score</span>
-          </h3>
-        </div>
-
-        {/* Score & Level Banner */}
-        <div className="p-5 bg-surface-mid border border-outline-var/30 rounded-md flex items-center justify-between">
+      <div className="space-y-4 font-outfit py-2">
+        {/* Clean Score Display */}
+        <div className="p-5 bg-surface border border-outline-var/30 rounded-lg flex items-center justify-between shadow-xs">
           <div>
-            <div className="font-syne text-[10px] uppercase font-bold tracking-widest text-outline mb-1">
-              Calculated Level
+            <div className="text-xs font-semibold uppercase tracking-wider text-text-muted mb-1 font-outfit">
+              Verified Competency
             </div>
-            <div className={`px-3 py-1 rounded-xs border font-syne font-bold text-xs uppercase tracking-wider inline-block ${getLevelColor(levelText)}`}>
-              {levelText}
+            <h3 className="text-xl font-bold text-text-primary tracking-tight font-syne">
+              {skillName}
+            </h3>
+            <div className="mt-1">
+              <span className={`px-2.5 py-0.5 rounded text-xs font-medium font-outfit inline-block ${getLevelColor(levelText)}`}>
+                {levelText}
+              </span>
             </div>
           </div>
           <div className="text-right">
-            <div className="font-syne text-[10px] uppercase font-bold tracking-widest text-outline mb-1">
+            <div className="text-xs font-semibold uppercase tracking-wider text-text-muted mb-1 font-outfit">
               AI Score
             </div>
-            <div className="text-3xl font-black font-syne text-text-primary tracking-tight">
-              {scoreVal}<span className="text-sm font-normal text-outline">/10</span>
+            <div className="text-3xl font-extrabold text-text-primary tracking-tight font-outfit">
+              {scoreVal}<span className="text-sm font-normal text-text-muted">/10</span>
             </div>
           </div>
         </div>
 
         {/* AI Reasoning */}
         {res?.reasoning && (
-          <div className="p-4 bg-surface-mid/70 border border-outline-var/20 rounded-xs">
-            <h5 className="font-syne text-[10px] font-bold tracking-[0.12em] uppercase text-outline mb-1.5 flex items-center gap-1.5">
-              <Cpu size={12} className="text-primary" /> AI Evaluation Reasoning
+          <div className="p-4 bg-surface-mid/50 border border-outline-var/25 rounded-lg">
+            <h5 className="font-outfit text-xs font-semibold uppercase tracking-wider text-text-muted mb-1.5">
+              Evaluation Summary
             </h5>
-            <p className="text-xs text-text-muted leading-relaxed">{res.reasoning}</p>
+            <p className="text-xs text-text-muted leading-relaxed font-outfit">{res.reasoning}</p>
           </div>
         )}
 
         {/* Evidence points */}
         {Array.isArray(res?.evidence) && res.evidence.length > 0 && (
-          <div className="p-4 bg-surface-mid/70 border border-outline-var/20 rounded-xs">
-            <h5 className="font-syne text-[10px] font-bold tracking-[0.12em] uppercase text-outline mb-2 flex items-center gap-1.5">
-              <Code2 size={12} className="text-secondary-bright" /> Code Evidence
+          <div className="p-4 bg-surface-mid/50 border border-outline-var/25 rounded-lg">
+            <h5 className="font-outfit text-xs font-semibold uppercase tracking-wider text-text-muted mb-2">
+              Code Evidence
             </h5>
-            <ul className="space-y-1.5">
+            <ul className="space-y-1.5 font-outfit">
               {res.evidence.map((ev, i) => (
                 <li key={i} className="text-xs text-text-muted flex items-start gap-2">
-                  <Check size={12} className="text-secondary-bright shrink-0 mt-0.5" />
+                  <Check size={13} className="text-accent shrink-0 mt-0.5" />
                   <span>{ev}</span>
                 </li>
               ))}
@@ -655,25 +641,22 @@ export default function SkillVerifier({ userId, skillName: initialSkillName, ski
           </div>
         )}
 
-        {/* Auto-discovered secondary skills banner */}
+        {/* Auto-discovered secondary skills */}
         {Array.isArray(res?.verifiedSkills) && res.verifiedSkills.length > 1 && (
-          <div className="p-3.5 bg-primary/10 border border-primary/30 rounded-xs">
-            <div className="flex items-center gap-2 mb-1.5">
-              <Sparkles size={14} className="text-primary" />
-              <span className="font-syne font-bold text-[10px] uppercase tracking-wider text-primary">
-                Multi-Skill Auto-Discovery
-              </span>
+          <div className="p-4 bg-surface-mid/50 border border-outline-var/25 rounded-lg">
+            <div className="font-outfit font-semibold text-xs uppercase tracking-wider text-text-muted mb-1.5">
+              Discovered Skills in Repository
             </div>
-            <p className="text-xs text-text-muted mb-2">
-              The following additional skills were detected and verified from the same repository:
+            <p className="text-xs text-text-muted mb-2 font-outfit">
+              The following additional skills were verified from the same code audit:
             </p>
-            <div className="flex flex-wrap gap-1.5">
+            <div className="flex flex-wrap gap-1.5 font-outfit">
               {res.verifiedSkills.filter((s) => s.skillName.toLowerCase() !== skillName.toLowerCase()).map((s) => (
                 <span
                   key={s.skillName}
-                  className="px-2 py-0.5 bg-surface text-secondary-bright border border-secondary-bright/30 rounded-xs text-[10px] font-syne font-bold uppercase flex items-center gap-1"
+                  className="px-2.5 py-0.5 bg-surface text-text-primary border border-outline-var/30 rounded text-xs font-medium"
                 >
-                  <Check size={9} /> {s.skillName} ({s.score}/10)
+                  {s.skillName} · {s.score}/10
                 </span>
               ))}
             </div>
@@ -681,10 +664,10 @@ export default function SkillVerifier({ userId, skillName: initialSkillName, ski
         )}
 
         {/* Actions */}
-        <div className="flex gap-2 pt-2">
+        <div className="pt-2">
           <button
             onClick={resetState}
-            className="flex-1 py-2.5 bg-surface-mid border border-outline-var/40 hover:border-primary/40 text-text-primary text-xs font-syne font-bold uppercase tracking-wider rounded-xs transition-all flex items-center justify-center gap-2"
+            className="w-full py-2.5 bg-surface border border-outline-var/30 hover:border-outline-var/60 text-text-primary text-xs font-semibold font-outfit rounded-lg transition-all flex items-center justify-center gap-2 shadow-xs"
           >
             <RefreshCw size={12} /> Verify Another Skill
           </button>
@@ -697,37 +680,37 @@ export default function SkillVerifier({ userId, skillName: initialSkillName, ski
   const renderBatchView = () => (
     <div className="space-y-4 font-outfit">
       <div>
-        <h4 className="text-sm font-bold text-text-primary mb-1">Repository Auto-Discovery</h4>
-        <p className="text-xs text-text-muted leading-relaxed">
-          SkillSphere scans your linked GitHub repositories and matches source code against unverified skills on your profile using Gemini AI.
+        <h4 className="text-sm font-semibold text-text-primary mb-1">Repository Auto-Discovery</h4>
+        <p className="text-xs text-text-muted leading-relaxed font-outfit">
+          SkillSphere scans your linked GitHub repositories and automatically matches code patterns against unverified skills on your profile.
         </p>
       </div>
 
       {userSkills.filter((s) => !s.isVerified).length > 0 ? (
-        <div className="p-3 bg-surface-mid border border-outline-var/30 rounded-xs">
-          <div className="font-syne text-[10px] uppercase font-bold tracking-widest text-outline mb-2">
+        <div className="p-3 bg-surface-mid/60 border border-outline-var/30 rounded-lg">
+          <div className="font-outfit text-xs font-semibold uppercase tracking-wider text-text-muted mb-2">
             Target Unverified Skills ({userSkills.filter((s) => !s.isVerified).length}):
           </div>
           <div className="flex flex-wrap gap-1.5">
             {userSkills.filter((s) => !s.isVerified).map((s) => (
-              <span key={s.name} className="px-2 py-0.5 bg-surface border border-outline-var/40 text-text-muted text-[10px] font-syne font-bold uppercase rounded-xs">
+              <span key={s.name} className="px-2.5 py-0.5 bg-surface border border-outline-var/40 text-text-muted text-xs font-medium rounded-md">
                 {s.name}
               </span>
             ))}
           </div>
         </div>
       ) : (
-        <div className="p-4 bg-secondary-bright/10 border border-secondary-bright/30 rounded-xs text-center">
-          <CheckCircle2 size={24} className="text-secondary-bright mx-auto mb-1" />
-          <p className="text-xs font-bold text-text-primary">All Profile Skills Are Verified!</p>
+        <div className="p-4 bg-accent-container/30 border border-accent/20 rounded-lg text-center">
+          <CheckCircle2 size={20} className="text-accent mx-auto mb-1" />
+          <p className="text-xs font-semibold text-text-primary">All Profile Skills Are Verified!</p>
         </div>
       )}
 
       {/* Repository Selection Pool */}
-      <div className="p-3.5 bg-surface border border-outline-var/30 rounded-xs space-y-3">
+      <div className="p-4 bg-surface border border-outline-var/30 rounded-lg space-y-3 shadow-xs">
         <div className="flex items-center justify-between">
-          <label className="font-syne text-[10px] font-bold tracking-[0.12em] uppercase text-outline flex items-center gap-1.5">
-            <FolderGit2 size={13} className="text-primary" /> Repositories To Scan ({selectedBatchRepos.length} selected)
+          <label className="font-outfit text-xs font-semibold uppercase tracking-wider text-text-muted flex items-center gap-1.5">
+            Repositories To Scan ({selectedBatchRepos.length} selected)
           </label>
         </div>
 
@@ -739,7 +722,7 @@ export default function SkillVerifier({ userId, skillName: initialSkillName, ski
               return (
                 <label
                   key={repo.id || repo.url}
-                  className={`p-2 border rounded-xs flex items-center justify-between text-xs cursor-pointer transition-colors ${
+                  className={`p-2 border rounded-md flex items-center justify-between text-xs cursor-pointer transition-colors ${
                     isChecked
                       ? 'bg-primary/5 border-primary/30 text-text-primary'
                       : 'bg-surface-mid/40 border-outline-var/20 text-text-muted hover:border-outline-var/40'
@@ -750,24 +733,24 @@ export default function SkillVerifier({ userId, skillName: initialSkillName, ski
                       type="checkbox"
                       checked={isChecked}
                       onChange={() => handleToggleBatchRepo(repo.url)}
-                      className="accent-primary rounded-xs cursor-pointer shrink-0"
+                      className="accent-primary rounded cursor-pointer shrink-0"
                     />
-                    <span className="font-bold truncate">{repo.repoName || repo.name}</span>
+                    <span className="font-medium truncate font-outfit">{repo.repoName || repo.name}</span>
                     {repo.primaryLanguage && (
-                      <span className="text-[9px] px-1.5 py-0.2 bg-surface border border-outline-var/30 text-outline rounded shrink-0">
+                      <span className="text-[10px] px-1.5 py-0.5 bg-surface border border-outline-var/30 text-text-muted rounded shrink-0 font-outfit">
                         {repo.primaryLanguage}
                       </span>
                     )}
                   </div>
                   {repo.stars > 0 && (
-                    <span className="text-[10px] text-text-muted shrink-0">★ {repo.stars}</span>
+                    <span className="text-[11px] text-text-muted shrink-0 font-outfit">★ {repo.stars}</span>
                   )}
                 </label>
               );
             })}
           </div>
         ) : (
-          <p className="text-xs text-text-muted italic">
+          <p className="text-xs text-text-muted italic font-outfit">
             No synced repositories found in database. You can add specific repository URLs below.
           </p>
         )}
@@ -781,12 +764,12 @@ export default function SkillVerifier({ userId, skillName: initialSkillName, ski
               onChange={(e) => setCustomRepoInput(e.target.value)}
               onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); handleAddCustomBatchRepo(); } }}
               placeholder="Add GitHub repo (e.g. github.com/user/project)"
-              className="flex-1 bg-surface-mid p-2 text-xs text-text-primary outline-none border border-outline-var/40 rounded-xs placeholder-outline font-outfit"
+              className="flex-1 bg-surface-mid p-2 text-xs text-text-primary outline-none border border-outline-var/40 rounded-lg placeholder-outline-var font-outfit"
             />
             <button
               type="button"
               onClick={handleAddCustomBatchRepo}
-              className="px-3 py-2 bg-surface-mid border border-outline-var/40 hover:border-primary text-text-primary text-xs font-syne font-bold uppercase rounded-xs transition-colors shrink-0"
+              className="px-3 py-2 bg-surface-mid border border-outline-var/40 hover:border-primary text-text-primary text-xs font-semibold rounded-lg transition-colors shrink-0 font-outfit"
             >
               Add Repo
             </button>
@@ -795,23 +778,23 @@ export default function SkillVerifier({ userId, skillName: initialSkillName, ski
       </div>
 
       {batchResults && (
-        <div className="space-y-2 mt-4">
-          <div className="font-syne text-[10px] uppercase font-bold tracking-widest text-outline">Scan Results:</div>
+        <div className="space-y-2 mt-4 font-outfit">
+          <div className="text-xs font-semibold uppercase tracking-wider text-text-muted">Scan Results:</div>
           {batchResults.map((r, i) => (
             <div
               key={i}
-              className={`p-3 rounded-xs border text-xs flex items-center justify-between gap-2 ${
+              className={`p-3 rounded-lg border text-xs flex items-center justify-between gap-2 ${
                 r.success
-                  ? 'bg-secondary-bright/5 border-secondary-bright/30 text-secondary-bright'
+                  ? 'bg-accent-container/20 border-accent/30 text-text-primary'
                   : 'bg-surface-mid border-outline-var/30 text-text-muted'
               }`}
             >
               <div className="min-w-0">
-                <span className="font-bold text-text-primary block">{r.skillName}</span>
-                <span className="text-[10px] text-outline truncate block">{r.repoUrl || r.error}</span>
+                <span className="font-semibold text-text-primary block font-outfit">{r.skillName}</span>
+                <span className="text-xs text-text-muted truncate block font-outfit">{r.repoUrl || r.error}</span>
               </div>
               {r.success && (
-                <div className="font-syne font-bold text-xs uppercase px-2 py-0.5 bg-secondary-bright/10 rounded-xs border border-secondary-bright/30 shrink-0">
+                <div className="font-outfit font-semibold text-xs px-2.5 py-0.5 bg-surface rounded border border-accent/30 shrink-0 text-accent">
                   {r.score}/10 — {r.level}
                 </div>
               )}
@@ -823,16 +806,14 @@ export default function SkillVerifier({ userId, skillName: initialSkillName, ski
       <button
         onClick={handleRunBatchVerify}
         disabled={isBatchRunning || (selectedBatchRepos.length === 0 && userRepos.length === 0)}
-        className="w-full py-3 bg-secondary-bright text-on-primary font-syne font-bold text-xs uppercase tracking-wider rounded-xs hover:opacity-90 disabled:opacity-50 transition flex items-center justify-center gap-2 shadow-lg shadow-secondary-bright/20 cursor-pointer"
+        className="w-full py-3 bg-primary hover:bg-primary-dim text-on-primary font-outfit font-semibold text-sm rounded-lg transition flex items-center justify-center gap-2 shadow-xs cursor-pointer disabled:opacity-50"
       >
         {isBatchRunning ? (
           <>
             <Loader2 className="w-4 h-4 animate-spin" /> Running Batch Auto-Discovery...
           </>
         ) : (
-          <>
-            <Sparkles size={14} /> Run Auto-Discovery Scan
-          </>
+          'Run Auto-Discovery Scan'
         )}
       </button>
     </div>
@@ -844,11 +825,11 @@ export default function SkillVerifier({ userId, skillName: initialSkillName, ski
       return (
         <div className="space-y-4 font-outfit">
           <div>
-            <label className="block font-syne text-[10px] font-bold tracking-[0.12em] uppercase text-outline mb-1.5">
+            <label className="block font-outfit text-xs font-semibold text-text-muted mb-1.5">
               LeetCode Username
             </label>
-            <div className="flex items-center bg-surface-mid rounded-xs border border-outline-var/40 focus-within:border-[#ffa116]/50 transition-colors">
-              <div className="ml-3 font-bold text-[#ffa116]">LC</div>
+            <div className="flex items-center bg-surface-mid rounded-lg border border-outline-var/40 focus-within:border-primary/60 transition-colors">
+              <div className="ml-3 font-bold text-text-muted text-xs">LC</div>
               <input
                 type="text"
                 value={inputValue}
@@ -861,7 +842,7 @@ export default function SkillVerifier({ userId, skillName: initialSkillName, ski
           <button
             onClick={handleScanLeetCode}
             disabled={loading || !inputValue}
-            className="w-full py-3 rounded-xs font-syne font-bold text-xs tracking-[0.1em] uppercase flex items-center justify-center gap-2 transition-all active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed bg-gradient-to-r from-[#ffa116] to-[#e69114] text-white hover:opacity-90 shadow-lg shadow-[#ffa116]/20"
+            className="w-full py-3 rounded-lg font-outfit font-semibold text-sm flex items-center justify-center gap-2 transition-all active:scale-[0.99] disabled:opacity-50 disabled:cursor-not-allowed bg-primary hover:bg-primary-dim text-on-primary shadow-xs"
           >
             {loading ? (
               <>
@@ -878,25 +859,25 @@ export default function SkillVerifier({ userId, skillName: initialSkillName, ski
     const dsaData = lcScanData?.dsa;
     return (
       <div className="space-y-4 font-outfit">
-        <div className="p-4 bg-surface-mid rounded-md border border-outline-var/50">
-          <h4 className="text-sm font-bold text-text-primary mb-2">LeetCode Profile Verified</h4>
+        <div className="p-4 bg-surface-mid rounded-lg border border-outline-var/30">
+          <h4 className="text-sm font-semibold text-text-primary mb-2 font-outfit">LeetCode Profile Verified</h4>
           {dsaData && (
-            <div className="grid grid-cols-3 gap-2 mb-3 text-center">
-              <div className="p-2 bg-surface rounded-xs">
-                <div className="text-[#00b8a3] font-bold">{dsaData.easy}</div>
-                <div className="text-[10px] text-outline uppercase tracking-wider">Easy</div>
+            <div className="grid grid-cols-3 gap-2 mb-3 text-center font-outfit">
+              <div className="p-2 bg-surface rounded-md border border-outline-var/20">
+                <div className="text-accent font-bold">{dsaData.easy}</div>
+                <div className="text-xs text-text-muted">Easy</div>
               </div>
-              <div className="p-2 bg-surface rounded-xs">
-                <div className="text-[#ffc01e] font-bold">{dsaData.medium}</div>
-                <div className="text-[10px] text-outline uppercase tracking-wider">Medium</div>
+              <div className="p-2 bg-surface rounded-md border border-outline-var/20">
+                <div className="text-primary font-bold">{dsaData.medium}</div>
+                <div className="text-xs text-text-muted">Medium</div>
               </div>
-              <div className="p-2 bg-surface rounded-xs">
+              <div className="p-2 bg-surface rounded-md border border-outline-var/20">
                 <div className="text-error font-bold">{dsaData.hard}</div>
-                <div className="text-[10px] text-outline uppercase tracking-wider">Hard</div>
+                <div className="text-xs text-text-muted">Hard</div>
               </div>
             </div>
           )}
-          <div className="flex justify-between items-center text-sm font-bold text-text-primary">
+          <div className="flex justify-between items-center text-sm font-semibold text-text-primary font-outfit">
             <span>Calculated Score:</span>
             <span>{dsaData?.score || 5}/10</span>
           </div>
@@ -905,7 +886,7 @@ export default function SkillVerifier({ userId, skillName: initialSkillName, ski
         <button
           onClick={handleVerifyLeetCode}
           disabled={loading}
-          className="w-full py-3 bg-[#ffa116] text-white font-syne font-bold text-xs uppercase tracking-wider rounded-xs hover:opacity-90 transition"
+          className="w-full py-3 bg-primary hover:bg-primary-dim text-on-primary font-outfit font-semibold text-sm rounded-lg transition"
         >
           {loading ? 'Attaching to Profile...' : 'Confirm LeetCode Verification'}
         </button>
@@ -917,7 +898,7 @@ export default function SkillVerifier({ userId, skillName: initialSkillName, ski
   const renderCertificate = () => (
     <div className="space-y-4 font-outfit">
       <div>
-        <label className="block font-syne text-[10px] font-bold tracking-[0.12em] uppercase text-outline mb-1.5">
+        <label className="block font-outfit text-xs font-semibold text-text-muted mb-1.5">
           Certificate / Credential URL
         </label>
         <input
@@ -925,9 +906,9 @@ export default function SkillVerifier({ userId, skillName: initialSkillName, ski
           value={inputValue}
           onChange={(e) => setInputValue(e.target.value)}
           placeholder="https://credly.com/badges/..."
-          className="w-full bg-surface-mid border border-outline-var/40 focus:border-secondary-bright/60 text-text-primary p-3 rounded-xs text-sm outline-none placeholder-outline-var"
+          className="w-full bg-surface-mid border border-outline-var/40 focus:border-primary/60 text-text-primary p-3 rounded-lg text-sm outline-none placeholder-outline-var font-outfit"
         />
-        <p className="text-[10px] text-outline mt-1.5">
+        <p className="text-xs text-text-muted mt-1.5 font-outfit">
           Supported: Credly, AWS Certifications, Coursera, or professional license links.
         </p>
       </div>
@@ -935,7 +916,7 @@ export default function SkillVerifier({ userId, skillName: initialSkillName, ski
       <button
         onClick={handleVerifyCertificate}
         disabled={loading || !inputValue}
-        className="w-full py-3 bg-secondary-bright text-on-primary font-syne font-bold text-xs uppercase tracking-wider rounded-xs hover:opacity-90 disabled:opacity-50 transition"
+        className="w-full py-3 bg-primary hover:bg-primary-dim text-on-primary font-outfit font-semibold text-sm rounded-lg hover:opacity-90 disabled:opacity-50 transition"
       >
         {loading ? 'Verifying Link...' : 'Attach Certificate Evidence'}
       </button>
@@ -943,30 +924,29 @@ export default function SkillVerifier({ userId, skillName: initialSkillName, ski
   );
 
   return (
-    <div className="p-6 bg-surface border border-outline-var/30 rounded-md max-w-lg w-full shadow-2xl relative overflow-hidden font-outfit">
+    <div className="p-6 bg-surface border border-outline-var/30 rounded-xl max-w-lg w-full shadow-xl relative overflow-hidden font-outfit">
       <ToastContainer toasts={toast.toasts} removeToast={toast.removeToast} />
-      <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-primary via-secondary-bright to-primary-container" />
 
       {/* Header */}
-      <div className="flex items-center justify-between mb-6 pb-4 border-b border-outline-var/20">
+      <div className="flex items-center justify-between mb-5 pb-4 border-b border-outline-var/20">
         <div className="flex items-center gap-3">
           {method && (
             <button
               onClick={handleBack}
-              className="p-1.5 text-outline hover:text-text-primary border border-outline-var/30 hover:border-outline-var/60 rounded-xs transition-colors"
+              className="p-1.5 text-text-muted hover:text-text-primary border border-outline-var/30 hover:border-outline-var/60 rounded-md transition-colors"
             >
               <ChevronLeft size={16} />
             </button>
           )}
-          <div className="p-2.5 bg-primary/10 rounded-xs border border-primary/20 text-primary">
+          <div className="p-2 bg-primary/10 rounded-md text-primary">
             <Shield size={18} />
           </div>
           <div>
-            <h3 className="text-base font-extrabold text-text-primary tracking-tight">
+            <h3 className="text-base font-bold text-text-primary tracking-tight font-syne">
               Skill Verification
             </h3>
-            <p className="font-syne text-[9px] font-bold tracking-[0.12em] uppercase text-outline">
-              {method ? `${method.toUpperCase()} VERIFICATION` : 'SELECT VERIFICATION PROTOCOL'}
+            <p className="font-outfit text-xs font-semibold uppercase tracking-wider text-text-muted">
+              {method ? `${method.toUpperCase()} PROTOCOL` : 'SELECT VERIFICATION PROTOCOL'}
             </p>
           </div>
         </div>
