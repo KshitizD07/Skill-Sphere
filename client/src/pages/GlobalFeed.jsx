@@ -210,14 +210,14 @@ function PostCard({
     const isOfficial = post.author?.email === 'official@skillsphere.com' || post.author?.name === 'SkillSphere' || post.author?.role === 'ADMIN';
 
     return (
-      <div className={`bg-surface border rounded-md hover:border-secondary/20 transition-colors group relative font-outfit ${isOfficial ? 'border-primary/40 bg-gradient-to-b from-surface to-surface-mid/40 shadow-sm' : 'border-outline-var/20'}`}>
+      <div className={`bg-surface border rounded-md hover:border-outline-var/90 transition-all group relative font-outfit shadow-[0_1px_3px_rgba(0,0,0,0.04)] ${isOfficial ? 'border-primary/50 shadow-sm' : 'border-outline-var/60'}`}>
         {/* Header */}
         <div className="flex items-center justify-between p-4 pb-3">
           <div className="flex items-center gap-3 cursor-pointer min-w-0 flex-1 mr-2" onClick={() => navigate(`/profile/${post.author?.id}`)}>
             <Avatar src={post.author?.avatar} name={post.author?.name} size={10} />
             <div className="min-w-0 flex-1">
               <div className="flex items-center gap-1.5 flex-wrap">
-                <span className="text-text-primary font-semibold hover:text-primary transition-colors text-sm truncate">
+                <span className="text-text-primary font-bold hover:text-primary transition-colors text-sm truncate">
                   {post.author?.name}
                 </span>
                 {isOfficial ? (
@@ -225,7 +225,7 @@ function PostCard({
                     <Shield size={10} /> Official
                   </span>
                 ) : post.author?.role === 'PROFESSIONAL' ? (
-                  <span className="px-1.5 py-0.5 bg-accent/10 text-accent text-[9px] font-syne font-bold uppercase rounded-xs">
+                  <span className="px-2 py-0.5 bg-accent/10 text-accent border border-accent/30 text-[9px] font-syne font-bold uppercase rounded-xs">
                     Pro
                   </span>
                 ) : null}
@@ -340,11 +340,11 @@ function PostCard({
           </div>
         ) : (
           <div>
-            <p className="text-text-muted text-sm leading-relaxed whitespace-pre-wrap">{displayContent}</p>
+            <p className="text-text-primary text-sm leading-relaxed whitespace-pre-wrap">{displayContent}</p>
             {isLongContent && (
               <button
                 onClick={() => setIsExpanded(!isExpanded)}
-                className="text-primary text-xs font-syne font-bold hover:underline mt-1 focus:outline-none"
+                className="text-primary text-xs font-syne font-bold hover:underline mt-1 focus:outline-none cursor-pointer"
               >
                 {isExpanded ? 'See less' : '... See more'}
               </button>
@@ -353,7 +353,7 @@ function PostCard({
         )}
 
         {post.imageUrl && (
-          <div className="mt-3 cursor-pointer overflow-hidden rounded-xs border border-outline-var/20 group/img">
+          <div className="mt-3 cursor-pointer overflow-hidden rounded-xs border border-outline-var/40 group/img">
             <img
               src={post.imageUrl}
               loading="lazy"
@@ -366,11 +366,11 @@ function PostCard({
       </div>
 
       {/* Actions & Counts Bar */}
-      <div className="flex items-center justify-between px-4 py-2.5 border-t border-outline-var/15">
+      <div className="flex items-center justify-between px-4 py-2.5 border-t border-outline-var/30 bg-surface">
         <div className="flex items-center gap-4">
           <button
             onClick={() => onLike(post.id)}
-            className={`flex items-center gap-1.5 text-sm transition-colors ${liked ? 'text-error' : 'text-outline hover:text-error'}`}
+            className={`flex items-center gap-1.5 text-sm transition-colors cursor-pointer ${liked ? 'text-error font-semibold' : 'text-outline hover:text-error'}`}
           >
             <Heart size={16} fill={liked ? 'currentColor' : 'none'} />
             <span
@@ -386,7 +386,7 @@ function PostCard({
 
           <button
             onClick={() => setShowComments(!showComments)}
-            className="flex items-center gap-1.5 text-sm text-outline hover:text-primary transition-colors"
+            className="flex items-center gap-1.5 text-sm text-outline hover:text-text-primary transition-colors cursor-pointer"
           >
             <MessageCircle size={16} />
             <span className="font-syne text-xs">{post.commentCount ?? post.comments?.length ?? 0}</span>
@@ -401,7 +401,7 @@ function PostCard({
 
       {/* Expandable Comment Section */}
       {showComments && (
-        <div className="px-4 pb-4 pt-3 border-t border-outline-var/15 space-y-3 bg-surface-mid/30">
+        <div className="px-4 pb-4 pt-3 border-t border-outline-var/30 space-y-3 bg-surface-mid/40">
           {(!post.comments || post.comments.length === 0) && (
             <p className="text-outline text-xs italic text-center py-1">No comments yet. Be the first to comment!</p>
           )}
@@ -872,33 +872,44 @@ export default function GlobalFeed() {
 
       <div className="flex-1 md:ml-64 pt-16 md:pt-0 min-h-screen overflow-y-auto overflow-x-hidden p-4 md:p-8 w-full max-w-7xl mx-auto space-y-6">
 
-        {/* Feed Type Switcher (All vs Following) */}
-        <div className="flex items-center gap-2 mb-6 border-b border-outline-var/20 pb-2">
-          <button
-            onClick={() => handleTabSwitch('all')}
-            className={`px-4 py-2 font-syne font-bold text-xs uppercase tracking-wider rounded-xs transition-all border ${
-              feedTab === 'all'
-                ? 'bg-primary text-on-primary border-primary shadow-sm shadow-primary/20'
-                : 'bg-surface-mid/60 text-text-muted border-outline-var/30 hover:text-text-primary'
-            }`}
-          >
-            All Updates
-          </button>
-          <button
-            onClick={() => handleTabSwitch('following')}
-            className={`px-4 py-2 font-syne font-bold text-xs uppercase tracking-wider rounded-xs transition-all border flex items-center gap-1.5 ${
-              feedTab === 'following'
-                ? 'bg-primary text-on-primary border-primary shadow-sm shadow-primary/20'
-                : 'bg-surface-mid/60 text-text-muted border-outline-var/30 hover:text-text-primary'
-            }`}
-          >
-            <Users size={12} /> Following
-          </button>
+        {/* Feed Page Header */}
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-4 border-b border-outline-var/40">
+          <div>
+            <h1 className="text-xl sm:text-2xl font-bold font-syne text-text-primary tracking-tight">
+              Community Feed
+            </h1>
+            <p className="text-xs text-text-muted mt-0.5">
+              Engineering discussions, project launches, and updates from your network
+            </p>
+          </div>
+          <div className="flex items-center gap-1.5 bg-surface border border-outline-var/60 p-1 rounded-sm shadow-[0_1px_2px_rgba(0,0,0,0.04)] self-start sm:self-center">
+            <button
+              onClick={() => handleTabSwitch('all')}
+              className={`px-3 py-1.5 text-xs font-semibold rounded-xs transition-colors cursor-pointer ${
+                feedTab === 'all'
+                  ? 'bg-secondary text-on-secondary shadow-xs'
+                  : 'text-text-muted hover:text-text-primary'
+              }`}
+            >
+              All Updates
+            </button>
+            <button
+              onClick={() => handleTabSwitch('following')}
+              className={`px-3 py-1.5 text-xs font-semibold rounded-xs transition-colors flex items-center gap-1.5 cursor-pointer ${
+                feedTab === 'following'
+                  ? 'bg-secondary text-on-secondary shadow-xs'
+                  : 'text-text-muted hover:text-text-primary'
+              }`}
+            >
+              <Users size={12} />
+              <span>Following</span>
+            </button>
+          </div>
         </div>
 
         {/* Post Composer Card */}
         {currentUser.id && (
-          <div className="bg-surface border border-outline-var/20 rounded-md p-5 mb-6 shadow-sm font-outfit">
+          <div className="bg-surface border border-outline-var/60 rounded-md p-5 mb-6 shadow-[0_1px_3px_rgba(0,0,0,0.04)] font-outfit">
             <div className="flex items-start gap-3">
               <Avatar src={currentUser.avatar} name={currentUser.name} size={10} />
               <div className="flex-1 min-w-0">
@@ -908,9 +919,9 @@ export default function GlobalFeed() {
                     setNewPostContent(e.target.value);
                     setCharCount(e.target.value.length);
                   }}
-                  placeholder={`What's on your mind, ${currentUser.name?.split(' ')[0] || 'developer'}?`}
+                  placeholder={`Share an update or question with your peers, ${currentUser.name?.split(' ')[0] || 'developer'}...`}
                   maxLength={2000}
-                  className="w-full bg-surface-mid border border-outline-var/30 text-text-primary p-3 focus:border-primary/50 outline-none resize-none h-24 text-sm rounded-xs placeholder-outline-var transition-colors leading-relaxed"
+                  className="w-full bg-surface-mid/80 border border-outline-var/40 text-text-primary p-3 focus:border-secondary/60 focus:bg-surface outline-none resize-none h-24 text-sm rounded-xs placeholder-text-muted/60 transition-all leading-relaxed"
                 />
                 <div className="flex items-center justify-between mt-2 mb-2.5">
                   <span className={`font-syne text-[10px] ${charCount > 1800 ? 'text-error font-bold' : 'text-outline'}`}>
@@ -920,34 +931,34 @@ export default function GlobalFeed() {
 
                 {newPostImage && (
                   <div className="relative mb-3 inline-block">
-                    <img src={newPostImage} alt="Preview" className="max-h-40 rounded-xs border border-outline-var/30 object-cover shadow" />
+                    <img src={newPostImage} alt="Preview" className="max-h-40 rounded-xs border border-outline-var/40 object-cover shadow" />
                     <button
                       onClick={() => {
                         setNewPostImage('');
                         if (postImageRef.current) postImageRef.current.value = '';
                       }}
-                      className="absolute -top-2 -right-2 p-1 bg-error text-white rounded-full transition-colors shadow"
+                      className="absolute -top-2 -right-2 p-1 bg-error text-white rounded-full transition-colors shadow cursor-pointer"
                     >
                       <X size={12} />
                     </button>
                   </div>
                 )}
 
-                <div className="flex flex-wrap gap-3 items-center justify-between border-t border-outline-var/20 pt-3">
+                <div className="flex flex-wrap gap-3 items-center justify-between border-t border-outline-var/30 pt-3">
                   <input ref={postImageRef} type="file" accept="image/*" onChange={handleImageChange} className="hidden" />
                   <button
                     onClick={() => postImageRef.current.click()}
-                    className="flex items-center gap-2 px-3 py-1.5 bg-surface-mid border border-outline-var/30 hover:border-primary/40 text-outline hover:text-primary transition-all text-xs font-syne font-bold rounded-xs uppercase tracking-wide"
+                    className="flex items-center gap-2 px-3 py-1.5 bg-surface-mid border border-outline-var/40 hover:border-secondary/40 text-text-muted hover:text-text-primary transition-all text-xs font-semibold rounded-xs cursor-pointer"
                   >
-                    <ImageIcon size={14} /> Attach Image
+                    <ImageIcon size={14} className="text-primary" /> Attach Image
                   </button>
 
                   <button
                     onClick={handleCreatePost}
                     disabled={!newPostContent.trim()}
-                    className="bg-primary text-on-primary font-syne font-bold px-6 py-2 rounded-xs text-xs uppercase tracking-[0.1em] hover:bg-secondary-bright disabled:opacity-40 transition-all shadow-md"
+                    className="bg-secondary text-white font-semibold px-6 py-2 rounded-xs text-xs uppercase tracking-wider hover:bg-secondary-bright disabled:opacity-40 transition-all shadow-xs cursor-pointer"
                   >
-                    Publish Post
+                    Post Update
                   </button>
                 </div>
               </div>
