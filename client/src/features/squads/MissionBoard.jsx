@@ -11,11 +11,11 @@ import Navbar from '../../shared/components/Navbar';
 import { useToast, ToastContainer } from '../../shared/components/Toast';
 
 const EVENT_COLORS = {
-  HACKATHON:   { bg: 'bg-purple-500/10', border: 'border-purple-500/30', text: 'text-purple-400' },
-  OPEN_SOURCE: { bg: 'bg-emerald-500/10', border: 'border-emerald-500/30', text: 'text-emerald-400' },
-  RESEARCH:    { bg: 'bg-blue-500/10', border: 'border-blue-500/30', text: 'text-blue-400' },
-  STARTUP:     { bg: 'bg-amber-500/10', border: 'border-amber-500/30', text: 'text-amber-400' },
-  PORTFOLIO:   { bg: 'bg-teal-500/10', border: 'border-teal-500/30', text: 'text-teal-400' },
+  HACKATHON:   { bg: 'bg-primary/10', border: 'border-primary/25', text: 'text-primary' },
+  OPEN_SOURCE: { bg: 'bg-accent/10', border: 'border-accent/25', text: 'text-accent' },
+  RESEARCH:    { bg: 'bg-surface-mid', border: 'border-outline-var/40', text: 'text-text-muted' },
+  STARTUP:     { bg: 'bg-primary/15', border: 'border-primary/30', text: 'text-primary-dim' },
+  PORTFOLIO:   { bg: 'bg-surface-mid', border: 'border-outline-var/40', text: 'text-text-primary' },
 };
 
 // ─── Create Squad Modal (Multi-step) ─────────────────────────────────────────
@@ -95,18 +95,18 @@ function CreateSquadModal({ onClose, onCreated }) {
   };
 
   const labelBase = "block font-outfit text-xs font-semibold text-text-muted mb-1.5 tracking-normal";
-  const inputBase = "w-full bg-surface-mid border border-outline-var/40 text-text-primary p-3 rounded-xs focus:border-primary/60 outline-none font-outfit text-sm transition-colors placeholder-outline-var";
+  const inputBase = "w-full bg-surface-mid border border-outline-var/40 text-text-primary p-3 rounded-lg focus:border-primary/60 outline-none font-outfit text-sm transition-colors placeholder-outline-var";
 
   return (
     <div className="fixed inset-0 bg-bg-base/85 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-      <div className="bg-surface border border-outline-var/30 rounded-md max-w-2xl w-full p-6 md:p-8 relative max-h-[90vh] overflow-y-auto shadow-2xl space-y-6">
-        <button onClick={onClose} className="absolute top-4 right-4 text-outline hover:text-text-primary transition-colors">
+      <div className="bg-surface border border-outline-var/30 rounded-xl max-w-2xl w-full p-6 md:p-8 relative max-h-[90vh] overflow-y-auto shadow-2xl space-y-6 font-outfit">
+        <button onClick={onClose} className="absolute top-4 right-4 text-text-muted hover:text-text-primary transition-colors">
           <X size={18} />
         </button>
 
         <div>
-          <p className="font-syne text-[10px] font-bold tracking-[0.12em] uppercase text-primary mb-1">Squad Builder</p>
-          <h2 className="text-xl font-extrabold text-text-primary tracking-tight font-syne">Create Mission Squad</h2>
+          <p className="font-outfit text-xs font-semibold uppercase tracking-wider text-text-muted mb-1">Squad Builder</p>
+          <h2 className="text-xl font-bold text-text-primary tracking-tight font-syne">Create Mission Squad</h2>
         </div>
 
         {/* Step indicator */}
@@ -162,8 +162,8 @@ function CreateSquadModal({ onClose, onCreated }) {
                   onChange={(e) => setForm((f) => ({ ...f, maxMembers: Number(e.target.value) }))}
                   className={`${inputBase} cursor-pointer`}
                 >
-                  {[2, 3, 4, 5, 6, 8, 10].map((n) => (
-                    <option key={n} value={n}>{n} members</option>
+                  {[2, 3, 4, 5, 6, 8].map((n) => (
+                    <option key={n} value={n}>{n} Members</option>
                   ))}
                 </select>
               </div>
@@ -186,7 +186,7 @@ function CreateSquadModal({ onClose, onCreated }) {
             <button
               onClick={() => setStep(2)}
               disabled={!form.title.trim() || !form.description.trim()}
-              className="w-full py-3 bg-primary text-on-primary font-syne font-bold text-xs uppercase tracking-wider hover:opacity-90 transition-all rounded-xs disabled:opacity-40 flex items-center justify-center gap-2"
+              className="w-full py-2.5 bg-primary hover:bg-primary-dim text-on-primary font-outfit font-semibold text-xs rounded-lg transition-all disabled:opacity-40 flex items-center justify-center gap-1.5 shadow-xs"
             >
               Next: Define Squad Roles <ChevronRight size={14} />
             </button>
@@ -195,27 +195,27 @@ function CreateSquadModal({ onClose, onCreated }) {
 
         {step === 2 && (
           <div className="space-y-4">
-            <p className="text-outline text-xs">
+            <p className="text-text-muted text-xs font-outfit">
               Define required roles. Gatekeeper will verify that applicants meet your skill and verification criteria.
             </p>
 
             {form.slots.map((slot, i) => (
-              <div key={i} className="bg-surface-mid border border-outline-var/30 rounded-xs p-4 relative group space-y-3">
+              <div key={i} className="bg-surface-mid/50 border border-outline-var/30 rounded-lg p-4 relative group space-y-3 font-outfit">
                 {form.slots.length > 1 && (
                   <button
                     onClick={() => removeSlot(i)}
-                    className="absolute top-3 right-3 text-outline-var hover:text-error transition-colors"
+                    className="absolute top-3 right-3 text-text-muted hover:text-error transition-colors"
                   >
                     <X size={14} />
                   </button>
                 )}
-                <p className="font-syne text-[9px] font-bold tracking-[0.12em] uppercase text-primary">
+                <p className="font-outfit text-xs font-semibold uppercase tracking-wider text-primary">
                   Slot #{i + 1}
                 </p>
 
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
                   <div>
-                    <label className={labelBase}>Role Title</label>
+                    <label className={labelBase}>Role Title *</label>
                     <input
                       value={slot.roleTitle}
                       onChange={(e) => updateSlot(i, 'roleTitle', e.target.value)}
@@ -246,12 +246,12 @@ function CreateSquadModal({ onClose, onCreated }) {
                 </div>
 
                 <div className="flex items-center gap-2 pt-1">
-                  <label className="flex items-center gap-2 cursor-pointer text-xs text-text-muted">
+                  <label className="flex items-center gap-2 cursor-pointer text-xs text-text-muted font-outfit">
                     <input
                       type="checkbox"
                       checked={slot.requireVerified}
                       onChange={(e) => updateSlot(i, 'requireVerified', e.target.checked)}
-                      className="accent-primary rounded-xs"
+                      className="accent-primary rounded"
                     />
                     <span>Require Verified Skill Certificate / Badge</span>
                   </label>
@@ -262,7 +262,7 @@ function CreateSquadModal({ onClose, onCreated }) {
             {form.slots.length < 8 && (
               <button
                 onClick={addSlot}
-                className="w-full py-2.5 border border-dashed border-outline-var/40 text-outline hover:border-primary hover:text-primary transition-all font-syne text-xs flex items-center justify-center gap-2 rounded-xs"
+                className="w-full py-2.5 border border-dashed border-outline-var/40 text-text-muted hover:border-primary hover:text-primary transition-all font-outfit text-xs font-semibold flex items-center justify-center gap-1.5 rounded-lg"
               >
                 <Plus size={14} /> Add Role Slot
               </button>
@@ -271,14 +271,14 @@ function CreateSquadModal({ onClose, onCreated }) {
             <div className="flex gap-3 pt-2">
               <button
                 onClick={() => setStep(1)}
-                className="flex-1 py-2.5 border border-outline-var/40 text-text-muted font-syne font-bold text-xs hover:text-text-primary transition-all rounded-xs uppercase tracking-wider"
+                className="flex-1 py-2.5 border border-outline-var/40 text-text-muted font-outfit font-semibold text-xs hover:text-text-primary transition-all rounded-lg"
               >
                 Back
               </button>
               <button
                 onClick={handleSubmit}
                 disabled={loading}
-                className="flex-1 py-2.5 bg-primary text-on-primary font-syne font-bold text-xs uppercase tracking-wider hover:opacity-90 transition-all rounded-xs disabled:opacity-40"
+                className="flex-1 py-2.5 bg-primary hover:bg-primary-dim text-on-primary font-outfit font-semibold text-xs rounded-lg transition-all disabled:opacity-40 shadow-xs"
               >
                 {loading ? 'Creating Squad...' : 'Deploy Squad Mission'}
               </button>
@@ -310,20 +310,20 @@ function SquadCard({ squad, currentUser }) {
   const visibleSlots = expandedRoles ? (squad.slots || []) : (squad.slots || []).slice(0, 2);
 
   return (
-    <div className="bg-surface border border-outline-var/20 hover:border-primary/40 rounded-md transition-all group relative overflow-hidden flex flex-col justify-between p-5 hover:shadow-xl">
-      <div className="space-y-4">
+    <div className="bg-surface border border-outline-var/25 hover:border-outline-var/50 rounded-xl transition-all group relative overflow-hidden flex flex-col justify-between p-5 shadow-xs hover:shadow-md font-outfit">
+      <div className="space-y-3.5">
         {/* Top Badges */}
         <div className="flex items-center justify-between gap-2">
           {squad.event && (
-            <span className={`px-2.5 py-0.5 rounded-full text-[9px] font-syne font-bold uppercase tracking-wider border ${eventStyle.bg} ${eventStyle.border} ${eventStyle.text}`}>
+            <span className={`px-2.5 py-0.5 rounded text-xs font-medium font-outfit border ${eventStyle.bg} ${eventStyle.border} ${eventStyle.text}`}>
               {squad.event}
             </span>
           )}
           <span
-            className={`px-2 py-0.5 rounded-full text-[9px] font-syne font-bold uppercase border ${
+            className={`px-2.5 py-0.5 rounded text-xs font-medium font-outfit border ${
               isFull
-                ? 'bg-outline-var/10 text-outline border-outline-var/20'
-                : 'bg-accent/10 text-accent border-accent/20'
+                ? 'bg-surface-mid text-text-muted border-outline-var/30'
+                : 'bg-accent-container/50 text-accent border-accent/20'
             }`}
           >
             {isFull ? 'Full' : 'Open'}
@@ -332,35 +332,35 @@ function SquadCard({ squad, currentUser }) {
 
         {/* Title & Description */}
         <div>
-          <h3 className="text-base font-bold text-text-primary group-hover:text-primary transition-colors line-clamp-1">
+          <h3 className="text-base font-semibold text-text-primary group-hover:text-primary transition-colors line-clamp-1 font-outfit">
             {squad.title}
           </h3>
-          <p className="text-xs text-text-muted mt-1 line-clamp-2 leading-relaxed">
+          <p className="text-xs text-text-muted mt-1 line-clamp-2 leading-relaxed font-outfit">
             {squad.description}
           </p>
         </div>
 
         {/* Slots preview */}
         {squad.slots && squad.slots.length > 0 && (
-          <div className="space-y-1.5 pt-2 border-t border-outline-var/15">
+          <div className="space-y-1.5 pt-2 border-t border-outline-var/15 font-outfit">
             <div className="flex items-center justify-between">
-              <span className="text-[10px] font-syne font-bold uppercase tracking-wider text-outline">
+              <span className="text-xs font-semibold uppercase tracking-wider text-text-muted">
                 Roles Needed ({squad.slots.length}):
               </span>
             </div>
-            <div className="space-y-1">
+            <div className="space-y-1.5">
               {visibleSlots.map((slot) => (
-                <div key={slot.id} className="flex items-center justify-between text-xs bg-surface-mid/60 px-2.5 py-1.5 rounded-xs border border-outline-var/20 gap-2">
+                <div key={slot.id} className="flex items-center justify-between text-xs bg-surface-mid/40 px-2.5 py-1.5 rounded border border-outline-var/20 gap-2 font-outfit">
                   <div className="flex items-center gap-1.5 min-w-0">
-                    <span className="font-medium text-text-primary text-[11px] truncate">{slot.roleTitle}</span>
+                    <span className="font-medium text-text-primary text-xs truncate font-outfit">{slot.roleTitle}</span>
                     {slot.requireVerified && (
-                      <span className="px-1.5 py-0.5 bg-primary/15 border border-primary/30 text-primary text-[8px] font-syne font-bold uppercase rounded-xs flex items-center gap-0.5 shrink-0" title="Requires Verified Skill Proof">
-                        <Shield size={8} /> Proof-Gated
+                      <span className="px-1.5 py-0.5 bg-accent-container/40 border border-accent/20 text-accent text-[10px] font-medium rounded shrink-0 font-outfit" title="Requires Verified Skill Proof">
+                        Verified Proof
                       </span>
                     )}
                   </div>
                   {slot.requiredSkill && (
-                    <span className="text-[10px] text-primary font-syne font-bold truncate">
+                    <span className="text-xs text-text-muted font-medium font-outfit truncate">
                       {slot.requiredSkill}
                     </span>
                   )}
@@ -370,10 +370,10 @@ function SquadCard({ squad, currentUser }) {
                 <button
                   type="button"
                   onClick={() => setExpandedRoles(!expandedRoles)}
-                  className="text-[10px] text-primary hover:text-secondary-bright font-syne font-bold flex items-center gap-1 mt-1 pl-1 transition-colors cursor-pointer"
+                  className="text-xs text-primary hover:underline font-medium flex items-center gap-1 mt-1 pl-0.5 transition-colors cursor-pointer font-outfit"
                 >
                   {expandedRoles ? 'Show less' : `+${squad.slots.length - 2} more roles`}
-                  <ChevronDown size={11} className={`transition-transform duration-200 ${expandedRoles ? 'rotate-180' : ''}`} />
+                  <ChevronDown size={12} className={`transition-transform duration-200 ${expandedRoles ? 'rotate-180' : ''}`} />
                 </button>
               )}
             </div>
@@ -381,7 +381,7 @@ function SquadCard({ squad, currentUser }) {
         )}
 
         {/* Leader & Member stats */}
-        <div className="flex items-center justify-between pt-2 border-t border-outline-var/15 text-xs text-text-muted">
+        <div className="flex items-center justify-between pt-2 border-t border-outline-var/15 text-xs text-text-muted font-outfit">
           <div className="flex items-center gap-2">
             <div className="w-5 h-5 rounded-full bg-surface-mid overflow-hidden border border-outline-var/30">
               {squad.leader?.avatar ? (
@@ -390,19 +390,19 @@ function SquadCard({ squad, currentUser }) {
                 <div className="w-full h-full bg-primary/20" />
               )}
             </div>
-            <span className="truncate max-w-[120px]">{squad.leader?.name}</span>
+            <span className="truncate max-w-[120px] font-outfit">{squad.leader?.name}</span>
           </div>
 
-          <div className="flex items-center gap-1 font-semibold text-text-primary">
-            <Users size={12} className="text-primary" />
+          <div className="flex items-center gap-1 font-medium text-text-primary font-outfit">
+            <Users size={12} className="text-text-muted" />
             <span>{squad.currentMembers}/{squad.maxMembers}</span>
           </div>
         </div>
 
         {/* Urgent Expiry warning */}
         {daysLeft !== null && daysLeft <= 3 && (
-          <div className="flex items-center gap-1.5 text-[10px] text-amber-400 font-syne font-bold">
-            <Clock size={11} /> Expires in {daysLeft} {daysLeft === 1 ? 'day' : 'days'}
+          <div className="flex items-center gap-1.5 text-xs text-warning font-medium font-outfit">
+            <Clock size={12} /> Expires in {daysLeft} {daysLeft === 1 ? 'day' : 'days'}
           </div>
         )}
       </div>
@@ -412,14 +412,14 @@ function SquadCard({ squad, currentUser }) {
         {isLeader ? (
           <button
             onClick={() => navigate(`/squad/${squad.id}/manage`)}
-            className="w-full py-2 bg-primary/10 hover:bg-primary text-primary hover:text-on-primary font-syne font-bold text-xs uppercase tracking-wider rounded-xs transition-all flex items-center justify-center gap-1.5"
+            className="w-full py-2 bg-primary/10 hover:bg-primary text-primary hover:text-on-primary font-outfit font-semibold text-xs rounded-md transition-all flex items-center justify-center gap-1.5"
           >
             Manage Squad
           </button>
         ) : (
           <button
             onClick={() => navigate(`/squad/${squad.id}`)}
-            className="w-full py-2 bg-surface-mid hover:bg-primary text-text-primary hover:text-on-primary border border-outline-var/30 hover:border-primary font-syne font-bold text-xs uppercase tracking-wider rounded-xs transition-all flex items-center justify-center gap-1.5"
+            className="w-full py-2 bg-surface hover:bg-primary text-text-primary hover:text-on-primary border border-outline-var/30 hover:border-primary font-outfit font-semibold text-xs rounded-md transition-all flex items-center justify-center gap-1.5 shadow-xs"
           >
             View Mission Details
           </button>
@@ -489,13 +489,10 @@ export default function MissionBoard({ user: propUser, onLogout }) {
         {/* Header */}
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-4 border-b border-outline-var/20">
           <div>
-            <div className="flex items-center gap-2">
-              <Sparkles className="text-primary" size={22} />
-              <h1 className="text-2xl font-syne font-extrabold text-text-primary tracking-tight">
-                Nexus Mission Board
-              </h1>
-            </div>
-            <p className="text-xs text-text-muted mt-1">
+            <h1 className="text-2xl font-bold font-syne text-text-primary tracking-tight">
+              Nexus Mission Board
+            </h1>
+            <p className="text-xs text-text-muted mt-1 font-outfit">
               Join high-impact teams for hackathons, startups, open source, and research initiatives.
             </p>
           </div>
@@ -503,7 +500,7 @@ export default function MissionBoard({ user: propUser, onLogout }) {
           <div className="flex items-center gap-3">
             <button
               onClick={() => setShowCreateModal(true)}
-              className="w-full sm:w-auto px-4 py-2 bg-primary text-on-primary hover:bg-secondary-bright font-syne font-bold text-xs uppercase tracking-wider rounded-xs transition-all flex items-center justify-center gap-1.5 shadow-md shadow-primary/20 cursor-pointer"
+              className="w-full sm:w-auto px-4 py-2 bg-primary hover:bg-primary-dim text-on-primary font-outfit font-semibold text-xs rounded-lg transition-all flex items-center justify-center gap-1.5 shadow-xs cursor-pointer"
             >
               <Plus size={14} /> Create Squad
             </button>
@@ -511,33 +508,31 @@ export default function MissionBoard({ user: propUser, onLogout }) {
         </div>
 
         {/* Unified Segmented Navigation */}
-        <div className="flex items-center gap-2 border-b border-outline-var/20 overflow-x-auto">
+        <div className="flex items-center gap-1 border-b border-outline-var/20 overflow-x-auto">
           <button
-            className="px-4 py-2.5 font-syne font-bold text-xs uppercase tracking-wider border-b-2 border-primary text-primary bg-primary/5 rounded-t-xs flex items-center gap-2 shrink-0"
+            className="px-4 py-2.5 font-outfit font-semibold text-xs border-b-2 border-primary text-primary flex items-center gap-2 shrink-0"
           >
-            <Sparkles size={14} />
             <span>Mission Feed</span>
           </button>
           <button
             onClick={() => navigate('/my-squads')}
-            className="px-4 py-2.5 font-syne font-bold text-xs uppercase tracking-wider border-b-2 border-transparent text-text-muted hover:text-text-primary hover:border-outline-var/50 transition-colors flex items-center gap-2 shrink-0 cursor-pointer"
+            className="px-4 py-2.5 font-outfit font-medium text-xs border-b-2 border-transparent text-text-muted hover:text-text-primary hover:border-outline-var/50 transition-colors flex items-center gap-2 shrink-0 cursor-pointer"
           >
-            <Shield size={14} />
             <span>My Squads & Applications</span>
           </button>
         </div>
 
         {/* Filter Bar */}
-        <div className="bg-surface border border-outline-var/20 rounded-md p-4 space-y-3">
+        <div className="bg-surface border border-outline-var/20 rounded-xl p-4 space-y-3 shadow-xs">
           <div className="grid grid-cols-1 md:grid-cols-12 gap-3">
             {/* Search Input */}
             <div className="md:col-span-8 relative">
-              <Search className="absolute left-3.5 top-3 text-outline" size={16} />
+              <Search className="absolute left-3.5 top-2.5 text-text-muted" size={15} />
               <input
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 placeholder="Search squads by title, description, or leader..."
-                className="w-full bg-surface-mid border border-outline-var/30 rounded-xs py-2 pl-10 pr-4 text-xs text-text-primary outline-none focus:border-primary/50 placeholder-outline-var font-outfit"
+                className="w-full bg-surface-mid border border-outline-var/30 rounded-lg py-2 pl-9 pr-4 text-xs text-text-primary outline-none focus:border-primary/50 placeholder-outline-var font-outfit"
               />
             </div>
 
@@ -547,14 +542,14 @@ export default function MissionBoard({ user: propUser, onLogout }) {
                 value={skillFilter}
                 onChange={(e) => setSkillFilter(e.target.value)}
                 placeholder="Filter by skill requirement..."
-                className="w-full bg-surface-mid border border-outline-var/30 rounded-xs py-2 px-3 text-xs text-text-primary outline-none focus:border-primary/50 placeholder-outline-var font-outfit"
+                className="w-full bg-surface-mid border border-outline-var/30 rounded-lg py-2 px-3 text-xs text-text-primary outline-none focus:border-primary/50 placeholder-outline-var font-outfit"
               />
             </div>
           </div>
 
           {/* Event Filter Pills */}
-          <div className="flex flex-wrap items-center gap-2 pt-2 border-t border-outline-var/15">
-            <span className="text-[10px] font-syne font-bold uppercase tracking-wider text-outline mr-1">
+          <div className="flex flex-wrap items-center gap-2 pt-2 border-t border-outline-var/15 font-outfit">
+            <span className="text-xs font-semibold text-text-muted mr-1">
               Category:
             </span>
             {[
@@ -568,9 +563,9 @@ export default function MissionBoard({ user: propUser, onLogout }) {
               <button
                 key={ev.id}
                 onClick={() => setEventFilter(ev.id)}
-                className={`px-3 py-1 rounded-xs font-syne text-[10px] font-bold uppercase tracking-wider transition-colors ${
+                className={`px-3 py-1 rounded-md font-outfit text-xs font-medium transition-colors ${
                   eventFilter === ev.id
-                    ? 'bg-primary text-on-primary'
+                    ? 'bg-primary text-on-primary font-semibold'
                     : 'bg-surface-mid text-text-muted hover:text-text-primary border border-outline-var/30'
                 }`}
               >
@@ -583,7 +578,7 @@ export default function MissionBoard({ user: propUser, onLogout }) {
         {/* Squad Cards Grid */}
         <div className="space-y-4">
           <div className="flex items-center justify-between">
-            <h2 className="text-sm font-syne font-bold uppercase tracking-wider text-text-primary">
+            <h2 className="text-sm font-semibold font-outfit text-text-primary">
               Active Squads {!loading && `(${squads.length})`}
             </h2>
           </div>
@@ -591,19 +586,19 @@ export default function MissionBoard({ user: propUser, onLogout }) {
           {loading ? (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
               {[1, 2, 3, 4, 5, 6].map((i) => (
-                <div key={i} className="h-60 bg-surface border border-outline-var/20 rounded-md animate-pulse p-6" />
+                <div key={i} className="h-60 bg-surface border border-outline-var/20 rounded-xl animate-pulse p-6" />
               ))}
             </div>
           ) : squads.length === 0 ? (
-            <div className="text-center py-20 bg-surface border border-dashed border-outline-var/30 rounded-md p-8">
-              <Shield size={44} className="mx-auto text-outline-var mb-3 opacity-40" />
-              <h3 className="text-base font-extrabold text-text-primary">No Squads Found</h3>
-              <p className="text-xs text-text-muted mt-1 max-w-sm mx-auto">
-                No active squads match your current filters. Be the pioneer and launch a new squad mission!
+            <div className="text-center py-20 bg-surface border border-dashed border-outline-var/30 rounded-xl p-8">
+              <Shield size={40} className="mx-auto text-outline-var mb-3 opacity-30" />
+              <h3 className="text-base font-bold text-text-primary font-syne">No Squads Found</h3>
+              <p className="text-xs text-text-muted mt-1 max-w-sm mx-auto font-outfit">
+                No active squads match your current filters. Launch a new mission squad!
               </p>
               <button
                 onClick={() => setShowCreateModal(true)}
-                className="mt-4 px-4 py-2 bg-primary text-on-primary font-syne font-bold text-xs uppercase tracking-wider rounded-xs hover:bg-secondary-bright transition-all"
+                className="mt-4 px-4 py-2 bg-primary hover:bg-primary-dim text-on-primary font-outfit font-semibold text-xs rounded-lg transition-all shadow-xs"
               >
                 Create Squad
               </button>
