@@ -6,7 +6,8 @@ import RoadmapAPI from '../features/roadmap/roadmapAPI';
 import {
   AlertTriangle, CheckCircle,
   Activity, Users, X, Brain, BarChart2, ShieldAlert,
-  ArrowRight, Search, ChevronDown, Sparkles, Filter, Check
+  ArrowRight, Search, ChevronDown, Sparkles, Filter, Check,
+  Target, Layers, Compass, Clock
 } from 'lucide-react';
 import Navbar from '../shared/components/Navbar';
 import SEOHead from '../shared/components/SEOHead';
@@ -307,31 +308,39 @@ export default function Dashboard({ user, onLogout }) {
       {/* Main Content Area — Edge-to-Edge Fluid with Sidebar Offset */}
       <main className="flex-1 md:ml-64 pt-20 md:pt-0 min-h-screen overflow-y-auto overflow-x-hidden">
         
-        {/* Top masthead */}
-        <div className="px-6 md:px-10 py-6 border-b-2 border-secondary">
-          <div className="flex justify-between items-baseline mb-1">
-            <span className="font-mono text-[10px] tracking-[0.08em] uppercase text-outline/60">
-              Skill Intelligence · Dashboard
-            </span>
-            <span className="font-mono text-[10px] tracking-[0.08em] uppercase text-outline/40">
-              {new Date().toISOString().split('T')[0]}
-            </span>
+        {/* Top Header */}
+        <div className="border-b border-outline-var/60 bg-surface px-6 md:px-10 py-6">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+            <div>
+              <div className="flex items-center gap-2 text-xs font-mono tracking-wider uppercase text-outline mb-1">
+                <span>Platform</span>
+                <span>/</span>
+                <span className="text-secondary font-semibold">Skill Intelligence</span>
+              </div>
+              <h1 className="text-2xl md:text-3xl font-extrabold text-secondary tracking-tight font-syne">
+                Skill Intelligence Dashboard
+              </h1>
+              <p className="text-text-muted text-sm mt-1 font-outfit max-w-2xl">
+                Evaluate role benchmarks, analyze skill gaps with precision diagnostics, and generate targeted roadmaps.
+              </p>
+            </div>
+            <div className="flex items-center gap-3">
+              <span className="font-mono text-xs text-outline px-3 py-1.5 rounded-md bg-surface-mid border border-outline-var/40">
+                {currentUser?.name || 'Engineer'} · {new Date().toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' })}
+              </span>
+            </div>
           </div>
-          <h1 className="text-2xl md:text-3xl font-extrabold tracking-tight font-syne">{currentUser?.name || 'Dashboard'}</h1>
-          <p className="text-text-muted text-sm mt-1 font-outfit max-w-2xl">
-            Evaluate your skill gaps, generate custom roadmaps, and connect with mentors.
-          </p>
         </div>
 
         {/* ── Mobile Segmented Tab Bar (Visible only on mobile screens < xl) ── */}
         <div className="px-6 pt-6 xl:hidden">
-          <div className="flex bg-surface-mid p-1 rounded-lg border border-outline-var/30 gap-1">
+          <div className="flex bg-surface p-1 rounded-lg border border-outline-var/60 gap-1 shadow-xs">
             <button
               onClick={() => setMobileTab('config')}
               className={`flex-1 py-2 rounded-md text-xs font-semibold font-outfit transition-all text-center ${
                 mobileTab === 'config'
-                  ? 'bg-surface text-text-primary shadow-sm border border-outline-var/30'
-                  : 'text-text-muted hover:text-text-primary'
+                  ? 'bg-secondary text-white shadow-xs'
+                  : 'text-text-muted hover:text-secondary'
               }`}
             >
               Target & Skills
@@ -340,8 +349,8 @@ export default function Dashboard({ user, onLogout }) {
               onClick={() => setMobileTab('diagnostics')}
               className={`flex-1 py-2 rounded-md text-xs font-semibold font-outfit transition-all flex items-center justify-center gap-1.5 ${
                 mobileTab === 'diagnostics'
-                  ? 'bg-surface text-text-primary shadow-sm border border-outline-var/30'
-                  : 'text-text-muted hover:text-text-primary'
+                  ? 'bg-secondary text-white shadow-xs'
+                  : 'text-text-muted hover:text-secondary'
               }`}
             >
               Diagnostics {analysis && <span className="w-1.5 h-1.5 rounded-full bg-accent" />}
@@ -350,8 +359,8 @@ export default function Dashboard({ user, onLogout }) {
               onClick={() => setMobileTab('feed')}
               className={`flex-1 py-2 rounded-md text-xs font-semibold font-outfit transition-all text-center ${
                 mobileTab === 'feed'
-                  ? 'bg-surface text-text-primary shadow-sm border border-outline-var/30'
-                  : 'text-text-muted hover:text-text-primary'
+                  ? 'bg-secondary text-white shadow-xs'
+                  : 'text-text-muted hover:text-secondary'
               }`}
             >
               Roadmaps
@@ -365,26 +374,31 @@ export default function Dashboard({ user, onLogout }) {
           {/* Left Column: Controls (Role + Skills) */}
           <div className={`xl:col-span-4 space-y-6 ${mobileTab !== 'config' ? 'hidden xl:block' : 'block'}`}>
             
-            {/* Target Role Selection */}
-            <div className="pb-5 border-b border-outline-var/30 relative" ref={roleDropdownRef}>
-              <h3 className="font-mono text-[10px] font-semibold uppercase tracking-[0.08em] text-outline/70 mb-3 flex items-center justify-between">
-                <span>01 · Target Role</span>
+            {/* Target Role Selection Card */}
+            <div className="bg-surface border border-outline-var/60 rounded-lg p-5 shadow-[0_1px_3px_rgba(0,0,0,0.04)] relative" ref={roleDropdownRef}>
+              <div className="flex items-center justify-between mb-3">
+                <div className="flex items-center gap-2">
+                  <Target size={14} className="text-secondary" />
+                  <h2 className="text-xs font-mono font-semibold uppercase tracking-wider text-secondary">
+                    Target Role
+                  </h2>
+                </div>
                 {selectedRole && (
                   <button 
                     onClick={() => setSelectedRole('')} 
-                    className="font-outfit text-xs text-text-muted hover:text-text-primary capitalize transition-colors normal-case tracking-normal"
+                    className="font-outfit text-xs text-text-muted hover:text-secondary transition-colors"
                   >
                     Clear
                   </button>
                 )}
-              </h3>
+              </div>
 
               <div className="relative">
                 <div className="relative flex items-center">
                   <Search size={15} className="absolute left-3.5 text-text-muted pointer-events-none" />
                   <input
                     type="text"
-                    className="w-full pl-10 pr-9 py-3 rounded-sm border border-outline-var/40 bg-surface-mid text-text-primary focus:border-primary/60 outline-none font-outfit text-sm transition-colors"
+                    className="w-full pl-10 pr-9 py-2.5 rounded-md border border-outline-var/50 bg-surface-mid/50 text-secondary placeholder:text-text-muted focus:bg-surface focus:border-secondary outline-none font-outfit text-sm transition-all"
                     placeholder="Search or select a target role..."
                     value={selectedRole}
                     onFocus={() => setIsRoleDropdownOpen(true)}
@@ -396,7 +410,7 @@ export default function Dashboard({ user, onLogout }) {
                   <button
                     type="button"
                     onClick={() => setIsRoleDropdownOpen(prev => !prev)}
-                    className="absolute right-3 text-text-muted hover:text-primary transition-colors p-1"
+                    className="absolute right-3 text-text-muted hover:text-secondary transition-colors p-1"
                   >
                     <ChevronDown size={16} className={`transition-transform duration-200 ${isRoleDropdownOpen ? 'rotate-180' : ''}`} />
                   </button>
@@ -409,11 +423,11 @@ export default function Dashboard({ user, onLogout }) {
                       initial={{ opacity: 0, y: 4 }}
                       animate={{ opacity: 1, y: 0 }}
                       exit={{ opacity: 0, y: 4 }}
-                      className="absolute z-50 left-0 right-0 mt-1 bg-surface border border-outline-var/40 rounded-sm shadow-lg overflow-hidden max-h-72 overflow-y-auto custom-scrollbar"
+                      className="absolute z-50 left-0 right-0 mt-1 bg-surface border border-outline-var/60 rounded-md shadow-xl overflow-hidden max-h-72 overflow-y-auto custom-scrollbar"
                     >
                       {/* Popular Role Chips */}
-                      <div className="p-3 border-b border-outline-var/20">
-                        <div className="font-mono text-[10px] tracking-[0.08em] uppercase text-outline/60 mb-2">
+                      <div className="p-3 border-b border-outline-var/40 bg-surface-mid/30">
+                        <div className="font-mono text-[10px] tracking-wider uppercase text-outline font-medium mb-2">
                           Popular Roles
                         </div>
                         <div className="flex flex-wrap gap-1.5">
@@ -425,10 +439,10 @@ export default function Dashboard({ user, onLogout }) {
                                 setSelectedRole(popRole);
                                 setIsRoleDropdownOpen(false);
                               }}
-                              className={`text-xs px-2.5 py-1 rounded-sm border transition-all font-outfit ${
+                              className={`text-xs px-2.5 py-1 rounded-md border transition-all font-outfit ${
                                 selectedRole === popRole
-                                  ? 'bg-primary text-on-primary border-primary font-semibold'
-                                  : 'bg-surface border-outline-var/30 text-text-muted hover:border-outline-var/60 hover:text-text-primary'
+                                  ? 'bg-secondary text-white border-secondary font-medium'
+                                  : 'bg-surface border-outline-var/50 text-text-secondary hover:border-secondary/60 hover:text-secondary'
                               }`}
                             >
                               {popRole}
@@ -439,7 +453,7 @@ export default function Dashboard({ user, onLogout }) {
 
                       {/* System Roles List */}
                       <div className="py-1">
-                        <div className="px-3 py-1.5 font-mono text-[10px] tracking-[0.08em] uppercase text-outline/60">
+                        <div className="px-3 py-1.5 font-mono text-[10px] tracking-wider uppercase text-outline font-medium">
                           All Roles
                         </div>
                         {roles
@@ -453,21 +467,21 @@ export default function Dashboard({ user, onLogout }) {
                               }}
                               className={`px-4 py-2 text-xs cursor-pointer flex items-center justify-between transition-colors font-outfit ${
                                 selectedRole === r.title
-                                  ? 'bg-primary/10 text-primary font-semibold'
+                                  ? 'bg-secondary/10 text-secondary font-semibold'
                                   : 'hover:bg-surface-mid text-text-primary'
                               }`}
                             >
                               <span>{r.title}</span>
-                              {selectedRole === r.title && <Check size={14} className="text-primary" />}
+                              {selectedRole === r.title && <Check size={14} className="text-secondary" />}
                             </div>
                           ))}
 
                         {selectedRole && !roles.some(r => r.title.toLowerCase() === selectedRole.toLowerCase()) && (
                           <div
                             onClick={() => setIsRoleDropdownOpen(false)}
-                            className="px-4 py-2.5 bg-surface-mid/60 text-xs text-text-primary font-medium flex items-center justify-between border-t border-outline-var/20 cursor-pointer hover:bg-surface-mid font-outfit"
+                            className="px-4 py-2.5 bg-surface-mid/60 text-xs text-secondary font-medium flex items-center justify-between border-t border-outline-var/40 cursor-pointer hover:bg-surface-mid font-outfit"
                           >
-                            <span>Use custom prompt: <strong>&ldquo;{selectedRole}&rdquo;</strong></span>
+                            <span>Use custom target: <strong>&ldquo;{selectedRole}&rdquo;</strong></span>
                           </div>
                         )}
                       </div>
@@ -477,25 +491,28 @@ export default function Dashboard({ user, onLogout }) {
               </div>
             </div>
 
-            {/* Skills Inventory */}
-            <div className="flex flex-col h-[420px]">
+            {/* Skills Inventory Card */}
+            <div className="bg-surface border border-outline-var/60 rounded-lg p-5 shadow-[0_1px_3px_rgba(0,0,0,0.04)] flex flex-col h-[520px]">
               
               {/* Header & Filter Controls */}
-              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-3">
-                <h3 className="font-mono text-[10px] font-semibold uppercase tracking-[0.08em] text-outline/70">
-                  02 · Skills Inventory
-                </h3>
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pb-3 mb-3 border-b border-outline-var/40">
+                <div className="flex items-center gap-2">
+                  <Layers size={14} className="text-secondary" />
+                  <h2 className="text-xs font-mono font-semibold uppercase tracking-wider text-secondary">
+                    Skills Inventory
+                  </h2>
+                </div>
 
                 {/* Filter Toggle Pills */}
                 {selectedRole ? (
-                  <div className="flex bg-surface-mid p-0.5 rounded-lg border border-outline-var/30 self-start sm:self-auto">
+                  <div className="flex bg-surface-mid p-0.5 rounded-md border border-outline-var/40 self-start sm:self-auto">
                     <button
                       type="button"
                       onClick={() => setInventoryFilter('role')}
-                      className={`text-xs font-outfit font-medium px-2.5 py-1 rounded-md transition-all ${
+                      className={`text-xs font-outfit font-medium px-2.5 py-1 rounded transition-all ${
                         inventoryFilter === 'role'
-                          ? 'bg-surface text-text-primary shadow-xs border border-outline-var/30'
-                          : 'text-text-muted hover:text-text-primary'
+                          ? 'bg-surface text-secondary shadow-xs font-semibold'
+                          : 'text-text-muted hover:text-secondary'
                       }`}
                       title="Show only skills relevant to selected role"
                     >
@@ -504,10 +521,10 @@ export default function Dashboard({ user, onLogout }) {
                     <button
                       type="button"
                       onClick={() => setInventoryFilter('all')}
-                      className={`text-xs font-outfit font-medium px-2.5 py-1 rounded-md transition-all ${
+                      className={`text-xs font-outfit font-medium px-2.5 py-1 rounded transition-all ${
                         inventoryFilter === 'all'
-                          ? 'bg-surface text-text-primary shadow-xs border border-outline-var/30'
-                          : 'text-text-muted hover:text-text-primary'
+                          ? 'bg-surface text-secondary shadow-xs font-semibold'
+                          : 'text-text-muted hover:text-secondary'
                       }`}
                       title="Show all skills in platform catalogue"
                     >
@@ -523,18 +540,18 @@ export default function Dashboard({ user, onLogout }) {
 
               {/* Mini Search Input for Fast Skill Filtering */}
               <div className="relative mb-3">
-                <Search size={12} className="absolute left-2.5 top-2.5 text-text-muted" />
+                <Search size={13} className="absolute left-2.5 top-2.5 text-text-muted" />
                 <input
                   type="text"
-                  placeholder="Filter inventory..."
+                  placeholder="Filter inventory skills..."
                   value={skillSearch}
                   onChange={(e) => setSkillSearch(e.target.value)}
-                  className="w-full pl-8 pr-3 py-1.5 text-xs rounded-md bg-surface-mid border border-outline-var/30 text-text-primary focus:border-primary/50 outline-none font-outfit"
+                  className="w-full pl-8 pr-7 py-1.5 text-xs rounded-md bg-surface-mid/60 border border-outline-var/40 text-secondary placeholder:text-text-muted focus:bg-surface focus:border-secondary outline-none font-outfit transition-all"
                 />
                 {skillSearch && (
                   <button
                     onClick={() => setSkillSearch('')}
-                    className="absolute right-2 top-2 text-text-muted hover:text-text-primary text-[10px]"
+                    className="absolute right-2 top-2 text-text-muted hover:text-secondary text-[10px]"
                   >
                     <X size={12} />
                   </button>
@@ -542,24 +559,24 @@ export default function Dashboard({ user, onLogout }) {
               </div>
 
               {/* Skill Checklist Container */}
-              <div className="flex-1 overflow-y-auto pr-2 space-y-1.5 custom-scrollbar">
+              <div className="flex-1 overflow-y-auto pr-1 space-y-1 custom-scrollbar">
                 {displayedSkills.length > 0 ? (
                   displayedSkills.map(skill => (
                     <div
                       key={skill.id}
                       onClick={() => toggleSkill(skill.id)}
-                      className={`flex items-center gap-3 py-2.5 px-1 cursor-pointer transition-all border-b border-outline-var/20 hover:bg-primary/[0.03] ${
+                      className={`flex items-center gap-3 py-2 px-2.5 rounded-md cursor-pointer transition-all border ${
                         mySkills.includes(skill.id)
-                          ? 'bg-primary/[0.04]'
-                          : ''
+                          ? 'bg-surface-mid/50 border-outline-var/60 text-secondary'
+                          : 'border-transparent hover:bg-surface-mid/40 text-text-secondary'
                       }`}
                     >
-                      <div className={`w-3.5 h-3.5 rounded-xs border flex items-center justify-center transition-colors flex-shrink-0 ${
-                        mySkills.includes(skill.id) ? 'bg-primary border-primary' : 'border-outline-var/50 bg-surface'
+                      <div className={`w-4 h-4 rounded-sm border flex items-center justify-center transition-colors flex-shrink-0 ${
+                        mySkills.includes(skill.id) ? 'bg-secondary border-secondary text-white' : 'border-outline-var/60 bg-surface'
                       }`}>
-                        {mySkills.includes(skill.id) && <Check size={10} className="text-on-primary" />}
+                        {mySkills.includes(skill.id) && <Check size={11} className="stroke-[3]" />}
                       </div>
-                      <span className={`text-sm select-none transition-colors flex-1 font-outfit ${mySkills.includes(skill.id) ? 'text-text-primary font-medium' : 'text-text-muted'}`}>
+                      <span className={`text-xs select-none transition-colors flex-1 font-outfit ${mySkills.includes(skill.id) ? 'text-secondary font-medium' : 'text-text-secondary'}`}>
                         {skill.name}
                       </span>
                       {(() => {
@@ -567,7 +584,7 @@ export default function Dashboard({ user, onLogout }) {
                         if (userSk && userSk.isVerified) {
                           const scoreText = userSk.calculatedScore != null ? `${userSk.calculatedScore}/10` : '';
                           return (
-                            <span className="font-mono text-[10px] tracking-[0.05em] uppercase text-accent whitespace-nowrap">
+                            <span className="font-mono text-[10px] tracking-wider uppercase text-accent font-semibold px-1.5 py-0.5 rounded bg-accent/10 whitespace-nowrap">
                               Verified{scoreText ? ` · ${scoreText}` : ''}
                             </span>
                           );
@@ -577,7 +594,7 @@ export default function Dashboard({ user, onLogout }) {
                             <button
                               type="button"
                               title="Self-Declared — click to verify" 
-                              className="text-xs text-text-muted hover:text-primary font-outfit font-medium px-2 py-0.5 rounded transition-colors" 
+                              className="text-xs text-text-muted hover:text-secondary font-outfit font-medium px-2 py-0.5 rounded hover:bg-surface transition-colors" 
                               onClick={(e) => { e.stopPropagation(); setVerifySkillModal(skill.name); }}
                             >
                               Verify
@@ -593,169 +610,185 @@ export default function Dashboard({ user, onLogout }) {
                     <p>No matching skills found for this role filter.</p>
                     <button
                       onClick={() => { setInventoryFilter('all'); setSkillSearch(''); }}
-                      className="text-primary text-xs font-outfit font-semibold hover:underline"
+                      className="text-secondary text-xs font-outfit font-semibold hover:underline"
                     >
                       Show All Catalog Skills
                     </button>
                   </div>
                 )}
               </div>
+
+              {/* Diagnostics Action Buttons */}
+              <div className="flex gap-2.5 pt-3 mt-3 border-t border-outline-var/40">
+                <button
+                  onClick={() => handleAnalyze(false)}
+                  disabled={analyzing}
+                  className="flex-1 min-h-[44px] py-2.5 rounded-md bg-secondary hover:bg-secondary-bright text-white font-outfit font-semibold text-sm transition-all active:scale-[0.99] disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 shadow-sm"
+                >
+                  {analyzing ? 'Analyzing...' : 'Run Diagnostics'}
+                </button>
+                <button
+                  onClick={() => handleAnalyze(true)}
+                  disabled={analyzing}
+                  title="Force regenerate role requirements using AI"
+                  className="w-12 min-h-[44px] rounded-md bg-surface border border-outline-var/60 text-text-muted hover:text-secondary hover:border-secondary transition-all flex items-center justify-center shadow-xs group"
+                >
+                  <Sparkles size={16} className="group-hover:rotate-12 transition-transform" />
+                </button>
+              </div>
             </div>
 
-            {/* Diagnostics Action Buttons */}
-            <div className="flex gap-2.5">
-              <button
-                onClick={() => handleAnalyze(false)}
-                disabled={analyzing}
-                className="flex-1 min-h-[46px] py-3 rounded-lg bg-primary hover:bg-primary-dim text-on-primary font-outfit font-semibold text-sm transition-all active:scale-[0.99] disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 shadow-xs"
-              >
-                {analyzing ? 'Analyzing...' : 'Run Diagnostics'}
-              </button>
-              <button
-                onClick={() => handleAnalyze(true)}
-                disabled={analyzing}
-                title="Force regenerate role requirements using AI"
-                className="w-12 min-h-[46px] rounded-lg bg-surface border border-outline-var/40 text-text-muted hover:text-text-primary hover:border-outline-var transition-all flex items-center justify-center shadow-xs group"
-              >
-                <Sparkles size={16} className="group-hover:rotate-12 transition-transform" />
-              </button>
-            </div>
           </div>
 
           {/* Right Column: Output + Activity */}
-          <div className={`xl:col-span-8 flex flex-col gap-8 ${mobileTab === 'config' ? 'hidden xl:flex' : 'flex'}`}>
+          <div className={`xl:col-span-8 flex flex-col gap-6 ${mobileTab === 'config' ? 'hidden xl:flex' : 'flex'}`}>
 
             {/* Analysis result canvas */}
             <div className={`flex-1 ${mobileTab === 'feed' ? 'hidden xl:block' : 'block'}`}>
               {analysis ? (
-                <div className="relative overflow-hidden h-full flex flex-col justify-center">
-                  {/* Section masthead */}
-                  <div className="border-t-2 border-secondary pt-3 pb-4 mb-6">
-                    <div className="flex justify-between items-baseline">
-                      <span className="font-mono text-[10px] tracking-[0.08em] uppercase text-outline/60">
-                        03 · Diagnostic Results
-                      </span>
-                      <span className="font-mono text-[10px] tracking-[0.08em] uppercase text-outline/40">
-                        Score: {analysis.score}%
+                <div className="bg-surface border border-outline-var/60 rounded-lg p-6 sm:p-8 shadow-[0_1px_3px_rgba(0,0,0,0.04)] relative">
+                  {/* Card Header */}
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-4 mb-6 border-b border-outline-var/40">
+                    <div className="flex items-center gap-2">
+                      <Compass size={16} className="text-secondary" />
+                      <h2 className="text-xs font-mono font-semibold uppercase tracking-wider text-secondary">
+                        Diagnostic Results
+                      </h2>
+                    </div>
+                    <div className="flex items-center gap-2 self-start sm:self-auto">
+                      <span className="font-mono text-xs uppercase tracking-wider px-3 py-1 rounded-full bg-secondary/5 text-secondary border border-secondary/20 font-semibold">
+                        Role Match: {analysis.score}%
                       </span>
                     </div>
                   </div>
 
-                  <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start relative z-10">
-                    <div className="lg:col-span-8">
-                      <h2 className="text-2xl md:text-3xl font-extrabold text-text-primary tracking-tight font-syne mb-6">{analysis.role}</h2>
+                  <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+                    <div className="lg:col-span-8 space-y-6">
+                      <div>
+                        <span className="text-xs font-mono tracking-wider uppercase text-outline">Target Benchmark</span>
+                        <h3 className="text-2xl md:text-3xl font-extrabold text-secondary tracking-tight font-syne mt-0.5">{analysis.role}</h3>
+                      </div>
                       
                       {analysis.diagnosticReport && (
-                        <div className="mb-6 py-4 border-t border-b border-outline-var/25">
-                          <h4 className="font-mono text-[10px] uppercase tracking-[0.08em] text-outline/60 mb-3">Assessment Summary</h4>
-                          <div className="text-sm text-text-primary space-y-2 [&_strong]:text-primary [&_li]:ml-4 [&_ul]:list-disc font-outfit leading-relaxed">
+                        <div className="p-4 rounded-md bg-surface-mid/40 border border-outline-var/40">
+                          <h4 className="font-mono text-[10px] uppercase tracking-wider font-semibold text-secondary mb-2">Assessment Summary</h4>
+                          <div className="text-sm text-text-primary space-y-2 [&_strong]:text-secondary [&_li]:ml-4 [&_ul]:list-disc font-outfit leading-relaxed">
                             <ReactMarkdown>{analysis.diagnosticReport}</ReactMarkdown>
                           </div>
                         </div>
                       )}
 
-                      <div className="font-mono text-[10px] uppercase tracking-[0.08em] text-outline/60 mb-3">
-                        Missing Skills
+                      <div>
+                        <div className="flex items-center justify-between mb-3">
+                          <h4 className="font-mono text-[10px] uppercase tracking-wider font-semibold text-secondary">
+                            Identified Skill Gaps ({analysis.missingSkills?.length || 0})
+                          </h4>
+                        </div>
+                        
+                        {analysis.missingSkills?.length > 0 ? (
+                          <div className="divide-y divide-outline-var/30 border border-outline-var/40 rounded-md overflow-hidden bg-surface">
+                            {analysis.missingSkills.map(s => (
+                              <div key={s.id} className="flex flex-col sm:flex-row sm:items-center justify-between py-3 px-3.5 hover:bg-surface-mid/30 transition-colors gap-2.5">
+                                <div className="flex items-center gap-2.5">
+                                  <div className="w-1.5 h-1.5 rounded-full bg-primary" />
+                                  <span className="font-outfit text-sm text-secondary font-medium">{s.name}</span>
+                                </div>
+                                <div className="flex items-center gap-2 shrink-0">
+                                  <button
+                                    onClick={() => handleGenerateRoadmap(s.name)}
+                                    className="px-3 py-1 rounded-md text-xs font-medium font-outfit bg-secondary text-white hover:bg-secondary-bright transition-all shadow-xs"
+                                  >
+                                    Roadmap
+                                  </button>
+                                  <button
+                                    onClick={() => setVerifySkillModal(s.name)}
+                                    className="px-2.5 py-1 rounded-md text-xs font-medium font-outfit text-text-secondary hover:text-secondary border border-outline-var/60 hover:border-secondary transition-all"
+                                  >
+                                    Verify
+                                  </button>
+                                  <button
+                                    onClick={() => handleFindMentors(s)}
+                                    className="px-2.5 py-1 rounded-md text-xs font-medium font-outfit text-text-secondary hover:text-secondary border border-outline-var/60 hover:border-secondary transition-all"
+                                  >
+                                    Mentors
+                                  </button>
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        ) : (
+                          <div className="p-4 rounded-md bg-accent/10 border border-accent/20 text-accent flex items-center gap-2.5 text-sm font-medium font-outfit">
+                            <CheckCircle size={16} /> You meet all technical requirements evaluated for this role benchmark.
+                          </div>
+                        )}
                       </div>
-                      
-                      {analysis.missingSkills?.length > 0 ? (
-                        <div className="space-y-0">
-                          {analysis.missingSkills.map(s => (
-                            <div key={s.id} className="flex flex-col sm:flex-row sm:items-center justify-between py-3 border-b border-outline-var/20 hover:bg-primary/[0.03] transition-colors gap-2 group">
-                              <div className="flex items-center gap-3">
-                                <span className="font-outfit text-sm text-text-primary font-medium">{s.name}</span>
-                                <span className="flex-1 hidden sm:block border-b border-dotted border-outline-var/30 min-w-[1rem] group-hover:border-primary/30 transition-colors" />
-                              </div>
-                              <div className="flex items-center gap-1.5 shrink-0">
-                                <button
-                                  onClick={() => handleGenerateRoadmap(s.name)}
-                                  className="px-2.5 py-1 rounded-sm text-xs font-medium font-outfit bg-primary/10 text-primary hover:bg-primary hover:text-on-primary transition-all"
-                                >
-                                  Roadmap
-                                </button>
-                                <button
-                                  onClick={() => setVerifySkillModal(s.name)}
-                                  className="px-2.5 py-1 rounded-sm text-xs font-medium font-outfit text-text-muted hover:text-text-primary border border-outline-var/20 transition-all"
-                                >
-                                  Verify
-                                </button>
-                                <button
-                                  onClick={() => handleFindMentors(s)}
-                                  className="px-2.5 py-1 rounded-sm text-xs font-medium font-outfit text-text-muted hover:text-text-primary border border-outline-var/20 transition-all"
-                                >
-                                  Mentors
-                                </button>
-                              </div>
-                            </div>
-                          ))}
-                        </div>
-                      ) : (
-                        <div className="text-accent flex items-center gap-2 text-sm font-medium py-4 border-b border-outline-var/20 font-outfit">
-                          <CheckCircle size={16} /> You meet all technical requirements for this role.
-                        </div>
-                      )}
                     </div>
 
-                    <div className="lg:col-span-4 flex flex-col items-center justify-center lg:border-l border-outline-var/20 lg:pl-6 h-full">
+                    <div className="lg:col-span-4 flex flex-col items-center justify-center lg:border-l border-outline-var/30 lg:pl-6 h-full py-4">
                       <RadarChart score={analysis.score} />
-                      <p className="font-mono text-[10px] tracking-[0.08em] uppercase text-outline/50 mt-2">Competency Match</p>
+                      <p className="font-mono text-[10px] tracking-wider uppercase text-outline font-medium mt-1">Competency Alignment</p>
                     </div>
                   </div>
                 </div>
               ) : (
-                <div className="h-full min-h-[320px] border-t-2 border-outline-var/20 pt-8 flex flex-col items-center justify-center text-outline-var space-y-4 text-center">
-                  <Activity size={32} className="opacity-15 text-text-muted" />
+                <div className="bg-surface border border-outline-var/60 rounded-lg p-10 shadow-[0_1px_3px_rgba(0,0,0,0.04)] min-h-[340px] flex flex-col items-center justify-center text-center space-y-3">
+                  <div className="w-12 h-12 rounded-full bg-surface-mid border border-outline-var/50 flex items-center justify-center text-outline">
+                    <Activity size={22} />
+                  </div>
                   <div>
-                    <p className="font-outfit text-sm font-semibold text-text-primary mb-1">Awaiting Input</p>
-                    <p className="text-text-muted text-xs max-w-sm font-outfit">Select a target role and check off your skills, then click <strong>Run Diagnostics</strong>.</p>
+                    <h3 className="font-syne text-base font-bold text-secondary mb-1">Awaiting Diagnostic Run</h3>
+                    <p className="text-text-muted text-xs max-w-sm font-outfit leading-relaxed">
+                      Select your target role and check off your current skills inventory, then click <strong>Run Diagnostics</strong> to generate your benchmark report.
+                    </p>
                   </div>
                 </div>
               )}
             </div>
 
-            {/* My Career Roadmaps panel */}
-            <div className={`${mobileTab === 'diagnostics' ? 'hidden xl:block' : 'block'} space-y-8`}>
+            {/* My Career Roadmaps & Platform Activity Cards */}
+            <div className={`${mobileTab === 'diagnostics' ? 'hidden xl:block' : 'block'} space-y-6`}>
               {savedRoadmaps.length > 0 && (
-                <div className="space-y-3">
-                  <div className="border-t-2 border-secondary pt-3 pb-2">
-                    <div className="flex justify-between items-baseline">
-                      <span className="font-mono text-[10px] tracking-[0.08em] uppercase text-outline/60">
-                        04 · Active Learning Roadmaps
-                      </span>
-                      <span className="font-mono text-[10px] tracking-[0.08em] uppercase text-outline/40">
-                        Total ({savedRoadmaps.length})
-                      </span>
+                <div className="bg-surface border border-outline-var/60 rounded-lg p-5 sm:p-6 shadow-[0_1px_3px_rgba(0,0,0,0.04)]">
+                  <div className="flex items-center justify-between pb-3 mb-3 border-b border-outline-var/40">
+                    <div className="flex items-center gap-2">
+                      <Brain size={14} className="text-secondary" />
+                      <h2 className="text-xs font-mono font-semibold uppercase tracking-wider text-secondary">
+                        Active Learning Roadmaps
+                      </h2>
                     </div>
+                    <span className="font-mono text-xs text-outline font-medium px-2 py-0.5 rounded bg-surface-mid border border-outline-var/30">
+                      {savedRoadmaps.length} Active
+                    </span>
                   </div>
 
-                  <div className="divide-y divide-outline-var/20 max-h-60 overflow-y-auto pr-1">
+                  <div className="divide-y divide-outline-var/30 max-h-64 overflow-y-auto pr-1 custom-scrollbar">
                     {savedRoadmaps.map((rm) => (
                       <div
                         key={rm.id}
                         onClick={() => navigate(`/roadmap/${rm.id}`)}
-                        className="py-3 px-1 cursor-pointer transition-colors flex items-center justify-between gap-4 group hover:bg-primary/[0.03]"
+                        className="py-3 px-2 cursor-pointer transition-colors flex items-center justify-between gap-4 group hover:bg-surface-mid/40 rounded-md"
                       >
                         <div className="space-y-1.5 min-w-0 flex-1">
                           <div className="flex items-center gap-2">
-                            <span className="text-sm font-semibold text-text-primary group-hover:text-primary transition-colors truncate font-outfit">
+                            <span className="text-sm font-semibold text-secondary group-hover:text-primary transition-colors truncate font-outfit">
                               {rm.targetSkill}
                             </span>
-                            <span className="font-mono text-[10px] uppercase tracking-wider text-primary border border-primary/25 px-1.5 py-0.2 rounded-xs">
+                            <span className="font-mono text-[10px] uppercase tracking-wider text-primary border border-primary/25 px-1.5 py-0.5 rounded">
                               {rm.targetRole}
                             </span>
                           </div>
                           <div className="flex items-center gap-3 text-xs text-text-muted font-outfit">
-                            <div className="w-28 h-1 bg-surface-high overflow-hidden rounded-none border border-outline-var/20">
+                            <div className="w-32 h-1.5 bg-surface-mid overflow-hidden rounded-full border border-outline-var/30">
                               <div
-                                className="h-full bg-accent"
+                                className="h-full bg-secondary rounded-full"
                                 style={{ width: `${rm.progress || 0}%` }}
                               />
                             </div>
-                            <span className="font-mono text-[10px] text-outline/60 tabular-nums">{rm.progress || 0}% complete</span>
+                            <span className="font-mono text-[10px] text-outline tabular-nums font-medium">{rm.progress || 0}% completed</span>
                           </div>
                         </div>
 
-                        <div className="flex items-center gap-1 text-primary text-xs font-medium font-outfit shrink-0 group-hover:translate-x-0.5 transition-transform">
+                        <div className="flex items-center gap-1 text-secondary text-xs font-medium font-outfit shrink-0 group-hover:translate-x-0.5 transition-transform">
                           <span>Continue</span>
                           <ArrowRight size={12} />
                         </div>
@@ -766,45 +799,46 @@ export default function Dashboard({ user, onLogout }) {
               )}
 
               {/* Activity feed panel */}
-              <div className="space-y-3">
-                <div className="border-t-2 border-secondary pt-3 pb-2">
-                  <div className="flex justify-between items-baseline">
-                    <span className="font-mono text-[10px] tracking-[0.08em] uppercase text-outline/60">
-                      05 · Network Activity Log
-                    </span>
-                    <span className="font-mono text-[10px] tracking-[0.08em] uppercase text-outline/40">
-                      Telemetry
-                    </span>
+              <div className="bg-surface border border-outline-var/60 rounded-lg p-5 sm:p-6 shadow-[0_1px_3px_rgba(0,0,0,0.04)]">
+                <div className="flex items-center justify-between pb-3 mb-3 border-b border-outline-var/40">
+                  <div className="flex items-center gap-2">
+                    <Clock size={14} className="text-secondary" />
+                    <h2 className="text-xs font-mono font-semibold uppercase tracking-wider text-secondary">
+                      Recent Activity
+                    </h2>
                   </div>
+                  <span className="font-mono text-[10px] tracking-wider uppercase text-outline">
+                    System Feed
+                  </span>
                 </div>
 
                 <div className="space-y-2 max-h-56 overflow-y-auto pr-2 custom-scrollbar">
                   {activities.length > 0
                     ? activities.map(log => (
-                      <div key={log.id} className="flex gap-3 text-sm border-l border-outline-var/30 pl-3 py-1.5 hover:border-primary/50 transition-colors font-outfit">
-                        <div className="text-text-muted min-w-[70px] font-mono text-[10px] text-outline/60 pt-0.5 tabular-nums">
+                      <div key={log.id} className="flex gap-3 text-sm border-l-2 border-outline-var/40 pl-3 py-1.5 hover:border-secondary transition-colors font-outfit">
+                        <div className="text-text-muted min-w-[70px] font-mono text-[10px] text-outline pt-0.5 tabular-nums">
                           {new Date(log.createdAt).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}
                         </div>
                         <div className="flex-1 min-w-0">
                           {(() => {
                             const labels = {
                               ACQUIRED_SKILL:  { text: 'Skill Verified',   color: 'text-accent' },
-                              DIAGNOSTIC_RUN:  { text: 'Diagnostics Run',  color: 'text-primary' },
-                              POST_CREATED:    { text: 'Post Published',   color: 'text-primary' },
+                              DIAGNOSTIC_RUN:  { text: 'Diagnostics Run',  color: 'text-secondary font-semibold' },
+                              POST_CREATED:    { text: 'Post Published',   color: 'text-secondary font-semibold' },
                               POST_DELETED:    { text: 'Post Removed',     color: 'text-error' },
                               USER_LOGIN:      { text: 'System Access',    color: 'text-text-muted' },
                               USER_LOGOUT:     { text: 'Session Ended',    color: 'text-text-muted' },
-                              PROFILE_UPDATED: { text: 'Profile Sync',     color: 'text-secondary' },
-                              ACCOUNT_CREATED: { text: 'Node Created',     color: 'text-accent' },
+                              PROFILE_UPDATED: { text: 'Profile Sync',     color: 'text-primary' },
+                              ACCOUNT_CREATED: { text: 'Account Created',  color: 'text-accent' },
                             };
-                            const l = labels[log.action] || { text: log.action, color: 'text-primary' };
+                            const l = labels[log.action] || { text: log.action, color: 'text-secondary font-semibold' };
                             return <span className={`${l.color} font-mono text-[10px] font-semibold uppercase tracking-wider`}>{l.text}</span>;
                           })()}
                           <div className="text-text-muted text-xs mt-0.5 font-outfit truncate">{log.details}</div>
                         </div>
                       </div>
                     ))
-                    : <div className="text-text-muted text-xs italic font-outfit py-2">No recent activity logged in the network.</div>}
+                    : <div className="text-text-muted text-xs italic font-outfit py-2">No recent activity recorded.</div>}
                 </div>
               </div>
             </div>
@@ -822,51 +856,51 @@ export default function Dashboard({ user, onLogout }) {
               animate={{ x: 0 }}
               exit={{ x: '100%' }}
               transition={{ type: 'spring', damping: 28, stiffness: 260 }}
-              className="bg-bg-base border-l border-outline-var/40 w-full max-w-md h-full flex flex-col shadow-2xl relative font-outfit"
+              className="bg-surface border-l border-outline-var/60 w-full max-w-md h-full flex flex-col shadow-2xl relative font-outfit"
             >
-              <div className="p-6 border-b-2 border-secondary flex justify-between items-center bg-surface-mid">
+              <div className="p-6 border-b border-outline-var/60 flex justify-between items-center bg-surface-mid/40">
                 <div>
-                  <p className="font-mono text-[10px] font-semibold uppercase tracking-[0.08em] text-outline/60 mb-1">Mentorship Directory</p>
-                  <h3 className="text-xl font-bold text-text-primary tracking-tight font-syne">
+                  <p className="font-mono text-[10px] font-semibold uppercase tracking-wider text-outline mb-1">Mentor Directory</p>
+                  <h3 className="text-xl font-bold text-secondary tracking-tight font-syne">
                     {selectedMissingSkill.name}
                   </h3>
                 </div>
                 <button
                   onClick={() => setSelectedMissingSkill(null)}
-                  className="w-7 h-7 rounded-xs border border-outline-var/40 flex items-center justify-center text-text-muted hover:border-outline-var hover:text-text-primary transition-colors text-xs font-mono"
+                  className="w-7 h-7 rounded-md border border-outline-var/60 flex items-center justify-center text-text-muted hover:border-secondary hover:text-secondary transition-colors text-xs font-mono"
                 >
                   ✕
                 </button>
               </div>
               
-              <div className="flex-1 overflow-y-auto p-6 space-y-1">
+              <div className="flex-1 overflow-y-auto p-6 space-y-2.5 custom-scrollbar">
                 {loadingMentors ? (
-                  <div className="flex flex-col items-center justify-center h-40 text-primary space-y-3">
-                    <div className="w-6 h-6 border-2 border-primary/20 border-t-primary rounded-full animate-spin" />
-                    <span className="font-mono text-[10px] uppercase tracking-[0.08em] text-text-muted">Scanning Network...</span>
+                  <div className="flex flex-col items-center justify-center h-40 text-secondary space-y-3">
+                    <div className="w-6 h-6 border-2 border-secondary/20 border-t-secondary rounded-full animate-spin" />
+                    <span className="font-mono text-[10px] uppercase tracking-wider text-text-muted">Scanning Peer Network...</span>
                   </div>
                 ) : mentors.length > 0 ? (
                   mentors.map(mentor => (
-                    <div key={mentor.id} className="border-b border-outline-var/25 py-3 px-1 flex items-center justify-between hover:bg-primary/[0.03] transition-colors group">
+                    <div key={mentor.id} className="border border-outline-var/50 rounded-md p-3.5 flex items-center justify-between hover:bg-surface-mid/30 transition-colors group">
                       <div className="flex items-center gap-3">
-                        <div className="w-8 h-8 rounded-xs bg-surface-mid border border-outline-var/30 flex items-center justify-center text-primary font-mono font-semibold text-xs">
+                        <div className="w-9 h-9 rounded-md bg-surface-mid border border-outline-var/40 flex items-center justify-center text-secondary font-mono font-semibold text-xs">
                           {mentor.name?.charAt(0)}
                         </div>
                         <div>
-                          <div className="text-text-primary font-medium text-sm font-outfit">{mentor.name}</div>
+                          <div className="text-secondary font-medium text-sm font-outfit">{mentor.name}</div>
                           <div className="font-mono text-[10px] text-text-muted uppercase tracking-wider">{mentor.role || 'Member'}</div>
                         </div>
                       </div>
                       <button
                         onClick={() => navigate(`/profile/${mentor.id}`)}
-                        className="px-2.5 py-1 text-primary text-xs border border-primary/30 rounded-xs hover:bg-primary hover:text-on-primary transition-all font-mono tracking-wider uppercase text-[10px]"
+                        className="px-3 py-1.5 text-white bg-secondary hover:bg-secondary-bright text-xs rounded-md transition-all font-outfit font-medium shadow-xs"
                       >
                         Profile
                       </button>
                     </div>
                   ))
                 ) : (
-                  <div className="text-center p-8 border border-outline-var/20 rounded-xs bg-surface-mid/40">
+                  <div className="text-center p-8 border border-outline-var/40 rounded-md bg-surface-mid/30">
                     <div className="text-text-muted text-xs font-medium font-outfit">No active mentors found for this competency.</div>
                   </div>
                 )}
