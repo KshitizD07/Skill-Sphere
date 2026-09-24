@@ -124,15 +124,15 @@ export default function FeedbackPage({ user: propUser, onLogout }) {
         {/* ── Page Header ── */}
         <div className="mb-8 text-center md:text-left">
           <div className="flex flex-wrap items-center justify-center md:justify-start gap-2 mb-2.5">
-            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-xs bg-[#F5F3FF] border border-[#DDD6FE] text-[#6D28D9] text-[10px] font-syne font-bold uppercase tracking-wider">
-              <HeartHandshake size={13} />
+            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-xs bg-surface border border-outline-var/40 text-text-primary text-[10px] font-syne font-bold uppercase tracking-wider">
+              <HeartHandshake size={13} className="text-primary" />
               <span>Developer Direct Line</span>
             </div>
-            <span className="inline-flex items-center gap-1 px-3 py-1 rounded-xs text-[10px] font-syne font-bold tracking-wider uppercase text-[#6D28D9] bg-[#F5F3FF] border border-[#DDD6FE]/80">
-              ✦ For the students, built by students
+            <span className="inline-flex items-center gap-1 px-3 py-1 rounded-xs text-[10px] font-syne font-bold tracking-wider uppercase text-text-muted bg-surface-mid border border-outline-var/30">
+              ✦ Built for developers, shaped by you
             </span>
           </div>
-          <h1 className="text-2xl sm:text-3xl md:text-4xl font-syne font-extrabold text-text-primary tracking-tight">
+          <h1 className="text-2xl sm:text-3xl md:text-4xl font-syne font-bold text-text-primary tracking-tight">
             Help Us Shape <span className="text-primary">SkillSphere</span>
           </h1>
           <p className="text-xs sm:text-sm text-text-muted mt-1.5 max-w-xl leading-relaxed">
@@ -148,23 +148,23 @@ export default function FeedbackPage({ user: propUser, onLogout }) {
               initial={{ opacity: 0, scale: 0.95 }}
               animate={{ opacity: 1, scale: 1 }}
               exit={{ opacity: 0, scale: 0.95 }}
-              className="bg-surface border border-outline-var/40 rounded-xl p-8 sm:p-12 text-center shadow-warm max-w-2xl mx-auto"
+              className="bg-surface border border-outline-var/60 rounded-md p-8 sm:p-12 text-center shadow-[0_1px_3px_rgba(0,0,0,0.04)] max-w-2xl mx-auto"
             >
-              <div className="w-16 h-16 rounded-full bg-[#F5F3FF] border border-[#DDD6FE] text-[#6D28D9] flex items-center justify-center mx-auto mb-5 shadow-inner">
+              <div className="w-16 h-16 rounded-full bg-accent/10 border border-accent/30 text-accent flex items-center justify-center mx-auto mb-5 shadow-inner">
                 <CheckCircle2 size={32} />
               </div>
-              <h2 className="text-xl sm:text-2xl font-syne font-extrabold text-text-primary tracking-tight">
+              <h2 className="text-xl sm:text-2xl font-syne font-bold text-text-primary tracking-tight">
                 Feedback Received!
               </h2>
               <p className="text-xs sm:text-sm text-text-muted mt-2 max-w-md mx-auto leading-relaxed">
-                Thank you, <strong className="text-text-primary">{currentUser.name || 'Engineer'}</strong>. Your insights have been dispatched straight to our inbox. We read every submission.
+                Thank you, <strong className="text-text-primary">{currentUser.name || 'Engineer'}</strong>. Your insights have been delivered directly to our team. We review every submission.
               </p>
 
               <div className="mt-8 flex flex-col sm:flex-row items-center justify-center gap-3">
                 <button
                   type="button"
                   onClick={() => navigate('/dashboard')}
-                  className="w-full sm:w-auto px-6 py-3 bg-primary text-on-primary font-syne font-bold text-xs uppercase tracking-wider rounded-xs hover:bg-secondary-bright transition-all shadow-md active:scale-95 flex items-center justify-center gap-2 cursor-pointer"
+                  className="w-full sm:w-auto px-6 py-3 bg-secondary text-white font-syne font-bold text-xs uppercase tracking-wider rounded-xs hover:bg-secondary-bright transition-all shadow-xs flex items-center justify-center gap-2 cursor-pointer"
                 >
                   Return to Dashboard <ArrowRight size={14} />
                 </button>
@@ -172,7 +172,7 @@ export default function FeedbackPage({ user: propUser, onLogout }) {
                   href={`mailto:kshitizd171@gmail.com,kshitizd777@gmail.com?subject=${encodeURIComponent(`[SkillSphere Feedback] from ${currentUser.name || 'User'}`)}&body=${encodeURIComponent(
                     `Name: ${currentUser.name || 'Anonymous'}\nEmail: ${currentUser.email || ''}\nCollege: ${currentUser.college || 'N/A'}\nRating: ${rating}/5\nCategory: ${category}\n\nFeedback:\n${feedback}\n\nMost Valuable: ${mostValuable}\nBuild Next: ${improvement}\nContributor Interest: ${wantsToContribute ? 'YES' : 'No'}\nSkills: ${contributorAreas.join(', ')}\nContact: ${contributorContact}`
                   )}`}
-                  className="w-full sm:w-auto px-5 py-3 bg-[#F5F3FF] border border-[#DDD6FE] text-[#6D28D9] font-syne font-bold text-xs uppercase tracking-wider rounded-xs hover:bg-[#EDE9FE] transition-colors flex items-center justify-center gap-2"
+                  className="w-full sm:w-auto px-5 py-3 bg-surface border border-outline-var/40 text-text-primary font-syne font-bold text-xs uppercase tracking-wider rounded-xs hover:bg-surface-mid transition-colors flex items-center justify-center gap-2"
                 >
                   <Mail size={14} /> Direct Mail Client (Optional)
                 </a>
@@ -192,12 +192,12 @@ export default function FeedbackPage({ user: propUser, onLogout }) {
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -10 }}
               onSubmit={handleSubmit}
-              className="bg-surface border border-outline-var/30 rounded-xl p-5 sm:p-8 shadow-warm space-y-7"
+              className="bg-surface border border-outline-var/60 rounded-md p-5 sm:p-8 shadow-[0_1px_3px_rgba(0,0,0,0.04)] space-y-7"
             >
               {/* ── 1. Verified User Info Badge ── */}
-              <div className="p-4 rounded-lg bg-surface-mid border border-outline-var/25 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+              <div className="p-4 rounded-xs bg-surface-mid/80 border border-outline-var/30 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                 <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-full bg-surface border border-primary/20 flex items-center justify-center shrink-0 overflow-hidden">
+                  <div className="w-10 h-10 rounded-full bg-surface border border-outline-var/40 flex items-center justify-center shrink-0 overflow-hidden">
                     {currentUser.avatar ? (
                       <img src={currentUser.avatar} alt={currentUser.name || 'User'} className="w-full h-full object-cover" />
                     ) : (
@@ -207,7 +207,7 @@ export default function FeedbackPage({ user: propUser, onLogout }) {
                   <div>
                     <div className="flex items-center gap-2">
                       <span className="font-bold text-sm text-text-primary">{currentUser.name || 'Anonymous'}</span>
-                      <span className="px-2 py-0.5 rounded-xs bg-accent/10 border border-accent/20 text-accent text-[9px] font-syne font-bold uppercase">
+                      <span className="px-2 py-0.5 rounded-xs bg-accent/10 border border-accent/30 text-accent text-[9px] font-syne font-bold uppercase">
                         {currentUser.role || 'STUDENT'}
                       </span>
                     </div>
@@ -223,7 +223,7 @@ export default function FeedbackPage({ user: propUser, onLogout }) {
                     </div>
                   </div>
                 </div>
-                <span className="text-[10px] text-outline font-syne uppercase tracking-wider self-start sm:self-center">
+                <span className="text-[10px] text-outline font-syne uppercase tracking-wider self-start sm:self-center font-bold">
                   Verified Account
                 </span>
               </div>
@@ -243,8 +243,8 @@ export default function FeedbackPage({ user: propUser, onLogout }) {
                         onClick={() => setCategory(cat.id)}
                         className={`px-3.5 py-2 rounded-xs text-xs font-syne font-bold uppercase tracking-wider transition-all cursor-pointer min-h-[38px] flex items-center ${
                           isSelected
-                            ? 'bg-[#6D28D9] text-white shadow-sm border border-[#5B21B6]'
-                            : 'bg-surface-mid text-text-muted hover:text-text-primary border border-outline-var/30 hover:border-outline-var/60'
+                            ? 'bg-secondary text-white shadow-xs border border-secondary'
+                            : 'bg-surface-mid text-text-muted hover:text-text-primary border border-outline-var/40 hover:border-outline-var/60'
                         }`}
                       >
                         {cat.label}
@@ -416,7 +416,7 @@ export default function FeedbackPage({ user: propUser, onLogout }) {
                 <button
                   type="submit"
                   disabled={submitting || feedback.trim().length < 5}
-                  className="w-full sm:w-auto min-h-[44px] px-8 py-2.5 bg-primary text-on-primary hover:bg-secondary-bright font-syne font-bold text-xs uppercase tracking-wider rounded-xs transition-all shadow-md active:scale-95 disabled:opacity-40 disabled:cursor-not-allowed flex items-center justify-center gap-2 cursor-pointer shrink-0"
+                  className="w-full sm:w-auto min-h-[44px] px-8 py-2.5 bg-secondary text-white hover:bg-secondary-bright font-syne font-bold text-xs uppercase tracking-wider rounded-xs transition-all shadow-xs disabled:opacity-40 disabled:cursor-not-allowed flex items-center justify-center gap-2 cursor-pointer shrink-0"
                 >
                   {submitting ? (
                     <>
