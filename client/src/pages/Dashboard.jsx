@@ -307,11 +307,19 @@ export default function Dashboard({ user, onLogout }) {
       {/* Main Content Area — Edge-to-Edge Fluid with Sidebar Offset */}
       <main className="flex-1 md:ml-64 pt-20 md:pt-0 min-h-screen overflow-y-auto overflow-x-hidden">
         
-        {/* Top welcome section */}
-        <div className="px-6 md:px-10 py-8 border-b border-outline-var/20 bg-surface/30">
-          <h1 className="text-3xl font-extrabold tracking-tight mb-2">Dashboard Overview</h1>
-          <p className="text-text-muted text-sm max-w-2xl">
-            Evaluate your skill gaps, generate custom roadmaps, and connect with mentors in your target field.
+        {/* Top masthead */}
+        <div className="px-6 md:px-10 py-6 border-b-2 border-secondary">
+          <div className="flex justify-between items-baseline mb-1">
+            <span className="font-mono text-[10px] tracking-[0.08em] uppercase text-outline/60">
+              Skill Intelligence · Dashboard
+            </span>
+            <span className="font-mono text-[10px] tracking-[0.08em] uppercase text-outline/40">
+              {new Date().toISOString().split('T')[0]}
+            </span>
+          </div>
+          <h1 className="text-2xl md:text-3xl font-extrabold tracking-tight font-syne">{currentUser?.name || 'Dashboard'}</h1>
+          <p className="text-text-muted text-sm mt-1 font-outfit max-w-2xl">
+            Evaluate your skill gaps, generate custom roadmaps, and connect with mentors.
           </p>
         </div>
 
@@ -357,14 +365,14 @@ export default function Dashboard({ user, onLogout }) {
           {/* Left Column: Controls (Role + Skills) */}
           <div className={`xl:col-span-4 space-y-6 ${mobileTab !== 'config' ? 'hidden xl:block' : 'block'}`}>
             
-            {/* Custom Searchable Combobox Dropdown Panel */}
-            <div className="bg-surface border border-outline-var/30 rounded-xl p-6 shadow-sm relative" ref={roleDropdownRef}>
-              <h3 className="font-outfit text-xs font-semibold uppercase tracking-wider text-text-muted mb-3 flex items-center justify-between">
-                <span>Target Role</span>
+            {/* Target Role Selection */}
+            <div className="pb-5 border-b border-outline-var/30 relative" ref={roleDropdownRef}>
+              <h3 className="font-mono text-[10px] font-semibold uppercase tracking-[0.08em] text-outline/70 mb-3 flex items-center justify-between">
+                <span>01 · Target Role</span>
                 {selectedRole && (
                   <button 
                     onClick={() => setSelectedRole('')} 
-                    className="text-text-muted hover:text-text-primary text-xs capitalize flex items-center gap-1 transition-colors"
+                    className="font-outfit text-xs text-text-muted hover:text-text-primary capitalize transition-colors normal-case tracking-normal"
                   >
                     Clear
                   </button>
@@ -376,7 +384,7 @@ export default function Dashboard({ user, onLogout }) {
                   <Search size={15} className="absolute left-3.5 text-text-muted pointer-events-none" />
                   <input
                     type="text"
-                    className="w-full pl-10 pr-9 py-3 rounded-lg border border-outline-var/40 bg-surface-mid text-text-primary focus:border-primary/60 outline-none font-outfit text-sm transition-colors"
+                    className="w-full pl-10 pr-9 py-3 rounded-sm border border-outline-var/40 bg-surface-mid text-text-primary focus:border-primary/60 outline-none font-outfit text-sm transition-colors"
                     placeholder="Search or select a target role..."
                     value={selectedRole}
                     onFocus={() => setIsRoleDropdownOpen(true)}
@@ -401,11 +409,11 @@ export default function Dashboard({ user, onLogout }) {
                       initial={{ opacity: 0, y: 4 }}
                       animate={{ opacity: 1, y: 0 }}
                       exit={{ opacity: 0, y: 4 }}
-                      className="absolute z-50 left-0 right-0 mt-2 bg-surface border border-outline-var/40 rounded-xl shadow-xl overflow-hidden max-h-72 overflow-y-auto custom-scrollbar"
+                      className="absolute z-50 left-0 right-0 mt-1 bg-surface border border-outline-var/40 rounded-sm shadow-lg overflow-hidden max-h-72 overflow-y-auto custom-scrollbar"
                     >
                       {/* Popular Role Chips */}
-                      <div className="p-3 border-b border-outline-var/20 bg-surface-mid/50">
-                        <div className="text-xs font-semibold text-text-muted mb-2 font-outfit">
+                      <div className="p-3 border-b border-outline-var/20">
+                        <div className="font-mono text-[10px] tracking-[0.08em] uppercase text-outline/60 mb-2">
                           Popular Roles
                         </div>
                         <div className="flex flex-wrap gap-1.5">
@@ -417,7 +425,7 @@ export default function Dashboard({ user, onLogout }) {
                                 setSelectedRole(popRole);
                                 setIsRoleDropdownOpen(false);
                               }}
-                              className={`text-xs px-2.5 py-1 rounded-md border transition-all font-outfit ${
+                              className={`text-xs px-2.5 py-1 rounded-sm border transition-all font-outfit ${
                                 selectedRole === popRole
                                   ? 'bg-primary text-on-primary border-primary font-semibold'
                                   : 'bg-surface border-outline-var/30 text-text-muted hover:border-outline-var/60 hover:text-text-primary'
@@ -431,8 +439,8 @@ export default function Dashboard({ user, onLogout }) {
 
                       {/* System Roles List */}
                       <div className="py-1">
-                        <div className="px-3 py-1.5 text-xs font-semibold text-text-muted font-outfit">
-                          All Catalog Roles
+                        <div className="px-3 py-1.5 font-mono text-[10px] tracking-[0.08em] uppercase text-outline/60">
+                          All Roles
                         </div>
                         {roles
                           .filter(r => !selectedRole || r.title.toLowerCase().includes(selectedRole.toLowerCase()))
@@ -469,13 +477,13 @@ export default function Dashboard({ user, onLogout }) {
               </div>
             </div>
 
-            {/* Role-Filtered Skill Checklist Panel */}
-            <div className="bg-surface border border-outline-var/30 rounded-xl p-6 shadow-sm flex flex-col h-[420px]">
+            {/* Skills Inventory */}
+            <div className="flex flex-col h-[420px]">
               
               {/* Header & Filter Controls */}
               <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-3">
-                <h3 className="font-outfit text-xs font-semibold uppercase tracking-wider text-text-muted">
-                  Skills Inventory
+                <h3 className="font-mono text-[10px] font-semibold uppercase tracking-[0.08em] text-outline/70">
+                  02 · Skills Inventory
                 </h3>
 
                 {/* Filter Toggle Pills */}
@@ -540,30 +548,27 @@ export default function Dashboard({ user, onLogout }) {
                     <div
                       key={skill.id}
                       onClick={() => toggleSkill(skill.id)}
-                      className={`flex items-center gap-3 p-2.5 rounded-lg cursor-pointer transition-all border ${
+                      className={`flex items-center gap-3 py-2.5 px-1 cursor-pointer transition-all border-b border-outline-var/20 hover:bg-primary/[0.03] ${
                         mySkills.includes(skill.id)
-                          ? 'bg-primary/10 border-primary/30'
-                          : 'hover:bg-surface-mid border-transparent hover:border-outline-var/20'
+                          ? 'bg-primary/[0.04]'
+                          : ''
                       }`}
                     >
-                      <div className={`w-4 h-4 rounded border flex items-center justify-center transition-colors flex-shrink-0 ${
+                      <div className={`w-3.5 h-3.5 rounded-xs border flex items-center justify-center transition-colors flex-shrink-0 ${
                         mySkills.includes(skill.id) ? 'bg-primary border-primary' : 'border-outline-var/50 bg-surface'
                       }`}>
-                        {mySkills.includes(skill.id) && <Check size={12} className="text-on-primary" />}
+                        {mySkills.includes(skill.id) && <Check size={10} className="text-on-primary" />}
                       </div>
-                      <span className={`text-sm select-none transition-colors flex-1 ${mySkills.includes(skill.id) ? 'text-text-primary font-medium' : 'text-text-muted'}`}>
+                      <span className={`text-sm select-none transition-colors flex-1 font-outfit ${mySkills.includes(skill.id) ? 'text-text-primary font-medium' : 'text-text-muted'}`}>
                         {skill.name}
                       </span>
                       {(() => {
                         const userSk = userSkillsData.find(s => s.name.toLowerCase() === skill.name.toLowerCase());
                         if (userSk && userSk.isVerified) {
-                          const scoreText = userSk.calculatedScore != null ? `${userSk.calculatedScore}/10` : 'Verified';
+                          const scoreText = userSk.calculatedScore != null ? `${userSk.calculatedScore}/10` : '';
                           return (
-                            <span 
-                              title={`Verified Score: ${scoreText}`} 
-                              className="text-xs text-accent font-outfit font-medium bg-accent-container/50 border border-accent/25 px-2 py-0.5 rounded"
-                            >
-                              Verified · {scoreText}
+                            <span className="font-mono text-[10px] tracking-[0.05em] uppercase text-accent whitespace-nowrap">
+                              Verified{scoreText ? ` · ${scoreText}` : ''}
                             </span>
                           );
                         }
