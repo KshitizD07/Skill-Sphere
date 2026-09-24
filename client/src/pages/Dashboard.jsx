@@ -628,46 +628,60 @@ export default function Dashboard({ user, onLogout }) {
             {/* Analysis result canvas */}
             <div className={`flex-1 ${mobileTab === 'feed' ? 'hidden xl:block' : 'block'}`}>
               {analysis ? (
-                <div className="bg-surface border border-outline-var/30 rounded-xl p-6 md:p-8 relative overflow-hidden shadow-sm h-full flex flex-col justify-center">
-                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-10 items-center relative z-10">
-                    <div>
-                      <p className="font-outfit text-xs font-semibold tracking-wider uppercase text-text-muted mb-1">Diagnostic Results</p>
+                <div className="relative overflow-hidden h-full flex flex-col justify-center">
+                  {/* Section masthead */}
+                  <div className="border-t-2 border-secondary pt-3 pb-4 mb-6">
+                    <div className="flex justify-between items-baseline">
+                      <span className="font-mono text-[10px] tracking-[0.08em] uppercase text-outline/60">
+                        03 · Diagnostic Results
+                      </span>
+                      <span className="font-mono text-[10px] tracking-[0.08em] uppercase text-outline/40">
+                        Score: {analysis.score}%
+                      </span>
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start relative z-10">
+                    <div className="lg:col-span-8">
                       <h2 className="text-2xl md:text-3xl font-extrabold text-text-primary tracking-tight font-syne mb-6">{analysis.role}</h2>
                       
                       {analysis.diagnosticReport && (
-                        <div className="mb-6 p-4 bg-surface-mid/60 border border-outline-var/25 rounded-lg">
-                          <h4 className="font-outfit text-xs font-semibold uppercase tracking-wider text-text-muted mb-2">AI Diagnostic Report</h4>
-                          <div className="text-sm text-text-primary space-y-2 [&_strong]:text-primary [&_li]:ml-4 [&_ul]:list-disc font-outfit">
+                        <div className="mb-6 py-4 border-t border-b border-outline-var/25">
+                          <h4 className="font-mono text-[10px] uppercase tracking-[0.08em] text-outline/60 mb-3">Assessment Summary</h4>
+                          <div className="text-sm text-text-primary space-y-2 [&_strong]:text-primary [&_li]:ml-4 [&_ul]:list-disc font-outfit leading-relaxed">
                             <ReactMarkdown>{analysis.diagnosticReport}</ReactMarkdown>
                           </div>
                         </div>
                       )}
 
-                      <div className="text-xs font-semibold uppercase tracking-wider text-text-muted mb-3">
-                        Missing Core Skills
+                      <div className="font-mono text-[10px] uppercase tracking-[0.08em] text-outline/60 mb-3">
+                        Missing Skills
                       </div>
                       
                       {analysis.missingSkills?.length > 0 ? (
-                        <div className="space-y-2.5">
+                        <div className="space-y-0">
                           {analysis.missingSkills.map(s => (
-                            <div key={s.id} className="flex flex-col sm:flex-row sm:items-center justify-between group bg-surface-mid/40 border border-outline-var/20 p-3 rounded-lg hover:border-outline-var/40 transition-colors gap-3">
-                              <span className="text-text-primary text-sm font-medium font-outfit">{s.name}</span>
-                              <div className="flex flex-wrap items-center gap-1.5 w-full sm:w-auto">
+                            <div key={s.id} className="flex flex-col sm:flex-row sm:items-center justify-between py-3 border-b border-outline-var/20 hover:bg-primary/[0.03] transition-colors gap-2 group">
+                              <div className="flex items-center gap-3">
+                                <span className="font-outfit text-sm text-text-primary font-medium">{s.name}</span>
+                                <span className="flex-1 hidden sm:block border-b border-dotted border-outline-var/30 min-w-[1rem] group-hover:border-primary/30 transition-colors" />
+                              </div>
+                              <div className="flex items-center gap-1.5 shrink-0">
                                 <button
                                   onClick={() => handleGenerateRoadmap(s.name)}
-                                  className="px-3 py-1.5 rounded-md text-xs font-semibold font-outfit bg-primary/10 text-primary hover:bg-primary hover:text-on-primary transition-all"
+                                  className="px-2.5 py-1 rounded-sm text-xs font-medium font-outfit bg-primary/10 text-primary hover:bg-primary hover:text-on-primary transition-all"
                                 >
                                   Roadmap
                                 </button>
                                 <button
                                   onClick={() => setVerifySkillModal(s.name)}
-                                  className="px-3 py-1.5 rounded-md text-xs font-medium font-outfit text-text-muted hover:text-text-primary hover:bg-surface-mid border border-outline-var/20 transition-all"
+                                  className="px-2.5 py-1 rounded-sm text-xs font-medium font-outfit text-text-muted hover:text-text-primary border border-outline-var/20 transition-all"
                                 >
                                   Verify
                                 </button>
                                 <button
                                   onClick={() => handleFindMentors(s)}
-                                  className="px-3 py-1.5 rounded-md text-xs font-medium font-outfit text-text-muted hover:text-text-primary hover:bg-surface-mid border border-outline-var/20 transition-all"
+                                  className="px-2.5 py-1 rounded-sm text-xs font-medium font-outfit text-text-muted hover:text-text-primary border border-outline-var/20 transition-all"
                                 >
                                   Mentors
                                 </button>
@@ -676,24 +690,24 @@ export default function Dashboard({ user, onLogout }) {
                           ))}
                         </div>
                       ) : (
-                        <div className="text-accent flex items-center gap-2 text-sm font-semibold bg-accent-container/30 border border-accent/20 p-4 rounded-lg font-outfit">
-                          <CheckCircle size={18} /> You meet all technical requirements for this role!
+                        <div className="text-accent flex items-center gap-2 text-sm font-medium py-4 border-b border-outline-var/20 font-outfit">
+                          <CheckCircle size={16} /> You meet all technical requirements for this role.
                         </div>
                       )}
                     </div>
 
-                    <div className="flex flex-col items-center justify-center lg:border-l border-outline-var/20 lg:pl-10 h-full">
+                    <div className="lg:col-span-4 flex flex-col items-center justify-center lg:border-l border-outline-var/20 lg:pl-6 h-full">
                       <RadarChart score={analysis.score} />
-                      <p className="font-outfit text-xs text-text-muted mt-2">Competency Match</p>
+                      <p className="font-mono text-[10px] tracking-[0.08em] uppercase text-outline/50 mt-2">Competency Match</p>
                     </div>
                   </div>
                 </div>
               ) : (
-                <div className="h-full min-h-[320px] border border-outline-var/20 rounded-xl bg-surface/50 flex flex-col items-center justify-center text-outline-var space-y-4 p-6 text-center">
-                  <Activity size={40} className="opacity-20 text-text-muted" />
+                <div className="h-full min-h-[320px] border-t-2 border-outline-var/20 pt-8 flex flex-col items-center justify-center text-outline-var space-y-4 text-center">
+                  <Activity size={32} className="opacity-15 text-text-muted" />
                   <div>
-                    <p className="font-outfit text-sm font-semibold text-text-primary mb-1">Awaiting Diagnostic Input</p>
-                    <p className="text-text-muted text-xs max-w-sm font-outfit">Select a target role and check off your skills on the left, then click <strong>Run Diagnostics</strong>.</p>
+                    <p className="font-outfit text-sm font-semibold text-text-primary mb-1">Awaiting Input</p>
+                    <p className="text-text-muted text-xs max-w-sm font-outfit">Select a target role and check off your skills, then click <strong>Run Diagnostics</strong>.</p>
                   </div>
                 </div>
               )}
@@ -702,43 +716,48 @@ export default function Dashboard({ user, onLogout }) {
             {/* My Career Roadmaps panel */}
             <div className={`${mobileTab === 'diagnostics' ? 'hidden xl:block' : 'block'} space-y-8`}>
               {savedRoadmaps.length > 0 && (
-                <div className="border border-outline-var/30 bg-surface rounded-xl p-6 shadow-sm space-y-4">
-                  <div className="flex items-center justify-between">
-                    <h3 className="font-outfit text-xs font-semibold uppercase tracking-wider text-text-muted">
-                      Active Learning Roadmaps ({savedRoadmaps.length})
-                    </h3>
+                <div className="space-y-3">
+                  <div className="border-t-2 border-secondary pt-3 pb-2">
+                    <div className="flex justify-between items-baseline">
+                      <span className="font-mono text-[10px] tracking-[0.08em] uppercase text-outline/60">
+                        04 · Active Learning Roadmaps
+                      </span>
+                      <span className="font-mono text-[10px] tracking-[0.08em] uppercase text-outline/40">
+                        Total ({savedRoadmaps.length})
+                      </span>
+                    </div>
                   </div>
 
-                  <div className="space-y-2.5 max-h-56 overflow-y-auto pr-1">
+                  <div className="divide-y divide-outline-var/20 max-h-60 overflow-y-auto pr-1">
                     {savedRoadmaps.map((rm) => (
                       <div
                         key={rm.id}
                         onClick={() => navigate(`/roadmap/${rm.id}`)}
-                        className="p-3.5 bg-surface-mid/60 border border-outline-var/25 hover:border-outline-var/50 rounded-lg cursor-pointer transition-all flex items-center justify-between gap-3 group"
+                        className="py-3 px-1 cursor-pointer transition-colors flex items-center justify-between gap-4 group hover:bg-primary/[0.03]"
                       >
-                        <div className="space-y-1 min-w-0">
+                        <div className="space-y-1.5 min-w-0 flex-1">
                           <div className="flex items-center gap-2">
                             <span className="text-sm font-semibold text-text-primary group-hover:text-primary transition-colors truncate font-outfit">
                               {rm.targetSkill}
                             </span>
-                            <span className="text-xs font-medium font-outfit bg-primary/10 text-primary px-2 py-0.5 rounded border border-primary/20">
+                            <span className="font-mono text-[10px] uppercase tracking-wider text-primary border border-primary/25 px-1.5 py-0.2 rounded-xs">
                               {rm.targetRole}
                             </span>
                           </div>
-                          <div className="flex items-center gap-2 text-xs text-text-muted font-outfit">
-                            <div className="w-24 h-1.5 bg-surface rounded-full overflow-hidden border border-outline-var/20">
+                          <div className="flex items-center gap-3 text-xs text-text-muted font-outfit">
+                            <div className="w-28 h-1 bg-surface-high overflow-hidden rounded-none border border-outline-var/20">
                               <div
-                                className="h-full bg-accent rounded-full"
+                                className="h-full bg-accent"
                                 style={{ width: `${rm.progress || 0}%` }}
                               />
                             </div>
-                            <span>{rm.progress || 0}% complete</span>
+                            <span className="font-mono text-[10px] text-outline/60 tabular-nums">{rm.progress || 0}% complete</span>
                           </div>
                         </div>
 
-                        <div className="flex items-center gap-1 text-primary text-xs font-semibold font-outfit shrink-0 group-hover:translate-x-0.5 transition-transform">
+                        <div className="flex items-center gap-1 text-primary text-xs font-medium font-outfit shrink-0 group-hover:translate-x-0.5 transition-transform">
                           <span>Continue</span>
-                          <ArrowRight size={13} />
+                          <ArrowRight size={12} />
                         </div>
                       </div>
                     ))}
@@ -747,18 +766,26 @@ export default function Dashboard({ user, onLogout }) {
               )}
 
               {/* Activity feed panel */}
-              <div className="border border-outline-var/30 bg-surface rounded-xl p-6 shadow-sm">
-                <h3 className="font-outfit text-xs font-semibold uppercase tracking-wider text-text-muted mb-4">
-                  Network Activity Log
-                </h3>
-                <div className="space-y-3.5 max-h-48 overflow-y-auto pr-2 custom-scrollbar">
+              <div className="space-y-3">
+                <div className="border-t-2 border-secondary pt-3 pb-2">
+                  <div className="flex justify-between items-baseline">
+                    <span className="font-mono text-[10px] tracking-[0.08em] uppercase text-outline/60">
+                      05 · Network Activity Log
+                    </span>
+                    <span className="font-mono text-[10px] tracking-[0.08em] uppercase text-outline/40">
+                      Telemetry
+                    </span>
+                  </div>
+                </div>
+
+                <div className="space-y-2 max-h-56 overflow-y-auto pr-2 custom-scrollbar">
                   {activities.length > 0
                     ? activities.map(log => (
-                      <div key={log.id} className="flex gap-3 text-sm border-l-2 border-outline-var/30 pl-3.5 py-1 hover:border-primary/40 transition-colors font-outfit">
-                        <div className="text-text-muted min-w-[56px] text-xs pt-0.5 font-medium font-outfit">
+                      <div key={log.id} className="flex gap-3 text-sm border-l border-outline-var/30 pl-3 py-1.5 hover:border-primary/50 transition-colors font-outfit">
+                        <div className="text-text-muted min-w-[70px] font-mono text-[10px] text-outline/60 pt-0.5 tabular-nums">
                           {new Date(log.createdAt).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}
                         </div>
-                        <div>
+                        <div className="flex-1 min-w-0">
                           {(() => {
                             const labels = {
                               ACQUIRED_SKILL:  { text: 'Skill Verified',   color: 'text-accent' },
@@ -771,13 +798,13 @@ export default function Dashboard({ user, onLogout }) {
                               ACCOUNT_CREATED: { text: 'Node Created',     color: 'text-accent' },
                             };
                             const l = labels[log.action] || { text: log.action, color: 'text-primary' };
-                            return <span className={`${l.color} text-xs font-semibold font-outfit uppercase tracking-wider`}>{l.text}</span>;
+                            return <span className={`${l.color} font-mono text-[10px] font-semibold uppercase tracking-wider`}>{l.text}</span>;
                           })()}
-                          <div className="text-text-muted text-xs mt-0.5 font-outfit">{log.details}</div>
+                          <div className="text-text-muted text-xs mt-0.5 font-outfit truncate">{log.details}</div>
                         </div>
                       </div>
                     ))
-                    : <div className="text-text-muted text-xs italic font-outfit">No recent activity logged in the network.</div>}
+                    : <div className="text-text-muted text-xs italic font-outfit py-2">No recent activity logged in the network.</div>}
                 </div>
               </div>
             </div>
@@ -789,58 +816,58 @@ export default function Dashboard({ user, onLogout }) {
       {/* ── Mentor Modal Drawer (Overhauled) ── */}
       <AnimatePresence>
         {selectedMissingSkill && (
-          <div className="fixed inset-0 bg-bg-base/80 backdrop-blur-md z-[100] flex items-center justify-end">
+          <div className="fixed inset-0 bg-secondary/30 backdrop-blur-xs z-[100] flex items-center justify-end">
             <motion.div 
               initial={{ x: '100%' }}
               animate={{ x: 0 }}
               exit={{ x: '100%' }}
-              transition={{ type: 'spring', damping: 25, stiffness: 200 }}
-              className="bg-surface border-l border-outline-var/40 w-full max-w-md h-full flex flex-col shadow-2xl relative font-outfit"
+              transition={{ type: 'spring', damping: 28, stiffness: 260 }}
+              className="bg-bg-base border-l border-outline-var/40 w-full max-w-md h-full flex flex-col shadow-2xl relative font-outfit"
             >
-              <div className="p-6 border-b border-outline-var/20 flex justify-between items-center bg-surface-mid/60">
+              <div className="p-6 border-b-2 border-secondary flex justify-between items-center bg-surface-mid">
                 <div>
-                  <p className="font-outfit text-xs font-semibold uppercase tracking-wider text-text-muted mb-1">Mentorship Network</p>
+                  <p className="font-mono text-[10px] font-semibold uppercase tracking-[0.08em] text-outline/60 mb-1">Mentorship Directory</p>
                   <h3 className="text-xl font-bold text-text-primary tracking-tight font-syne">
                     {selectedMissingSkill.name}
                   </h3>
                 </div>
                 <button
                   onClick={() => setSelectedMissingSkill(null)}
-                  className="w-8 h-8 rounded-full bg-outline-var/20 flex items-center justify-center text-text-muted hover:bg-outline-var/40 hover:text-text-primary transition-colors"
+                  className="w-7 h-7 rounded-xs border border-outline-var/40 flex items-center justify-center text-text-muted hover:border-outline-var hover:text-text-primary transition-colors text-xs font-mono"
                 >
-                  <X size={16} />
+                  ✕
                 </button>
               </div>
               
-              <div className="flex-1 overflow-y-auto p-6 space-y-3">
+              <div className="flex-1 overflow-y-auto p-6 space-y-1">
                 {loadingMentors ? (
                   <div className="flex flex-col items-center justify-center h-40 text-primary space-y-3">
-                    <div className="w-8 h-8 border-2 border-primary/20 border-t-primary rounded-full animate-spin" />
-                    <span className="font-outfit text-xs uppercase tracking-wider text-text-muted">Scanning Network...</span>
+                    <div className="w-6 h-6 border-2 border-primary/20 border-t-primary rounded-full animate-spin" />
+                    <span className="font-mono text-[10px] uppercase tracking-[0.08em] text-text-muted">Scanning Network...</span>
                   </div>
                 ) : mentors.length > 0 ? (
                   mentors.map(mentor => (
-                    <div key={mentor.id} className="border border-outline-var/30 bg-surface rounded-lg p-4 flex items-center justify-between hover:border-outline-var/60 transition-all shadow-xs group">
+                    <div key={mentor.id} className="border-b border-outline-var/25 py-3 px-1 flex items-center justify-between hover:bg-primary/[0.03] transition-colors group">
                       <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 bg-surface-mid rounded-full flex items-center justify-center text-primary font-bold text-sm border border-outline-var/40 group-hover:border-primary/50 transition-colors">
+                        <div className="w-8 h-8 rounded-xs bg-surface-mid border border-outline-var/30 flex items-center justify-center text-primary font-mono font-semibold text-xs">
                           {mentor.name?.charAt(0)}
                         </div>
                         <div>
-                          <div className="text-text-primary font-semibold text-sm">{mentor.name}</div>
-                          <div className="text-xs text-text-muted font-outfit mt-0.5">{mentor.role || 'Member'}</div>
+                          <div className="text-text-primary font-medium text-sm font-outfit">{mentor.name}</div>
+                          <div className="font-mono text-[10px] text-text-muted uppercase tracking-wider">{mentor.role || 'Member'}</div>
                         </div>
                       </div>
                       <button
                         onClick={() => navigate(`/profile/${mentor.id}`)}
-                        className="px-3 py-1.5 bg-primary/10 text-primary text-xs border border-primary/20 rounded-md hover:bg-primary hover:text-on-primary transition-all font-outfit font-semibold"
+                        className="px-2.5 py-1 text-primary text-xs border border-primary/30 rounded-xs hover:bg-primary hover:text-on-primary transition-all font-mono tracking-wider uppercase text-[10px]"
                       >
-                        View Profile
+                        Profile
                       </button>
                     </div>
                   ))
                 ) : (
-                  <div className="text-center p-8 border border-outline-var/20 rounded-lg bg-surface-mid/40">
-                    <div className="text-text-muted text-sm font-medium font-outfit">No active mentors found for this competency.</div>
+                  <div className="text-center p-8 border border-outline-var/20 rounded-xs bg-surface-mid/40">
+                    <div className="text-text-muted text-xs font-medium font-outfit">No active mentors found for this competency.</div>
                   </div>
                 )}
               </div>
