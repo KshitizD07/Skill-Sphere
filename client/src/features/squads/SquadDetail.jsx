@@ -304,58 +304,70 @@ export default function SquadDetail({ user: propUser, onLogout }) {
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           {/* Main Info (Left 2 cols) */}
           <div className="lg:col-span-2 space-y-6">
-            {/* Squad Overview Card */}
-            <div className="bg-surface border border-outline-var/25 rounded-xl p-5 sm:p-7 space-y-3.5 shadow-sm">
-              <div className="flex items-center gap-2 flex-wrap">
-                {squad.event && (
-                  <span className="px-2.5 py-0.5 bg-primary/10 border border-primary/20 text-primary text-xs font-outfit font-medium rounded-full">
-                    {squad.event}
+            {/* Squad Overview */}
+            <div className="space-y-4">
+              <div className="border-t-2 border-secondary pt-3 pb-2">
+                <div className="flex justify-between items-baseline">
+                  <div className="flex items-center gap-2">
+                    <span className="font-mono text-[10px] tracking-[0.08em] uppercase text-outline/60">
+                      01 · Squad Briefing
+                    </span>
+                    {squad.event && (
+                      <>
+                        <span className="text-outline-var text-xs font-mono">/</span>
+                        <span className="font-mono text-[10px] tracking-[0.08em] uppercase text-primary">
+                          {squad.event}
+                        </span>
+                      </>
+                    )}
+                  </div>
+                  <span
+                    className={`font-mono text-[10px] tracking-wider uppercase px-1.5 py-0.2 rounded-xs border ${
+                      isFull
+                        ? 'bg-surface-mid text-text-muted border-outline-var/30'
+                        : 'bg-accent/10 text-accent border-accent/25'
+                    }`}
+                  >
+                    {isFull ? 'FULL' : 'RECRUITING'}
                   </span>
-                )}
-                <span
-                  className={`px-2.5 py-0.5 rounded-full text-xs font-outfit font-medium border ${
-                    isFull
-                      ? 'bg-surface-mid text-text-muted border-outline-var/25'
-                      : 'bg-accent/10 text-accent border-accent/25'
-                  }`}
-                >
-                  {isFull ? 'Squad Full' : 'Recruiting Members'}
-                </span>
+                </div>
               </div>
 
-              <h2 className="text-xl sm:text-2xl font-bold text-text-primary tracking-tight font-syne leading-snug">
+              <h2 className="text-2xl sm:text-3xl font-bold text-text-primary tracking-tight font-syne leading-snug">
                 {squad.title}
               </h2>
 
-              <p className="text-text-muted text-sm leading-relaxed whitespace-pre-wrap">
+              <p className="text-text-muted text-sm leading-relaxed whitespace-pre-wrap font-outfit border-b border-outline-var/20 pb-5">
                 {squad.description}
               </p>
             </div>
 
             {/* Slots / Roles List */}
-            <div className="bg-surface border border-outline-var/25 rounded-xl p-5 sm:p-7 space-y-5 shadow-sm">
-              <div className="flex items-center justify-between flex-wrap gap-2">
-                <div className="flex items-center gap-2">
-                  <Target size={18} className="text-primary" />
-                  <h3 className="font-syne font-bold text-base text-text-primary">
-                    Squad Role Slots ({(squad.slots || []).length})
-                  </h3>
+            <div className="space-y-4">
+              <div className="border-t-2 border-secondary pt-3 pb-2 flex items-center justify-between flex-wrap gap-2">
+                <div className="flex items-baseline gap-2">
+                  <span className="font-mono text-[10px] tracking-[0.08em] uppercase text-outline/60">
+                    02 · Role Architecture
+                  </span>
+                  <span className="font-mono text-[10px] text-outline/40">
+                    ({(squad.slots || []).length} Slots)
+                  </span>
                 </div>
 
                 {isLeader && (
                   <button
                     type="button"
                     onClick={handleOpenAddSlot}
-                    className="px-3 py-1.5 bg-primary/10 hover:bg-primary text-primary hover:text-on-primary border border-primary/25 font-outfit font-semibold text-xs rounded-lg transition-all flex items-center gap-1.5"
+                    className="px-2.5 py-1 bg-primary/10 hover:bg-primary text-primary hover:text-on-primary border border-primary/25 font-mono text-[10px] uppercase tracking-wider rounded-xs transition-colors flex items-center gap-1 cursor-pointer"
                   >
-                    <Plus size={13} /> Add Role Slot
+                    <Plus size={12} /> Add Role Slot
                   </button>
                 )}
               </div>
 
-              <div className="space-y-3">
+              <div className="divide-y divide-outline-var/20">
                 {(squad.slots || []).length === 0 ? (
-                  <p className="text-text-muted text-xs italic py-2">No role slots defined for this squad yet.</p>
+                  <p className="text-text-muted text-xs italic py-4 font-outfit">No role slots defined for this squad yet.</p>
                 ) : (
                   (squad.slots || []).map((slot) => {
                     const isFilled = slot.status === 'FILLED';
@@ -374,40 +386,38 @@ export default function SquadDetail({ user: propUser, onLogout }) {
                     return (
                       <div
                         key={slot.id}
-                        className={`p-4 rounded-lg border transition-all ${
-                          isFilled
-                            ? 'bg-surface-mid/30 border-outline-var/20 opacity-70'
-                            : 'bg-surface-mid/50 border-outline-var/25 hover:border-primary/40'
+                        className={`py-3.5 px-1 transition-colors hover:bg-primary/[0.02] ${
+                          isFilled ? 'opacity-60' : ''
                         }`}
                       >
-                        <div className="flex items-start justify-between gap-3">
-                          <div className="flex-1 min-w-0 space-y-1.5">
+                        <div className="flex items-start justify-between gap-4">
+                          <div className="flex-1 min-w-0 space-y-1">
                             <div className="flex items-center gap-2.5 flex-wrap">
-                              <h4 className="font-semibold text-sm text-text-primary">{slot.roleTitle}</h4>
+                              <h4 className="font-semibold text-sm text-text-primary font-outfit">{slot.roleTitle}</h4>
                               <span
-                                className={`px-2 py-0.5 rounded-full text-xs font-outfit font-medium border ${
+                                className={`font-mono text-[9px] uppercase tracking-wider px-1.5 py-0.2 rounded-xs border ${
                                   isFilled
                                     ? 'bg-surface-mid text-text-muted border-outline-var/20'
                                     : 'bg-accent/10 text-accent border-accent/20'
                                 }`}
                               >
-                                {isFilled ? 'Filled' : 'Open'}
+                                {isFilled ? 'FILLED' : 'OPEN'}
                               </span>
                             </div>
 
                             {slot.roleDescription && (
-                              <p className="text-xs text-text-muted line-clamp-2">{slot.roleDescription}</p>
+                              <p className="text-xs text-text-muted line-clamp-2 font-outfit">{slot.roleDescription}</p>
                             )}
 
-                            <div className="flex items-center gap-2.5 text-xs text-text-muted flex-wrap">
+                            <div className="flex items-center gap-3 text-xs text-text-muted flex-wrap pt-0.5">
                               {slot.requiredSkill && (
-                                <span className="flex items-center gap-1 text-primary font-medium text-xs">
-                                  <Shield size={12} /> Required: {slot.requiredSkill} (≥ {slot.minScore}/10)
+                                <span className="font-mono text-[10px] text-primary">
+                                  Skill Req: {slot.requiredSkill} (≥ {slot.minScore}/10)
                                 </span>
                               )}
                               {slot.requireVerified && (
-                                <span className="flex items-center gap-1 text-primary text-xs font-medium px-2 py-0.5 bg-primary/10 border border-primary/25 rounded-md">
-                                  <Shield size={12} className="text-primary" /> Verified Skill Required
+                                <span className="font-mono text-[9px] uppercase tracking-wider text-accent border border-accent/20 px-1 rounded-xs">
+                                  Verified Certificate Required
                                 </span>
                               )}
                             </div>
@@ -416,43 +426,43 @@ export default function SquadDetail({ user: propUser, onLogout }) {
                           {/* Per-slot CTA */}
                           <div className="flex items-center gap-2 shrink-0">
                             {isLeader ? (
-                              <div className="flex items-center gap-1.5">
+                              <div className="flex items-center gap-1">
                                 {!isFilled && (
                                   <button
                                     type="button"
                                     onClick={() => handleOpenEditSlot(slot)}
-                                    className="p-1.5 bg-surface hover:bg-surface-mid border border-outline-var/30 text-text-muted hover:text-primary rounded-lg transition-colors"
+                                    className="p-1 border border-outline-var/30 text-text-muted hover:text-primary rounded-xs transition-colors"
                                     title="Edit Role Slot"
                                   >
-                                    <Pencil size={13} />
+                                    <Pencil size={12} />
                                   </button>
                                 )}
                                 {!isFilled && (
                                   <button
                                     type="button"
                                     onClick={() => handleDeleteSlot(slot.id)}
-                                    className="p-1.5 bg-error/10 hover:bg-error/20 border border-error/30 text-error rounded-lg transition-colors"
+                                    className="p-1 border border-error/30 text-error hover:bg-error/10 rounded-xs transition-colors"
                                     title="Delete Role Slot"
                                   >
-                                    <Trash2 size={13} />
+                                    <Trash2 size={12} />
                                   </button>
                                 )}
                                 {isFilled && (
-                                  <span className="text-xs text-text-muted font-outfit font-medium">Filled</span>
+                                  <span className="font-mono text-[10px] uppercase tracking-wider text-text-muted">Filled</span>
                                 )}
                               </div>
                             ) : isFilled ? (
-                              <span className="text-xs text-text-muted font-outfit font-medium">Slot Filled</span>
+                              <span className="font-mono text-[10px] uppercase tracking-wider text-text-muted">Filled</span>
                             ) : slotStatus === 'ACCEPTED' ? (
-                              <span className="px-2.5 py-1 bg-accent/10 border border-accent/20 text-accent font-outfit font-medium text-xs rounded-md flex items-center gap-1.5">
-                                <CheckCircle2 size={12} /> Member
+                              <span className="font-mono text-[10px] uppercase tracking-wider px-2 py-0.5 bg-accent/10 border border-accent/25 text-accent rounded-xs flex items-center gap-1">
+                                <CheckCircle2 size={11} /> Member
                               </span>
                             ) : slotStatus === 'PENDING' ? (
-                              <span className="px-2.5 py-1 bg-primary/10 border border-primary/20 text-primary font-outfit font-medium text-xs rounded-md">
+                              <span className="font-mono text-[10px] uppercase tracking-wider px-2 py-0.5 bg-primary/10 border border-primary/25 text-primary rounded-xs">
                                 Applied
                               </span>
                             ) : slotStatus === 'REJECTED' ? (
-                              <span className="px-2.5 py-1 bg-error/10 border border-error/20 text-error font-outfit font-medium text-xs rounded-md">
+                              <span className="font-mono text-[10px] uppercase tracking-wider px-2 py-0.5 bg-error/10 border border-error/25 text-error rounded-xs">
                                 Rejected
                               </span>
                             ) : canApply ? (
@@ -461,12 +471,12 @@ export default function SquadDetail({ user: propUser, onLogout }) {
                                   setSelectedSlot(slot.id);
                                   setShowApplyModal(true);
                                 }}
-                                className="px-3.5 py-1.5 bg-primary text-on-primary hover:bg-primary-dim font-outfit font-semibold text-xs rounded-lg transition-colors whitespace-nowrap"
+                                className="px-3 py-1 bg-primary text-on-primary hover:bg-primary-dim font-mono text-[11px] uppercase tracking-wider rounded-xs transition-colors whitespace-nowrap cursor-pointer"
                               >
                                 Apply
                               </button>
                             ) : hasPendingApp && !slotApp ? (
-                              <span className="text-xs text-text-muted font-outfit italic">Pending elsewhere</span>
+                              <span className="font-mono text-[10px] text-text-muted italic">Pending</span>
                             ) : null}
                           </div>
                         </div>
@@ -480,24 +490,26 @@ export default function SquadDetail({ user: propUser, onLogout }) {
 
           {/* Sidebar (Right 1 col) — stacks below main content on mobile */}
           <div className="space-y-6">
-            {/* Squad Leader Card */}
-            <div className="bg-surface border border-outline-var/25 rounded-xl p-5 space-y-4 shadow-sm">
-              <span className="text-xs font-outfit font-semibold uppercase tracking-wider text-text-muted">
-                Mission Leader
-              </span>
+            {/* Squad Leader Section */}
+            <div className="space-y-3">
+              <div className="border-t-2 border-secondary pt-3 pb-1">
+                <span className="font-mono text-[10px] tracking-[0.08em] uppercase text-outline/60">
+                  03 · Mission Leader
+                </span>
+              </div>
 
-              <div className="flex items-center gap-3">
-                <div className="w-11 h-11 rounded-full border border-outline-var/30 overflow-hidden bg-surface-mid flex items-center justify-center shrink-0">
+              <div className="flex items-center gap-3 py-2 border-b border-outline-var/20">
+                <div className="w-9 h-9 rounded-xs border border-outline-var/30 overflow-hidden bg-surface-mid flex items-center justify-center shrink-0 font-mono text-xs font-semibold text-primary">
                   {squad.leader?.avatar ? (
                     <img src={squad.leader.avatar} className="w-full h-full object-cover" alt="" />
                   ) : (
-                    <User size={20} className="text-outline" />
+                    squad.leader?.name?.charAt(0) || 'L'
                   )}
                 </div>
 
                 <div className="flex-1 min-w-0">
-                  <h3 className="font-semibold text-sm text-text-primary truncate">{squad.leader?.name}</h3>
-                  <p className="text-xs text-text-muted truncate mt-0.5">
+                  <h3 className="font-semibold text-sm text-text-primary truncate font-outfit">{squad.leader?.name}</h3>
+                  <p className="font-mono text-[10px] uppercase tracking-wider text-text-muted truncate mt-0.5">
                     {squad.leader?.headline || squad.leader?.college || 'Squad Leader'}
                   </p>
                 </div>
@@ -505,99 +517,101 @@ export default function SquadDetail({ user: propUser, onLogout }) {
 
               <button
                 onClick={() => navigate(`/profile/${squad.leader?.id}`)}
-                className="w-full py-2 bg-surface hover:bg-surface-mid border border-outline-var/30 text-text-muted hover:text-text-primary font-outfit font-semibold text-xs rounded-lg transition-colors flex items-center justify-center gap-1.5"
+                className="w-full py-2 bg-surface hover:bg-surface-mid border border-outline-var/40 text-text-muted hover:text-text-primary font-mono text-[11px] uppercase tracking-wider rounded-xs transition-colors flex items-center justify-center gap-1.5 cursor-pointer"
               >
-                View Profile <ExternalLink size={12} />
+                View Profile <ExternalLink size={11} />
               </button>
             </div>
 
             {/* Squad Stats + Members Dropdown */}
-            <div className="bg-surface border border-outline-var/25 rounded-xl p-5 space-y-3.5 shadow-sm">
-              <span className="text-xs font-outfit font-semibold uppercase tracking-wider text-text-muted">
-                Squad Status
-              </span>
+            <div className="space-y-3">
+              <div className="border-t-2 border-secondary pt-3 pb-1">
+                <span className="font-mono text-[10px] tracking-[0.08em] uppercase text-outline/60">
+                  04 · Squad Status
+                </span>
+              </div>
 
               <div className="space-y-1 text-xs">
                 {/* Members row — expands to show member list */}
                 <button
                   type="button"
                   onClick={() => setMembersExpanded((v) => !v)}
-                  className="w-full flex items-center justify-between py-2 border-b border-outline-var/15 hover:text-primary transition-colors"
+                  className="w-full flex items-center justify-between py-2 border-b border-outline-var/20 hover:text-primary transition-colors cursor-pointer"
                 >
-                  <div className="flex items-center gap-1.5 text-text-muted">
-                    <UserCheck size={14} />
+                  <div className="flex items-center gap-1.5 text-text-muted font-mono text-[11px] uppercase tracking-wider">
+                    <UserCheck size={13} />
                     <span>Members</span>
                   </div>
                   <div className="flex items-center gap-1.5">
-                    <span className="font-bold text-text-primary">
+                    <span className="font-mono text-xs tabular-nums text-text-primary font-bold">
                       {squad.currentMembers} / {squad.maxMembers}
                     </span>
                     {membersExpanded
-                      ? <ChevronUp size={13} className="text-outline" />
-                      : <ChevronDown size={13} className="text-outline" />
+                      ? <ChevronUp size={12} className="text-outline" />
+                      : <ChevronDown size={12} className="text-outline" />
                     }
                   </div>
                 </button>
 
                 {/* Expanded member list */}
                 {membersExpanded && (
-                  <div className="pt-2 pb-1 space-y-2">
+                  <div className="pt-2 pb-1 space-y-1.5">
                     {/* Leader row */}
-                    <div className="flex items-center justify-between gap-2 py-2 px-2.5 rounded-lg bg-surface-mid/50 border border-outline-var/15">
-                      <div className="flex items-center gap-2.5 min-w-0">
-                        <div className="w-7 h-7 rounded-full border border-outline-var/30 overflow-hidden bg-surface-mid flex items-center justify-center shrink-0">
+                    <div className="flex items-center justify-between gap-2 py-2 px-2 rounded-xs bg-surface-mid/50 border border-outline-var/15">
+                      <div className="flex items-center gap-2 min-w-0">
+                        <div className="w-6 h-6 rounded-xs border border-outline-var/30 overflow-hidden bg-surface-mid flex items-center justify-center shrink-0 font-mono text-[10px] text-primary">
                           {squad.leader?.avatar
                             ? <img src={squad.leader.avatar} className="w-full h-full object-cover" alt="" />
-                            : <User size={12} className="text-outline" />
+                            : squad.leader?.name?.charAt(0) || 'L'
                           }
                         </div>
                         <div className="min-w-0">
                           <button
                             onClick={() => navigate(`/profile/${squad.leader?.id}`)}
-                            className="text-xs font-semibold text-text-primary hover:text-primary truncate block text-left"
+                            className="text-xs font-medium text-text-primary hover:text-primary truncate block text-left font-outfit"
                             style={{ maxWidth: '110px' }}
                           >
                             {squad.leader?.name}
                           </button>
-                          <span className="text-xs text-primary font-outfit font-medium">Leader</span>
+                          <span className="font-mono text-[9px] uppercase tracking-wider text-primary">Leader</span>
                         </div>
                       </div>
                       {currentUser?.id !== squad.leader?.id && (
                         <button
                           onClick={() => navigate('/chat', { state: { userId: squad.leader?.id } })}
-                          className="p-1.5 text-outline hover:text-primary hover:bg-primary/10 rounded-lg transition-colors shrink-0"
+                          className="p-1 text-outline hover:text-primary border border-outline-var/25 rounded-xs transition-colors shrink-0"
                           title="Chat with leader"
                         >
-                          <MessageCircle size={14} />
+                          <MessageCircle size={12} />
                         </button>
                       )}
                     </div>
 
                     {/* Accepted members */}
                     {acceptedMembers.length === 0 ? (
-                      <p className="text-xs text-text-muted italic px-1 py-1">No members selected yet.</p>
+                      <p className="text-xs text-text-muted italic px-1 py-1 font-outfit">No members selected yet.</p>
                     ) : (
                       acceptedMembers.map((m) => (
                         <div
                           key={m.user?.id}
-                          className="flex items-center justify-between gap-2 py-2 px-2.5 rounded-lg bg-surface-mid/50 border border-outline-var/15"
+                          className="flex items-center justify-between gap-2 py-2 px-2 rounded-xs bg-surface-mid/50 border border-outline-var/15"
                         >
-                          <div className="flex items-center gap-2.5 min-w-0">
-                            <div className="w-7 h-7 rounded-full border border-outline-var/30 overflow-hidden bg-surface-mid flex items-center justify-center shrink-0">
+                          <div className="flex items-center gap-2 min-w-0">
+                            <div className="w-6 h-6 rounded-xs border border-outline-var/30 overflow-hidden bg-surface-mid flex items-center justify-center shrink-0 font-mono text-[10px] text-text-muted">
                               {m.user?.avatar
                                 ? <img src={m.user.avatar} className="w-full h-full object-cover" alt="" />
-                                : <User size={12} className="text-outline" />
+                                : m.user?.name?.charAt(0) || 'U'
                               }
                             </div>
                             <div className="min-w-0">
                               <button
                                 onClick={() => navigate(`/profile/${m.user?.id}`)}
-                                className="text-xs font-semibold text-text-primary hover:text-primary truncate block text-left"
+                                className="text-xs font-medium text-text-primary hover:text-primary truncate block text-left font-outfit"
                                 style={{ maxWidth: '110px' }}
                               >
                                 {m.user?.name}
                               </button>
-                              <span className="text-xs text-text-muted truncate block">{m.roleTitle}</span>
+                              <span className="font-mono text-[9px] uppercase tracking-wider text-text-muted truncate block">{m.roleTitle}</span>
                             </div>
                           </div>
                           {isLeader && currentUser?.id !== m.user?.id && (
@@ -630,69 +644,69 @@ export default function SquadDetail({ user: propUser, onLogout }) {
         </div>
       </div>
 
-      {/* ── Apply Modal — bottom-sheet on mobile ──────────────────────────── */}
+      {/* ── Apply Modal ─────────────────────────────────────────────────── */}
       {showApplyModal && (
-        <div className="fixed inset-0 bg-bg-base/85 backdrop-blur-sm z-50 flex items-end sm:items-center justify-center p-0 sm:p-4">
-          <div className="bg-surface border border-outline-var/30 rounded-t-2xl sm:rounded-xl w-full sm:max-w-md p-6 relative shadow-2xl space-y-4 font-outfit">
+        <div className="fixed inset-0 bg-secondary/30 backdrop-blur-xs z-50 flex items-center justify-center p-4">
+          <div className="bg-bg-base border border-outline-var/40 rounded-xs w-full max-w-md p-6 relative shadow-2xl space-y-4 font-outfit">
             <button
               onClick={() => setShowApplyModal(false)}
-              className="absolute top-4 right-4 text-outline hover:text-text-primary p-1 rounded-md"
+              className="absolute top-5 right-5 text-text-muted hover:text-text-primary font-mono text-xs"
             >
-              <X size={16} />
+              ✕
             </button>
 
-            <div>
-              <p className="font-outfit text-xs font-semibold tracking-wider uppercase text-primary">Qualification Gate</p>
-              <h3 className="text-xl font-bold font-syne text-text-primary mt-0.5">Apply for Squad Role</h3>
+            <div className="border-b-2 border-secondary pb-3">
+              <p className="font-mono text-[10px] font-semibold uppercase tracking-[0.08em] text-outline/60 mb-1">Qualification Gate</p>
+              <h3 className="text-xl font-bold font-syne text-text-primary">Apply for Squad Role</h3>
             </div>
 
             {/* Gatekeeper qualification preview */}
             {qualification && (
               <div
-                className={`p-3.5 rounded-lg text-xs border ${
+                className={`p-3 rounded-xs text-xs border ${
                   qualification.qualifies
                     ? 'bg-accent/10 border-accent/25 text-accent'
                     : 'bg-error/10 border-error/25 text-error'
                 }`}
               >
                 {qualification.qualifies ? (
-                  <div className="flex items-center gap-2 font-medium">
-                    <CheckCircle2 size={15} /> You qualify for this squad!
+                  <div className="flex items-center gap-2 font-mono text-[11px] uppercase tracking-wider">
+                    <CheckCircle2 size={13} /> You qualify for this position
                   </div>
                 ) : (
-                  <div className="flex items-center gap-2 font-medium">
-                    <AlertCircle size={15} /> {qualification.reason || 'Qualification check failed'}
+                  <div className="flex items-center gap-2 font-mono text-[11px] uppercase tracking-wider">
+                    <AlertCircle size={13} /> {qualification.reason || 'Qualification check failed'}
                   </div>
                 )}
               </div>
             )}
 
             <div>
-              <label className="block font-outfit text-xs font-semibold text-text-muted mb-1.5">
-                Pitch / Application Note (Optional)
+              <label className="block font-mono text-[10px] uppercase tracking-wider text-outline/70 mb-1.5">
+                Application Statement (Optional)
               </label>
               <textarea
                 value={applyMessage}
                 onChange={(e) => setApplyMessage(e.target.value)}
                 rows={3}
-                placeholder="Tell the leader why you're a great fit for this role..."
-                className="w-full bg-surface-mid border border-outline-var/30 rounded-lg p-3 text-xs text-text-primary outline-none focus:border-primary/60 resize-none font-outfit"
+                placeholder="Detail your relevant experience and contributions for this role..."
+                className="w-full bg-surface-mid border border-outline-var/40 rounded-xs p-2.5 text-xs text-text-primary outline-none focus:border-primary/60 resize-none font-outfit"
               />
             </div>
 
             <div className="flex gap-2.5 pt-2">
               <button
                 onClick={() => setShowApplyModal(false)}
-                className="flex-1 py-2.5 border border-outline-var/30 text-text-muted hover:text-text-primary font-outfit font-semibold text-xs rounded-lg transition-colors"
+                className="flex-1 py-2 border border-outline-var/40 text-text-muted hover:text-text-primary font-mono text-[11px] uppercase tracking-wider rounded-xs transition-colors cursor-pointer"
               >
                 Cancel
               </button>
               <button
                 onClick={handleApply}
                 disabled={submitting}
-                className="flex-1 py-2.5 bg-primary text-on-primary font-outfit font-semibold text-xs rounded-lg hover:bg-primary-dim transition-colors disabled:opacity-50"
+                className="flex-1 py-2 bg-primary text-on-primary font-mono text-[11px] uppercase tracking-wider rounded-xs hover:bg-primary-dim transition-colors disabled:opacity-50 cursor-pointer"
               >
-                {submitting ? 'Submitting...' : 'Send Application'}
+                {submitting ? 'Submitting...' : 'Submit Application'}
               </button>
             </div>
           </div>
@@ -701,52 +715,52 @@ export default function SquadDetail({ user: propUser, onLogout }) {
 
       {/* ── Edit Squad Modal (Leader Only) ───────────────────────────────── */}
       {showEditModal && (
-        <div className="fixed inset-0 bg-bg-base/85 backdrop-blur-sm z-50 flex items-end sm:items-center justify-center p-0 sm:p-4">
-          <div className="bg-surface border border-outline-var/30 rounded-t-2xl sm:rounded-xl w-full sm:max-w-md p-6 relative shadow-2xl space-y-4 font-outfit">
+        <div className="fixed inset-0 bg-secondary/30 backdrop-blur-xs z-50 flex items-center justify-center p-4">
+          <div className="bg-bg-base border border-outline-var/40 rounded-xs w-full max-w-md p-6 relative shadow-2xl space-y-4 font-outfit">
             <button
               onClick={() => setShowEditModal(false)}
-              className="absolute top-4 right-4 text-outline hover:text-text-primary p-1 rounded-md"
+              className="absolute top-5 right-5 text-text-muted hover:text-text-primary font-mono text-xs"
             >
-              <X size={16} />
+              ✕
             </button>
 
-            <div>
-              <p className="font-outfit text-xs font-semibold tracking-wider uppercase text-primary">Squad Settings</p>
-              <h3 className="text-xl font-bold font-syne text-text-primary mt-0.5">Edit Squad Info</h3>
+            <div className="border-b-2 border-secondary pb-3">
+              <p className="font-mono text-[10px] font-semibold uppercase tracking-[0.08em] text-outline/60 mb-1">Squad Configuration</p>
+              <h3 className="text-xl font-bold font-syne text-text-primary">Edit Squad Parameters</h3>
             </div>
 
-            <div className="space-y-3.5">
+            <div className="space-y-3">
               <div>
-                <label className="block font-outfit text-xs font-semibold text-text-muted mb-1.5">
+                <label className="block font-mono text-[10px] uppercase tracking-wider text-outline/70 mb-1">
                   Title
                 </label>
                 <input
                   value={editForm.title}
                   onChange={(e) => setEditForm((f) => ({ ...f, title: e.target.value }))}
-                  className="w-full bg-surface-mid border border-outline-var/30 rounded-lg p-2.5 text-xs text-text-primary outline-none focus:border-primary/60 font-outfit"
+                  className="w-full bg-surface-mid border border-outline-var/40 rounded-xs p-2 text-xs text-text-primary outline-none focus:border-primary/60 font-outfit"
                 />
               </div>
 
               <div>
-                <label className="block font-outfit text-xs font-semibold text-text-muted mb-1.5">
+                <label className="block font-mono text-[10px] uppercase tracking-wider text-outline/70 mb-1">
                   Description
                 </label>
                 <textarea
                   value={editForm.description}
                   onChange={(e) => setEditForm((f) => ({ ...f, description: e.target.value }))}
                   rows={3}
-                  className="w-full bg-surface-mid border border-outline-var/30 rounded-lg p-2.5 text-xs text-text-primary outline-none focus:border-primary/60 resize-none font-outfit"
+                  className="w-full bg-surface-mid border border-outline-var/40 rounded-xs p-2 text-xs text-text-primary outline-none focus:border-primary/60 resize-none font-outfit"
                 />
               </div>
 
               <div>
-                <label className="block font-outfit text-xs font-semibold text-text-muted mb-1.5">
+                <label className="block font-mono text-[10px] uppercase tracking-wider text-outline/70 mb-1">
                   Event Category
                 </label>
                 <select
                   value={editForm.event}
                   onChange={(e) => setEditForm((f) => ({ ...f, event: e.target.value }))}
-                  className="w-full bg-surface-mid border border-outline-var/30 rounded-lg p-2.5 text-xs text-text-primary outline-none focus:border-primary/60 cursor-pointer font-outfit"
+                  className="w-full bg-surface-mid border border-outline-var/40 rounded-xs p-2 text-xs text-text-primary outline-none focus:border-primary/60 cursor-pointer font-outfit"
                 >
                   <option value="HACKATHON">Hackathon</option>
                   <option value="OPEN_SOURCE">Open Source</option>
@@ -760,15 +774,15 @@ export default function SquadDetail({ user: propUser, onLogout }) {
             <div className="flex gap-2.5 pt-2">
               <button
                 onClick={() => setShowEditModal(false)}
-                className="flex-1 py-2.5 border border-outline-var/30 text-text-muted hover:text-text-primary font-outfit font-semibold text-xs rounded-lg transition-colors"
+                className="flex-1 py-2 border border-outline-var/40 text-text-muted hover:text-text-primary font-mono text-[11px] uppercase tracking-wider rounded-xs transition-colors cursor-pointer"
               >
                 Cancel
               </button>
               <button
                 onClick={handleSaveEdit}
-                className="flex-1 py-2.5 bg-primary text-on-primary font-outfit font-semibold text-xs rounded-lg hover:bg-primary-dim transition-colors"
+                className="flex-1 py-2 bg-primary text-on-primary font-mono text-[11px] uppercase tracking-wider rounded-xs hover:bg-primary-dim transition-colors cursor-pointer"
               >
-                Save Changes
+                Save Parameters
               </button>
             </div>
           </div>
@@ -777,37 +791,37 @@ export default function SquadDetail({ user: propUser, onLogout }) {
 
       {/* ── Add / Edit Role Slot Modal (Leader Only) ────────────────────── */}
       {showSlotModal && (
-        <div className="fixed inset-0 bg-bg-base/85 backdrop-blur-sm z-50 flex items-end sm:items-center justify-center p-0 sm:p-4">
-          <div className="bg-surface border border-outline-var/30 rounded-t-2xl sm:rounded-xl w-full sm:max-w-md p-6 relative shadow-2xl space-y-4 font-outfit">
+        <div className="fixed inset-0 bg-secondary/30 backdrop-blur-xs z-50 flex items-center justify-center p-4">
+          <div className="bg-bg-base border border-outline-var/40 rounded-xs w-full max-w-md p-6 relative shadow-2xl space-y-4 font-outfit">
             <button
               onClick={() => setShowSlotModal(false)}
-              className="absolute top-4 right-4 text-outline hover:text-text-primary p-1 rounded-md"
+              className="absolute top-5 right-5 text-text-muted hover:text-text-primary font-mono text-xs"
             >
-              <X size={16} />
+              ✕
             </button>
 
-            <div>
-              <p className="font-outfit text-xs font-semibold tracking-wider uppercase text-primary">Role Architect</p>
-              <h3 className="text-xl font-bold font-syne text-text-primary mt-0.5">
+            <div className="border-b-2 border-secondary pb-3">
+              <p className="font-mono text-[10px] font-semibold uppercase tracking-[0.08em] text-outline/60 mb-1">Slot Architect</p>
+              <h3 className="text-xl font-bold font-syne text-text-primary">
                 {slotEditMode ? 'Edit Role Slot' : 'Add New Role Slot'}
               </h3>
             </div>
 
-            <div className="space-y-3.5">
+            <div className="space-y-3">
               <div>
-                <label className="block font-outfit text-xs font-semibold text-text-muted mb-1.5">
+                <label className="block font-mono text-[10px] uppercase tracking-wider text-outline/70 mb-1">
                   Role Title *
                 </label>
                 <input
                   value={slotForm.roleTitle}
                   onChange={(e) => setSlotForm((f) => ({ ...f, roleTitle: e.target.value }))}
                   placeholder="e.g. Backend Lead, UI/UX Designer"
-                  className="w-full bg-surface-mid border border-outline-var/30 rounded-lg p-2.5 text-xs text-text-primary outline-none focus:border-primary/60 font-outfit"
+                  className="w-full bg-surface-mid border border-outline-var/40 rounded-xs p-2 text-xs text-text-primary outline-none focus:border-primary/60 font-outfit"
                 />
               </div>
 
               <div>
-                <label className="block font-outfit text-xs font-semibold text-text-muted mb-1.5">
+                <label className="block font-mono text-[10px] uppercase tracking-wider text-outline/70 mb-1">
                   Role Description (Optional)
                 </label>
                 <textarea
@@ -815,25 +829,25 @@ export default function SquadDetail({ user: propUser, onLogout }) {
                   onChange={(e) => setSlotForm((f) => ({ ...f, roleDescription: e.target.value }))}
                   rows={2}
                   placeholder="Key responsibilities and expectations..."
-                  className="w-full bg-surface-mid border border-outline-var/30 rounded-lg p-2.5 text-xs text-text-primary outline-none focus:border-primary/60 resize-none font-outfit"
+                  className="w-full bg-surface-mid border border-outline-var/40 rounded-xs p-2 text-xs text-text-primary outline-none focus:border-primary/60 resize-none font-outfit"
                 />
               </div>
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div>
-                  <label className="block font-outfit text-xs font-semibold text-text-muted mb-1.5">
+                  <label className="block font-mono text-[10px] uppercase tracking-wider text-outline/70 mb-1">
                     Gatekeeper Skill
                   </label>
                   <input
                     value={slotForm.requiredSkill}
                     onChange={(e) => setSlotForm((f) => ({ ...f, requiredSkill: e.target.value }))}
                     placeholder="e.g. Python, React"
-                    className="w-full bg-surface-mid border border-outline-var/30 rounded-lg p-2.5 text-xs text-text-primary outline-none focus:border-primary/60 font-outfit"
+                    className="w-full bg-surface-mid border border-outline-var/40 rounded-xs p-2 text-xs text-text-primary outline-none focus:border-primary/60 font-outfit"
                   />
                 </div>
 
                 <div>
-                  <label className="block font-outfit text-xs font-semibold text-text-muted mb-1.5">
+                  <label className="block font-mono text-[10px] uppercase tracking-wider text-outline/70 mb-1">
                     Min Score (0–10)
                   </label>
                   <input
@@ -842,20 +856,20 @@ export default function SquadDetail({ user: propUser, onLogout }) {
                     max={10}
                     value={slotForm.minScore}
                     onChange={(e) => setSlotForm((f) => ({ ...f, minScore: Number(e.target.value) }))}
-                    className="w-full bg-surface-mid border border-outline-var/30 rounded-lg p-2.5 text-xs text-text-primary outline-none focus:border-primary/60 font-outfit"
+                    className="w-full bg-surface-mid border border-outline-var/40 rounded-xs p-2 text-xs text-text-primary outline-none focus:border-primary/60 font-outfit"
                   />
                 </div>
               </div>
 
               <div className="flex items-center gap-2 pt-1">
-                <label className="flex items-center gap-2 cursor-pointer text-xs text-text-muted select-none">
+                <label className="flex items-center gap-2 cursor-pointer text-xs text-text-muted select-none font-outfit">
                   <input
                     type="checkbox"
                     checked={slotForm.requireVerified}
                     onChange={(e) => setSlotForm((f) => ({ ...f, requireVerified: e.target.checked }))}
-                    className="accent-primary rounded"
+                    className="accent-primary rounded-xs"
                   />
-                  <span>Require verified skill from applicants</span>
+                  <span>Require verified skill certificate from applicants</span>
                 </label>
               </div>
             </div>
@@ -864,7 +878,7 @@ export default function SquadDetail({ user: propUser, onLogout }) {
               <button
                 type="button"
                 onClick={() => setShowSlotModal(false)}
-                className="flex-1 py-2.5 border border-outline-var/30 text-text-muted hover:text-text-primary font-outfit font-semibold text-xs rounded-lg transition-colors"
+                className="flex-1 py-2 border border-outline-var/40 text-text-muted hover:text-text-primary font-mono text-[11px] uppercase tracking-wider rounded-xs transition-colors cursor-pointer"
               >
                 Cancel
               </button>
@@ -872,7 +886,7 @@ export default function SquadDetail({ user: propUser, onLogout }) {
                 type="button"
                 onClick={handleSaveSlot}
                 disabled={slotSubmitting}
-                className="flex-1 py-2.5 bg-primary text-on-primary font-outfit font-semibold text-xs rounded-lg hover:bg-primary-dim transition-colors disabled:opacity-50"
+                className="flex-1 py-2 bg-primary text-on-primary font-mono text-[11px] uppercase tracking-wider rounded-xs hover:bg-primary-dim transition-colors disabled:opacity-50 cursor-pointer"
               >
                 {slotSubmitting ? 'Saving...' : slotEditMode ? 'Update Slot' : 'Add Slot'}
               </button>
