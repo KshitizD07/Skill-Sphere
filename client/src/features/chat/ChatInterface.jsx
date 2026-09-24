@@ -10,6 +10,7 @@ import ChatAPI from './chatAPI';
 import API from '../../api';
 import Navbar from '../../shared/components/Navbar';
 import { useToast, ToastContainer } from '../../shared/components/Toast';
+import { ContrastBadge, CrosshairAnchor } from '../../shared/components/EditorialUI';
 
 function timeFormat(date) {
   if (!date) return '';
@@ -386,49 +387,53 @@ export default function ChatInterface({ user: propUser, onLogout }) {
       <div className="flex-1 md:ml-64 pt-16 md:pt-0 h-full max-h-full overflow-hidden flex min-h-0">
         {/* ── LEFT PANE: Conversations List ───────────────────────────────── */}
         <div
-          className={`w-full md:w-80 lg:w-96 bg-surface border-r border-outline-var/30 flex flex-col h-full min-h-0 shrink-0 ${
+          className={`w-full md:w-80 lg:w-96 bg-surface border-r border-outline-var/50 flex flex-col h-full min-h-0 shrink-0 ${
             mobileView === 'chat' ? 'hidden md:flex' : 'flex'
           }`}
         >
           {/* Header */}
-          <div className="p-4 border-b border-outline-var/20 flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <MessageSquare size={18} className="text-primary" />
-              <h2 className="font-syne font-extrabold text-base tracking-tight text-text-primary">Messages</h2>
+          <div className="p-4 border-b border-outline-var/40 flex items-center justify-between bg-surface">
+            <div>
+              <span className="font-mono text-[9px] uppercase tracking-widest text-outline block select-none">
+                SECURE TELEMETRY
+              </span>
+              <h2 className="font-syne font-bold text-base tracking-tight text-text-primary">
+                Transmissions
+              </h2>
             </div>
             <button
               onClick={() => setShowNewChatModal(true)}
-              className="p-1.5 bg-primary/10 hover:bg-primary text-primary hover:text-on-primary border border-primary/20 rounded-xs transition-all flex items-center gap-1 text-xs font-syne font-bold uppercase tracking-wider"
-              title="New Message"
+              className="px-2.5 py-1.5 bg-text-primary hover:bg-accent text-surface hover:text-text-primary border border-text-primary rounded-none transition-colors flex items-center gap-1 font-mono text-[10px] font-bold uppercase tracking-wider cursor-pointer"
+              title="New Channel"
             >
-              <Plus size={14} /> New Chat
+              <Plus size={12} /> New Channel
             </button>
           </div>
 
           {/* Search Bar */}
-          <div className="p-3 border-b border-outline-var/20">
+          <div className="p-3 border-b border-outline-var/40 bg-surface">
             <div className="relative">
-              <Search size={14} className="absolute left-3 top-2.5 text-outline" />
+              <Search size={13} className="absolute left-3 top-2.5 text-outline" />
               <input
                 value={searchFilter}
                 onChange={(e) => setSearchFilter(e.target.value)}
-                placeholder="Search conversations..."
-                className="w-full bg-surface-mid border border-outline-var/30 rounded-xs py-1.5 pl-8 pr-3 text-xs text-text-primary outline-none focus:border-primary/50 placeholder-outline-var font-outfit"
+                placeholder="Search transmission logs..."
+                className="w-full bg-surface-mid/40 border border-outline-var/50 rounded-none py-1.5 pl-8 pr-3 text-xs text-text-primary outline-none focus:border-text-primary placeholder-outline font-outfit"
               />
             </div>
           </div>
 
           {/* Conversations Scrollable List */}
-          <div className="flex-1 overflow-y-auto p-2 space-y-1">
+          <div className="flex-1 overflow-y-auto divide-y divide-outline-var/30">
             {filteredConversations.length === 0 ? (
-              <div className="text-center py-12 text-outline">
+              <div className="text-center py-16 text-outline p-4">
                 <MessageSquare size={28} className="mx-auto mb-2 opacity-40" />
-                <p className="text-xs font-syne uppercase tracking-wider">No active conversations</p>
+                <p className="font-mono text-xs uppercase tracking-wider">No active channels</p>
                 <button
                   onClick={() => setShowNewChatModal(true)}
-                  className="mt-3 text-primary text-xs font-bold hover:underline"
+                  className="mt-3 text-accent font-mono text-xs uppercase tracking-wider font-bold hover:underline cursor-pointer"
                 >
-                  Start a conversation
+                  [ Open New Channel + ]
                 </button>
               </div>
             ) : (
@@ -440,15 +445,15 @@ export default function ChatInterface({ user: propUser, onLogout }) {
                   <div
                     key={conv.id}
                     onClick={() => selectConversation(conv)}
-                    className={`flex items-center gap-3 p-3 rounded-xs cursor-pointer transition-all border ${
+                    className={`flex items-center gap-3 p-3.5 cursor-pointer transition-colors ${
                       isSelected
-                        ? 'bg-primary/10 border-primary/30'
-                        : 'bg-surface-mid/40 hover:bg-surface-mid border-outline-var/20 hover:border-outline-var/40'
+                        ? 'bg-surface-mid/90 border-l-4 border-l-text-primary'
+                        : 'bg-surface hover:bg-surface-mid/40'
                     }`}
                   >
                     {/* Avatar with live online dot */}
                     <div className="relative shrink-0">
-                      <div className="w-10 h-10 rounded-full border border-outline-var/40 overflow-hidden bg-surface-mid flex items-center justify-center">
+                      <div className="w-10 h-10 rounded-none border border-outline-var/50 overflow-hidden bg-surface-mid flex items-center justify-center">
                         {conv.otherUser?.avatar ? (
                           <img src={conv.otherUser.avatar} alt="" className="w-full h-full object-cover" />
                         ) : (
@@ -456,7 +461,7 @@ export default function ChatInterface({ user: propUser, onLogout }) {
                         )}
                       </div>
                       <span
-                        className={`absolute bottom-0 right-0 w-3 h-3 rounded-full border-2 border-surface ${
+                        className={`absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 rounded-none border border-surface ${
                           isOnline ? 'bg-accent' : 'bg-outline-var'
                         }`}
                         title={isOnline ? 'Online' : 'Offline'}
@@ -465,23 +470,23 @@ export default function ChatInterface({ user: propUser, onLogout }) {
 
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center justify-between">
-                        <span className="font-semibold text-sm text-text-primary truncate">
+                        <span className="font-bold text-sm text-text-primary truncate font-outfit">
                           {conv.otherUser?.name || 'User'}
                         </span>
                         {conv.lastMessage?.createdAt && (
-                          <span className="text-[10px] text-outline font-syne shrink-0 ml-1">
+                          <span className="font-mono text-[10px] text-outline uppercase tracking-wider tabular-nums shrink-0 ml-1">
                             {timeAgo(conv.lastMessage.createdAt)}
                           </span>
                         )}
                       </div>
                       <div className="flex items-center justify-between mt-0.5">
-                        <p className="text-xs text-text-muted truncate">
+                        <p className="text-xs text-text-muted truncate font-outfit">
                           {conv.lastMessage
                             ? `${conv.lastMessage.senderId === currentUser.id ? 'You: ' : ''}${conv.lastMessage.content}`
-                            : 'No messages yet'}
+                            : 'Channel established'}
                         </p>
                         {conv.unreadCount > 0 && (
-                          <span className="ml-2 px-1.5 py-0.5 bg-primary text-on-primary font-syne font-bold text-[10px] rounded-full shrink-0">
+                          <span className="ml-2 px-1.5 py-0.5 bg-text-primary text-surface font-mono font-bold text-[9px] rounded-none shrink-0">
                             {conv.unreadCount}
                           </span>
                         )}
@@ -496,52 +501,40 @@ export default function ChatInterface({ user: propUser, onLogout }) {
 
         {/* ── RIGHT PANE: Active Chat Thread ──────────────────────────────── */}
         <div
-          className={`flex-1 flex flex-col h-full min-h-0 bg-surface-mid/30 relative ${
+          className={`flex-1 flex flex-col h-full min-h-0 bg-surface-mid/20 relative ${
             mobileView === 'list' ? 'hidden md:flex' : 'flex'
           }`}
         >
           {loadingChat ? (
             /* ── Instant Loading Skeleton for Rapid Transition ─────────── */
             <div className="flex-1 min-h-0 flex flex-col h-full animate-pulse">
-              <div className="p-3.5 bg-surface border-b border-outline-var/20 flex items-center justify-between shrink-0 shadow-sm">
+              <div className="p-3.5 bg-surface border-b border-outline-var/40 flex items-center justify-between shrink-0">
                 <div className="flex items-center gap-3">
-                  <button
-                    onClick={() => {
-                      setMobileView('list');
-                      if (routeRecipientId) navigate('/chat');
-                    }}
-                    className="md:hidden p-2 -ml-2 text-outline"
-                  >
-                    <ChevronLeft size={22} />
-                  </button>
-                  <div className="w-10 h-10 rounded-full bg-surface-mid border border-outline-var/30" />
+                  <div className="w-10 h-10 bg-surface-mid" />
                   <div className="space-y-1.5">
-                    <div className="w-28 h-3.5 bg-surface-mid rounded-xs" />
-                    <div className="w-16 h-2.5 bg-surface-mid/60 rounded-xs" />
+                    <div className="w-28 h-3.5 bg-surface-mid" />
+                    <div className="w-16 h-2.5 bg-surface-mid/60" />
                   </div>
                 </div>
               </div>
 
               <div className="flex-1 min-h-0 p-4 md:p-6 space-y-4 overflow-y-auto">
                 <div className="flex justify-start">
-                  <div className="w-48 h-10 bg-surface border border-outline-var/20 rounded-md" />
+                  <div className="w-48 h-10 bg-surface border border-outline-var/30" />
                 </div>
                 <div className="flex justify-end">
-                  <div className="w-56 h-12 bg-primary/20 rounded-md" />
-                </div>
-                <div className="flex justify-start">
-                  <div className="w-40 h-8 bg-surface border border-outline-var/20 rounded-md" />
+                  <div className="w-56 h-12 bg-surface-mid border border-outline-var/40" />
                 </div>
               </div>
 
-              <div className="p-3 bg-surface border-t border-outline-var/20 shrink-0 mt-auto">
-                <div className="w-full h-10 bg-surface-mid border border-outline-var/30 rounded-xs" />
+              <div className="p-3 bg-surface border-t border-outline-var/40 shrink-0 mt-auto">
+                <div className="w-full h-10 bg-surface-mid" />
               </div>
             </div>
           ) : activeRecipient ? (
             <>
               {/* Thread Header */}
-              <div className="p-3.5 bg-surface border-b border-outline-var/20 flex items-center justify-between shrink-0 shadow-sm">
+              <div className="p-3.5 bg-surface border-b border-outline-var/50 flex items-center justify-between shrink-0">
                 <div className="flex items-center gap-3">
                   <button
                     onClick={() => {
@@ -549,13 +542,13 @@ export default function ChatInterface({ user: propUser, onLogout }) {
                       if (routeRecipientId) navigate('/chat');
                     }}
                     className="md:hidden p-2 -ml-2 text-outline hover:text-text-primary active:scale-95 transition-transform"
-                    aria-label="Back to conversations"
+                    aria-label="Back to transmissions"
                   >
-                    <ChevronLeft size={22} />
+                    <ChevronLeft size={20} />
                   </button>
 
                   <div className="relative">
-                    <div className="w-10 h-10 rounded-full border border-outline-var/40 overflow-hidden bg-surface-mid flex items-center justify-center">
+                    <div className="w-10 h-10 rounded-none border border-outline-var/60 overflow-hidden bg-surface-mid flex items-center justify-center">
                       {activeRecipient.avatar ? (
                         <img src={activeRecipient.avatar} alt="" className="w-full h-full object-cover" />
                       ) : (
@@ -563,7 +556,7 @@ export default function ChatInterface({ user: propUser, onLogout }) {
                       )}
                     </div>
                     <span
-                      className={`absolute bottom-0 right-0 w-2.5 h-2.5 rounded-full border-2 border-surface ${
+                      className={`absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 rounded-none border border-surface ${
                         onlineUserIds.has(activeRecipient.id) ? 'bg-accent' : 'bg-outline-var'
                       }`}
                     />
@@ -571,43 +564,45 @@ export default function ChatInterface({ user: propUser, onLogout }) {
 
                   <div>
                     <div className="flex items-center gap-2">
-                      <span className="font-extrabold text-sm text-text-primary tracking-tight">
+                      <span className="font-bold text-sm text-text-primary tracking-tight font-outfit">
                         {activeRecipient.name}
                       </span>
                       {activeRecipient.role === 'PROFESSIONAL' && (
-                        <span className="px-1.5 py-0.5 bg-accent/10 text-accent text-[8px] font-syne font-bold uppercase rounded-xs">
+                        <ContrastBadge variant="ochre">
                           Pro
-                        </span>
+                        </ContrastBadge>
                       )}
                     </div>
-                    <div className="flex items-center gap-1.5 text-[10px] text-outline">
+                    <div className="flex items-center gap-1.5 font-mono text-[10px] uppercase tracking-wider text-outline">
                       <span
-                        className={`w-1.5 h-1.5 rounded-full ${
+                        className={`w-1.5 h-1.5 rounded-none ${
                           onlineUserIds.has(activeRecipient.id) ? 'bg-accent animate-pulse' : 'bg-outline-var'
                         }`}
                       />
-                      <span>{onlineUserIds.has(activeRecipient.id) ? 'Online' : 'Offline'}</span>
-                      {activeRecipient.college && <span>• {activeRecipient.college}</span>}
+                      <span>{onlineUserIds.has(activeRecipient.id) ? 'ONLINE TELEMETRY' : 'OFFLINE ARCHIVE'}</span>
+                      {activeRecipient.college && <span>// {activeRecipient.college}</span>}
                     </div>
                   </div>
                 </div>
 
                 <button
                   onClick={() => navigate(`/profile/${activeRecipient.id}`)}
-                  className="px-3 py-1.5 bg-surface-mid border border-outline-var/30 hover:border-primary/40 text-text-primary text-xs font-syne font-bold uppercase tracking-wider rounded-xs transition-colors flex items-center gap-1.5"
+                  className="px-3.5 py-1.5 bg-surface-mid border border-outline-var/60 hover:border-text-primary text-text-primary font-mono text-[11px] font-bold uppercase tracking-wider rounded-none transition-colors flex items-center gap-1.5 cursor-pointer"
                 >
-                  <ExternalLink size={12} /> Profile
+                  <ExternalLink size={12} /> Dossier
                 </button>
               </div>
 
               {/* Messages Stream */}
-              <div className="flex-1 min-h-0 overflow-y-auto p-4 md:p-6 space-y-3 flex flex-col">
+              <div className="flex-1 min-h-0 overflow-y-auto p-4 md:p-6 space-y-4 flex flex-col">
                 {messages.length === 0 ? (
                   <div className="my-auto text-center py-12 text-outline font-outfit">
-                    <MessageSquare size={36} className="mx-auto mb-2 text-primary opacity-50" />
-                    <h4 className="text-sm font-bold text-text-primary">Direct Message Channel</h4>
-                    <p className="text-xs text-text-muted mt-1 max-w-sm mx-auto">
-                      Say hello to {activeRecipient.name} to start collaborating on skills and squads.
+                    <MessageSquare size={36} className="mx-auto mb-2 text-outline opacity-40" />
+                    <h4 className="font-mono text-xs uppercase tracking-widest text-text-primary font-bold">
+                      TRANSMISSION CHANNEL READY
+                    </h4>
+                    <p className="text-xs text-text-muted mt-1 max-w-sm mx-auto font-outfit">
+                      Dispatch your first message to {activeRecipient.name} to initiate real-time peer dialogue.
                     </p>
                   </div>
                 ) : (
@@ -619,32 +614,32 @@ export default function ChatInterface({ user: propUser, onLogout }) {
                       <div key={m.id || idx} className={`flex ${isMe ? 'justify-end' : 'justify-start'} group`}>
                         <div className={`max-w-[85%] md:max-w-[70%] space-y-1`}>
                           <div
-                            className={`p-3 rounded-md text-sm leading-relaxed relative ${
+                            className={`p-3.5 rounded-none text-sm leading-relaxed relative ${
                               isDeleted
-                                ? 'bg-surface-mid/60 border border-outline-var/20 text-outline italic text-xs'
+                                ? 'bg-surface-mid/60 border border-outline-var/30 text-outline italic text-xs'
                                 : isMe
-                                ? 'bg-primary text-on-primary rounded-br-none shadow-sm'
-                                : 'bg-surface border border-outline-var/25 text-text-primary rounded-bl-none shadow-sm'
+                                ? 'bg-text-primary text-surface border border-text-primary'
+                                : 'bg-surface border border-outline-var/60 text-text-primary'
                             }`}
                           >
-                            <p className="whitespace-pre-wrap break-words">{m.content}</p>
+                            <p className="whitespace-pre-wrap break-words font-outfit">{m.content}</p>
                           </div>
 
-                          <div className={`flex items-center gap-1.5 px-1 text-[10px] text-outline font-syne ${isMe ? 'justify-end' : 'justify-start'}`}>
+                          <div className={`flex items-center gap-1.5 px-1 font-mono text-[10px] text-outline uppercase tracking-wider tabular-nums ${isMe ? 'justify-end' : 'justify-start'}`}>
                             <span>{timeFormat(m.createdAt)}</span>
                             {isMe && !isDeleted && (
-                              <span title={m.isRead ? 'Read' : 'Sent'}>
+                              <span title={m.isRead ? 'Read' : 'Delivered'}>
                                 {m.isRead ? (
-                                  <CheckCheck size={12} className="text-accent" />
+                                  <CheckCheck size={12} className="text-accent inline" />
                                 ) : (
-                                  <Check size={12} className="text-outline" />
+                                  <Check size={12} className="text-outline inline" />
                                 )}
                               </span>
                             )}
                             {isMe && !isDeleted && (
                               <button
                                 onClick={() => handleDeleteMessage(m.id)}
-                                className="opacity-0 group-hover:opacity-100 text-outline hover:text-error transition-opacity ml-1"
+                                className="opacity-0 group-hover:opacity-100 text-outline hover:text-[#8B3A3A] transition-opacity ml-1 cursor-pointer"
                                 title="Delete message"
                               >
                                 <Trash2 size={10} />
@@ -659,12 +654,8 @@ export default function ChatInterface({ user: propUser, onLogout }) {
 
                 {/* Typing status */}
                 {isTyping && (
-                  <div className="flex items-center gap-2 text-xs text-outline italic py-1">
-                    <div className="flex gap-1">
-                      <span className="w-1.5 h-1.5 rounded-full bg-primary animate-bounce" />
-                      <span className="w-1.5 h-1.5 rounded-full bg-primary animate-bounce delay-150" />
-                      <span className="w-1.5 h-1.5 rounded-full bg-primary animate-bounce delay-300" />
-                    </div>
+                  <div className="flex items-center gap-2 font-mono text-[11px] uppercase tracking-wider text-outline italic py-1">
+                    <span className="w-1.5 h-1.5 bg-accent animate-pulse" />
                     <span>{activeRecipient.name} is typing...</span>
                   </div>
                 )}
@@ -673,10 +664,10 @@ export default function ChatInterface({ user: propUser, onLogout }) {
               </div>
 
               {/* Compose Bar */}
-              <div className="p-3 bg-surface border-t border-outline-var/20 shrink-0 relative mt-auto pb-safe">
+              <div className="p-3.5 bg-surface border-t border-outline-var/50 shrink-0 relative mt-auto pb-safe">
                 {/* Quick emoji drawer */}
                 {showEmojiPicker && (
-                  <div className="absolute bottom-full left-3 mb-2 p-2 bg-surface border border-outline-var/30 rounded-md shadow-2xl flex gap-1.5 z-20">
+                  <div className="absolute bottom-full left-3 mb-2 p-2 bg-surface border border-outline-var/60 rounded-none shadow-2xl flex gap-1.5 z-20">
                     {quickEmojis.map((emoji) => (
                       <button
                         key={emoji}
@@ -685,7 +676,7 @@ export default function ChatInterface({ user: propUser, onLogout }) {
                           setMsgInput((prev) => prev + emoji);
                           setShowEmojiPicker(false);
                         }}
-                        className="text-lg hover:scale-125 transition-transform p-1"
+                        className="text-lg hover:scale-125 transition-transform p-1 cursor-pointer"
                       >
                         {emoji}
                       </button>
@@ -697,10 +688,10 @@ export default function ChatInterface({ user: propUser, onLogout }) {
                   <button
                     type="button"
                     onClick={() => setShowEmojiPicker(!showEmojiPicker)}
-                    className="p-2.5 text-outline hover:text-primary transition-colors rounded-xs border border-outline-var/30 bg-surface-mid"
+                    className="p-2.5 text-outline hover:text-text-primary transition-colors rounded-none border border-outline-var/50 bg-surface-mid cursor-pointer"
                     title="Quick Reactions"
                   >
-                    <Smile size={18} />
+                    <Smile size={16} />
                   </button>
 
                   <textarea
@@ -712,35 +703,38 @@ export default function ChatInterface({ user: propUser, onLogout }) {
                         handleSendMessage();
                       }
                     }}
-                    placeholder={`Message ${activeRecipient.name}...`}
+                    placeholder={`Dispatch transmission to ${activeRecipient.name}...`}
                     rows={1}
                     maxLength={2000}
-                    className="flex-1 bg-surface-mid border border-outline-var/30 focus:border-primary/60 text-text-primary p-2.5 rounded-xs text-sm outline-none resize-none max-h-32 placeholder-outline-var font-outfit"
+                    className="flex-1 bg-surface-mid/40 border border-outline-var/50 focus:border-text-primary text-text-primary p-2.5 rounded-none text-sm outline-none resize-none max-h-32 placeholder-outline font-outfit"
                   />
 
                   <button
                     type="submit"
                     disabled={!msgInput.trim()}
-                    className="p-2.5 bg-primary text-on-primary rounded-xs hover:bg-secondary-bright disabled:opacity-40 transition-all font-syne font-bold text-xs uppercase flex items-center justify-center shrink-0"
-                    title="Send Message"
+                    className="p-2.5 px-4 bg-text-primary text-surface rounded-none hover:bg-accent hover:text-text-primary disabled:opacity-40 transition-all font-mono font-bold text-xs uppercase tracking-wider flex items-center justify-center gap-1 shrink-0 cursor-pointer"
+                    title="Send Transmission"
                   >
-                    <Send size={16} />
+                    <Send size={14} />
+                    <span className="hidden sm:inline">Send</span>
                   </button>
                 </form>
               </div>
             </>
           ) : (
             <div className="flex-1 flex flex-col items-center justify-center p-8 text-center text-outline">
-              <MessageSquare size={48} className="text-primary opacity-30 mb-3" />
-              <h3 className="text-base font-extrabold text-text-primary tracking-tight">Select a Conversation</h3>
-              <p className="text-xs text-text-muted mt-1 max-w-xs leading-relaxed">
-                Choose an existing chat from the left panel or start a new conversation with a network member.
+              <MessageSquare size={44} className="text-outline opacity-40 mb-3" />
+              <h3 className="font-mono text-sm uppercase tracking-widest text-text-primary font-bold">
+                Select a Transmission Channel
+              </h3>
+              <p className="text-xs text-text-muted mt-1 max-w-xs leading-relaxed font-outfit">
+                Choose an active session from the left directory or initiate a new peer dispatch.
               </p>
               <button
                 onClick={() => setShowNewChatModal(true)}
-                className="mt-4 px-4 py-2 bg-primary text-on-primary font-syne font-bold text-xs uppercase tracking-wider rounded-xs hover:bg-secondary-bright transition-all"
+                className="mt-4 px-5 py-2.5 bg-text-primary text-surface font-mono font-bold text-xs uppercase tracking-widest rounded-none hover:bg-accent hover:text-text-primary transition-all cursor-pointer"
               >
-                Start New Message
+                Initiate New Channel
               </button>
             </div>
           )}
@@ -750,50 +744,54 @@ export default function ChatInterface({ user: propUser, onLogout }) {
       {/* ── New Chat / User Search Modal ──────────────────────────────────── */}
       {showNewChatModal && (
         <div className="fixed inset-0 bg-bg-base/80 backdrop-blur-sm z-[400] flex items-center justify-center p-4">
-          <div className="relative w-full max-w-md bg-surface border border-outline-var/30 rounded-md p-6 shadow-2xl space-y-4 font-outfit">
-            <div className="flex items-center justify-between pb-3 border-b border-outline-var/20">
-              <div className="flex items-center gap-2">
-                <MessageSquare size={18} className="text-primary" />
-                <h3 className="text-base font-extrabold text-text-primary tracking-tight">New Direct Message</h3>
+          <div className="relative w-full max-w-md bg-surface border-t-2 border-text-primary border-x border-b border-outline-var/60 rounded-none p-6 shadow-2xl space-y-4 font-outfit">
+            <div className="flex items-center justify-between pb-3 border-b border-outline-var/40">
+              <div>
+                <span className="font-mono text-[9px] uppercase tracking-widest text-outline block select-none">
+                  INITIATE CHANNEL
+                </span>
+                <h3 className="font-syne text-base font-bold text-text-primary tracking-tight">
+                  New Transmission
+                </h3>
               </div>
-              <button onClick={() => setShowNewChatModal(false)} className="text-outline hover:text-text-primary">
-                <X size={18} />
+              <button onClick={() => setShowNewChatModal(false)} className="text-outline hover:text-text-primary font-mono text-xs uppercase cursor-pointer">
+                [ Close × ]
               </button>
             </div>
 
             <div className="relative">
-              <Search size={16} className="absolute left-3 top-3 text-outline" />
+              <Search size={15} className="absolute left-3 top-3 text-outline" />
               <input
                 value={userSearchQuery}
                 onChange={handleUserSearch}
-                placeholder="Type member name, college, or headline..."
-                className="w-full bg-surface-mid border border-outline-var/40 focus:border-primary/60 text-text-primary p-2.5 pl-9 rounded-xs text-sm outline-none placeholder-outline-var"
+                placeholder="Search builder name, college, or role..."
+                className="w-full bg-surface-mid/40 border border-outline-var/50 focus:border-text-primary text-text-primary p-2.5 pl-9 rounded-none text-xs outline-none placeholder-outline font-outfit"
                 autoFocus
               />
             </div>
 
-            <div className="space-y-2 max-h-64 overflow-y-auto">
+            <div className="space-y-1.5 max-h-64 overflow-y-auto divide-y divide-outline-var/30">
               {userSearchResults.length === 0 ? (
-                <p className="text-center py-6 text-xs text-outline italic">
-                  {userSearchQuery.trim() ? 'No members found.' : 'Search for a member to start chatting.'}
+                <p className="text-center py-6 font-mono text-xs text-outline uppercase tracking-wider">
+                  {userSearchQuery.trim() ? 'No builders matched query' : 'Type to search directory members...'}
                 </p>
               ) : (
                 userSearchResults.map((u) => (
                   <div
                     key={u.id}
                     onClick={() => handleStartChatWithUser(u)}
-                    className="flex items-center justify-between p-2.5 rounded-xs bg-surface-mid/60 hover:bg-surface-mid border border-outline-var/20 hover:border-primary/30 cursor-pointer transition-colors"
+                    className="flex items-center justify-between p-3 rounded-none bg-surface hover:bg-surface-mid cursor-pointer transition-colors"
                   >
                     <div className="flex items-center gap-3">
-                      <div className="w-8 h-8 rounded-full overflow-hidden bg-surface border border-outline-var/40 flex items-center justify-center">
-                        {u.avatar ? <img src={u.avatar} alt="" className="w-full h-full object-cover" /> : <User size={16} />}
+                      <div className="w-8 h-8 rounded-none overflow-hidden bg-surface-mid border border-outline-var/50 flex items-center justify-center">
+                        {u.avatar ? <img src={u.avatar} alt="" className="w-full h-full object-cover" /> : <User size={15} />}
                       </div>
                       <div>
-                        <div className="text-xs font-bold text-text-primary">{u.name}</div>
-                        <div className="text-[10px] text-outline font-syne">{u.headline || u.college || u.role}</div>
+                        <div className="text-xs font-bold text-text-primary font-outfit">{u.name}</div>
+                        <div className="font-mono text-[10px] text-outline uppercase tracking-wider">{u.headline || u.college || u.role}</div>
                       </div>
                     </div>
-                    <span className="text-[10px] font-syne font-bold text-primary uppercase">Chat →</span>
+                    <span className="font-mono text-[10px] font-bold text-accent uppercase tracking-wider">Connect →</span>
                   </div>
                 ))
               )}
