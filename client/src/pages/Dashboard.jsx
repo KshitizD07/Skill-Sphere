@@ -13,7 +13,7 @@ import SEOHead from '../shared/components/SEOHead';
 import ReactMarkdown from 'react-markdown';
 import SkillVerifier from '../features/skills/SkillVerifier';
 
-// ─── Radar Chart (Upgraded to Glowing Bronze) ────────────────────────────────
+// ─── Radar Chart (High-Craft Minimalist Visualization) ────────────────────────
 const RadarChart = ({ score }) => {
   const cx = 100, cy = 100, maxR = 80;
   const axes = 5;
@@ -29,37 +29,36 @@ const RadarChart = ({ score }) => {
   const dataRatio = Math.min(Math.max((score || 0) / 100, 0), 1);
 
   return (
-    <div className="relative w-56 h-56 mx-auto mb-4">
-      {/* Glow effect behind chart */}
-      <div className="absolute inset-0 bg-primary/5 blur-2xl rounded-full" />
-      <svg viewBox="0 0 200 200" className="w-full h-full relative z-10 drop-shadow-[0_0_10px_rgba(245,158,11,0.2)]">
+    <div className="relative w-52 h-52 mx-auto mb-3">
+      <svg viewBox="0 0 200 200" className="w-full h-full relative z-10">
         {gridLevels.map((ratio, i) => (
-          <polygon key={i} points={buildPoints(ratio)} fill="none" stroke="rgba(245, 158, 11, 0.1)" strokeWidth="1" />
+          <polygon key={i} points={buildPoints(ratio)} fill="none" stroke="rgba(194, 159, 93, 0.15)" strokeWidth="1" />
         ))}
         {Array.from({ length: axes }, (_, i) => {
           const angle = (2 * Math.PI * i) / axes - Math.PI / 2;
           return (
             <line key={i} x1={cx} y1={cy}
               x2={cx + maxR * Math.cos(angle)} y2={cy + maxR * Math.sin(angle)}
-              stroke="rgba(245, 158, 11, 0.15)" strokeWidth="1"
+              stroke="rgba(194, 159, 93, 0.2)" strokeWidth="1"
             />
           );
         })}
         {/* Animated fill polygon */}
         <polygon 
           points={buildPoints(dataRatio)} 
-          fill="rgba(245, 158, 11, 0.15)" 
-          stroke="#f59e0b" 
-          strokeWidth="2.5" 
+          fill="rgba(194, 159, 93, 0.18)" 
+          stroke="#C29F5D" 
+          strokeWidth="2" 
           strokeLinejoin="round"
         />
-        <text x={cx} y={cy + 8} textAnchor="middle" fill="#111111" fontSize="22" fontWeight="800" fontFamily="Syne, sans-serif">
+        <text x={cx} y={cy + 8} textAnchor="middle" fill="#111111" fontSize="22" fontWeight="700" fontFamily="Outfit, sans-serif">
           {score}%
         </text>
       </svg>
     </div>
   );
 };
+
 
 const POPULAR_ROLES = [
   'Full Stack Web Developer',
@@ -318,36 +317,36 @@ export default function Dashboard({ user, onLogout }) {
 
         {/* ── Mobile Segmented Tab Bar (Visible only on mobile screens < xl) ── */}
         <div className="px-6 pt-6 xl:hidden">
-          <div className="flex bg-surface-mid p-1 rounded-xl border border-outline-var/30 gap-1 shadow-inner">
+          <div className="flex bg-surface-mid p-1 rounded-lg border border-outline-var/30 gap-1">
             <button
               onClick={() => setMobileTab('config')}
-              className={`flex-1 py-2.5 rounded-lg text-xs font-syne font-bold uppercase tracking-wider transition-all flex items-center justify-center gap-1.5 ${
+              className={`flex-1 py-2 rounded-md text-xs font-semibold font-outfit transition-all text-center ${
                 mobileTab === 'config'
-                  ? 'bg-primary text-on-primary shadow-md'
+                  ? 'bg-surface text-text-primary shadow-sm border border-outline-var/30'
                   : 'text-text-muted hover:text-text-primary'
               }`}
             >
-              <BarChart2 size={14} /> Target & Skills
+              Target & Skills
             </button>
             <button
               onClick={() => setMobileTab('diagnostics')}
-              className={`flex-1 py-2.5 rounded-lg text-xs font-syne font-bold uppercase tracking-wider transition-all flex items-center justify-center gap-1.5 ${
+              className={`flex-1 py-2 rounded-md text-xs font-semibold font-outfit transition-all flex items-center justify-center gap-1.5 ${
                 mobileTab === 'diagnostics'
-                  ? 'bg-primary text-on-primary shadow-md'
+                  ? 'bg-surface text-text-primary shadow-sm border border-outline-var/30'
                   : 'text-text-muted hover:text-text-primary'
               }`}
             >
-              <Brain size={14} /> Diagnostics {analysis && <span className="w-2 h-2 rounded-full bg-accent animate-ping" />}
+              Diagnostics {analysis && <span className="w-1.5 h-1.5 rounded-full bg-accent" />}
             </button>
             <button
               onClick={() => setMobileTab('feed')}
-              className={`flex-1 py-2.5 rounded-lg text-xs font-syne font-bold uppercase tracking-wider transition-all flex items-center justify-center gap-1.5 ${
+              className={`flex-1 py-2 rounded-md text-xs font-semibold font-outfit transition-all text-center ${
                 mobileTab === 'feed'
-                  ? 'bg-primary text-on-primary shadow-md'
+                  ? 'bg-surface text-text-primary shadow-sm border border-outline-var/30'
                   : 'text-text-muted hover:text-text-primary'
               }`}
             >
-              <Activity size={14} /> Roadmaps
+              Roadmaps
             </button>
           </div>
         </div>
@@ -359,26 +358,26 @@ export default function Dashboard({ user, onLogout }) {
           <div className={`xl:col-span-4 space-y-6 ${mobileTab !== 'config' ? 'hidden xl:block' : 'block'}`}>
             
             {/* Custom Searchable Combobox Dropdown Panel */}
-            <div className="bg-surface border border-outline-var/30 rounded-xl p-6 shadow-xl hover:border-primary/20 transition-all relative" ref={roleDropdownRef}>
-              <h3 className="font-syne text-[10px] font-bold tracking-widest uppercase text-primary mb-3 flex items-center justify-between">
-                <span className="flex items-center gap-2"><BarChart2 size={12} /> Target Role</span>
+            <div className="bg-surface border border-outline-var/30 rounded-xl p-6 shadow-sm relative" ref={roleDropdownRef}>
+              <h3 className="font-outfit text-xs font-semibold uppercase tracking-wider text-text-muted mb-3 flex items-center justify-between">
+                <span>Target Role</span>
                 {selectedRole && (
                   <button 
                     onClick={() => setSelectedRole('')} 
-                    className="text-text-muted hover:text-error text-[10px] lowercase flex items-center gap-1 transition-colors"
+                    className="text-text-muted hover:text-text-primary text-xs capitalize flex items-center gap-1 transition-colors"
                   >
-                    <X size={10} /> clear
+                    Clear
                   </button>
                 )}
               </h3>
 
               <div className="relative">
                 <div className="relative flex items-center">
-                  <Search size={16} className="absolute left-3.5 text-text-muted pointer-events-none" />
+                  <Search size={15} className="absolute left-3.5 text-text-muted pointer-events-none" />
                   <input
                     type="text"
-                    className="w-full pl-10 pr-9 py-3.5 rounded-lg border border-outline-var/40 bg-surface-mid text-text-primary focus:border-primary/60 outline-none font-outfit text-sm transition-colors shadow-inner"
-                    placeholder="Search or type a target role..."
+                    className="w-full pl-10 pr-9 py-3 rounded-lg border border-outline-var/40 bg-surface-mid text-text-primary focus:border-primary/60 outline-none font-outfit text-sm transition-colors"
+                    placeholder="Search or select a target role..."
                     value={selectedRole}
                     onFocus={() => setIsRoleDropdownOpen(true)}
                     onChange={(e) => {
@@ -402,12 +401,12 @@ export default function Dashboard({ user, onLogout }) {
                       initial={{ opacity: 0, y: 4 }}
                       animate={{ opacity: 1, y: 0 }}
                       exit={{ opacity: 0, y: 4 }}
-                      className="absolute z-50 left-0 right-0 mt-2 bg-surface-mid border border-outline-var/40 rounded-xl shadow-2xl overflow-hidden max-h-72 overflow-y-auto custom-scrollbar"
+                      className="absolute z-50 left-0 right-0 mt-2 bg-surface border border-outline-var/40 rounded-xl shadow-xl overflow-hidden max-h-72 overflow-y-auto custom-scrollbar"
                     >
                       {/* Popular Role Chips */}
-                      <div className="p-3 border-b border-outline-var/20 bg-bg-base/40">
-                        <div className="text-[9px] font-syne uppercase tracking-wider text-outline mb-2 flex items-center gap-1 font-bold">
-                          <Sparkles size={10} className="text-primary" /> Popular Roles
+                      <div className="p-3 border-b border-outline-var/20 bg-surface-mid/50">
+                        <div className="text-xs font-semibold text-text-muted mb-2 font-outfit">
+                          Popular Roles
                         </div>
                         <div className="flex flex-wrap gap-1.5">
                           {POPULAR_ROLES.map(popRole => (
@@ -418,10 +417,10 @@ export default function Dashboard({ user, onLogout }) {
                                 setSelectedRole(popRole);
                                 setIsRoleDropdownOpen(false);
                               }}
-                              className={`text-[10px] px-2.5 py-1 rounded-md border transition-all ${
+                              className={`text-xs px-2.5 py-1 rounded-md border transition-all font-outfit ${
                                 selectedRole === popRole
-                                  ? 'bg-primary text-on-primary border-primary font-bold'
-                                  : 'bg-surface/80 border-outline-var/30 text-text-muted hover:border-primary/40 hover:text-text-primary'
+                                  ? 'bg-primary text-on-primary border-primary font-semibold'
+                                  : 'bg-surface border-outline-var/30 text-text-muted hover:border-outline-var/60 hover:text-text-primary'
                               }`}
                             >
                               {popRole}
@@ -432,7 +431,7 @@ export default function Dashboard({ user, onLogout }) {
 
                       {/* System Roles List */}
                       <div className="py-1">
-                        <div className="px-3 py-1 text-[9px] font-syne uppercase tracking-wider text-outline font-bold">
+                        <div className="px-3 py-1.5 text-xs font-semibold text-text-muted font-outfit">
                           All Catalog Roles
                         </div>
                         {roles
@@ -444,10 +443,10 @@ export default function Dashboard({ user, onLogout }) {
                                 setSelectedRole(r.title);
                                 setIsRoleDropdownOpen(false);
                               }}
-                              className={`px-4 py-2.5 text-xs cursor-pointer flex items-center justify-between transition-colors ${
+                              className={`px-4 py-2 text-xs cursor-pointer flex items-center justify-between transition-colors font-outfit ${
                                 selectedRole === r.title
-                                  ? 'bg-primary/15 text-primary font-semibold'
-                                  : 'hover:bg-surface text-text-primary'
+                                  ? 'bg-primary/10 text-primary font-semibold'
+                                  : 'hover:bg-surface-mid text-text-primary'
                               }`}
                             >
                               <span>{r.title}</span>
@@ -458,10 +457,9 @@ export default function Dashboard({ user, onLogout }) {
                         {selectedRole && !roles.some(r => r.title.toLowerCase() === selectedRole.toLowerCase()) && (
                           <div
                             onClick={() => setIsRoleDropdownOpen(false)}
-                            className="px-4 py-3 bg-primary/5 text-xs text-primary font-medium flex items-center justify-between border-t border-outline-var/20 cursor-pointer hover:bg-primary/10"
+                            className="px-4 py-2.5 bg-surface-mid/60 text-xs text-text-primary font-medium flex items-center justify-between border-t border-outline-var/20 cursor-pointer hover:bg-surface-mid font-outfit"
                           >
                             <span>Use custom prompt: <strong>&ldquo;{selectedRole}&rdquo;</strong></span>
-                            <Sparkles size={12} />
                           </div>
                         )}
                       </div>
@@ -472,12 +470,12 @@ export default function Dashboard({ user, onLogout }) {
             </div>
 
             {/* Role-Filtered Skill Checklist Panel */}
-            <div className="bg-surface border border-outline-var/30 rounded-xl p-6 shadow-xl hover:border-primary/20 transition-all flex flex-col h-[420px]">
+            <div className="bg-surface border border-outline-var/30 rounded-xl p-6 shadow-sm flex flex-col h-[420px]">
               
               {/* Header & Filter Controls */}
               <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-3">
-                <h3 className="font-syne text-[10px] font-bold tracking-widest uppercase text-primary flex items-center gap-1.5">
-                  <Filter size={12} /> Skills Inventory
+                <h3 className="font-outfit text-xs font-semibold uppercase tracking-wider text-text-muted">
+                  Skills Inventory
                 </h3>
 
                 {/* Filter Toggle Pills */}
@@ -486,30 +484,30 @@ export default function Dashboard({ user, onLogout }) {
                     <button
                       type="button"
                       onClick={() => setInventoryFilter('role')}
-                      className={`text-[9px] font-syne font-bold uppercase tracking-wider px-2.5 py-1 rounded-md transition-all ${
+                      className={`text-xs font-outfit font-medium px-2.5 py-1 rounded-md transition-all ${
                         inventoryFilter === 'role'
-                          ? 'bg-primary text-on-primary shadow-sm'
+                          ? 'bg-surface text-text-primary shadow-xs border border-outline-var/30'
                           : 'text-text-muted hover:text-text-primary'
                       }`}
                       title="Show only skills relevant to selected role"
                     >
-                      🎯 Role Skills ({roleSkillsCount})
+                      Role Skills ({roleSkillsCount})
                     </button>
                     <button
                       type="button"
                       onClick={() => setInventoryFilter('all')}
-                      className={`text-[9px] font-syne font-bold uppercase tracking-wider px-2.5 py-1 rounded-md transition-all ${
+                      className={`text-xs font-outfit font-medium px-2.5 py-1 rounded-md transition-all ${
                         inventoryFilter === 'all'
-                          ? 'bg-primary text-on-primary shadow-sm'
+                          ? 'bg-surface text-text-primary shadow-xs border border-outline-var/30'
                           : 'text-text-muted hover:text-text-primary'
                       }`}
                       title="Show all skills in platform catalogue"
                     >
-                      🌐 All ({allSkills.length})
+                      All ({allSkills.length})
                     </button>
                   </div>
                 ) : (
-                  <span className="text-[10px] text-text-muted font-syne uppercase tracking-wider">
+                  <span className="text-xs text-text-muted font-outfit">
                     Total: {allSkills.length}
                   </span>
                 )}
@@ -523,7 +521,7 @@ export default function Dashboard({ user, onLogout }) {
                   placeholder="Filter inventory..."
                   value={skillSearch}
                   onChange={(e) => setSkillSearch(e.target.value)}
-                  className="w-full pl-8 pr-3 py-1.5 text-xs rounded-md bg-surface-mid border border-outline-var/30 text-text-primary focus:border-primary/50 outline-none"
+                  className="w-full pl-8 pr-3 py-1.5 text-xs rounded-md bg-surface-mid border border-outline-var/30 text-text-primary focus:border-primary/50 outline-none font-outfit"
                 />
                 {skillSearch && (
                   <button
@@ -542,16 +540,16 @@ export default function Dashboard({ user, onLogout }) {
                     <div
                       key={skill.id}
                       onClick={() => toggleSkill(skill.id)}
-                      className={`flex items-center gap-3 p-3 rounded-lg cursor-pointer transition-all border ${
+                      className={`flex items-center gap-3 p-2.5 rounded-lg cursor-pointer transition-all border ${
                         mySkills.includes(skill.id)
-                          ? 'bg-primary/10 border-primary/30 shadow-[0_2px_10px_rgba(245,158,11,0.05)]'
-                          : 'hover:bg-surface-mid border-transparent hover:border-outline-var/30'
+                          ? 'bg-primary/10 border-primary/30'
+                          : 'hover:bg-surface-mid border-transparent hover:border-outline-var/20'
                       }`}
                     >
-                      <div className={`w-4 h-4 rounded border-2 flex items-center justify-center transition-colors flex-shrink-0 ${
-                        mySkills.includes(skill.id) ? 'bg-primary border-primary' : 'border-outline-var'
+                      <div className={`w-4 h-4 rounded border flex items-center justify-center transition-colors flex-shrink-0 ${
+                        mySkills.includes(skill.id) ? 'bg-primary border-primary' : 'border-outline-var/50 bg-surface'
                       }`}>
-                        {mySkills.includes(skill.id) && <div className="w-1.5 h-1.5 bg-on-primary rounded-sm" />}
+                        {mySkills.includes(skill.id) && <Check size={12} className="text-on-primary" />}
                       </div>
                       <span className={`text-sm select-none transition-colors flex-1 ${mySkills.includes(skill.id) ? 'text-text-primary font-medium' : 'text-text-muted'}`}>
                         {skill.name}
@@ -563,21 +561,22 @@ export default function Dashboard({ user, onLogout }) {
                           return (
                             <span 
                               title={`Verified Score: ${scoreText}`} 
-                              className="text-[10px] text-accent font-syne uppercase tracking-wider font-bold bg-accent/10 border border-accent/30 px-2 py-0.5 rounded flex items-center gap-1"
+                              className="text-xs text-accent font-outfit font-medium bg-accent-container/50 border border-accent/25 px-2 py-0.5 rounded"
                             >
-                              🛡️ {scoreText}
+                              Verified · {scoreText}
                             </span>
                           );
                         }
                         if (userSk) {
                           return (
-                            <span 
-                              title="Self-Declared" 
-                              className="text-[10px] text-error font-syne uppercase tracking-wider font-bold cursor-pointer hover:underline bg-error/10 border border-error/20 px-2 py-0.5 rounded" 
+                            <button
+                              type="button"
+                              title="Self-Declared — click to verify" 
+                              className="text-xs text-text-muted hover:text-primary font-outfit font-medium px-2 py-0.5 rounded transition-colors" 
                               onClick={(e) => { e.stopPropagation(); setVerifySkillModal(skill.name); }}
                             >
-                              ⚠️ Verify
-                            </span>
+                              Verify
+                            </button>
                           );
                         }
                         return null;
@@ -585,11 +584,11 @@ export default function Dashboard({ user, onLogout }) {
                     </div>
                   ))
                 ) : (
-                  <div className="text-outline text-xs p-6 text-center space-y-2">
+                  <div className="text-text-muted text-xs p-6 text-center space-y-2">
                     <p>No matching skills found for this role filter.</p>
                     <button
                       onClick={() => { setInventoryFilter('all'); setSkillSearch(''); }}
-                      className="text-primary text-[10px] font-syne font-bold uppercase tracking-wider underline hover:text-primary-dim"
+                      className="text-primary text-xs font-outfit font-semibold hover:underline"
                     >
                       Show All Catalog Skills
                     </button>
@@ -598,23 +597,22 @@ export default function Dashboard({ user, onLogout }) {
               </div>
             </div>
 
-            {/* Diagnostics Action Buttons with Touch Sizing */}
-            <div className="flex gap-3">
+            {/* Diagnostics Action Buttons */}
+            <div className="flex gap-2.5">
               <button
                 onClick={() => handleAnalyze(false)}
                 disabled={analyzing}
-                className="flex-1 min-h-[52px] py-3.5 rounded-xl bg-gradient-to-r from-primary to-primary-dim text-on-primary font-syne font-bold text-xs tracking-widest uppercase hover:brightness-110 transition-all active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed shadow-[0_0_20px_rgba(245,158,11,0.2)] flex items-center justify-center gap-2"
+                className="flex-1 min-h-[46px] py-3 rounded-lg bg-primary hover:bg-primary-dim text-on-primary font-outfit font-semibold text-sm transition-all active:scale-[0.99] disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 shadow-xs"
               >
-                <Brain size={16} />
                 {analyzing ? 'Analyzing...' : 'Run Diagnostics'}
               </button>
               <button
                 onClick={() => handleAnalyze(true)}
                 disabled={analyzing}
                 title="Force regenerate role requirements using AI"
-                className="w-14 min-h-[52px] rounded-xl bg-surface-mid border border-outline-var/40 text-primary font-syne font-bold text-xs hover:border-primary/50 transition-all active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center shadow-lg group"
+                className="w-12 min-h-[46px] rounded-lg bg-surface border border-outline-var/40 text-text-muted hover:text-text-primary hover:border-outline-var transition-all flex items-center justify-center shadow-xs group"
               >
-                <Sparkles size={18} className="group-hover:animate-spin" />
+                <Sparkles size={16} className="group-hover:rotate-12 transition-transform" />
               </button>
             </div>
           </div>
@@ -625,59 +623,55 @@ export default function Dashboard({ user, onLogout }) {
             {/* Analysis result canvas */}
             <div className={`flex-1 ${mobileTab === 'feed' ? 'hidden xl:block' : 'block'}`}>
               {analysis ? (
-                <div className="bg-surface border border-outline-var/30 rounded-xl p-6 md:p-8 relative overflow-hidden shadow-2xl h-full flex flex-col justify-center">
-                  {/* Subtle background glow */}
-                  <div className="absolute -top-[20%] -right-[10%] w-[60%] h-[60%] bg-primary/5 blur-[100px] rounded-full pointer-events-none" />
-                  
+                <div className="bg-surface border border-outline-var/30 rounded-xl p-6 md:p-8 relative overflow-hidden shadow-sm h-full flex flex-col justify-center">
                   <div className="grid grid-cols-1 lg:grid-cols-2 gap-10 items-center relative z-10">
                     <div>
-                      <p className="font-syne text-[10px] font-bold tracking-widest uppercase text-outline mb-1">Diagnostic Results</p>
-                      <h2 className="text-2xl md:text-3xl font-extrabold text-text-primary tracking-tight mb-6">{analysis.role}</h2>
+                      <p className="font-outfit text-xs font-semibold tracking-wider uppercase text-text-muted mb-1">Diagnostic Results</p>
+                      <h2 className="text-2xl md:text-3xl font-extrabold text-text-primary tracking-tight font-syne mb-6">{analysis.role}</h2>
                       
                       {analysis.diagnosticReport && (
-                        <div className="mb-6 p-4 bg-surface-mid/80 border border-outline-var/40 rounded-xl shadow-inner">
-                          <h4 className="font-syne text-[10px] font-bold tracking-widest uppercase text-primary mb-2 flex items-center gap-2"><Brain size={12}/> AI Diagnostic Report</h4>
-                          <div className="text-sm text-text-primary space-y-2 [&_strong]:text-primary [&_li]:ml-4 [&_ul]:list-disc">
+                        <div className="mb-6 p-4 bg-surface-mid/60 border border-outline-var/25 rounded-lg">
+                          <h4 className="font-outfit text-xs font-semibold uppercase tracking-wider text-text-muted mb-2">AI Diagnostic Report</h4>
+                          <div className="text-sm text-text-primary space-y-2 [&_strong]:text-primary [&_li]:ml-4 [&_ul]:list-disc font-outfit">
                             <ReactMarkdown>{analysis.diagnosticReport}</ReactMarkdown>
                           </div>
                         </div>
                       )}
 
-                      <div className="flex items-center gap-2 mb-4 bg-error-container/10 border border-error-container/20 px-3 py-1.5 rounded w-max">
-                        <AlertTriangle size={14} className="text-error" />
-                        <span className="font-syne text-[10px] font-bold tracking-widest uppercase text-error">Missing Core Skills</span>
+                      <div className="text-xs font-semibold uppercase tracking-wider text-text-muted mb-3">
+                        Missing Core Skills
                       </div>
                       
                       {analysis.missingSkills?.length > 0 ? (
-                        <div className="space-y-3">
+                        <div className="space-y-2.5">
                           {analysis.missingSkills.map(s => (
-                            <div key={s.id} className="flex flex-col sm:flex-row sm:items-center justify-between group bg-surface-mid/50 border border-outline-var/20 p-3.5 rounded-xl hover:border-primary/30 transition-colors gap-3">
-                              <span className="text-text-primary text-sm font-semibold">{s.name}</span>
-                              <div className="flex flex-wrap gap-2 w-full sm:w-auto">
+                            <div key={s.id} className="flex flex-col sm:flex-row sm:items-center justify-between group bg-surface-mid/40 border border-outline-var/20 p-3 rounded-lg hover:border-outline-var/40 transition-colors gap-3">
+                              <span className="text-text-primary text-sm font-medium font-outfit">{s.name}</span>
+                              <div className="flex flex-wrap items-center gap-1.5 w-full sm:w-auto">
                                 <button
                                   onClick={() => handleGenerateRoadmap(s.name)}
-                                  className="flex-1 sm:flex-none min-h-[36px] justify-center text-[10px] bg-primary/10 text-primary border border-primary/20 px-3 py-2 rounded-lg hover:bg-primary hover:text-on-primary transition-all flex items-center gap-1.5 font-syne font-bold tracking-widest uppercase active:scale-95"
+                                  className="px-3 py-1.5 rounded-md text-xs font-semibold font-outfit bg-primary/10 text-primary hover:bg-primary hover:text-on-primary transition-all"
                                 >
-                                  <Brain size={12} /> Roadmap
+                                  Roadmap
                                 </button>
                                 <button
                                   onClick={() => setVerifySkillModal(s.name)}
-                                  className="flex-1 sm:flex-none min-h-[36px] justify-center text-[10px] bg-accent/10 text-accent border border-accent/20 px-3 py-2 rounded-lg hover:bg-accent hover:text-on-accent transition-all flex items-center gap-1.5 font-syne font-bold tracking-widest uppercase active:scale-95"
+                                  className="px-3 py-1.5 rounded-md text-xs font-medium font-outfit text-text-muted hover:text-text-primary hover:bg-surface-mid border border-outline-var/20 transition-all"
                                 >
-                                  <ShieldAlert size={12} /> Verify
+                                  Verify
                                 </button>
                                 <button
                                   onClick={() => handleFindMentors(s)}
-                                  className="flex-1 sm:flex-none min-h-[36px] justify-center text-[10px] bg-secondary/10 text-secondary border border-secondary/20 px-3 py-2 rounded-lg hover:bg-secondary hover:text-on-secondary transition-all flex items-center gap-1.5 font-syne font-bold tracking-widest uppercase active:scale-95"
+                                  className="px-3 py-1.5 rounded-md text-xs font-medium font-outfit text-text-muted hover:text-text-primary hover:bg-surface-mid border border-outline-var/20 transition-all"
                                 >
-                                  <Users size={12} /> Mentors
+                                  Mentors
                                 </button>
                               </div>
                             </div>
                           ))}
                         </div>
                       ) : (
-                        <div className="text-accent flex items-center gap-2 text-sm font-semibold bg-secondary/10 border border-secondary/20 p-4 rounded-lg">
+                        <div className="text-accent flex items-center gap-2 text-sm font-semibold bg-accent-container/30 border border-accent/20 p-4 rounded-lg font-outfit">
                           <CheckCircle size={18} /> You meet all technical requirements for this role!
                         </div>
                       )}
@@ -685,16 +679,16 @@ export default function Dashboard({ user, onLogout }) {
 
                     <div className="flex flex-col items-center justify-center lg:border-l border-outline-var/20 lg:pl-10 h-full">
                       <RadarChart score={analysis.score} />
-                      <p className="font-syne text-[10px] tracking-widest uppercase text-primary/70 mt-2">Competency Match</p>
+                      <p className="font-outfit text-xs text-text-muted mt-2">Competency Match</p>
                     </div>
                   </div>
                 </div>
               ) : (
-                <div className="h-full min-h-[320px] border border-outline-var/20 rounded-xl bg-surface/50 flex flex-col items-center justify-center text-outline-var space-y-4 shadow-inner p-6 text-center">
-                  <Activity size={56} className="opacity-20 text-primary" />
+                <div className="h-full min-h-[320px] border border-outline-var/20 rounded-xl bg-surface/50 flex flex-col items-center justify-center text-outline-var space-y-4 p-6 text-center">
+                  <Activity size={40} className="opacity-20 text-text-muted" />
                   <div>
-                    <p className="font-syne text-xs tracking-widest uppercase text-outline font-bold mb-1">Awaiting Diagnostic Input</p>
-                    <p className="text-text-muted text-xs max-w-sm">Select a target role and check off your skills on the left, then click <strong>Run Diagnostics</strong>.</p>
+                    <p className="font-outfit text-sm font-semibold text-text-primary mb-1">Awaiting Diagnostic Input</p>
+                    <p className="text-text-muted text-xs max-w-sm font-outfit">Select a target role and check off your skills on the left, then click <strong>Run Diagnostics</strong>.</p>
                   </div>
                 </div>
               )}
@@ -703,31 +697,31 @@ export default function Dashboard({ user, onLogout }) {
             {/* My Career Roadmaps panel */}
             <div className={`${mobileTab === 'diagnostics' ? 'hidden xl:block' : 'block'} space-y-8`}>
               {savedRoadmaps.length > 0 && (
-                <div className="border border-outline-var/30 bg-surface rounded-xl p-6 shadow-xl space-y-4">
+                <div className="border border-outline-var/30 bg-surface rounded-xl p-6 shadow-sm space-y-4">
                   <div className="flex items-center justify-between">
-                    <h3 className="font-syne text-[10px] font-bold tracking-widest uppercase text-primary flex items-center gap-2">
-                      <Brain size={13} /> Active Learning Roadmaps ({savedRoadmaps.length})
+                    <h3 className="font-outfit text-xs font-semibold uppercase tracking-wider text-text-muted">
+                      Active Learning Roadmaps ({savedRoadmaps.length})
                     </h3>
                   </div>
 
-                  <div className="space-y-3 max-h-56 overflow-y-auto pr-1">
+                  <div className="space-y-2.5 max-h-56 overflow-y-auto pr-1">
                     {savedRoadmaps.map((rm) => (
                       <div
                         key={rm.id}
                         onClick={() => navigate(`/roadmap/${rm.id}`)}
-                        className="p-3.5 bg-surface-mid border border-outline-var/25 hover:border-primary/40 rounded-xl cursor-pointer transition-all flex items-center justify-between gap-3 group"
+                        className="p-3.5 bg-surface-mid/60 border border-outline-var/25 hover:border-outline-var/50 rounded-lg cursor-pointer transition-all flex items-center justify-between gap-3 group"
                       >
                         <div className="space-y-1 min-w-0">
                           <div className="flex items-center gap-2">
-                            <span className="text-xs font-bold text-text-primary group-hover:text-primary transition-colors truncate">
+                            <span className="text-sm font-semibold text-text-primary group-hover:text-primary transition-colors truncate font-outfit">
                               {rm.targetSkill}
                             </span>
-                            <span className="text-[9px] font-syne uppercase bg-primary/10 text-primary px-2 py-0.5 rounded-full border border-primary/20">
+                            <span className="text-xs font-medium font-outfit bg-primary/10 text-primary px-2 py-0.5 rounded border border-primary/20">
                               {rm.targetRole}
                             </span>
                           </div>
-                          <div className="flex items-center gap-2 text-[10px] text-text-muted">
-                            <div className="w-24 h-1.5 bg-bg-base rounded-full overflow-hidden border border-outline-var/20">
+                          <div className="flex items-center gap-2 text-xs text-text-muted font-outfit">
+                            <div className="w-24 h-1.5 bg-surface rounded-full overflow-hidden border border-outline-var/20">
                               <div
                                 className="h-full bg-accent rounded-full"
                                 style={{ width: `${rm.progress || 0}%` }}
@@ -737,9 +731,9 @@ export default function Dashboard({ user, onLogout }) {
                           </div>
                         </div>
 
-                        <div className="flex items-center gap-1 text-primary text-xs font-syne font-bold uppercase tracking-wider shrink-0 group-hover:translate-x-0.5 transition-transform">
+                        <div className="flex items-center gap-1 text-primary text-xs font-semibold font-outfit shrink-0 group-hover:translate-x-0.5 transition-transform">
                           <span>Continue</span>
-                          <ArrowRight size={12} />
+                          <ArrowRight size={13} />
                         </div>
                       </div>
                     ))}
@@ -748,15 +742,15 @@ export default function Dashboard({ user, onLogout }) {
               )}
 
               {/* Activity feed panel */}
-              <div className="border border-outline-var/30 bg-surface rounded-xl p-6 shadow-xl">
-                <h3 className="font-syne text-[10px] font-bold tracking-widest uppercase text-outline mb-5 flex items-center gap-2">
-                  <Activity size={12} /> Network Activity Log
+              <div className="border border-outline-var/30 bg-surface rounded-xl p-6 shadow-sm">
+                <h3 className="font-outfit text-xs font-semibold uppercase tracking-wider text-text-muted mb-4">
+                  Network Activity Log
                 </h3>
-                <div className="space-y-4 max-h-48 overflow-y-auto pr-2 custom-scrollbar">
+                <div className="space-y-3.5 max-h-48 overflow-y-auto pr-2 custom-scrollbar">
                   {activities.length > 0
                     ? activities.map(log => (
-                      <div key={log.id} className="flex gap-4 text-sm border-l-2 border-outline-var/30 pl-4 py-1 hover:border-primary/40 transition-colors">
-                        <div className="text-outline min-w-[52px] text-xs pt-0.5 font-syne font-medium">
+                      <div key={log.id} className="flex gap-3 text-sm border-l-2 border-outline-var/30 pl-3.5 py-1 hover:border-primary/40 transition-colors font-outfit">
+                        <div className="text-text-muted min-w-[56px] text-xs pt-0.5 font-medium font-outfit">
                           {new Date(log.createdAt).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}
                         </div>
                         <div>
@@ -766,19 +760,19 @@ export default function Dashboard({ user, onLogout }) {
                               DIAGNOSTIC_RUN:  { text: 'Diagnostics Run',  color: 'text-primary' },
                               POST_CREATED:    { text: 'Post Published',   color: 'text-primary' },
                               POST_DELETED:    { text: 'Post Removed',     color: 'text-error' },
-                              USER_LOGIN:      { text: 'System Access',    color: 'text-outline' },
-                              USER_LOGOUT:     { text: 'Session Ended',    color: 'text-outline' },
+                              USER_LOGIN:      { text: 'System Access',    color: 'text-text-muted' },
+                              USER_LOGOUT:     { text: 'Session Ended',    color: 'text-text-muted' },
                               PROFILE_UPDATED: { text: 'Profile Sync',     color: 'text-secondary' },
                               ACCOUNT_CREATED: { text: 'Node Created',     color: 'text-accent' },
                             };
                             const l = labels[log.action] || { text: log.action, color: 'text-primary' };
-                            return <span className={`${l.color} text-xs font-bold font-syne tracking-wide uppercase`}>{l.text}</span>;
+                            return <span className={`${l.color} text-xs font-semibold font-outfit uppercase tracking-wider`}>{l.text}</span>;
                           })()}
-                          <div className="text-text-muted text-sm mt-1">{log.details}</div>
+                          <div className="text-text-muted text-xs mt-0.5 font-outfit">{log.details}</div>
                         </div>
                       </div>
                     ))
-                    : <div className="text-outline text-sm italic">No recent activity logged in the network.</div>}
+                    : <div className="text-text-muted text-xs italic font-outfit">No recent activity logged in the network.</div>}
                 </div>
               </div>
             </div>
@@ -796,12 +790,12 @@ export default function Dashboard({ user, onLogout }) {
               animate={{ x: 0 }}
               exit={{ x: '100%' }}
               transition={{ type: 'spring', damping: 25, stiffness: 200 }}
-              className="bg-surface border-l border-outline-var/40 w-full max-w-md h-full flex flex-col shadow-2xl relative"
+              className="bg-surface border-l border-outline-var/40 w-full max-w-md h-full flex flex-col shadow-2xl relative font-outfit"
             >
-              <div className="p-6 border-b border-outline-var/20 flex justify-between items-center bg-surface-mid">
+              <div className="p-6 border-b border-outline-var/20 flex justify-between items-center bg-surface-mid/60">
                 <div>
-                  <p className="font-syne text-[10px] font-bold tracking-widest uppercase text-secondary mb-1">Mentorship Network</p>
-                  <h3 className="text-xl font-bold text-text-primary tracking-tight">
+                  <p className="font-outfit text-xs font-semibold uppercase tracking-wider text-text-muted mb-1">Mentorship Network</p>
+                  <h3 className="text-xl font-bold text-text-primary tracking-tight font-syne">
                     {selectedMissingSkill.name}
                   </h3>
                 </div>
@@ -813,36 +807,35 @@ export default function Dashboard({ user, onLogout }) {
                 </button>
               </div>
               
-              <div className="flex-1 overflow-y-auto p-6 space-y-4">
+              <div className="flex-1 overflow-y-auto p-6 space-y-3">
                 {loadingMentors ? (
                   <div className="flex flex-col items-center justify-center h-40 text-primary space-y-3">
                     <div className="w-8 h-8 border-2 border-primary/20 border-t-primary rounded-full animate-spin" />
-                    <span className="font-syne text-xs uppercase tracking-widest">Scanning Network...</span>
+                    <span className="font-outfit text-xs uppercase tracking-wider text-text-muted">Scanning Network...</span>
                   </div>
                 ) : mentors.length > 0 ? (
                   mentors.map(mentor => (
-                    <div key={mentor.id} className="border border-outline-var/30 bg-surface-mid rounded-xl p-4 flex items-center justify-between hover:border-primary/30 transition-all shadow-md group">
+                    <div key={mentor.id} className="border border-outline-var/30 bg-surface rounded-lg p-4 flex items-center justify-between hover:border-outline-var/60 transition-all shadow-xs group">
                       <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 bg-bg-base rounded-full flex items-center justify-center text-primary font-bold text-sm border border-outline-var/40 group-hover:border-primary/50 transition-colors">
+                        <div className="w-10 h-10 bg-surface-mid rounded-full flex items-center justify-center text-primary font-bold text-sm border border-outline-var/40 group-hover:border-primary/50 transition-colors">
                           {mentor.name?.charAt(0)}
                         </div>
                         <div>
-                          <div className="text-text-primary font-bold text-sm">{mentor.name}</div>
-                          <div className="text-[10px] text-text-muted font-syne uppercase tracking-wider mt-0.5">{mentor.role || 'Member'}</div>
+                          <div className="text-text-primary font-semibold text-sm">{mentor.name}</div>
+                          <div className="text-xs text-text-muted font-outfit mt-0.5">{mentor.role || 'Member'}</div>
                         </div>
                       </div>
                       <button
                         onClick={() => navigate(`/profile/${mentor.id}`)}
-                        className="px-3 py-1.5 bg-primary/10 text-primary text-[10px] border border-primary/20 rounded hover:bg-primary hover:text-on-primary transition-all font-syne font-bold uppercase tracking-widest"
+                        className="px-3 py-1.5 bg-primary/10 text-primary text-xs border border-primary/20 rounded-md hover:bg-primary hover:text-on-primary transition-all font-outfit font-semibold"
                       >
-                        View
+                        View Profile
                       </button>
                     </div>
                   ))
                 ) : (
-                  <div className="text-center p-8 border border-error-container/30 rounded-xl bg-error-container/5">
-                    <AlertTriangle size={24} className="text-error mx-auto mb-3 opacity-50" />
-                    <div className="text-error text-sm font-medium">No active mentors found for this competency.</div>
+                  <div className="text-center p-8 border border-outline-var/20 rounded-lg bg-surface-mid/40">
+                    <div className="text-text-muted text-sm font-medium font-outfit">No active mentors found for this competency.</div>
                   </div>
                 )}
               </div>
