@@ -47,6 +47,14 @@
 - **Theme Alignment:** Removed hardcoded purple hex colors (`#6D28D9`, `#F5F3FF`) in favor of SkillSphere theme tokens (`bg-secondary`, `bg-surface`, `border-outline-var/60`).
 - **Form Card:** Wrapped form in a pure white container (`bg-surface border border-outline-var/60 shadow-[0_1px_3px_rgba(0,0,0,0.04)]`) with deep charcoal submit action.
 
+### F. Skill Intelligence Dashboard (`client/src/pages/Dashboard.jsx`)
+- **Top Header:** Replaced raw `border-b-2` masthead with a pure white surface header (`bg-surface border-b border-outline-var/60`), clean breadcrumbs (`Platform / Skill Intelligence`), and engineer metadata badge.
+- **Target Role Selector Card:** Encapsulated in a pure white card (`bg-surface border border-outline-var/60 rounded-lg p-5 shadow-[0_1px_3px_rgba(0,0,0,0.04)]`) with high-contrast search input and clear chip states.
+- **Skills Inventory Card:** Re-architected into a dedicated pure white card with visible 1px borders, crisp checkbox states (`bg-secondary` check with white tick), verified tags, and docked action buttons (`Run Diagnostics` in `bg-secondary text-white hover:bg-secondary-bright`).
+- **Diagnostic Results Canvas:** Encapsulated in a structured pure white card (`bg-surface border border-outline-var/60 rounded-lg p-6 sm:p-8 shadow-[0_1px_3px_rgba(0,0,0,0.04)]`) with role match badge, assessment summary, and high-contrast roadmap/verify actions.
+- **Career Roadmaps & Activity Log:** Enclosed in pure white surface cards. Removed residual jargon ("Telemetry", "05 · Network Activity Log") in favor of standard, professional "Recent Activity" and "Active Learning Roadmaps".
+- **Mentor Modal Drawer:** Elevated from flat beige to pure white surface drawer (`bg-surface border-l border-outline-var/60 shadow-2xl`) with clear member cards and deep charcoal profile buttons.
+
 ---
 
 ## 3. Remote Git Resolution & Atomic Commit Ledger
@@ -54,6 +62,7 @@
 Remote protected branch (`origin/master`) had diverged due to previous force-push restrictions. Integrated remote history via an `ours` merge strategy and successfully pushed all clean micro-commits to `origin/master`:
 
 ```
+* 6def1c7 - improved: dashboard layout with clear contrast cards, elevated role selector, and refined diagnostics
 * 770b6ff - improved: feedback page with clear contrast cards, theme buttons, and de-cluttered form
 * 14a638e - improved: user profile components with clear contrast cards, refined completion bar, and clean borders
 * 6e337e2 - improved: chat interface with contrast cards, deep charcoal speech bubbles, and elevated compose form
