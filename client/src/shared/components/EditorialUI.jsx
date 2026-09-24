@@ -186,3 +186,83 @@ export function MonoTimestamp({ date, className = '' }) {
     </span>
   );
 }
+
+// ─── Heavy Masthead (High-Contrast Anchor) ──────────────────────────────────
+// Heavy 2px dark rule with strong typographic contrast. Anchors major page zones.
+export function HeavyMasthead({ number, title, kicker, meta, children, className = '' }) {
+  return (
+    <div className={`border-t-2 border-text-primary pt-3.5 pb-5 ${className}`}>
+      <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-2">
+        <div>
+          {kicker && (
+            <div className="font-mono text-[10px] tracking-evidence uppercase text-outline mb-1 select-none">
+              {kicker}
+            </div>
+          )}
+          <h2 className="font-syne text-xl sm:text-2xl font-bold tracking-tight text-text-primary flex items-baseline gap-2">
+            {number && (
+              <span className="font-mono text-sm sm:text-base font-normal text-outline/70">
+                {number}
+              </span>
+            )}
+            <span>{title}</span>
+          </h2>
+        </div>
+        {(meta || children) && (
+          <div className="flex items-center gap-3">
+            {meta && (
+              <span className="font-mono text-xs text-outline tracking-wider uppercase select-none">
+                {meta}
+              </span>
+            )}
+            {children}
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+// ─── Contrast Badge (High-Contrast Authority Stamp) ─────────────────────────
+// Razor-sharp monospace badge replacing generic rounded pills.
+export function ContrastBadge({ variant = 'ink', children, className = '' }) {
+  const variants = {
+    ink: 'bg-text-primary text-surface border border-text-primary font-mono text-[10px] font-bold tracking-widest uppercase px-2.5 py-0.5 rounded-none',
+    ochre: 'bg-accent/15 text-accent border border-accent/40 font-mono text-[10px] font-bold tracking-widest uppercase px-2.5 py-0.5 rounded-none',
+    outline: 'bg-surface text-text-primary border border-outline-var/60 font-mono text-[10px] font-medium tracking-wider uppercase px-2 py-0.5 rounded-none',
+    subtle: 'bg-surface-mid/80 text-text-muted border border-outline-var/30 font-mono text-[10px] tracking-wider uppercase px-2 py-0.5 rounded-none',
+    success: 'bg-[#6B7F5E]/15 text-[#6B7F5E] border border-[#6B7F5E]/40 font-mono text-[10px] font-bold tracking-widest uppercase px-2 py-0.5 rounded-none',
+    danger: 'bg-[#8B3A3A]/15 text-[#8B3A3A] border border-[#8B3A3A]/40 font-mono text-[10px] font-bold tracking-widest uppercase px-2 py-0.5 rounded-none',
+  };
+
+  return (
+    <span className={`inline-flex items-center gap-1.5 select-none ${variants[variant] || variants.ink} ${className}`}>
+      {children}
+    </span>
+  );
+}
+
+// ─── Crosshair Anchor (Architectural Drafting Mark) ──────────────────────────
+// Placed at grid intersections or rule terminals to create technical tactile precision.
+export function CrosshairAnchor({ className = '' }) {
+  return (
+    <span className={`font-mono text-[11px] leading-none text-outline/50 select-none pointer-events-none ${className}`}>
+      +
+    </span>
+  );
+}
+
+// ─── Architectural Section ──────────────────────────────────────────────────
+// High-contrast container surface without floating dropshadow cards.
+export function ArchitecturalSection({ children, className = '', tinted = false }) {
+  return (
+    <section className={`
+      border border-outline-var/60 p-5 sm:p-6 transition-colors
+      ${tinted ? 'bg-surface-mid/70' : 'bg-surface'}
+      ${className}
+    `}>
+      {children}
+    </section>
+  );
+}
+
