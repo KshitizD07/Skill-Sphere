@@ -9,6 +9,7 @@ import NetworkAPI from './networkAPI';
 import ProfileAPI from '../profile/profileAPI';
 import Navbar from '../../shared/components/Navbar';
 import { useToast, ToastContainer } from '../../shared/components/Toast';
+import { HeavyMasthead, ContrastBadge, CrosshairAnchor } from '../../shared/components/EditorialUI';
 
 export default function Network({ user: propUser, onLogout }) {
   const navigate = useNavigate();
@@ -136,53 +137,58 @@ export default function Network({ user: propUser, onLogout }) {
       <Navbar user={currentUser} onLogout={onLogout} />
       <ToastContainer toasts={toast.toasts} removeToast={toast.removeToast} />
 
-      <div className="flex-1 md:ml-64 pt-16 md:pt-0 min-h-screen overflow-y-auto overflow-x-hidden p-4 md:p-8 w-full max-w-7xl mx-auto space-y-6">
-        {/* ── Header ─────────────────────────────────────────────────────── */}
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-6 border-b border-outline-var/20">
-          <div>
-            <div className="flex items-center gap-2">
-              <Users className="text-primary" size={22} />
-              <h1 className="text-2xl font-syne font-extrabold text-text-primary tracking-tight">
-                Network Discovery
-              </h1>
-            </div>
-            <p className="text-xs text-text-muted mt-1">
-              Connect with skilled students, alumni, mentors, and engineers across global universities.
-            </p>
+      <div className="flex-1 md:ml-64 pt-16 md:pt-0 min-h-screen overflow-y-auto overflow-x-hidden p-4 md:p-8 w-full max-w-6xl mx-auto space-y-6">
+        {/* ── Heavy Masthead ──────────────────────────────────────────────── */}
+        <HeavyMasthead
+          number="02"
+          kicker="PEER ROSTER & DIRECTORY // VERIFIED TALENT MATRIX"
+          title="Network Directory"
+          meta={`${users.length} BUILDERS INDEXED`}
+        >
+          <button
+            onClick={() => {
+              setIsMyCampusOnly(!isMyCampusOnly);
+              if (!isMyCampusOnly && !currentUser.college) {
+                toast.info('Add your college in profile to filter by campus.');
+              }
+            }}
+            className={`font-mono text-xs uppercase tracking-wider px-3.5 py-1.5 border transition-all cursor-pointer ${
+              isMyCampusOnly
+                ? 'bg-text-primary text-surface border-text-primary font-bold'
+                : 'bg-surface text-outline hover:text-text-primary border-outline-var/60'
+            }`}
+          >
+            <Building2 size={13} className="inline mr-1.5" />
+            {isMyCampusOnly ? '[ Campus Filter: Active ]' : '[ Filter: My Campus ]'}
+          </button>
+        </HeavyMasthead>
+
+        {/* ── SECTION 2: Architectural Filter Toolbar ─────────────────────────── */}
+        <div className="bg-surface border border-outline-var/60 rounded-none p-5 space-y-4">
+          <div className="flex items-center justify-between border-b border-outline-var/40 pb-2.5">
+            <span className="font-mono text-[10px] tracking-widest uppercase text-text-primary font-bold flex items-center gap-1.5">
+              <span className="w-2 h-2 bg-text-primary inline-block" />
+              DIRECTORY QUERY & ROSTER FILTERS
+            </span>
+            {hasActiveFilters && (
+              <button
+                onClick={resetFilters}
+                className="font-mono text-[10px] text-accent hover:underline uppercase tracking-wider font-bold cursor-pointer"
+              >
+                Reset All Filters [×]
+              </button>
+            )}
           </div>
 
-          <div className="flex items-center gap-3">
-            <button
-              onClick={() => {
-                setIsMyCampusOnly(!isMyCampusOnly);
-                if (!isMyCampusOnly && !currentUser.college) {
-                  toast.info('Add your college in profile to filter by campus.');
-                }
-              }}
-              className={`flex items-center gap-2 px-3.5 py-2 border rounded-xs font-syne font-bold text-xs uppercase tracking-wider transition-all ${
-                isMyCampusOnly
-                  ? 'bg-primary text-on-primary border-primary shadow-[0_0_12px_rgba(245,158,11,0.3)]'
-                  : 'bg-surface hover:bg-surface-mid border-outline-var/30 text-text-muted hover:text-text-primary'
-              }`}
-            >
-              <Building2 size={14} />
-              {isMyCampusOnly ? 'My Campus Active' : 'My Campus'}
-            </button>
-          </div>
-        </div>
-
-
-        {/* ── SECTION 2: Search & Filter Toolbar ─────────────────────────── */}
-        <div className="bg-surface border border-outline-var/20 rounded-md p-4 space-y-4 shadow-sm">
           <div className="grid grid-cols-1 md:grid-cols-12 gap-3">
             {/* Search Input */}
             <div className="md:col-span-6 relative">
-              <Search className="absolute left-3.5 top-3 text-outline" size={16} />
+              <Search className="absolute left-3.5 top-3 text-outline" size={15} />
               <input
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                placeholder="Search by name, headline, skill, or campus..."
-                className="w-full bg-surface-mid border border-outline-var/30 rounded-xs py-2 pl-10 pr-4 text-xs text-text-primary outline-none focus:border-primary/50 placeholder-outline-var transition-colors font-outfit"
+                placeholder="Search builder name, headline, skill, or campus..."
+                className="w-full bg-surface-mid/40 border border-outline-var/50 rounded-none py-2 pl-10 pr-4 text-xs text-text-primary outline-none focus:border-text-primary placeholder-outline transition-colors font-outfit"
               />
             </div>
 
@@ -192,7 +198,7 @@ export default function Network({ user: propUser, onLogout }) {
                 value={skillFilter}
                 onChange={(e) => setSkillFilter(e.target.value)}
                 placeholder="Filter by skill (e.g. React)..."
-                className="w-full bg-surface-mid border border-outline-var/30 rounded-xs py-2 px-3 text-xs text-text-primary outline-none focus:border-primary/50 placeholder-outline-var font-outfit"
+                className="w-full bg-surface-mid/40 border border-outline-var/50 rounded-none py-2 px-3 text-xs text-text-primary outline-none focus:border-text-primary placeholder-outline font-outfit"
               />
             </div>
 
@@ -201,7 +207,7 @@ export default function Network({ user: propUser, onLogout }) {
               <select
                 value={sortOption}
                 onChange={(e) => setSortOption(e.target.value)}
-                className="w-full bg-surface-mid border border-outline-var/30 rounded-xs py-2 px-3 text-xs text-text-primary outline-none focus:border-primary/50 font-outfit cursor-pointer"
+                className="w-full bg-surface-mid/40 border border-outline-var/50 rounded-none py-2 px-3 text-xs text-text-primary outline-none focus:border-text-primary font-mono uppercase tracking-wider cursor-pointer"
               >
                 <option value="newest">Sort: Newest Members</option>
                 <option value="most_skills">Sort: Most Verified Skills</option>
@@ -211,20 +217,20 @@ export default function Network({ user: propUser, onLogout }) {
           </div>
 
           {/* Quick Filter Pills */}
-          <div className="flex flex-wrap items-center justify-between gap-3 pt-2 border-t border-outline-var/15">
+          <div className="flex flex-wrap items-center justify-between gap-3 pt-3 border-t border-outline-var/30">
             {/* Role Pills */}
             <div className="flex items-center gap-1.5 flex-wrap">
-              <span className="text-[10px] font-syne font-bold uppercase tracking-wider text-outline mr-1">
+              <span className="font-mono text-[10px] uppercase tracking-wider text-outline mr-1 select-none">
                 Role:
               </span>
               {['ALL', 'STUDENT', 'PROFESSIONAL', 'RECRUITER'].map((r) => (
                 <button
                   key={r}
                   onClick={() => setRoleFilter(r)}
-                  className={`px-3 py-1 rounded-xs font-syne text-[10px] font-bold uppercase tracking-wider transition-colors ${
+                  className={`px-3 py-1 rounded-none font-mono text-[10px] uppercase tracking-wider transition-colors border cursor-pointer ${
                     roleFilter === r
-                      ? 'bg-primary text-on-primary'
-                      : 'bg-surface-mid text-text-muted hover:text-text-primary border border-outline-var/30'
+                      ? 'bg-text-primary text-surface font-bold border-text-primary'
+                      : 'bg-surface-mid/60 text-text-muted hover:text-text-primary border-outline-var/40'
                   }`}
                 >
                   {r === 'ALL' ? 'All Roles' : r === 'STUDENT' ? 'Students' : r === 'PROFESSIONAL' ? 'Pros' : 'Recruiters'}
@@ -235,10 +241,10 @@ export default function Network({ user: propUser, onLogout }) {
             {/* Verified Only Toggle */}
             <button
               onClick={() => setVerifiedOnly(!verifiedOnly)}
-              className={`flex items-center gap-1.5 px-3 py-1 rounded-xs font-syne text-[10px] font-bold uppercase tracking-wider border transition-all ${
+              className={`flex items-center gap-1.5 px-3 py-1 rounded-none font-mono text-[10px] uppercase tracking-wider border transition-all cursor-pointer ${
                 verifiedOnly
-                  ? 'bg-accent/10 border-accent text-accent'
-                  : 'bg-surface-mid border-outline-var/30 text-outline hover:text-text-primary'
+                  ? 'bg-accent/15 border-accent text-accent font-bold'
+                  : 'bg-surface-mid/60 border-outline-var/40 text-outline hover:text-text-primary'
               }`}
             >
               <CheckCircle2 size={12} className={verifiedOnly ? 'text-accent' : 'text-outline'} />
@@ -248,17 +254,17 @@ export default function Network({ user: propUser, onLogout }) {
 
           {/* Quick Skill Suggestion Tags */}
           <div className="flex items-center gap-1.5 flex-wrap pt-1">
-            <span className="text-[10px] font-syne font-bold uppercase tracking-wider text-outline mr-1">
-              Popular:
+            <span className="font-mono text-[10px] uppercase tracking-wider text-outline mr-1 select-none">
+              Popular Tags:
             </span>
             {popularSkills.map((s) => (
               <button
                 key={s}
                 onClick={() => setSkillFilter(skillFilter === s ? '' : s)}
-                className={`px-2 py-0.5 rounded-xs text-[10px] font-syne transition-colors border ${
+                className={`px-2 py-0.5 rounded-none font-mono text-[10px] uppercase tracking-wider transition-colors border cursor-pointer ${
                   skillFilter.toLowerCase() === s.toLowerCase()
-                    ? 'bg-primary/20 border-primary text-primary font-bold'
-                    : 'bg-surface-mid/60 hover:bg-surface-mid border-outline-var/20 text-text-muted'
+                    ? 'bg-text-primary text-surface border-text-primary font-bold'
+                    : 'bg-surface-mid/40 hover:bg-surface-mid border-outline-var/30 text-text-muted'
                 }`}
               >
                 {s}
@@ -268,235 +274,227 @@ export default function Network({ user: propUser, onLogout }) {
 
           {/* Active filter chips */}
           {hasActiveFilters && (
-            <div className="flex items-center gap-2 pt-2 border-t border-outline-var/15 flex-wrap">
-              <span className="text-[10px] font-syne font-bold uppercase tracking-wider text-outline">
-                Active Filters:
+            <div className="flex items-center gap-2 pt-2 border-t border-outline-var/25 flex-wrap">
+              <span className="font-mono text-[10px] uppercase tracking-wider text-outline select-none">
+                Active:
               </span>
               {searchQuery && (
-                <span className="px-2 py-0.5 bg-surface-mid border border-outline-var/30 text-[10px] rounded-xs text-text-primary flex items-center gap-1">
+                <span className="px-2 py-0.5 bg-surface-mid border border-outline-var/50 font-mono text-[10px] rounded-none text-text-primary flex items-center gap-1">
                   Query: {searchQuery}
                   <X size={10} className="cursor-pointer" onClick={() => setSearchQuery('')} />
                 </span>
               )}
               {roleFilter !== 'ALL' && (
-                <span className="px-2 py-0.5 bg-surface-mid border border-outline-var/30 text-[10px] rounded-xs text-text-primary flex items-center gap-1">
+                <span className="px-2 py-0.5 bg-surface-mid border border-outline-var/50 font-mono text-[10px] rounded-none text-text-primary flex items-center gap-1">
                   Role: {roleFilter}
                   <X size={10} className="cursor-pointer" onClick={() => setRoleFilter('ALL')} />
                 </span>
               )}
               {skillFilter && (
-                <span className="px-2 py-0.5 bg-surface-mid border border-outline-var/30 text-[10px] rounded-xs text-text-primary flex items-center gap-1">
+                <span className="px-2 py-0.5 bg-surface-mid border border-outline-var/50 font-mono text-[10px] rounded-none text-text-primary flex items-center gap-1">
                   Skill: {skillFilter}
                   <X size={10} className="cursor-pointer" onClick={() => setSkillFilter('')} />
                 </span>
               )}
               {isMyCampusOnly && (
-                <span className="px-2 py-0.5 bg-surface-mid border border-outline-var/30 text-[10px] rounded-xs text-text-primary flex items-center gap-1">
+                <span className="px-2 py-0.5 bg-surface-mid border border-outline-var/50 font-mono text-[10px] rounded-none text-text-primary flex items-center gap-1">
                   Campus Only
                   <X size={10} className="cursor-pointer" onClick={() => setIsMyCampusOnly(false)} />
                 </span>
               )}
               {verifiedOnly && (
-                <span className="px-2 py-0.5 bg-surface-mid border border-outline-var/30 text-[10px] rounded-xs text-text-primary flex items-center gap-1">
+                <span className="px-2 py-0.5 bg-surface-mid border border-outline-var/50 font-mono text-[10px] rounded-none text-text-primary flex items-center gap-1">
                   Verified Only
                   <X size={10} className="cursor-pointer" onClick={() => setVerifiedOnly(false)} />
                 </span>
               )}
-              <button
-                onClick={resetFilters}
-                className="text-[10px] text-primary hover:underline font-syne font-bold uppercase tracking-wider ml-auto"
-              >
-                Clear all filters
-              </button>
             </div>
           )}
         </div>
 
-        {/* ── SECTION 3: Directory Member Cards Grid ─────────────────────── */}
+        {/* ── SECTION 3: Architectural Roster Directory ───────────────────────── */}
         <div className="space-y-6">
-          <div className="flex items-center justify-between">
-            <h2 className="text-sm font-syne font-bold uppercase tracking-wider text-text-primary">
-              All Members {!loading && `(${users.length})`}
-            </h2>
-          </div>
-
           {loading ? (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
-              {[1, 2, 3, 4, 5, 6].map((i) => (
-                <div key={i} className="h-56 bg-surface border border-outline-var/20 rounded-md animate-pulse p-6" />
+            <div className="border-t-2 border-text-primary border-l border-outline-var/60 bg-surface grid grid-cols-1 lg:grid-cols-2">
+              {[1, 2, 3, 4].map((i) => (
+                <div key={i} className="h-48 border-r border-b border-outline-var/50 animate-pulse p-6 space-y-3">
+                  <div className="flex items-center gap-3">
+                    <div className="w-12 h-12 bg-surface-mid" />
+                    <div className="space-y-2 flex-1">
+                      <div className="h-4 bg-surface-mid w-1/3" />
+                      <div className="h-3 bg-surface-mid w-1/2" />
+                    </div>
+                  </div>
+                  <div className="h-4 bg-surface-mid w-3/4 mt-4" />
+                </div>
               ))}
             </div>
           ) : users.length === 0 ? (
-            <div className="col-span-full text-center py-20 bg-surface border border-dashed border-outline-var/30 rounded-md p-8">
-              <Shield size={44} className="mx-auto text-outline-var mb-3 opacity-40" />
-              <h3 className="text-base font-extrabold text-text-primary">No Members Found</h3>
-              <p className="text-xs text-text-muted mt-1 max-w-sm mx-auto">
-                No users match your current search and filter criteria. Try adjusting or clearing your filters.
+            <div className="text-center py-20 bg-surface border border-outline-var/60 rounded-none p-8 space-y-3">
+              <Shield size={36} className="mx-auto text-outline" />
+              <h3 className="text-base font-bold font-syne uppercase tracking-wider text-text-primary">
+                No Builders Matching Query
+              </h3>
+              <p className="text-xs text-text-muted max-w-sm mx-auto font-outfit">
+                No indexed members match your filter parameters. Clear filters to view full network directory.
               </p>
               <button
                 onClick={resetFilters}
-                className="mt-4 px-4 py-2 bg-primary text-on-primary font-syne font-bold text-xs uppercase tracking-wider rounded-xs hover:bg-secondary-bright transition-all"
+                className="mt-2 px-5 py-2 bg-text-primary text-surface font-mono font-bold text-xs uppercase tracking-widest rounded-none hover:bg-accent hover:text-text-primary transition-all cursor-pointer"
               >
                 Reset All Filters
               </button>
             </div>
           ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
-              {users.map((user) => {
-                const roleBadgeClass =
-                  user.role === 'PROFESSIONAL'
-                    ? 'bg-accent/10 text-accent border-accent/20'
-                    : user.role === 'RECRUITER'
-                    ? 'bg-purple-500/10 text-purple-400 border-purple-500/20'
-                    : 'bg-primary/10 text-primary border-primary/20';
-
-                return (
-                  <div
-                    key={user.id}
-                    className="bg-surface border border-outline-var/20 hover:border-primary/40 rounded-md p-5 flex flex-col justify-between transition-all group relative hover:shadow-xl"
-                  >
-                    <div className="space-y-4">
-                      {/* Top Header */}
-                      <div className="flex items-start gap-3">
-                        <div
-                          onClick={() => navigate(`/profile/${user.id}`)}
-                          className="relative shrink-0 cursor-pointer"
-                        >
-                          <div className="w-12 h-12 rounded-full border border-outline-var/40 hover:border-primary/50 overflow-hidden bg-surface-mid flex items-center justify-center transition-colors">
-                            {user.avatar ? (
-                              <img src={user.avatar} className="w-full h-full object-cover" alt="" />
-                            ) : (
-                              <User size={20} className="text-outline" />
-                            )}
-                          </div>
-                          <span
-                            className={`absolute bottom-0 right-0 w-3 h-3 rounded-full border-2 border-surface ${
-                              user.isOnline ? 'bg-accent' : 'bg-outline-var'
-                            }`}
-                            title={user.isOnline ? 'Online' : 'Offline'}
-                          />
+            <div className="border-t-2 border-text-primary border-l border-outline-var/60 bg-surface grid grid-cols-1 lg:grid-cols-2">
+              {users.map((user) => (
+                <div
+                  key={user.id}
+                  className="border-r border-b border-outline-var/60 p-5 sm:p-6 flex flex-col justify-between transition-colors hover:bg-surface-mid/[0.18] group relative rounded-none"
+                >
+                  <div className="space-y-3">
+                    {/* Top Identity Row */}
+                    <div className="flex items-start gap-3.5">
+                      <div
+                        onClick={() => navigate(`/profile/${user.id}`)}
+                        className="relative shrink-0 cursor-pointer"
+                      >
+                        <div className="w-12 h-12 rounded-none border border-outline-var/60 hover:border-text-primary overflow-hidden bg-surface-mid flex items-center justify-center transition-colors">
+                          {user.avatar ? (
+                            <img src={user.avatar} className="w-full h-full object-cover" alt="" />
+                          ) : (
+                            <User size={20} className="text-outline" />
+                          )}
                         </div>
-
-                        <div className="flex-1 min-w-0 pr-2">
-                          <div className="flex items-center justify-between gap-1">
-                            <h3
-                              onClick={() => navigate(`/profile/${user.id}`)}
-                              className="font-bold text-base text-text-primary group-hover:text-primary transition-colors truncate cursor-pointer"
-                            >
-                              {user.name}
-                            </h3>
-                            {user.id === currentUser?.id && (
-                              <span className="px-2 py-0.5 rounded-full text-[9px] font-syne font-black uppercase bg-primary/20 text-primary border border-primary/30 shrink-0">
-                                You
-                              </span>
-                            )}
-                          </div>
-                          <p className="text-xs text-text-muted line-clamp-1 mt-0.5">
-                            {user.headline || 'Member'}
-                          </p>
-                          <div className="flex items-center gap-1.5 mt-1 flex-wrap">
-                            <span className={`px-2 py-0.5 rounded-full text-[9px] font-syne font-bold uppercase border ${roleBadgeClass}`}>
-                              {user.role}
-                            </span>
-                            {user.verifiedSkillCount > 0 && (
-                              <span className="px-2 py-0.5 rounded-full text-[9px] font-syne font-bold uppercase bg-accent/10 text-accent border border-accent/20 flex items-center gap-1">
-                                <CheckCircle2 size={10} /> {user.verifiedSkillCount} Verified
-                              </span>
-                            )}
-                          </div>
-                        </div>
+                        <span
+                          className={`absolute -bottom-1 -right-1 w-2.5 h-2.5 rounded-none border border-surface ${
+                            user.isOnline ? 'bg-accent' : 'bg-outline-var'
+                          }`}
+                          title={user.isOnline ? 'Online' : 'Offline'}
+                        />
                       </div>
 
-                      {/* College badge */}
-                      {user.college && (
-                        <div className="flex items-center gap-2 text-xs text-text-muted bg-surface-mid/80 p-2 rounded-xs border border-outline-var/20">
-                          <Building2 size={13} className="text-primary shrink-0" />
-                          <span className="truncate">{user.college}</span>
+                      <div className="flex-1 min-w-0 pr-1">
+                        <div className="flex items-center justify-between gap-2">
+                          <h3
+                            onClick={() => navigate(`/profile/${user.id}`)}
+                            className="font-bold text-base text-text-primary group-hover:text-accent transition-colors truncate cursor-pointer font-outfit"
+                          >
+                            {user.name}
+                          </h3>
+                          {user.id === currentUser?.id && (
+                            <span className="px-2 py-0.5 rounded-none font-mono text-[9px] font-bold uppercase bg-text-primary text-surface shrink-0">
+                              YOU
+                            </span>
+                          )}
                         </div>
-                      )}
 
-                      {/* Skill Tags */}
-                      {user.topSkills && user.topSkills.length > 0 && (
-                        <div className="space-y-1.5">
-                          <span className="text-[10px] font-syne font-bold uppercase tracking-wider text-outline">
-                            Top Skills:
-                          </span>
-                          <div className="flex flex-wrap gap-1.5">
-                            {user.topSkills.map((sk) => (
-                              <span
-                                key={sk.id}
-                                className={`px-2 py-0.5 rounded-xs text-[10px] font-syne flex items-center gap-1 border ${
-                                  sk.isVerified
-                                    ? 'bg-accent/10 border-accent/30 text-accent font-bold'
-                                    : 'bg-surface-mid border-outline-var/25 text-text-muted'
-                                }`}
-                              >
-                                {sk.isVerified && <Star size={9} className="fill-accent text-accent" />}
-                                {sk.name}
-                              </span>
-                            ))}
-                          </div>
+                        <p className="text-xs text-text-muted line-clamp-1 mt-0.5 font-outfit">
+                          {user.headline || 'Member'}
+                        </p>
+
+                        <div className="flex items-center gap-1.5 mt-1.5 flex-wrap">
+                          <ContrastBadge variant={user.role === 'PROFESSIONAL' ? 'ochre' : user.role === 'RECRUITER' ? 'ink' : 'subtle'}>
+                            {user.role}
+                          </ContrastBadge>
+                          {user.verifiedSkillCount > 0 && (
+                            <ContrastBadge variant="ink">
+                              <CheckCircle2 size={10} /> {user.verifiedSkillCount} VERIFIED
+                            </ContrastBadge>
+                          )}
                         </div>
-                      )}
+                      </div>
                     </div>
 
-                    {/* Footer Actions */}
-                    <div className="flex items-center gap-2 mt-4 pt-4 border-t border-outline-var/20">
-                      {user.id === currentUser?.id ? (
+                    {/* College Badge */}
+                    {user.college && (
+                      <div className="flex items-center gap-1.5 font-mono text-[10px] uppercase tracking-wider text-outline bg-surface-mid/50 px-2.5 py-1.5 border border-outline-var/30">
+                        <Building2 size={12} className="text-text-primary shrink-0" />
+                        <span className="truncate">{user.college}</span>
+                      </div>
+                    )}
+
+                    {/* Skill Tags Matrix */}
+                    {user.topSkills && user.topSkills.length > 0 && (
+                      <div className="space-y-1.5 pt-1">
+                        <span className="font-mono text-[9px] uppercase tracking-widest text-outline select-none">
+                          Attested Competencies:
+                        </span>
+                        <div className="flex flex-wrap gap-1.5">
+                          {user.topSkills.map((sk) => (
+                            <span
+                              key={sk.id}
+                              className={`px-2 py-0.5 rounded-none font-mono text-[10px] uppercase tracking-wider flex items-center gap-1 border ${
+                                sk.isVerified
+                                  ? 'bg-accent/15 border-accent/40 text-accent font-bold'
+                                  : 'bg-surface-mid border-outline-var/30 text-text-muted'
+                              }`}
+                            >
+                              {sk.isVerified && <Star size={9} className="fill-accent text-accent" />}
+                              {sk.name}
+                            </span>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Footer Actions */}
+                  <div className="flex items-center gap-2 mt-4 pt-3 border-t border-outline-var/40">
+                    {user.id === currentUser?.id ? (
+                      <button
+                        onClick={() => navigate(`/profile/${user.id}`)}
+                        className="w-full py-2 bg-text-primary hover:bg-accent text-surface hover:text-text-primary font-mono font-bold text-xs uppercase tracking-widest rounded-none transition-all flex items-center justify-center gap-1.5 cursor-pointer"
+                      >
+                        <User size={13} /> View Your Dossier <ArrowRight size={12} />
+                      </button>
+                    ) : (
+                      <>
                         <button
-                          onClick={() => navigate(`/profile/${user.id}`)}
-                          className="w-full py-2 bg-primary/15 hover:bg-primary text-primary hover:text-on-primary font-syne font-bold text-xs uppercase tracking-wider rounded-xs transition-all flex items-center justify-center gap-1.5 cursor-pointer"
-                        >
-                          <User size={13} /> View Your Profile <ArrowRight size={12} />
-                        </button>
-                      ) : (
-                        <>
-                          <button
-                            onClick={async () => {
-                              const isCurrentlyFollowing = user.isFollowing;
+                          onClick={async () => {
+                            const isCurrentlyFollowing = user.isFollowing;
+                            setUsers((prev) =>
+                              prev.map((u) =>
+                                u.id === user.id ? { ...u, isFollowing: !isCurrentlyFollowing } : u
+                              )
+                            );
+                            try {
+                              if (isCurrentlyFollowing) await ProfileAPI.unfollowUser(user.id);
+                              else await ProfileAPI.followUser(user.id);
+                            } catch {
                               setUsers((prev) =>
                                 prev.map((u) =>
-                                  u.id === user.id ? { ...u, isFollowing: !isCurrentlyFollowing } : u
+                                  u.id === user.id ? { ...u, isFollowing: isCurrentlyFollowing } : u
                                 )
                               );
-                              try {
-                                if (isCurrentlyFollowing) await ProfileAPI.unfollowUser(user.id);
-                                else await ProfileAPI.followUser(user.id);
-                              } catch {
-                                setUsers((prev) =>
-                                  prev.map((u) =>
-                                    u.id === user.id ? { ...u, isFollowing: isCurrentlyFollowing } : u
-                                  )
-                                );
-                              }
-                            }}
-                            className={`px-3 py-2 border font-syne font-bold text-xs uppercase tracking-wider rounded-xs transition-all flex items-center justify-center gap-1 shrink-0 cursor-pointer ${
-                              user.isFollowing
-                                ? 'bg-surface-mid border-outline-var/30 text-text-muted hover:border-error hover:text-error'
-                                : 'bg-primary/15 border-primary/30 text-primary hover:bg-primary hover:text-on-primary'
-                            }`}
-                            title={user.isFollowing ? 'Unfollow' : 'Follow'}
-                          >
-                            {user.isFollowing ? <UserCheck size={13} /> : <UserPlus size={13} />}
-                          </button>
-                          <button
-                            onClick={() => navigate(`/chat/${user.id}`)}
-                            className="flex-1 py-2 bg-primary/10 hover:bg-primary text-primary hover:text-on-primary font-syne font-bold text-xs uppercase tracking-wider rounded-xs transition-all flex items-center justify-center gap-1.5 cursor-pointer"
-                          >
-                            <MessageSquare size={13} /> Message
-                          </button>
-                          <button
-                            onClick={() => navigate(`/profile/${user.id}`)}
-                            className="px-3.5 py-2 bg-surface-mid hover:bg-surface border border-outline-var/30 text-text-muted hover:text-text-primary font-syne font-bold text-xs uppercase tracking-wider rounded-xs transition-colors flex items-center gap-1 cursor-pointer"
-                          >
-                            Profile <ArrowRight size={12} />
-                          </button>
-                        </>
-                      )}
-                    </div>
+                            }
+                          }}
+                          className={`px-3 py-2 border font-mono font-bold text-xs uppercase tracking-wider rounded-none transition-all flex items-center justify-center gap-1 shrink-0 cursor-pointer ${
+                            user.isFollowing
+                              ? 'bg-surface-mid border-outline-var/40 text-text-muted hover:border-[#8B3A3A] hover:text-[#8B3A3A]'
+                              : 'bg-surface border-outline-var/60 text-text-primary hover:border-text-primary'
+                          }`}
+                          title={user.isFollowing ? 'Unfollow' : 'Follow'}
+                        >
+                          {user.isFollowing ? <UserCheck size={13} /> : <UserPlus size={13} />}
+                        </button>
+                        <button
+                          onClick={() => navigate(`/chat/${user.id}`)}
+                          className="flex-1 py-2 bg-surface-mid border border-outline-var/60 hover:border-text-primary text-text-primary font-mono font-bold text-xs uppercase tracking-wider rounded-none transition-all flex items-center justify-center gap-1.5 cursor-pointer"
+                        >
+                          <MessageSquare size={13} /> Message
+                        </button>
+                        <button
+                          onClick={() => navigate(`/profile/${user.id}`)}
+                          className="px-4 py-2 bg-text-primary hover:bg-accent text-surface hover:text-text-primary font-mono font-bold text-xs uppercase tracking-widest rounded-none transition-colors flex items-center gap-1 cursor-pointer"
+                        >
+                          Dossier <ArrowRight size={12} />
+                        </button>
+                      </>
+                    )}
                   </div>
-                );
-              })}
+                </div>
+              ))}
             </div>
           )}
 
@@ -506,9 +504,9 @@ export default function Network({ user: propUser, onLogout }) {
               <button
                 onClick={() => fetchUsers(true, nextCursor)}
                 disabled={loadingMore}
-                className="px-6 py-2.5 bg-surface hover:bg-surface-mid border border-outline-var/30 text-text-primary text-xs font-syne font-bold uppercase tracking-wider rounded-xs transition-all disabled:opacity-50"
+                className="px-6 py-2.5 bg-surface hover:bg-surface-mid border border-outline-var/60 hover:border-text-primary text-text-primary text-xs font-mono font-bold uppercase tracking-wider rounded-none transition-all disabled:opacity-50 cursor-pointer"
               >
-                {loadingMore ? 'Loading more members...' : 'Load More Members'}
+                {loadingMore ? 'Loading roster records...' : 'Load More Directory Members [+]'}
               </button>
             </div>
           )}
