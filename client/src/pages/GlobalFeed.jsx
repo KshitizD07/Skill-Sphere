@@ -10,6 +10,7 @@ import FeedAPI from '../features/feed/feedAPI';
 import API from '../api';
 import Navbar from '../shared/components/Navbar';
 import { useToast, ToastContainer } from '../shared/components/Toast';
+import { HeavyMasthead, ContrastBadge, CrosshairAnchor } from '../shared/components/EditorialUI';
 
 function timeAgo(date) {
   if (!date) return '';
@@ -210,27 +211,37 @@ function PostCard({
     const isOfficial = post.author?.email === 'official@skillsphere.com' || post.author?.name === 'SkillSphere' || post.author?.role === 'ADMIN';
 
     return (
-      <div className={`bg-surface border rounded-md hover:border-secondary/20 transition-colors group relative font-outfit ${isOfficial ? 'border-primary/40 bg-gradient-to-b from-surface to-surface-mid/40 shadow-sm' : 'border-outline-var/20'}`}>
-        {/* Header */}
-        <div className="flex items-center justify-between p-4 pb-3">
-          <div className="flex items-center gap-3 cursor-pointer min-w-0 flex-1 mr-2" onClick={() => navigate(`/profile/${post.author?.id}`)}>
-            <Avatar src={post.author?.avatar} name={post.author?.name} size={10} />
+      <div className={`border-b-2 border-outline-var/60 bg-surface hover:bg-surface-mid/[0.15] transition-colors group relative font-outfit rounded-none p-5 sm:p-6 ${isOfficial ? 'border-l-4 border-l-text-primary bg-surface-mid/20' : ''}`}>
+        {/* Top Broadsheet Byline */}
+        <div className="flex items-start justify-between gap-3 pb-3">
+          <div className="flex items-start gap-3 cursor-pointer min-w-0 flex-1" onClick={() => navigate(`/profile/${post.author?.id}`)}>
+            <div className="w-10 h-10 rounded-none overflow-hidden border border-outline-var/60 bg-surface-mid shrink-0 flex items-center justify-center">
+              {post.author?.avatar ? (
+                <img src={post.author?.avatar} loading="lazy" className="w-full h-full object-cover" alt="" />
+              ) : (
+                <User size={18} className="text-outline" />
+              )}
+            </div>
             <div className="min-w-0 flex-1">
-              <div className="flex items-center gap-1.5 flex-wrap">
-                <span className="text-text-primary font-semibold hover:text-primary transition-colors text-sm truncate">
+              <div className="flex items-center gap-2 flex-wrap">
+                <span className="text-text-primary font-bold hover:text-accent transition-colors text-base truncate">
                   {post.author?.name}
                 </span>
                 {isOfficial ? (
-                  <span className="px-2 py-0.5 bg-primary/15 border border-primary/30 text-primary text-[9px] font-syne font-bold uppercase rounded-xs flex items-center gap-1 shadow-xs">
-                    <Shield size={10} /> Official
-                  </span>
+                  <ContrastBadge variant="ink">
+                    <Shield size={10} /> Official Dispatch
+                  </ContrastBadge>
                 ) : post.author?.role === 'PROFESSIONAL' ? (
-                  <span className="px-1.5 py-0.5 bg-accent/10 text-accent text-[9px] font-syne font-bold uppercase rounded-xs">
-                    Pro
-                  </span>
-                ) : null}
+                  <ContrastBadge variant="ochre">
+                    Pro Builder
+                  </ContrastBadge>
+                ) : (
+                  <ContrastBadge variant="subtle">
+                    {post.author?.role || 'MEMBER'}
+                  </ContrastBadge>
+                )}
               </div>
-              <div className="flex items-center gap-2 text-[10px] font-syne text-outline truncate">
+              <div className="flex items-center gap-2 text-[10px] font-mono text-outline uppercase tracking-wider truncate mt-0.5">
                 {post.author?.headline && <span className="truncate">{post.author.headline}</span>}
                 {post.author?.college && (
                   <span className="flex items-center gap-1 shrink-0">
@@ -239,211 +250,238 @@ function PostCard({
                 )}
               </div>
             </div>
-        </div>
+          </div>
 
-        {/* 3-Dot Options Dropdown */}
-        <div className="relative shrink-0" ref={menuRef}>
-          <button
-            type="button"
-            onClick={() => setShowMenu(!showMenu)}
-            className="p-1.5 text-outline hover:text-text-primary transition-colors rounded-xs hover:bg-surface-mid"
-            title="More options"
-          >
-            <MoreVertical size={16} />
-          </button>
+          <div className="flex items-center gap-2 shrink-0">
+            <span className="font-mono text-[11px] text-outline uppercase tracking-widest tabular-nums select-none">
+              {timeAgo(post.createdAt)}
+            </span>
 
-          {showMenu && (
-            <div className="absolute right-0 top-full mt-1 w-44 bg-surface-mid border border-outline-var/40 rounded-xs shadow-2xl z-50 py-1 font-outfit text-xs">
+            {/* 3-Dot Options Dropdown */}
+            <div className="relative" ref={menuRef}>
               <button
                 type="button"
-                onClick={() => {
-                  onShare(post.id);
-                  setShowMenu(false);
-                }}
-                className="w-full px-3 py-2 text-left text-text-primary hover:bg-surface flex items-center gap-2 transition-colors"
+                onClick={() => setShowMenu(!showMenu)}
+                className="p-1.5 text-outline hover:text-text-primary transition-colors rounded-none hover:bg-surface-mid"
+                title="More options"
               >
-                <Share2 size={13} className="text-primary" /> Copy Link
+                <MoreVertical size={16} />
               </button>
 
-              {isOwner && (
-                <button
-                  type="button"
-                  onClick={() => {
-                    setEditing(true);
-                    setEditContent(post.content);
-                    setShowMenu(false);
-                  }}
-                  className="w-full px-3 py-2 text-left text-text-primary hover:bg-surface flex items-center gap-2 transition-colors"
-                >
-                  <Pencil size={13} className="text-primary" /> Edit Post
-                </button>
-              )}
+              {showMenu && (
+                <div className="absolute right-0 top-full mt-1 w-44 bg-surface border border-outline-var/60 rounded-none shadow-xl z-50 py-1 font-outfit text-xs">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      onShare(post.id);
+                      setShowMenu(false);
+                    }}
+                    className="w-full px-3 py-2 text-left text-text-primary hover:bg-surface-mid flex items-center gap-2 transition-colors font-mono text-[11px] uppercase tracking-wider"
+                  >
+                    <Share2 size={13} className="text-accent" /> Copy Link
+                  </button>
 
-              {isOwner && (
-                <button
-                  type="button"
-                  onClick={() => {
-                    onDelete(post.id);
-                    setShowMenu(false);
-                  }}
-                  className="w-full px-3 py-2 text-left text-error hover:bg-surface flex items-center gap-2 transition-colors border-t border-outline-var/20"
-                >
-                  <Trash2 size={13} /> Delete Post
-                </button>
-              )}
+                  {isOwner && (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setEditing(true);
+                        setEditContent(post.content);
+                        setShowMenu(false);
+                      }}
+                      className="w-full px-3 py-2 text-left text-text-primary hover:bg-surface-mid flex items-center gap-2 transition-colors font-mono text-[11px] uppercase tracking-wider"
+                    >
+                      <Pencil size={13} className="text-text-primary" /> Edit Dispatch
+                    </button>
+                  )}
 
-              {!isOwner && (
+                  {isOwner && (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        onDelete(post.id);
+                        setShowMenu(false);
+                      }}
+                      className="w-full px-3 py-2 text-left text-[#8B3A3A] hover:bg-surface-mid flex items-center gap-2 transition-colors border-t border-outline-var/30 font-mono text-[11px] uppercase tracking-wider font-bold"
+                    >
+                      <Trash2 size={13} /> Delete Dispatch
+                    </button>
+                  )}
+
+                  {!isOwner && (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        onOpenReportModal(post.id);
+                        setShowMenu(false);
+                      }}
+                      className="w-full px-3 py-2 text-left text-[#f59e0b] hover:bg-surface-mid flex items-center gap-2 transition-colors border-t border-outline-var/30 font-mono text-[11px] uppercase tracking-wider"
+                    >
+                      <Flag size={13} /> Report Entry
+                    </button>
+                  )}
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+
+        {/* Content Body */}
+        <div className="pt-1 pb-3">
+          {editing ? (
+            <div className="space-y-2">
+              <textarea
+                value={editContent}
+                onChange={(e) => setEditContent(e.target.value)}
+                className="w-full bg-surface-mid border border-outline-var/60 text-text-primary p-3 text-sm font-outfit resize-none focus:border-text-primary outline-none rounded-none"
+                rows={4}
+                maxLength={2000}
+              />
+              <div className="flex justify-between items-center text-xs">
+                <span className="text-outline font-mono text-[10px] tabular-nums">{editContent.length}/2000</span>
+                <div className="flex gap-2">
+                  <button onClick={() => setEditing(false)} className="px-3 py-1 font-mono text-xs text-outline hover:text-text-primary uppercase tracking-wider">
+                    Cancel
+                  </button>
+                  <button
+                    onClick={() => {
+                      onEdit(post.id, editContent);
+                      setEditing(false);
+                    }}
+                    className="px-4 py-1.5 text-xs bg-text-primary text-surface font-mono font-bold uppercase tracking-wider rounded-none hover:bg-accent hover:text-text-primary transition-colors"
+                  >
+                    Save Changes
+                  </button>
+                </div>
+              </div>
+            </div>
+          ) : (
+            <div>
+              <p className="text-text-primary/90 text-sm sm:text-[15px] leading-relaxed whitespace-pre-wrap">{displayContent}</p>
+              {isLongContent && (
                 <button
-                  type="button"
-                  onClick={() => {
-                    onOpenReportModal(post.id);
-                    setShowMenu(false);
-                  }}
-                  className="w-full px-3 py-2 text-left text-[#f59e0b] hover:bg-surface flex items-center gap-2 transition-colors border-t border-outline-var/20"
+                  onClick={() => setIsExpanded(!isExpanded)}
+                  className="text-accent text-xs font-mono uppercase tracking-wider font-bold hover:underline mt-2 focus:outline-none"
                 >
-                  <Flag size={13} /> Report Post
+                  {isExpanded ? 'Collapse Dispatch [-]' : 'Read Full Dispatch [+]'}
                 </button>
               )}
             </div>
           )}
-        </div>
-      </div>
 
-      {/* Content */}
-      <div className="px-4 pb-3">
-        {editing ? (
-          <div className="space-y-2">
-            <textarea
-              value={editContent}
-              onChange={(e) => setEditContent(e.target.value)}
-              className="w-full bg-surface-mid border border-outline-var/40 text-text-primary p-3 text-sm font-outfit resize-none focus:border-primary/50 outline-none rounded-xs"
-              rows={4}
-              maxLength={2000}
-            />
-            <div className="flex justify-between items-center text-xs">
-              <span className="text-outline font-syne">{editContent.length}/2000</span>
-              <div className="flex gap-2">
-                <button onClick={() => setEditing(false)} className="px-3 py-1 text-xs text-outline hover:text-text-primary">
-                  Cancel
-                </button>
+          {post.imageUrl && (
+            <div className="mt-3 cursor-pointer overflow-hidden rounded-none border border-outline-var/60 group/img">
+              <img
+                src={post.imageUrl}
+                loading="lazy"
+                alt="Attachment"
+                onClick={() => setShowImageLightbox(true)}
+                className="w-full max-h-96 object-cover hover:scale-[1.01] transition-transform duration-300"
+              />
+            </div>
+          )}
+        </div>
+
+        {/* Actions & Counts Bar */}
+        <div className="flex items-center justify-between pt-3 border-t border-outline-var/40">
+          <div className="flex items-center gap-5">
+            <button
+              onClick={() => onLike(post.id)}
+              className={`flex items-center gap-1.5 text-xs font-mono transition-colors ${liked ? 'text-[#8B3A3A] font-bold' : 'text-outline hover:text-[#8B3A3A]'}`}
+            >
+              <Heart size={15} fill={liked ? 'currentColor' : 'none'} />
+              <span
+                onClick={(e) => {
+                  e.stopPropagation();
+                  if ((post.likeCount || post.likes?.length) > 0) onOpenLikesModal(post.id);
+                }}
+                className="hover:underline cursor-pointer tabular-nums"
+              >
+                {post.likeCount ?? post.likes?.length ?? 0}
+              </span>
+            </button>
+
+            <button
+              onClick={() => setShowComments(!showComments)}
+              className="flex items-center gap-1.5 text-xs font-mono text-outline hover:text-text-primary transition-colors"
+            >
+              <MessageCircle size={15} />
+              <span className="tabular-nums">{post.commentCount ?? post.comments?.length ?? 0}</span>
+              <span className="hidden sm:inline uppercase text-[10px] tracking-wider text-outline/70">
+                {showComments ? 'Hide Ledger' : 'Ledger'}
+              </span>
+            </button>
+
+            <button
+              onClick={() => onShare(post.id)}
+              className="flex items-center gap-1.5 text-xs font-mono text-outline hover:text-text-primary transition-colors"
+              title="Share Dispatch"
+            >
+              <Share2 size={13} />
+              <span className="hidden sm:inline uppercase text-[10px] tracking-wider text-outline/70">Share</span>
+            </button>
+          </div>
+
+          <div className="flex items-center gap-1 text-outline font-mono text-[10px] uppercase tracking-widest">
+            <span className="w-1.5 h-1.5 rounded-full bg-accent/60 inline-block" />
+            <span>ID: {post.id?.slice(0, 8)}</span>
+          </div>
+        </div>
+
+        {/* Expandable Comment Section */}
+        {showComments && (
+          <div className="mt-4 pt-4 border-l-2 border-text-primary/40 pl-4 sm:pl-6 space-y-3 bg-surface-mid/30 py-3 rounded-none">
+            {(!post.comments || post.comments.length === 0) && (
+              <p className="text-outline font-mono text-xs uppercase tracking-wider italic py-2">
+                No discussion entries yet. First response open.
+              </p>
+            )}
+
+            {post.comments?.map((c) => (
+              <CommentItem
+                key={c.id}
+                comment={c}
+                postId={post.id}
+                postOwnerId={post.author?.id}
+                currentUser={currentUser}
+                onDelete={onDeleteComment}
+                onLike={onLikeComment}
+                onReply={onReply}
+              />
+            ))}
+
+            {/* New Comment Compose */}
+            <div className="flex gap-2 pt-3 border-t border-outline-var/30">
+              <div className="w-7 h-7 rounded-none overflow-hidden border border-outline-var/50 bg-surface-mid shrink-0 flex items-center justify-center">
+                {currentUser.avatar ? (
+                  <img src={currentUser.avatar} className="w-full h-full object-cover" alt="" />
+                ) : (
+                  <User size={12} className="text-outline" />
+                )}
+              </div>
+              <div className="flex-1 flex gap-2">
+                <input
+                  value={commentText}
+                  onChange={(e) => setCommentText(e.target.value)}
+                  onKeyDown={(e) => e.key === 'Enter' && !e.shiftKey && submitComment()}
+                  placeholder="Record comment entry..."
+                  maxLength={500}
+                  className="flex-1 bg-surface border border-outline-var/60 text-text-primary px-3 py-2 text-xs focus:border-text-primary outline-none rounded-none placeholder-outline font-outfit"
+                />
                 <button
-                  onClick={() => {
-                    onEdit(post.id, editContent);
-                    setEditing(false);
-                  }}
-                  className="px-3 py-1 text-xs bg-primary text-on-primary font-syne font-bold uppercase rounded-xs"
+                  onClick={submitComment}
+                  disabled={!commentText.trim()}
+                  className="bg-text-primary text-surface hover:bg-accent hover:text-text-primary font-mono text-xs uppercase tracking-wider px-3 py-1.5 rounded-none disabled:opacity-40 transition-colors flex items-center gap-1.5"
                 >
-                  Save Changes
+                  <Send size={12} />
+                  <span className="hidden sm:inline">Post</span>
                 </button>
               </div>
             </div>
           </div>
-        ) : (
-          <div>
-            <p className="text-text-muted text-sm leading-relaxed whitespace-pre-wrap">{displayContent}</p>
-            {isLongContent && (
-              <button
-                onClick={() => setIsExpanded(!isExpanded)}
-                className="text-primary text-xs font-syne font-bold hover:underline mt-1 focus:outline-none"
-              >
-                {isExpanded ? 'See less' : '... See more'}
-              </button>
-            )}
-          </div>
         )}
 
-        {post.imageUrl && (
-          <div className="mt-3 cursor-pointer overflow-hidden rounded-xs border border-outline-var/20 group/img">
-            <img
-              src={post.imageUrl}
-              loading="lazy"
-              alt="Attachment"
-              onClick={() => setShowImageLightbox(true)}
-              className="w-full max-h-96 object-cover hover:scale-[1.01] transition-transform duration-300"
-            />
-          </div>
-        )}
-      </div>
-
-      {/* Actions & Counts Bar */}
-      <div className="flex items-center justify-between px-4 py-2.5 border-t border-outline-var/15">
-        <div className="flex items-center gap-4">
-          <button
-            onClick={() => onLike(post.id)}
-            className={`flex items-center gap-1.5 text-sm transition-colors ${liked ? 'text-error' : 'text-outline hover:text-error'}`}
-          >
-            <Heart size={16} fill={liked ? 'currentColor' : 'none'} />
-            <span
-              onClick={(e) => {
-                e.stopPropagation();
-                if ((post.likeCount || post.likes?.length) > 0) onOpenLikesModal(post.id);
-              }}
-              className="font-syne text-xs hover:underline cursor-pointer"
-            >
-              {post.likeCount ?? post.likes?.length ?? 0}
-            </span>
-          </button>
-
-          <button
-            onClick={() => setShowComments(!showComments)}
-            className="flex items-center gap-1.5 text-sm text-outline hover:text-primary transition-colors"
-          >
-            <MessageCircle size={16} />
-            <span className="font-syne text-xs">{post.commentCount ?? post.comments?.length ?? 0}</span>
-          </button>
-        </div>
-
-        {/* Post Timestamp (Positioned on the bottom right) */}
-        <div className="text-outline text-[11px] font-syne tracking-wide flex items-center gap-1 select-none">
-          {timeAgo(post.createdAt)}
-        </div>
-      </div>
-
-      {/* Expandable Comment Section */}
-      {showComments && (
-        <div className="px-4 pb-4 pt-3 border-t border-outline-var/15 space-y-3 bg-surface-mid/30">
-          {(!post.comments || post.comments.length === 0) && (
-            <p className="text-outline text-xs italic text-center py-1">No comments yet. Be the first to comment!</p>
-          )}
-
-          {post.comments?.map((c) => (
-            <CommentItem
-              key={c.id}
-              comment={c}
-              postId={post.id}
-              postOwnerId={post.author?.id}
-              currentUser={currentUser}
-              onDelete={onDeleteComment}
-              onLike={onLikeComment}
-              onReply={onReply}
-            />
-          ))}
-
-          {/* New Comment Compose */}
-          <div className="flex gap-2 pt-2 border-t border-outline-var/15">
-            <Avatar src={currentUser.avatar} name={currentUser.name} size={7} />
-            <div className="flex-1 flex gap-2">
-              <input
-                value={commentText}
-                onChange={(e) => setCommentText(e.target.value)}
-                onKeyDown={(e) => e.key === 'Enter' && !e.shiftKey && submitComment()}
-                placeholder="Write a comment..."
-                maxLength={500}
-                className="flex-1 bg-surface-mid border border-outline-var/40 text-text-muted px-3 py-2 text-xs focus:border-primary/50 outline-none rounded-xs placeholder-outline-var"
-              />
-              <button
-                onClick={submitComment}
-                disabled={!commentText.trim()}
-                className="text-primary hover:text-secondary-bright disabled:opacity-40 px-2 transition-colors"
-              >
-                <Send size={15} />
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Image Lightbox */}
+        {/* Image Lightbox */}
       {showImageLightbox && (
         <div 
           className="fixed inset-0 bg-bg-base/90 backdrop-blur-md z-[500] flex items-center justify-center p-4 cursor-zoom-out"
@@ -870,37 +908,62 @@ export default function GlobalFeed() {
       <Navbar user={currentUser} onLogout={handleLogout} />
       <ToastContainer toasts={toast.toasts} removeToast={toast.removeToast} />
 
-      <div className="flex-1 md:ml-64 pt-16 md:pt-0 min-h-screen overflow-y-auto overflow-x-hidden p-4 md:p-8 w-full max-w-7xl mx-auto space-y-6">
+      <div className="flex-1 md:ml-64 pt-16 md:pt-0 min-h-screen overflow-y-auto overflow-x-hidden p-4 md:p-8 w-full max-w-5xl mx-auto space-y-6">
+
+        {/* Heavy Masthead */}
+        <HeavyMasthead
+          number="01"
+          kicker="PEER TELEMETRY & NETWORK ACTIVITY"
+          title="Community Wire"
+          meta={`${posts.length} DISPATCHES LOGGED`}
+        />
 
         {/* Feed Type Switcher (All vs Following) */}
-        <div className="flex items-center gap-2 mb-6 border-b border-outline-var/20 pb-2">
+        <div className="flex items-center gap-6 border-b border-outline-var/60 pb-3 mb-6">
           <button
             onClick={() => handleTabSwitch('all')}
-            className={`px-4 py-2 font-syne font-bold text-xs uppercase tracking-wider rounded-xs transition-all border ${
+            className={`font-mono text-xs uppercase tracking-wider transition-colors pb-1 border-b-2 cursor-pointer ${
               feedTab === 'all'
-                ? 'bg-primary text-on-primary border-primary shadow-sm shadow-primary/20'
-                : 'bg-surface-mid/60 text-text-muted border-outline-var/30 hover:text-text-primary'
+                ? 'border-text-primary text-text-primary font-bold'
+                : 'border-transparent text-outline hover:text-text-primary'
             }`}
           >
-            All Updates
+            [ All Transmissions ]
           </button>
           <button
             onClick={() => handleTabSwitch('following')}
-            className={`px-4 py-2 font-syne font-bold text-xs uppercase tracking-wider rounded-xs transition-all border flex items-center gap-1.5 ${
+            className={`font-mono text-xs uppercase tracking-wider transition-colors pb-1 border-b-2 flex items-center gap-2 cursor-pointer ${
               feedTab === 'following'
-                ? 'bg-primary text-on-primary border-primary shadow-sm shadow-primary/20'
-                : 'bg-surface-mid/60 text-text-muted border-outline-var/30 hover:text-text-primary'
+                ? 'border-text-primary text-text-primary font-bold'
+                : 'border-transparent text-outline hover:text-text-primary'
             }`}
           >
-            <Users size={12} /> Following
+            <Users size={13} />
+            <span>[ Following Only ]</span>
           </button>
         </div>
 
-        {/* Post Composer Card */}
+        {/* Post Composer Architectural Desk */}
         {currentUser.id && (
-          <div className="bg-surface border border-outline-var/20 rounded-md p-5 mb-6 shadow-sm font-outfit">
-            <div className="flex items-start gap-3">
-              <Avatar src={currentUser.avatar} name={currentUser.name} size={10} />
+          <div className="border border-outline-var/60 bg-surface rounded-none p-5 sm:p-6 mb-8 transition-colors">
+            <div className="flex items-center justify-between border-b border-outline-var/40 pb-3 mb-4">
+              <span className="font-mono text-[10px] tracking-widest uppercase text-text-primary font-bold flex items-center gap-1.5">
+                <span className="w-2 h-2 bg-text-primary inline-block" />
+                DRAFT NEW DISPATCH
+              </span>
+              <span className={`font-mono text-[10px] uppercase tracking-wider tabular-nums ${charCount > 1800 ? 'text-[#8B3A3A] font-bold' : 'text-outline'}`}>
+                {charCount} / 2000 CHARACTERS
+              </span>
+            </div>
+
+            <div className="flex items-start gap-4">
+              <div className="w-10 h-10 rounded-none overflow-hidden border border-outline-var/60 bg-surface-mid shrink-0 flex items-center justify-center">
+                {currentUser.avatar ? (
+                  <img src={currentUser.avatar} className="w-full h-full object-cover" alt="" />
+                ) : (
+                  <User size={18} className="text-outline" />
+                )}
+              </div>
               <div className="flex-1 min-w-0">
                 <textarea
                   value={newPostContent}
@@ -908,46 +971,41 @@ export default function GlobalFeed() {
                     setNewPostContent(e.target.value);
                     setCharCount(e.target.value.length);
                   }}
-                  placeholder={`What's on your mind, ${currentUser.name?.split(' ')[0] || 'developer'}?`}
+                  placeholder={`Broadcast update, technical finding, or query, ${currentUser.name?.split(' ')[0] || 'builder'}...`}
                   maxLength={2000}
-                  className="w-full bg-surface-mid border border-outline-var/30 text-text-primary p-3 focus:border-primary/50 outline-none resize-none h-24 text-sm rounded-xs placeholder-outline-var transition-colors leading-relaxed"
+                  className="w-full bg-surface-mid/40 border border-outline-var/50 text-text-primary p-3.5 focus:border-text-primary outline-none resize-none h-24 text-sm rounded-none placeholder-outline transition-colors leading-relaxed font-outfit"
                 />
-                <div className="flex items-center justify-between mt-2 mb-2.5">
-                  <span className={`font-syne text-[10px] ${charCount > 1800 ? 'text-error font-bold' : 'text-outline'}`}>
-                    {charCount}/2000
-                  </span>
-                </div>
 
                 {newPostImage && (
-                  <div className="relative mb-3 inline-block">
-                    <img src={newPostImage} alt="Preview" className="max-h-40 rounded-xs border border-outline-var/30 object-cover shadow" />
+                  <div className="relative mb-3 mt-3 inline-block">
+                    <img src={newPostImage} alt="Preview" className="max-h-40 rounded-none border border-outline-var/60 object-cover" />
                     <button
                       onClick={() => {
                         setNewPostImage('');
                         if (postImageRef.current) postImageRef.current.value = '';
                       }}
-                      className="absolute -top-2 -right-2 p-1 bg-error text-white rounded-full transition-colors shadow"
+                      className="absolute -top-2 -right-2 p-1 bg-text-primary text-surface rounded-none hover:bg-[#8B3A3A] transition-colors cursor-pointer"
                     >
                       <X size={12} />
                     </button>
                   </div>
                 )}
 
-                <div className="flex flex-wrap gap-3 items-center justify-between border-t border-outline-var/20 pt-3">
+                <div className="flex flex-wrap gap-3 items-center justify-between border-t border-outline-var/40 pt-3 mt-2">
                   <input ref={postImageRef} type="file" accept="image/*" onChange={handleImageChange} className="hidden" />
                   <button
                     onClick={() => postImageRef.current.click()}
-                    className="flex items-center gap-2 px-3 py-1.5 bg-surface-mid border border-outline-var/30 hover:border-primary/40 text-outline hover:text-primary transition-all text-xs font-syne font-bold rounded-xs uppercase tracking-wide"
+                    className="flex items-center gap-2 px-3 py-1.5 bg-surface-mid border border-outline-var/60 hover:border-text-primary text-outline hover:text-text-primary transition-all text-xs font-mono uppercase tracking-wider rounded-none cursor-pointer"
                   >
-                    <ImageIcon size={14} /> Attach Image
+                    <ImageIcon size={13} /> Attach Media
                   </button>
 
                   <button
                     onClick={handleCreatePost}
                     disabled={!newPostContent.trim()}
-                    className="bg-primary text-on-primary font-syne font-bold px-6 py-2 rounded-xs text-xs uppercase tracking-[0.1em] hover:bg-secondary-bright disabled:opacity-40 transition-all shadow-md"
+                    className="bg-text-primary text-surface font-mono font-bold px-6 py-2 rounded-none text-xs uppercase tracking-widest hover:bg-accent hover:text-text-primary disabled:opacity-40 transition-all cursor-pointer"
                   >
-                    Publish Post
+                    Broadcast Dispatch
                   </button>
                 </div>
               </div>
@@ -957,70 +1015,74 @@ export default function GlobalFeed() {
 
         {/* Loading Skeletons */}
         {loading && (
-          <div className="space-y-4">
+          <div className="border border-outline-var/60 divide-y divide-outline-var/40 bg-surface">
             {[1, 2, 3].map((i) => (
-              <div key={i} className="bg-surface border border-outline-var/20 p-5 rounded-md space-y-3 animate-pulse">
+              <div key={i} className="p-6 space-y-3 animate-pulse">
                 <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-full bg-surface-mid" />
+                  <div className="w-10 h-10 bg-surface-mid" />
                   <div className="space-y-1.5 flex-1">
-                    <div className="h-3 bg-surface-mid rounded w-1/4" />
-                    <div className="h-2 bg-surface-mid rounded w-1/6" />
+                    <div className="h-3 bg-surface-mid w-1/4" />
+                    <div className="h-2 bg-surface-mid w-1/6" />
                   </div>
                 </div>
-                <div className="h-4 bg-surface-mid rounded w-3/4" />
-                <div className="h-4 bg-surface-mid rounded w-1/2" />
+                <div className="h-4 bg-surface-mid w-3/4" />
+                <div className="h-4 bg-surface-mid w-1/2" />
               </div>
             ))}
           </div>
         )}
 
-        {/* Feed Posts */}
+        {/* Feed Posts Broadsheet Ledger */}
         {!loading && (
-          <div className="space-y-4 font-outfit">
+          <div className="space-y-6">
             {posts.length === 0 ? (
               feedTab === 'following' ? (
-                <div className="text-center py-16 bg-surface border border-dashed border-outline-var/30 rounded-md p-8 space-y-4">
-                  <Users size={40} className="mx-auto text-primary opacity-60" />
+                <div className="text-center py-16 bg-surface border border-outline-var/60 p-8 space-y-4">
+                  <Users size={36} className="mx-auto text-outline" />
                   <div className="space-y-1">
-                    <h3 className="text-base font-bold text-text-primary">No updates from followed builders yet</h3>
-                    <p className="text-xs text-text-muted max-w-sm mx-auto leading-relaxed">
+                    <h3 className="text-base font-bold font-syne text-text-primary uppercase tracking-wide">
+                      No Dispatches from Followed Builders
+                    </h3>
+                    <p className="text-xs text-text-muted max-w-sm mx-auto leading-relaxed font-outfit">
                       Follow peer developers, college mates, or squad leaders to see their discussions and launches here.
                     </p>
                   </div>
                   <button
                     onClick={() => navigate('/network')}
-                    className="px-5 py-2.5 bg-primary text-on-primary font-syne font-bold text-xs uppercase tracking-wider rounded-xs hover:bg-secondary-bright transition-colors shadow-md"
+                    className="px-6 py-2.5 bg-text-primary text-surface font-mono font-bold text-xs uppercase tracking-widest rounded-none hover:bg-accent hover:text-text-primary transition-colors cursor-pointer"
                   >
-                    Discover People to Follow
+                    Explore Directory →
                   </button>
                 </div>
               ) : (
-                <div className="text-center py-20 border border-dashed border-outline-var/30 rounded-md">
-                  <MessageCircle size={40} className="mx-auto text-outline mb-2" />
-                  <p className="text-outline font-syne text-[10px] uppercase tracking-[0.12em]">
-                    No posts yet. Be the first to share an update.
+                <div className="text-center py-20 border border-outline-var/60 bg-surface">
+                  <MessageCircle size={36} className="mx-auto text-outline mb-2" />
+                  <p className="text-outline font-mono text-[11px] uppercase tracking-widest">
+                    No dispatches recorded yet. First transmission open.
                   </p>
                 </div>
               )
             ) : (
-              posts.map((post) => (
-                <PostCard
-                  key={post.id}
-                  post={post}
-                  currentUser={currentUser}
-                  navigate={navigate}
-                  onDelete={handleDeletePost}
-                  onEdit={handleEditPost}
-                  onLike={handleLike}
-                  onComment={handleComment}
-                  onLikeComment={handleLikeComment}
-                  onDeleteComment={handleDeleteComment}
-                  onReply={(postId, content, parentId) => handleComment(postId, content, parentId)}
-                  onOpenLikesModal={openLikesModal}
-                  onOpenReportModal={(id) => setReportModalPostId(id)}
-                  onShare={handleSharePost}
-                />
-              ))
+              <div className="border-t-2 border-text-primary bg-surface border-x border-b border-outline-var/60">
+                {posts.map((post) => (
+                  <PostCard
+                    key={post.id}
+                    post={post}
+                    currentUser={currentUser}
+                    navigate={navigate}
+                    onDelete={handleDeletePost}
+                    onEdit={handleEditPost}
+                    onLike={handleLike}
+                    onComment={handleComment}
+                    onLikeComment={handleLikeComment}
+                    onDeleteComment={handleDeleteComment}
+                    onReply={(postId, content, parentId) => handleComment(postId, content, parentId)}
+                    onOpenLikesModal={openLikesModal}
+                    onOpenReportModal={(id) => setReportModalPostId(id)}
+                    onShare={handleSharePost}
+                  />
+                ))}
+              </div>
             )}
 
             {/* Load More Button */}
@@ -1029,9 +1091,9 @@ export default function GlobalFeed() {
                 <button
                   onClick={loadMorePosts}
                   disabled={loadingMore}
-                  className="px-6 py-2.5 bg-surface-mid border border-outline-var/40 hover:border-primary/50 text-text-primary font-syne font-bold text-xs uppercase tracking-wider rounded-xs transition-all flex items-center gap-2 mx-auto disabled:opacity-50"
+                  className="px-6 py-2.5 bg-surface border border-outline-var/60 hover:border-text-primary text-text-primary font-mono font-bold text-xs uppercase tracking-wider rounded-none transition-all flex items-center gap-2 mx-auto disabled:opacity-50 cursor-pointer"
                 >
-                  {loadingMore ? <Loader2 size={14} className="animate-spin" /> : 'Load More Posts'}
+                  {loadingMore ? <Loader2 size={14} className="animate-spin" /> : 'Retrieve Older Dispatches [+]'}
                 </button>
               </div>
             )}
