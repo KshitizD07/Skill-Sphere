@@ -1,5 +1,5 @@
 import { useState, useEffect, lazy, Suspense } from 'react';
-import { Routes, Route, useLocation } from 'react-router-dom';
+import { Routes, Route } from 'react-router-dom';
 import API from '../api';
 
 // Auth
@@ -43,7 +43,6 @@ const PageLoader = () => (
 function App() {
   const [user, setUser] = useState(null);
   const [authChecked, setAuthChecked] = useState(false);
-  const location = useLocation();
   const toast = useToast();
 
   // Enforce 15-minute rolling inactivity demotion for elevated admins
@@ -89,37 +88,6 @@ function App() {
     // Replace the current entry with the landing page to prevent back‑navigation to a protected view
     window.location.replace('/');
   };
-
-  // ── Strict Quality Control: Mandatory GitHub Account ─────────────────────────
-  // Automatically purge accounts attempting to access the platform without linking GitHub
-  useEffect(() => {
-    if (!authChecked || !user) return;
-
-    const publicPaths = ['/', '/auth', '/my-profile'];
-    const path = location.pathname.replace(/\/$/, '') || '/';
-    const isPublic = publicPaths.includes(path) || path.startsWith('/roadmap/shared');
-    const isSystemOrAdmin = user.role === 'ADMIN' || user.role === 'SYSTEM' || user.isSystemAccount || user.email === 'official@skillsphere.com';
-    const hasGithub = (user.github && user.github.trim() !== '') || isSystemOrAdmin;
-
-    if (!hasGithub && !isPublic) {
-      console.warn('⚠️ Quality Control: GitHub account not linked. Purging account...');
-
-      const purgeAccount = async () => {
-        try {
-          await API.delete('/users/me');
-        } catch (err) {
-          console.error('Failed to execute account purge:', err);
-        } finally {
-          localStorage.removeItem('user_data');
-          localStorage.removeItem('ss_token');
-          setUser(null);
-          window.location.replace('/auth?reason=github_required');
-        }
-      };
-
-      purgeAccount();
-    }
-  }, [user, authChecked, location.pathname]);
 
   return (
     <Suspense fallback={<PageLoader />}>

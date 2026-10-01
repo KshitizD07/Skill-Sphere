@@ -11,27 +11,8 @@ const prisma = new PrismaClient();
  * @param {number} gracePeriodHours - Hours before an unlinked account is pruned.
  */
 export async function pruneUnlinkedAccounts(gracePeriodHours = 24) {
-  try {
-    const cutoffDate = new Date(Date.now() - gracePeriodHours * 60 * 60 * 1000);
-
-    const result = await prisma.user.deleteMany({
-      where: {
-        OR: [
-          { github: null },
-          { github: '' },
-        ],
-        createdAt: { lt: cutoffDate },
-      },
-    });
-
-    if (result.count > 0) {
-      logger.info('User pruning: removed accounts missing GitHub link', { count: result.count });
-    }
-    return result.count;
-  } catch (err) {
-    logger.error('User pruning job error', { err: err.message });
-    return 0;
-  }
+  // Pruning unlinked accounts is disabled to preserve user and recruiter accounts without a GitHub link
+  return 0;
 }
 
 export function setupUserPruningJob() {
