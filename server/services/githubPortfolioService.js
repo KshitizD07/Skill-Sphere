@@ -3,21 +3,49 @@ import axios from 'axios';
 
 const prisma = new PrismaClient();
 
-// Helper to get GitHub Axios instance
+// Helper to get GitHub Axios instance with resilient fallback on 401
 const getGitHubClient = (accessToken) => {
   const headers = {
     Accept: 'application/vnd.github+json',
     'User-Agent': 'SkillSphere',
   };
-  if (accessToken) {
-    headers.Authorization = `Bearer ${accessToken}`;
-  } else if (process.env.GITHUB_TOKEN) {
-    headers.Authorization = `Bearer ${process.env.GITHUB_TOKEN}`;
+  const token = accessToken || process.env.GITHUB_TOKEN;
+  if (token) {
+    headers.Authorization = `Bearer ${token}`;
   }
-  return axios.create({
+
+  const instance = axios.create({
     baseURL: 'https://api.github.com',
     headers,
   });
+
+  // Response interceptor: if a request with Authorization fails with 401, retry once unauthenticated
+  instance.interceptors.response.use(
+    (response) => response,
+    async (error) => {
+      const originalRequest = error.config;
+      if (
+        error.response &&
+        error.response.status === 401 &&
+        !originalRequest._retryWithoutAuth
+      ) {
+        originalRequest._retryWithoutAuth = true;
+        delete instance.defaults.headers.Authorization;
+        delete instance.defaults.headers.common?.Authorization;
+        if (originalRequest.headers?.delete) {
+          originalRequest.headers.delete('Authorization');
+          originalRequest.headers.delete('authorization');
+        } else if (originalRequest.headers) {
+          delete originalRequest.headers.Authorization;
+          delete originalRequest.headers.authorization;
+        }
+        return instance(originalRequest);
+      }
+      return Promise.reject(error);
+    }
+  );
+
+  return instance;
 };
 
 /**
@@ -99,7 +127,7 @@ export const fetchContributedRepos = async (githubUsername, accessToken) => {
       return [];
     }
 
-    const repos = res.data.data.user.repositoriesContributedTo.nodes;
+    const repos = res.data.data?.user?.repositoriesContributedTo?.nodes || [];
     
     return repos.map((repo) => ({
       githubId: repo.databaseId,
@@ -207,8 +235,7 @@ export const syncUserRepos = async (userId) => {
 
     let techStack = existingRepo?.techStack || [];
     
-    // Refresh tech stack if not detected yet or if it's been a while? 
-    // For now, let's detect if it's empty, to save API calls.
+    // Refresh tech stack if not detected yet or if it's empty, to save API calls.
     if (!existingRepo || existingRepo.techStack.length === 0) {
       techStack = await detectTechnologies(repoFields.fullName, defaultBranch, user.githubAccessToken);
     }
