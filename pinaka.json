@@ -1,0 +1,34 @@
+{
+  "$schema": "https://pinaka.dev/schemas/manifest.v1.json",
+  "id": "skillsphere",
+  "name": "SkillSphere",
+  "tagline": "AI-powered proof-of-work skill verification, intelligent squad matching, and dynamic career roadmaps for students.",
+  "category": "EdTech",
+  "track": "flagship",
+  "status": "mvp",
+  "leadBuilder": "KSHITIZ",
+  "repoUrl": "https://github.com/KshitizD07/Skill-Sphere",
+  "demoUrl": "https://skill-sphere-v1.vercel.app/",
+  "description": "A next-generation talent and collaboration platform replacing generic resume claims with verified proof-of-work. Features Google Gemini-powered GitHub multi-stack repository analysis, the Antifragile N.E.X.U.S. matching engine, skill-gated project squads, and real-time Socket.io communication.",
+  "techStack": [
+    "React 19",
+    "Vite",
+    "Node.js",
+    "Express",
+    "Prisma",
+    "PostgreSQL",
+    "Google Gemini AI",
+    "Socket.io",
+    "Tailwind CSS",
+    "Three.js"
+  ],
+  "highlights": [
+    "Gameproof multi-stack repository verification powered by Google Gemini AI",
+    "Antifragile N.E.X.U.S. multi-strategy consensus matching engine",
+    "Skill-gated project squads with automated background lifecycle maintenance"
+  ],
+  "gates": {
+    "currentGate": 4,
+    "lastEvaluated": "2026-10-24"
+  }
+}
