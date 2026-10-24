@@ -38,12 +38,12 @@ const LANGUAGE_MAP = {
 export function parseGitHubUrl(url) {
   try {
     if (!url || typeof url !== 'string') return null;
-    const cleaned = url.trim().replace(/\.git$/, '');
+    const cleaned = url.trim().replace(/\/+$/, '').replace(/\.git$/, '');
     const u = new URL(cleaned.startsWith('http') ? cleaned : `https://${cleaned}`);
     if (!u.hostname.includes('github.com')) return null;
     const parts = u.pathname.replace(/^\//, '').replace(/\/$/, '').split('/').filter(Boolean);
     if (parts.length < 2) return null;
-    return { owner: parts[0], repo: parts[1] };
+    return { owner: parts[0], repo: parts[1].replace(/\.git$/, '') };
   } catch {
     return null;
   }
