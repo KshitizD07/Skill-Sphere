@@ -166,9 +166,15 @@ export async function verifySkill({ userId, skillName, repoUrl, showLevel = true
   }
 
   // ── 2. Ownership & Commit Checks ──────────────────────────────────────────
-  const linkedGithubUser = user?.github ? user.github.replace(/^https?:\/\//, '').replace(/^github\.com\//, '').split('/')[0].toLowerCase() : null;
-  const isDirectOwner = repo.owner.login.toLowerCase() === parsed.owner.toLowerCase() &&
-    (!linkedGithubUser || repo.owner.login.toLowerCase() === linkedGithubUser);
+  const linkedGithubUser = user?.github
+    ? user.github.replace(/^https?:\/\//, '').replace(/^github\.com\//, '').split('/')[0].trim().toLowerCase()
+    : null;
+
+  if (!linkedGithubUser) {
+    throw ApiError.badRequest('Please link your GitHub profile to your account before verifying skills with a repository.');
+  }
+
+  const isDirectOwner = repo.owner.login.toLowerCase() === linkedGithubUser;
 
   let commitWarning = null;
   let hasContributorCommits = isDirectOwner;
@@ -181,7 +187,7 @@ export async function verifySkill({ userId, skillName, repoUrl, showLevel = true
         if (commits.length < 3) {
           commitWarning = 'Repository has fewer than 3 commits.';
         }
-        if (!isDirectOwner && linkedGithubUser) {
+        if (!isDirectOwner) {
           const userHasCommits = commits.some((c) => {
             const authorLogin = c.author?.login?.toLowerCase();
             const committerLogin = c.committer?.login?.toLowerCase();
@@ -195,6 +201,12 @@ export async function verifySkill({ userId, skillName, repoUrl, showLevel = true
     }
   } catch (err) {
     logger.warn('Failed to fetch commit history for verification', { error: err.message });
+  }
+
+  if (!isDirectOwner && !hasContributorCommits) {
+    throw ApiError.badRequest(
+      `You cannot verify skills using a repository you do not own or contribute to. Neither repo ownership nor recent commits matched your connected GitHub profile (${linkedGithubUser}).`
+    );
   }
 
   // ── 3. Fetch File Tree and Multi-File Categorized Sampling ─────────────────
